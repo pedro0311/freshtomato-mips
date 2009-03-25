@@ -1,4 +1,4 @@
-/* dnsmasq is Copyright (c) 2000-2008 Simon Kelley
+/* dnsmasq is Copyright (c) 2000-2009 Simon Kelley
  
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -10,11 +10,11 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
      
-  You should have received a copy of the GNU General Public License
-  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define COPYRIGHT "Copyright (C) 2000-2008 Simon Kelley" 
+#define COPYRIGHT "Copyright (C) 2000-2009 Simon Kelley" 
 
 #ifndef NO_LARGEFILE
 /* Ensure we can use files >2GB (log files may grow this big) */
@@ -106,7 +106,7 @@ extern int capget(cap_user_header_t header, cap_user_data_t data);
 #define LINUX_CAPABILITY_VERSION_3  0x20080522
 
 #include <linux/prctl.h>
-#elif defined(HAVE_SOLARIS_PRIVS)
+#elif defined(HAVE_SOLARIS_NETWORK)
 #include <priv.h>
 #endif
 
@@ -135,6 +135,7 @@ struct event_desc {
 #define EVENT_GROUP_ERR 15
 #define EVENT_DIE       16
 #define EVENT_LOG_ERR   17
+#define EVENT_FORK_ERR  18
 
 /* Exit codes. */
 #define EC_GOOD        0
@@ -185,6 +186,11 @@ struct event_desc {
 #define OPT_NO_OVERRIDE    (1u<<30)
 #define OPT_NO_REBIND      (1u<<31)
 
+/* extra flags for my_syslog, we use a couple of facilities since they are known 
+   not to occupy the same bits as priorities, no matter how syslog.h is set up. */
+#define MS_TFTP LOG_USER
+#define MS_DHCP LOG_DAEMON 
+
 struct all_addr {
   union {
     struct in_addr addr4;
@@ -201,7 +207,7 @@ struct bogus_addr {
 
 /* dns doctor param */
 struct doctor {
-  struct in_addr in, out, mask;
+  struct in_addr in, end, out, mask;
   struct doctor *next;
 };
 
@@ -368,8 +374,11 @@ struct resolvc {
 };
 
 /* adn-hosts parms from command-line */
+#define AH_DIR      1
+#define AH_INACTIVE 2
 struct hostsfile {
   struct hostsfile *next;
+  int flags;
   char *fname;
   int index; /* matches to cache entries for logging */
 };
@@ -464,7 +473,12 @@ struct dhcp_config {
 
 struct dhcp_opt {
   int opt, len, flags;
-  unsigned char *val, *vendor_class;
+  union {
+    int encap;
+    unsigned int wildcard_mask;
+    unsigned char *vendor_class;
+  } u;
+  unsigned char *val;
   struct dhcp_netid *netid;
   struct dhcp_opt *next;
 };
@@ -472,9 +486,13 @@ struct dhcp_opt {
 #define DHOPT_ADDR               1
 #define DHOPT_STRING             2
 #define DHOPT_ENCAPSULATE        4
-#define DHOPT_VENDOR_MATCH       8
+#define DHOPT_ENCAP_MATCH        8
 #define DHOPT_FORCE             16
 #define DHOPT_BANK              32
+#define DHOPT_ENCAP_DONE        64
+#define DHOPT_MATCH            128
+#define DHOPT_VENDOR           256
+#define DHOPT_HEX              512
 
 struct dhcp_boot {
   char *file, *sname;
@@ -488,7 +506,6 @@ struct dhcp_boot {
 #define MATCH_CIRCUIT    3
 #define MATCH_REMOTE     4
 #define MATCH_SUBSCRIBER 5
-#define MATCH_OPTION     6
 
 /* vendorclass, userclass, remote-id or cicuit-id */
 struct dhcp_vendor {
@@ -608,7 +625,7 @@ extern struct daemon {
   struct hostsfile *addn_hosts;
   struct dhcp_context *dhcp;
   struct dhcp_config *dhcp_conf;
-  struct dhcp_opt *dhcp_opts;
+  struct dhcp_opt *dhcp_opts, *dhcp_match;
   struct dhcp_vendor *dhcp_vendors;
   struct dhcp_mac *dhcp_macs;
   struct dhcp_boot *boot_config;
@@ -635,14 +652,14 @@ extern struct daemon {
   struct server *srv_save; /* Used for resend on DoD */
   size_t packet_len;       /*      "        "        */
   struct randfd *rfd_save; /*      "        "        */
-pid_t tcp_pids[MAX_PROCS];
+  pid_t tcp_pids[MAX_PROCS];
   struct randfd randomsocks[RANDOM_SOCKS];
 
   /* DHCP state */
   int dhcpfd, helperfd; 
-#ifdef HAVE_LINUX_NETWORK
+#if defined(HAVE_LINUX_NETWORK)
   int netlinkfd;
-#else
+#elif defined(HAVE_BSD_NETWORK)
   int dhcp_raw_fd, dhcp_icmp_fd;
 #endif
   struct iovec dhcp_packet;
@@ -679,7 +696,7 @@ void cache_end_insert(void);
 void cache_start_insert(void);
 struct crec *cache_insert(char *name, struct all_addr *addr,
 			  time_t now, unsigned long ttl, unsigned short flags);
-void cache_reload(struct hostsfile  *addn_hosts);
+void cache_reload(void);
 void cache_add_dhcp_entry(char *host_name, struct in_addr *host_address, time_t ttd);
 void cache_unhash_dhcp(void);
 void dump_cache(time_t now);
@@ -752,6 +769,7 @@ void server_gone(struct server *server);
 struct frec *get_new_frec(time_t now, int *wait);
 
 /* network.c */
+int indextoname(int fd, int index, char *name);
 int local_bind(int fd, union mysockaddr *addr, char *intname, int is_tcp);
 int random_sock(int family);
 void pre_allocate_sfds(void);
@@ -760,8 +778,7 @@ void check_servers(void);
 int enumerate_interfaces();
 struct listener *create_wildcard_listeners(void);
 struct listener *create_bound_listeners(void);
-int iface_check(int family, struct all_addr *addr, 
-		struct ifreq *ifr, int *indexp);
+int iface_check(int family, struct all_addr *addr, char *name, int *indexp);
 int fix_fd(int fd);
 struct in_addr get_ifaddr(char *intr);
 

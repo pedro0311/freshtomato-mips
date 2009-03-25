@@ -1,4 +1,4 @@
-/* dnsmasq is Copyright (c) 2000-2008 Simon Kelley
+/* dnsmasq is Copyright (c) 2000-2009 Simon Kelley
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -10,8 +10,8 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
      
-  You should have received a copy of the GNU General Public License
-  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "dnsmasq.h"
@@ -63,16 +63,20 @@ int iface_enumerate(void *parm, int (*ipv4_callback)(), int (*ipv6_callback)())
 	}
     }
   
-  for (ptr = ifc.ifc_buf; ptr < ifc.ifc_buf + ifc.ifc_len; ptr += len )
+  for (ptr = ifc.ifc_buf; ptr < (char *)(ifc.ifc_buf + ifc.ifc_len); ptr += len)
     {
       /* subsequent entries may not be aligned, so copy into
 	 an aligned buffer to avoid nasty complaints about 
 	 unaligned accesses. */
-#ifdef HAVE_SOCKADDR_SA_LEN
-      len = ((struct ifreq *)ptr)->ifr_addr.sa_len + offsetof(struct ifreq, ifr_ifru);
-#else
+
       len = sizeof(struct ifreq);
+      
+#ifdef HAVE_SOCKADDR_SA_LEN
+      ifr = (struct ifreq *)ptr;
+      if (ifr->ifr_addr.sa_len > sizeof(ifr->ifr_ifru))
+	len = ifr->ifr_addr.sa_len + offsetof(struct ifreq, ifr_ifru);
 #endif
+      
       if (!expand_buf(&ifreq, len))
 	goto err;
 
@@ -171,7 +175,7 @@ void send_via_bpf(struct dhcp_packet *mess, size_t len,
   /* Only know how to do ethernet on *BSD */
   if (mess->htype != ARPHRD_ETHER || mess->hlen != ETHER_ADDR_LEN)
     {
-      my_syslog(LOG_WARNING, _("DHCP request for unsupported hardware type (%d) received on %s"), 
+      my_syslog(MS_DHCP | LOG_WARNING, _("DHCP request for unsupported hardware type (%d) received on %s"), 
 		mess->htype, ifr->ifr_name);
       return;
     }

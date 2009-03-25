@@ -1,4 +1,4 @@
-/* dnsmasq is Copyright (c) 2000-2008 Simon Kelley
+/* dnsmasq is Copyright (c) 2000-2009 Simon Kelley
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -10,8 +10,8 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
      
-  You should have received a copy of the GNU General Public License
-  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "dnsmasq.h"
@@ -667,19 +667,8 @@ void receive_query(struct listener *listen, time_t now)
       
       /* enforce available interface configuration */
       
-      if (if_index == 0)
-	return;
-      
-#ifdef SIOCGIFNAME
-      ifr.ifr_ifindex = if_index;
-      if (ioctl(listen->fd, SIOCGIFNAME, &ifr) == -1)
-	return;
-#else
-      if (!if_indextoname(if_index, ifr.ifr_name))
-	return;
-#endif
-      
-      if (!iface_check(listen->family, &dst_addr, &ifr, &if_index))
+      if (!indextoname(listen->fd, if_index, ifr.ifr_name) ||
+	  !iface_check(listen->family, &dst_addr, ifr.ifr_name, &if_index))
 	return;
       
       if (listen->family == AF_INET &&

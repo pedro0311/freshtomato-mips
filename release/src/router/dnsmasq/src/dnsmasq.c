@@ -1,4 +1,4 @@
-/* dnsmasq is Copyright (c) 2000-2008 Simon Kelley
+/* dnsmasq is Copyright (c) 2000-2009 Simon Kelley
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -10,8 +10,8 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
      
-  You should have received a copy of the GNU General Public License
-  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "dnsmasq.h"
@@ -76,7 +76,7 @@ int main (int argc, char **argv)
   struct passwd *ent_pw = NULL;
   uid_t script_uid = 0;
   gid_t script_gid = 0;
-  struct group *gp= NULL;
+  struct group *gp = NULL;
   long i, max_fd = sysconf(_SC_OPEN_MAX);
   char *baduser = NULL;
   int log_err;
@@ -154,15 +154,6 @@ int main (int argc, char **argv)
   
   if (daemon->dhcp)
     {
-#if !defined(HAVE_LINUX_NETWORK) && !defined(IP_RECVIF)
-      int c;
-      struct iname *tmp;
-      for (c = 0, tmp = daemon->if_names; tmp; tmp = tmp->next)
-	if (!tmp->isloop)
-	  c++;
-      if (c != 1)
-	die(_("must set exactly one interface on broken systems without IP_RECVIF"), NULL, EC_BADCONF);
-#endif
       /* Note that order matters here, we must call lease_init before
 	 creating any file descriptors which shouldn't be leaked
 	 to the lease-script init process. */
@@ -297,8 +288,9 @@ int main (int argc, char **argv)
 	     When startup is complete we close this and the process terminates. */
 	  safe_pipe(err_pipe, 0);
 	  
-	  if ((pid = fork()) == -1 )
-	    die(_("cannot fork into background: %s"), NULL, EC_MISC);
+	  if ((pid = fork()) == -1)
+	    /* fd == -1 since we've not forked, never returns. */
+	    send_event(-1, EVENT_FORK_ERR, errno);
 	   
 	  if (pid != 0)
 	    {
@@ -319,9 +311,11 @@ int main (int argc, char **argv)
 	  /* NO calls to die() from here on. */
 	  
 	  setsid();
-	  pid = fork();
-
-	  if (pid != 0 && pid != -1)
+	 
+	  if ((pid = fork()) == -1)
+	    send_event(err_pipe[1], EVENT_FORK_ERR, errno);
+	 
+	  if (pid != 0)
 	    _exit(0);
 	}
 #endif
@@ -387,7 +381,7 @@ int main (int argc, char **argv)
 	  if (capset(hdr, data) == -1 || prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0) == -1)
 	    bad_capabilities = errno;
 			  
-#elif defined(HAVE_SOLARIS_PRIVS)
+#elif defined(HAVE_SOLARIS_NETWORK)
 	  /* http://developers.sun.com/solaris/articles/program_privileges.html */
 	  priv_set_t *priv_set;
 	  
@@ -407,9 +401,6 @@ int main (int argc, char **argv)
 	  if (priv_set)
 	    priv_freeset(priv_set);
 
-#elif defined(HAVE_SOLARIS_NETWORK)
-
-	  bad_capabilities = ENOTSUP;
 #endif    
 
 	  if (bad_capabilities != 0)
@@ -497,7 +488,7 @@ int main (int argc, char **argv)
 	{
 	  prettyprint_time(daemon->dhcp_buff2, dhcp_tmp->lease_time);
 	  strcpy(daemon->dhcp_buff, inet_ntoa(dhcp_tmp->start));
-	  my_syslog(LOG_INFO, 
+	  my_syslog(MS_DHCP | LOG_INFO, 
 		    (dhcp_tmp->flags & CONTEXT_STATIC) ? 
 		    _("DHCP, static leases only on %.0s%s, lease time %s") :
 		    _("DHCP, IP range %s -- %s, lease time %s"),
@@ -513,7 +504,7 @@ int main (int argc, char **argv)
 	max_fd = FD_SETSIZE;
 #endif
 
-      my_syslog(LOG_INFO, "TFTP %s%s %s", 
+      my_syslog(MS_TFTP | LOG_INFO, "TFTP %s%s %s", 
 		daemon->tftp_prefix ? _("root is ") : _("enabled"),
 		daemon->tftp_prefix ? daemon->tftp_prefix: "",
 		daemon->options & OPT_TFTP_SECURE ? _("secure mode") : "");
@@ -541,7 +532,7 @@ int main (int argc, char **argv)
       if (daemon->tftp_max > max_fd)
 	{
 	  daemon->tftp_max = max_fd;
-	  my_syslog(LOG_WARNING, 
+	  my_syslog(MS_TFTP | LOG_WARNING, 
 		    _("restricting maximum simultaneous TFTP transfers to %d"), 
 		    daemon->tftp_max);
 	}
@@ -744,6 +735,9 @@ static void fatal_event(struct event_desc *ev)
     {
     case EVENT_DIE:
       exit(0);
+
+    case EVENT_FORK_ERR:
+      die(_("cannot fork into background: %s"), NULL, EC_MISC);
   
     case EVENT_PIPE_ERR:
       die(_("failed to create helper: %s"), NULL, EC_MISC);
@@ -867,6 +861,9 @@ static void async_event(int pipe, time_t now)
 
 	if (daemon->lease_stream)
 	  fclose(daemon->lease_stream);
+
+	if (daemon->runfile)
+	  unlink(daemon->runfile);
 	
 	my_syslog(LOG_INFO, _("exiting on receipt of SIGTERM"));
 	flush_log();
@@ -913,7 +910,7 @@ static void poll_resolv()
 	  warned = 0;
 	  check_servers();
 	  if (daemon->options & OPT_RELOAD)
-	    cache_reload(daemon->addn_hosts);
+	    cache_reload();
 	}
       else 
 	{
@@ -930,7 +927,7 @@ static void poll_resolv()
 void clear_cache_and_reload(time_t now)
 {
   if (daemon->port != 0)
-    cache_reload(daemon->addn_hosts);
+    cache_reload();
   
   if (daemon->dhcp)
     {

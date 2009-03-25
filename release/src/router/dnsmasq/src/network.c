@@ -1,4 +1,4 @@
-/* dnsmasq is Copyright (c) 2000-2008 Simon Kelley
+/* dnsmasq is Copyright (c) 2000-2009 Simon Kelley
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -10,14 +10,43 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
      
-  You should have received a copy of the GNU General Public License
-  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "dnsmasq.h"
 
-int iface_check(int family, struct all_addr *addr, 
-		struct ifreq *ifr, int *indexp)
+#ifdef HAVE_LINUX_NETWORK
+
+int indextoname(int fd, int index, char *name)
+{
+  struct ifreq ifr;
+  
+  if (index == 0)
+    return 0;
+
+  ifr.ifr_ifindex = index;
+  if (ioctl(fd, SIOCGIFNAME, &ifr) == -1)
+    return 0;
+
+  strncpy(name, ifr.ifr_name, IF_NAMESIZE);
+
+  return 1;
+}
+
+#else
+
+int indextoname(int fd, int index, char *name)
+{ 
+  if (index == 0 || !if_indextoname(index, name))
+    return 0;
+
+  return 1;
+}
+
+#endif
+
+int iface_check(int family, struct all_addr *addr, char *name, int *indexp)
 {
   struct iname *tmp;
   int ret = 1;
@@ -36,19 +65,19 @@ int iface_check(int family, struct all_addr *addr,
       for (bridge = daemon->bridges; bridge; bridge = bridge->next)
 	{
 	  for (alias = bridge->alias; alias; alias = alias->next)
-	    if (strncmp(ifr->ifr_name, alias->iface, IF_NAMESIZE) == 0)
+	    if (strncmp(name, alias->iface, IF_NAMESIZE) == 0)
 	      {
 		int newindex;
 		
 		if (!(newindex = if_nametoindex(bridge->iface)))
 		  {
-		    my_syslog(LOG_WARNING, _("unknown interface %s in bridge-interface"), ifr->ifr_name);
+		    my_syslog(LOG_WARNING, _("unknown interface %s in bridge-interface"), name);
 		    return 0;
 		  }
 		else 
 		  {
 		    *indexp = newindex;
-		    strncpy(ifr->ifr_name,  bridge->iface, IF_NAMESIZE);
+		    strncpy(name,  bridge->iface, IF_NAMESIZE);
 		    break;
 		  }
 	      }
@@ -63,7 +92,7 @@ int iface_check(int family, struct all_addr *addr,
       ret = 0;
 
       for (tmp = daemon->if_names; tmp; tmp = tmp->next)
-	if (tmp->name && (strcmp(tmp->name, ifr->ifr_name) == 0))
+	if (tmp->name && (strcmp(tmp->name, name) == 0))
 	  ret = tmp->used = 1;
 	        
       for (tmp = daemon->if_addrs; tmp; tmp = tmp->next)
@@ -82,7 +111,7 @@ int iface_check(int family, struct all_addr *addr,
     }
   
   for (tmp = daemon->if_except; tmp; tmp = tmp->next)
-    if (tmp->name && (strcmp(tmp->name, ifr->ifr_name) == 0))
+    if (tmp->name && (strcmp(tmp->name, name) == 0))
       ret = 0;
   
   return ret; 
@@ -103,16 +132,8 @@ static int iface_allowed(struct irec **irecp, int if_index,
     if (sockaddr_isequal(&iface->addr, addr))
       return 1;
   
-#ifdef HAVE_LINUX_NETWORK
-  ifr.ifr_ifindex = if_index;
-#endif
-  
   if ((fd = socket(PF_INET, SOCK_DGRAM, 0)) == -1 ||
-#ifdef HAVE_LINUX_NETWORK
-      ioctl(fd, SIOCGIFNAME, &ifr) == -1 ||
-#else
-      !if_indextoname(if_index, ifr.ifr_name) ||
-#endif
+      !indextoname(fd, if_index, ifr.ifr_name) ||
       ioctl(fd, SIOCGIFFLAGS, &ifr) == -1)
     {
       if (fd != -1)
@@ -150,7 +171,7 @@ static int iface_allowed(struct irec **irecp, int if_index,
     }
   
   if (addr->sa.sa_family == AF_INET &&
-      !iface_check(AF_INET, (struct all_addr *)&addr->in.sin_addr, &ifr, NULL))
+      !iface_check(AF_INET, (struct all_addr *)&addr->in.sin_addr, ifr.ifr_name, NULL))
     return 1;
   
   for (tmp = daemon->dhcp_except; tmp; tmp = tmp->next)
@@ -159,7 +180,7 @@ static int iface_allowed(struct irec **irecp, int if_index,
   
 #ifdef HAVE_IPV6
   if (addr->sa.sa_family == AF_INET6 &&
-      !iface_check(AF_INET6, (struct all_addr *)&addr->in6.sin6_addr, &ifr, NULL))
+      !iface_check(AF_INET6, (struct all_addr *)&addr->in6.sin6_addr, ifr.ifr_name, NULL))
     return 1;
 #endif
 
@@ -217,7 +238,6 @@ static int iface_allowed_v4(struct in_addr local, int if_index,
   return iface_allowed((struct irec **)vparam, if_index, &addr, netmask);
 }
    
-
 int enumerate_interfaces(void)
 {
 #ifdef HAVE_IPV6
@@ -366,8 +386,11 @@ struct listener *create_bound_listeners(void)
 {
   struct listener *listeners = NULL;
   struct irec *iface;
-  int opt = 1;
-  
+  int rc, opt = 1;
+#ifdef HAVE_IPV6
+  static int dad_count = 0;
+#endif
+
   for (iface = daemon->interfaces; iface; iface = iface->next)
     {
       struct listener *new = safe_malloc(sizeof(struct listener));
@@ -377,6 +400,7 @@ struct listener *create_bound_listeners(void)
       new->tftpfd = -1;
       new->tcpfd = -1;
       new->fd = -1;
+      listeners = new;
 
       if (daemon->port != 0)
 	{
@@ -396,27 +420,34 @@ struct listener *create_bound_listeners(void)
 		die(_("failed to set IPV6 options on listening socket: %s"), NULL, EC_BADNET);
 	    }
 #endif
-	  
-	  if (bind(new->tcpfd, &iface->addr.sa, sa_len(&iface->addr)) == -1 ||
-	      bind(new->fd, &iface->addr.sa, sa_len(&iface->addr)) == -1)
+
+	  while(1)
 	    {
+	      if ((rc = bind(new->fd, &iface->addr.sa, sa_len(&iface->addr))) != -1)
+		break;
+	      
 #ifdef HAVE_IPV6
-	      if (iface->addr.sa.sa_family == AF_INET6 && (errno == ENODEV || errno == EADDRNOTAVAIL))
+	      /* An interface may have an IPv6 address which is still undergoing DAD. 
+		 If so, the bind will fail until the DAD completes, so we try over 20 seconds
+		 before failing. */
+	      if (iface->addr.sa.sa_family == AF_INET6 && (errno == ENODEV || errno == EADDRNOTAVAIL) && 
+		  dad_count++ < DAD_WAIT)
 		{
-		  close(new->tcpfd);
-		  close(new->fd);
-		  free(new);
-		  new = NULL;
+		  sleep(1);
+		  continue;
 		}
-	      else
 #endif
-		{
-		  prettyprint_addr(&iface->addr, daemon->namebuff);
-		  die(_("failed to bind listening socket for %s: %s"), 
-		      daemon->namebuff, EC_BADNET);
-		}
+	      break;
 	    }
-	  else if (listen(new->tcpfd, 5) == -1)
+	  
+	  if (rc == -1 || bind(new->tcpfd, &iface->addr.sa, sa_len(&iface->addr)) == -1)
+	    {
+	      prettyprint_addr(&iface->addr, daemon->namebuff);
+	      die(_("failed to bind listening socket for %s: %s"), 
+		  daemon->namebuff, EC_BADNET);
+	    }
+	    
+	  if (listen(new->tcpfd, 5) == -1)
 	    die(_("failed to listen on socket: %s"), NULL, EC_BADNET);
 	}
 
@@ -434,8 +465,6 @@ struct listener *create_bound_listeners(void)
 	}
 #endif
 
-      if (new)
-	listeners = new;
     }
 
   return listeners;
@@ -519,8 +548,8 @@ int local_bind(int fd, union mysockaddr *addr, char *intname, int is_tcp)
     return 0;
     
 #if defined(SO_BINDTODEVICE)
-  if (strlen(intname) != 0 &&
-      setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, intname, sizeof(intname)) == -1)
+  if (intname[0] != 0 &&
+      setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, intname, strlen(intname)) == -1)
     return 0;
 #endif
 
@@ -534,7 +563,7 @@ static struct serverfd *allocate_sfd(union mysockaddr *addr, char *intname)
 
   /* when using random ports, servers which would otherwise use
      the INADDR_ANY/port0 socket have sfd set to NULL */
-  if (!daemon->osport)
+  if (!daemon->osport && intname[0] == 0)
     {
       errno = 0;
       
@@ -620,7 +649,7 @@ void pre_allocate_sfds(void)
 	(daemon->options & OPT_NOWILD))
       {
 	prettyprint_addr(&srv->addr, daemon->namebuff);
-	if (strlen(srv->interface) != 0)
+	if (srv->interface[0] != 0)
 	  {
 	    strcat(daemon->namebuff, " ");
 	    strcat(daemon->namebuff, srv->interface);
@@ -695,7 +724,7 @@ void check_servers(void)
 	  else if (!(new->flags & SERV_LITERAL_ADDRESS))
 	    my_syslog(LOG_INFO, _("using nameserver %s#%d for %s %s"), daemon->namebuff, port, s1, s2);
 	}
-      else if (strlen(new->interface) != 0)
+      else if (new->interface[0] != 0)
 	my_syslog(LOG_INFO, _("using nameserver %s#%d(via %s)"), daemon->namebuff, port, new->interface); 
       else
 	my_syslog(LOG_INFO, _("using nameserver %s#%d"), daemon->namebuff, port); 

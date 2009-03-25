@@ -1,4 +1,4 @@
-/* dnsmasq is Copyright (c) 2000-2008 Simon Kelley
+/* dnsmasq is Copyright (c) 2000-2009 Simon Kelley
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -10,11 +10,11 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
      
-  You should have received a copy of the GNU General Public License
-  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define VERSION "2.46"
+#define VERSION "2.48test7"
 
 #define FTABSIZ 150 /* max number of outstanding requests (default) */
 #define MAX_PROCS 20 /* max no children for TCP requests */
@@ -38,18 +38,25 @@
 #  define RESOLVFILE "/etc/resolv.conf"
 #endif
 #define RUNFILE "/var/run/dnsmasq.pid"
-#if defined(__FreeBSD__) || defined (__OpenBSD__) || defined(__DragonFly__)
-#   define LEASEFILE "/var/db/dnsmasq.leases"
-#elif defined(__sun__) || defined (__sun)
-#   define LEASEFILE "/var/cache/dnsmasq.leases"
-#else
-#   define LEASEFILE "/var/lib/misc/dnsmasq.leases"
+
+#ifndef LEASEFILE
+#   if defined(__FreeBSD__) || defined (__OpenBSD__) || defined(__DragonFly__) || defined(__NetBSD__)
+#      define LEASEFILE "/var/db/dnsmasq.leases"
+#   elif defined(__sun__) || defined (__sun)
+#      define LEASEFILE "/var/cache/dnsmasq.leases"
+#   else
+#      define LEASEFILE "/var/lib/misc/dnsmasq.leases"
+#   endif
 #endif
-#if defined(__FreeBSD__)
-#   define CONFFILE "/usr/local/etc/dnsmasq.conf"
-#else
-#   define CONFFILE "/etc/dnsmasq.conf"
+
+#ifndef CONFFILE
+#   if defined(__FreeBSD__)
+#      define CONFFILE "/usr/local/etc/dnsmasq.conf"
+#   else
+#      define CONFFILE "/etc/dnsmasq.conf"
+#   endif
 #endif
+
 #define DEFLEASE 3600 /* default lease time, 1 hour */
 #define CHUSER "nobody"
 #define CHGRP "dip"
@@ -61,6 +68,7 @@
 #define TFTP_MAX_CONNECTIONS 50 /* max simultaneous connections */
 #define LOG_MAX 5 /* log-queue length */
 #define RANDFILE "/dev/urandom"
+#define DAD_WAIT 20 /* retry binding IPv6 sockets for this long */
 
 /* DBUS interface specifics */
 #define DNSMASQ_SERVICE "uk.org.thekelleys.dnsmasq"
@@ -97,9 +105,6 @@ HAVE_LINUX_NETWORK
 HAVE_BSD_NETWORK
 HAVE_SOLARIS_NETWORK
    define exactly one of these to alter interaction with kernel networking.
-
-HAVE_SOLARIS_PRIVS
-   define for Solaris > 10 which can split privileges.
 
 HAVE_BROKEN_RTC
    define this on embedded systems which don't have an RTC
@@ -243,30 +248,13 @@ typedef unsigned long in_addr_t;
 
 #elif defined(__sun) || defined(__sun__)
 #define HAVE_SOLARIS_NETWORK
-/* only Solaris 10 does split privs. */
-#if (SUNOS_VER >= 10)
-#  define HAVE_SOLARIS_PRIVS
-#  define HAVE_GETOPT_LONG
-#endif
-/* some CMSG stuff missing on early solaris */
-#ifndef OSSH_ALIGNBYTES
-#  define OSSH_ALIGNBYTES (sizeof(int) - 1)
-#endif
-#ifndef __CMSG_ALIGN
-#  define __CMSG_ALIGN(p) (((u_int)(p) + OSSH_ALIGNBYTES) &~ OSSH_ALIGNBYTES)
-#endif
-#ifndef CMSG_LEN
-#  define CMSG_LEN(len)   (__CMSG_ALIGN(sizeof(struct cmsghdr)) + (len))
-#endif
-#ifndef CMSG_SPACE
-#  define CMSG_SPACE(len) (__CMSG_ALIGN(sizeof(struct cmsghdr)) + __CMSG_ALIGN(len))
-#endif
+#define HAVE_GETOPT_LONG
 #undef HAVE_ARC4RANDOM
 #undef HAVE_SOCKADDR_SA_LEN
-
 #define _XPG4_2
 #define __EXTENSIONS__
-#define ETHER_ADDR_LEN 6
+#define ETHER_ADDR_LEN 6 
+ 
 #endif
 
 /* Decide if we're going to support IPv6 */

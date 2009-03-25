@@ -1,4 +1,4 @@
-# dnsmasq is Copyright (c) 2000-2008 Simon Kelley
+# dnsmasq is Copyright (c) 2000-2009 Simon Kelley
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -10,8 +10,8 @@
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
 #    
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 PREFIX = /usr/local
 BINDIR = ${PREFIX}/sbin
@@ -23,24 +23,19 @@ PO = po
 MAN = man
 
 PKG_CONFIG = pkg-config
-AWK = nawk
 INSTALL = install
 
-DBUS_MINOR=" `echo $(COPTS) | ../bld/pkg-wrapper $(PKG_CONFIG) --modversion dbus-1 | $(AWK) -F . -- '{ if ($$(NF-1)) print \"-DDBUS_MINOR=\"$$(NF-1) }'`" 
 DBUS_CFLAGS="`echo $(COPTS) | ../bld/pkg-wrapper $(PKG_CONFIG) --cflags dbus-1`" 
 DBUS_LIBS="  `echo $(COPTS) | ../bld/pkg-wrapper $(PKG_CONFIG) --libs dbus-1`" 
-SUNOS_VER="  `if uname | grep SunOS 2>&1 >/dev/null; then uname -r | $(AWK) -F . -- '{ print \"-DSUNOS_VER=\"$$2 }'; fi`"
 SUNOS_LIBS=" `if uname | grep SunOS 2>&1 >/dev/null; then echo -lsocket -lnsl -lposix4; fi `"
 
 all :   dnsmasq
 
 dnsmasq :
 	cd $(SRC) && $(MAKE) \
- DBUS_MINOR=$(DBUS_MINOR) \
  DBUS_CFLAGS=$(DBUS_CFLAGS) \
  DBUS_LIBS=$(DBUS_LIBS) \
  SUNOS_LIBS=$(SUNOS_LIBS) \
- SUNOS_VER=$(SUNOS_VER) \
  -f ../bld/Makefile dnsmasq 
 
 clean :
@@ -57,11 +52,9 @@ install-common :
 all-i18n :
 	cd $(SRC) && $(MAKE) \
  I18N=-DLOCALEDIR='\"$(LOCALEDIR)\"' \
- DBUS_MINOR=$(DBUS_MINOR) \
  DBUS_CFLAGS=$(DBUS_CFLAGS) \
  DBUS_LIBS=$(DBUS_LIBS) \
  SUNOS_LIBS=$(SUNOS_LIBS) \
- SUNOS_VER=$(SUNOS_VER) \
  -f ../bld/Makefile dnsmasq 
 	cd $(PO); for f in *.po; do \
 		cd ../$(SRC) && $(MAKE) -f ../bld/Makefile $${f%.po}.mo; \

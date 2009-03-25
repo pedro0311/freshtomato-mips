@@ -1,4 +1,4 @@
-/* dnsmasq is Copyright (c) 2000-2008 Simon Kelley
+/* dnsmasq is Copyright (c) 2000-2009 Simon Kelley
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -10,8 +10,8 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
      
-  You should have received a copy of the GNU General Public License
-  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /* define this to get facilitynames */
@@ -34,10 +34,7 @@ static const struct {
   { "lpr",    LOG_LPR },
   { "news",   LOG_NEWS },
   { "uucp",   LOG_UUCP },
-#ifdef LOG_AUDIT
-  /* Not Solaris < 10 */
   { "audit",  LOG_AUDIT },
-#endif
   { "cron",   LOG_CRON },
   { "local0", LOG_LOCAL0 },
   { "local1", LOG_LOCAL1 },
@@ -310,7 +307,7 @@ static struct {
   { LOPT_MAX_LOGS, ARG_ONE, "[=<log lines>]", gettext_noop("Enable async. logging; optionally set queue length."), NULL },
   { LOPT_REBIND, OPT_NO_REBIND, NULL, gettext_noop("Stop DNS rebinding. Filter private IP ranges when resolving."), NULL },
   { LOPT_NOLAST, OPT_ALL_SERVERS, NULL, gettext_noop("Always perform DNS queries to all servers."), NULL },
-  { LOPT_MATCH, ARG_DUP, "<netid>,<opt-no>", gettext_noop("Set tag if client includes option in request."), NULL },
+  { LOPT_MATCH, ARG_DUP, "<netid>,<optspec>", gettext_noop("Set tag if client includes matching option in request."), NULL },
   { LOPT_ALTPORT, ARG_ONE, "[=<ports>]", gettext_noop("Use alternative ports for DHCP."), NULL },
   { LOPT_SCRIPTUSR, ARG_ONE, "<username>", gettext_noop("Run lease-change script as this user."), NULL },
   { LOPT_NAPTR, ARG_DUP, "<name>,<naptr>", gettext_noop("Specify NAPTR DNS record."), NULL },
@@ -391,6 +388,9 @@ static const struct {
   { "user-class", 77, 0 },
   { "FQDN", 81, OT_INTERNAL },
   { "agent-id", 82, OT_INTERNAL },
+  { "client-arch", 93, 2 },
+  { "client-interface-id", 94, 0 },
+  { "client-machine-id", 97, 0 },
   { "subnet-select", 118, OT_INTERNAL },
   { "domain-search", 119, 0 },
   { "sip-server", 120, 0 },
@@ -491,11 +491,12 @@ static char *opt_string_alloc(char *cp)
 
 /* find next comma, split string with zero and eliminate spaces.
    return start of string following comma */
-static char *split(char *s)
+
+static char *split_chr(char *s, char c)
 {
   char *comma, *p;
 
-  if (!s || !(comma = strchr(s, ',')))
+  if (!s || !(comma = strchr(s, c)))
     return NULL;
   
   p = comma;
@@ -507,6 +508,11 @@ static char *split(char *s)
     *p = 0;
     
   return comma;
+}
+
+static char *split(char *s)
+{
+  return split_chr(s, ',');
 }
 
 static int canonicalise_opt(char *s)
@@ -642,7 +648,6 @@ static char *parse_dhcp_opt(char *arg, int flags)
   new->flags = flags;
   new->netid = NULL;
   new->val = NULL;
-  new->vendor_class = NULL;
   new->opt = 0;
   
   while (arg)
@@ -675,7 +680,12 @@ static char *parse_dhcp_opt(char *arg, int flags)
 	}
       else if (strstr(arg, "vendor:") == arg)
 	{
-	  new->vendor_class = (unsigned char *)opt_string_alloc(arg+7);
+	  new->u.vendor_class = (unsigned char *)opt_string_alloc(arg+7);
+	  new->flags |= DHOPT_VENDOR;
+	}
+      else if (strstr(arg, "encap:") == arg)
+	{
+	  new->u.encap = atoi(arg+6);
 	  new->flags |= DHOPT_ENCAPSULATE;
 	}
       else
@@ -740,7 +750,8 @@ static char *parse_dhcp_opt(char *arg, int flags)
 	    else
 	      is_dec = 0;
 	    if (!((c >='A' && c <= 'F') ||
-		  (c >='a' && c <= 'f')))
+		  (c >='a' && c <= 'f') || 
+		  (c == '*' && (flags & DHOPT_MATCH))))
 	      is_hex = 0;
 	  }
      
@@ -757,7 +768,8 @@ static char *parse_dhcp_opt(char *arg, int flags)
 	{
 	  new->len = digs;
 	  new->val = opt_malloc(new->len);
-	  parse_hex(comma, new->val, digs, NULL, NULL);
+	  parse_hex(comma, new->val, digs, (flags & DHOPT_MATCH) ? &new->u.wildcard_mask : NULL, NULL);
+	  new->flags |= DHOPT_HEX;
 	}
       else if (is_dec)
 	{
@@ -804,8 +816,7 @@ static char *parse_dhcp_opt(char *arg, int flags)
 	    {
 	      cp = comma;
 	      comma = split(cp);
-	      if ((slash = strchr(cp, '/')))
-		*slash++ = 0;
+	      slash = split_chr(cp, '/');
 	      in.s_addr = inet_addr(cp);
 	      if (!slash)
 		{
@@ -910,8 +921,23 @@ static char *parse_dhcp_opt(char *arg, int flags)
   
   if (!problem)
     {
-      new->next = daemon->dhcp_opts;
-      daemon->dhcp_opts = new;
+      if (flags == DHOPT_MATCH)
+	{
+	  if ((new->flags & (DHOPT_ENCAPSULATE | DHOPT_VENDOR)) ||
+	      !new->netid ||
+	      new->netid->next)
+	    problem = _("illegal dhcp-match");
+	  else
+	    {
+	      new->next = daemon->dhcp_match;
+	      daemon->dhcp_match = new;
+	    }
+	}
+      else     
+	{
+	  new->next = daemon->dhcp_opts;
+	  daemon->dhcp_opts = new;
+	}
     }
 
   return problem;
@@ -984,20 +1010,21 @@ static char *one_opt(int option, char *arg, char *gen_prob, int nest)
 		
 	while ((ent = readdir(dir_stream)))
 	  {
-	    size_t len;
+	    size_t len = strlen(ent->d_name);
 	    struct stat buf;
 
-	    if ((len = strlen(ent->d_name)) == 0)
-	      continue;
 	     /* ignore emacs backups and dotfiles */
-	    if (ent->d_name[len - 1] == '~' ||
+	    if (len == 0 ||
+		ent->d_name[len - 1] == '~' ||
 		(ent->d_name[0] == '#' && ent->d_name[len - 1] == '#') ||
 		ent->d_name[0] == '.')
 	      continue;
+
 	    path = opt_malloc(strlen(directory) + len + 2);
 	    strcpy(path, directory);
 	    strcat(path, "/");
 	    strcat(path, ent->d_name);
+
 	    if (stat(path, &buf) == -1)
 	      die(_("cannot access %s: %s"), path, EC_FILE);
 	    /* only reg files allowed. */
@@ -1149,10 +1176,9 @@ static char *one_opt(int option, char *arg, char *gen_prob, int nest)
 		{
 		  struct cond_domain *new = safe_malloc(sizeof(struct cond_domain));
 		  unhide_metas(comma);
-		  if ((arg = strchr(comma, '/')))
+		  if ((arg = split_chr(comma, '/')))
 		    {
 		      int mask;
-		      *arg++ = 0;
 		      if ((new->start.s_addr = inet_addr(comma)) == (in_addr_t)-1 ||
 			  !atoi_check(arg, &mask))
 			option = '?';
@@ -1292,10 +1318,9 @@ static char *one_opt(int option, char *arg, char *gen_prob, int nest)
 	  {
 	    char *end;
 	    arg++;
-	    while ((end = strchr(arg, '/')))
+	    while ((end = split_chr(arg, '/')))
 	      {
 		char *domain = NULL;
-		*end = 0;
 		/* # matches everything and becomes a zero length domain string */
 		if (strcmp(arg, "#") == 0)
 		  domain = "";
@@ -1309,7 +1334,7 @@ static char *one_opt(int option, char *arg, char *gen_prob, int nest)
 		newlist = serv;
 		serv->domain = domain;
 		serv->flags = domain ? SERV_HAS_DOMAIN : SERV_FOR_NODOTS;
-		arg = end+1;
+		arg = end;
 	      }
 	    if (!newlist)
 	      {
@@ -1342,23 +1367,14 @@ static char *one_opt(int option, char *arg, char *gen_prob, int nest)
 	    int source_port = 0, serv_port = NAMESERVER_PORT;
 	    char *portno, *source;
 	    
-	    if ((source = strchr(arg, '@'))) /* is there a source. */
-	      {
-		*source = 0; 
-		if ((portno = strchr(source+1, '#')))
-		  { 
-		    *portno = 0;
-		    if (!atoi_check16(portno+1, &source_port))
-		      problem = _("bad port");
-		  }
-	      }
-	    
-	    if ((portno = strchr(arg, '#'))) /* is there a port no. */
-	      {
-		*portno = 0;
-		if (!atoi_check16(portno+1, &serv_port))
-		  problem = _("bad port");
-	      }
+	    if ((source = split_chr(arg, '@')) && /* is there a source. */
+		(portno = split_chr(source, '#')) &&
+		!atoi_check16(portno, &source_port))
+	      problem = _("bad port");
+	       	    
+	    if ((portno = split_chr(arg, '#')) && /* is there a port no. */
+		!atoi_check16(portno, &serv_port))
+	      problem = _("bad port");
 	    
 	    if ((newlist->addr.in.sin_addr.s_addr = inet_addr(arg)) != (in_addr_t) -1)
 	      {
@@ -1371,11 +1387,11 @@ static char *one_opt(int option, char *arg, char *gen_prob, int nest)
 		if (source)
 		  {
 		    newlist->flags |= SERV_HAS_SOURCE;
-		    if ((newlist->source_addr.in.sin_addr.s_addr = inet_addr(source+1)) == (in_addr_t) -1)
+		    if ((newlist->source_addr.in.sin_addr.s_addr = inet_addr(source)) == (in_addr_t) -1)
 		      {
 #if defined(SO_BINDTODEVICE)
 			newlist->source_addr.in.sin_addr.s_addr = INADDR_ANY;
-			strncpy(newlist->interface, source+1, IF_NAMESIZE);
+			strncpy(newlist->interface, source, IF_NAMESIZE);
 #else
 			problem = _("interface binding not supported");
 #endif
@@ -1396,11 +1412,11 @@ static char *one_opt(int option, char *arg, char *gen_prob, int nest)
 		if (source)
 		  {
 		     newlist->flags |= SERV_HAS_SOURCE;
-		     if (inet_pton(AF_INET6, source+1, &newlist->source_addr.in6.sin6_addr) == 0)
+		     if (inet_pton(AF_INET6, source, &newlist->source_addr.in6.sin6_addr) == 0)
 		      {
-#if defined(SO_BINDTODEVICE) || defined(HAVE_SOLARIS_NETWORK)
+#if defined(SO_BINDTODEVICE)
 			newlist->source_addr.in6.sin6_addr = in6addr_any; 
-			strncpy(newlist->interface, source+1, IF_NAMESIZE);
+			strncpy(newlist->interface, source, IF_NAMESIZE);
 #else
 			problem = _("interface binding not supported");
 #endif
@@ -1455,7 +1471,7 @@ static char *one_opt(int option, char *arg, char *gen_prob, int nest)
     
     case LOPT_MINPORT:  /* --min-port */
       if (!atoi_check16(arg, &daemon->min_port))
-option = '?';
+	option = '?';
       break;
 
     case '0':  /* --dns-forward-max */
@@ -1840,12 +1856,14 @@ option = '?';
 	break;
       }
       
-    case 'O':
-    case LOPT_FORCE:
+    case 'O':           /* --dhcp-option */
+    case LOPT_FORCE:    /* --dhcp-option-force */
     case LOPT_OPTS:
+    case LOPT_MATCH:    /* --dhcp-match */
       problem = parse_dhcp_opt(arg, 
 			       option == LOPT_FORCE ? DHOPT_FORCE : 
-			       (option == LOPT_OPTS ? DHOPT_BANK : 0));
+			       (option == LOPT_MATCH ? DHOPT_MATCH :
+			       (option == LOPT_OPTS ? DHOPT_BANK : 0)));
       break;
       
     case 'M': /* --dhcp-boot */
@@ -1921,7 +1939,6 @@ option = '?';
     case LOPT_CIRCUIT:  /* --dhcp-circuitid */
     case LOPT_REMOTE:   /* --dhcp-remoteid */
     case LOPT_SUBSCR:   /* --dhcp-subscrid */
-    case LOPT_MATCH:    /* --dhcp-match */
       {
 	if (!(comma = split(arg)))
 	  option = '?';
@@ -1942,9 +1959,7 @@ option = '?';
 	      else if (*p != ':')
 		break;
 	    unhide_metas(comma);
-	    if (option == LOPT_MATCH) 
-	      new->option = atoi(comma);
-	    else if (option == 'U' || option == 'j' || *p || !dig)
+	    if (option == 'U' || option == 'j' || *p || !dig)
 	      {
 		new->len = strlen(comma);  
 		new->data = opt_malloc(new->len);
@@ -1973,9 +1988,6 @@ option = '?';
 		break;
 	      case LOPT_SUBSCR:
 		new->match_type = MATCH_SUBSCRIBER;
-		break;
-	      case LOPT_MATCH:
-		new->match_type = MATCH_OPTION;
 		break;
 	      }
 	    new->next = daemon->dhcp_vendors;
@@ -2047,13 +2059,14 @@ option = '?';
       
     case 'V':  /* --alias */
       {
-	char *a[3] = { NULL, NULL, NULL };
+	char *dash, *a[3] = { NULL, NULL, NULL };
 	int k = 0;
-	struct in_addr in, out, mask;
-	struct doctor *new;
-	
-	mask.s_addr = 0xffffffff;
-	
+	struct doctor *new = opt_malloc(sizeof(struct doctor));
+	new->next = daemon->doctors;
+	daemon->doctors = new;
+	new->mask.s_addr = 0xffffffff;
+	new->end.s_addr = 0;
+
 	if ((a[0] = arg))
 	  for (k = 1; k < 3; k++)
 	    {
@@ -2062,23 +2075,21 @@ option = '?';
 	      unhide_metas(a[k]);
 	    }
 	
+	dash = split_chr(a[0], '-');
+
 	if ((k < 2) || 
-	    ((in.s_addr = inet_addr(a[0])) == (in_addr_t)-1) ||
-	    ((out.s_addr = inet_addr(a[1])) == (in_addr_t)-1))
-	  {
-	    option = '?';
-	    break;
-	  }
+	    ((new->in.s_addr = inet_addr(a[0])) == (in_addr_t)-1) ||
+	    ((new->out.s_addr = inet_addr(a[1])) == (in_addr_t)-1))
+	  option = '?';
 	
 	if (k == 3)
-	  mask.s_addr = inet_addr(a[2]);
+	  new->mask.s_addr = inet_addr(a[2]);
 	
-	new = opt_malloc(sizeof(struct doctor));
-	new->in = in;
-	new->out = out;
-	new->mask = mask;
-	new->next = daemon->doctors;
-	daemon->doctors = new;
+	if (dash && 
+	    ((new->end.s_addr = inet_addr(dash)) == (in_addr_t)-1 ||
+	     !is_same_net(new->in, new->end, new->mask) ||
+	     ntohl(new->in.s_addr) > ntohl(new->end.s_addr)))
+	  problem = _("invalid alias range");
 	
 	break;
       }
@@ -2315,10 +2326,32 @@ static void one_file(char *file, int nest, int hard_opt)
   int i, option; 
   FILE *f;
   char *p, *arg, *start, *buff = daemon->namebuff;
+  static struct fileread {
+    dev_t dev;
+    ino_t ino;
+    struct fileread *next;
+  } *filesread = NULL;
+  struct stat statbuf;
+  
+  /* ignore repeated files. */
+  if (hard_opt == 0 && stat(file, &statbuf) == 0)
+    {
+      struct fileread *r;
+
+      for (r = filesread; r; r = r->next)
+	if (r->dev == statbuf.st_dev && r->ino == statbuf.st_ino)
+	  return;
+
+      r = safe_malloc(sizeof(struct fileread));
+      r->next = filesread;
+      filesread = r;
+      r->dev = statbuf.st_dev;
+      r->ino = statbuf.st_ino;
+    }
 
   if (nest > 20)
     die(_("files nested too deep in %s"), file, EC_BADCONF);
-  
+
   if (!(f = fopen(file, "r")))
     {   
       if (errno == ENOENT && nest == 0)
@@ -2513,7 +2546,8 @@ void reread_dhcp(void)
 	  
 	  if (opts->flags & DHOPT_BANK)
 	    {
-	      free(opts->vendor_class);
+	      if ((opts->flags & DHOPT_VENDOR))
+		free(opts->u.vendor_class);
 	      free(opts->val);
 	      for (id = opts->netid; id; id = next)
 		{
