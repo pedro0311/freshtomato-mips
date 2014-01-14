@@ -40,6 +40,7 @@ static void cleanup_tcp(struct Listener *listener) {
 
 	m_free(tcpinfo->sendaddr);
 	m_free(tcpinfo->listenaddr);
+	m_free(tcpinfo->request_listenaddr);
 	m_free(tcpinfo);
 }
 
@@ -61,6 +62,7 @@ static void tcp_acceptor(struct Listener *listener, int sock) {
 	if (getnameinfo((struct sockaddr*)&addr, len, ipstring, sizeof(ipstring),
 				portstring, sizeof(portstring), 
 				NI_NUMERICHOST | NI_NUMERICSERV) != 0) {
+		m_close(fd);
 		return;
 	}
 
@@ -77,10 +79,13 @@ static void tcp_acceptor(struct Listener *listener, int sock) {
 			dropbear_assert(tcpinfo->tcp_type == forwarded);
 			/* "forwarded-tcpip" */
 			/* address that was connected, port that was connected */
-			addr = tcpinfo->listenaddr;
+			addr = tcpinfo->request_listenaddr;
 			port = tcpinfo->listenport;
 		}
 
+		if (addr == NULL) {
+			addr = "localhost";
+		}
 		buf_putstring(ses.writepayload, addr, strlen(addr));
 		buf_putint(ses.writepayload, port);
 
@@ -104,21 +109,13 @@ int listen_tcpfwd(struct TCPListener* tcpinfo) {
 	struct Listener *listener = NULL;
 	int nsocks;
 	char* errstring = NULL;
-	/* listen_spec = NULL indicates localhost */
-	const char* listen_spec = NULL;
 
 	TRACE(("enter listen_tcpfwd"))
 
 	/* first we try to bind, so don't need to do so much cleanup on failure */
 	snprintf(portstring, sizeof(portstring), "%d", tcpinfo->listenport);
 
-	/* a listenaddr of "" will indicate all interfaces */
-	if (opts.listen_fwd_all 
-			&& (strcmp(tcpinfo->listenaddr, "localhost") != 0) ) {
-		listen_spec = tcpinfo->listenaddr;
-	}
-
-	nsocks = dropbear_listen(listen_spec, portstring, socks, 
+	nsocks = dropbear_listen(tcpinfo->listenaddr, portstring, socks, 
 			DROPBEAR_MAX_SOCKS, &errstring, &ses.maxfd);
 	if (nsocks < 0) {
 		dropbear_log(LOG_INFO, "TCP forward failed: %s", errstring);

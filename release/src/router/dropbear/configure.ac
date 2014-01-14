@@ -5,8 +5,9 @@
 # of the platform checks have been taken straight from OpenSSH's configure.ac
 # Huge thanks to them for dealing with the horrible platform-specifics :)
 
-AC_PREREQ(2.50)
-AC_INIT(buffer.c)
+AC_PREREQ(2.59)
+AC_INIT
+AC_CONFIG_SRCDIR(buffer.c)
 
 OLDCFLAGS=$CFLAGS
 # Checks for programs.
@@ -20,7 +21,7 @@ AC_SUBST(LD)
 
 if test -z "$OLDCFLAGS" && test "$GCC" = "yes"; then
 	AC_MSG_NOTICE(No \$CFLAGS set... using "-Os -W -Wall" for GCC)
-	CFLAGS="-Os -W -Wall"
+	CFLAGS="-Os -W -Wall -Wno-pointer-sign"
 fi
 
 # large file support is useful for scp
@@ -82,7 +83,8 @@ AC_CHECK_DECL(__UCLIBC__,
 	],,,)
 
 # Checks for libraries.
-AC_CHECK_LIB(crypt, crypt, LIBS="$LIBS -lcrypt")
+AC_CHECK_LIB(crypt, crypt, CRYPTLIB="-lcrypt")
+AC_SUBST(CRYPTLIB)	
 
 # Check if zlib is needed
 AC_ARG_WITH(zlib,
@@ -145,6 +147,7 @@ AC_ARG_ENABLE(pam,
 		if test "x$enableval" = "xyes"; then
 			AC_CHECK_LIB(pam, pam_authenticate, , AC_MSG_ERROR([*** PAM missing - install first or check config.log ***]))
 			AC_MSG_NOTICE(Enabling PAM)
+			AC_CHECK_FUNCS(pam_fail_delay)
 		else
 			AC_DEFINE(DISABLE_PAM,, Use PAM)
 			AC_MSG_NOTICE(Disabling PAM)
@@ -209,7 +212,7 @@ AC_ARG_ENABLE(shadow,
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([fcntl.h limits.h netinet/in.h netinet/tcp.h stdlib.h string.h sys/socket.h sys/time.h termios.h unistd.h crypt.h pty.h ioctl.h libutil.h libgen.h inttypes.h stropts.h utmp.h utmpx.h lastlog.h paths.h util.h netdb.h security/pam_appl.h pam/pam_appl.h netinet/in_systm.h])
+AC_CHECK_HEADERS([fcntl.h limits.h netinet/in.h netinet/tcp.h stdlib.h string.h sys/socket.h sys/time.h termios.h unistd.h crypt.h pty.h ioctl.h libutil.h libgen.h inttypes.h stropts.h utmp.h utmpx.h lastlog.h paths.h util.h netdb.h security/pam_appl.h pam/pam_appl.h netinet/in_systm.h sys/uio.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -219,7 +222,8 @@ AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_HEADER_TIME
 
-AC_CHECK_TYPES([uint16_t, u_int16_t, struct sockaddr_storage])
+AC_CHECK_TYPES([uint8_t, u_int8_t, uint16_t, u_int16_t, uint32_t, u_int32_t])
+AC_CHECK_TYPES([struct sockaddr_storage])
 AC_CHECK_TYPE([socklen_t], ,[
 	AC_MSG_CHECKING([for socklen_t equivalent])
 	AC_CACHE_VAL([curl_cv_socklen_t_equiv],
@@ -229,15 +233,15 @@ AC_CHECK_TYPE([socklen_t], ,[
 	curl_cv_socklen_t_equiv=
 	for arg2 in "struct sockaddr" void; do
 		for t in int size_t unsigned long "unsigned long"; do
-		AC_TRY_COMPILE([
-			#include <sys/types.h>
-			#include <sys/socket.h>
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <sys/types.h>
+#include <sys/socket.h>
 
 			int getpeername (int, $arg2 *, $t *);
-		],[
+		]],[[
 			$t len;
 			getpeername(0,0,&len);
-		],[
+		]])],[
 			curl_cv_socklen_t_equiv="$t"
 			break
 		])
@@ -257,12 +261,11 @@ AC_CHECK_TYPE([socklen_t], ,[
 # for the fake-rfc2553 stuff - straight from OpenSSH
 
 AC_CACHE_CHECK([for struct sockaddr_storage], ac_cv_have_struct_sockaddr_storage, [
-	AC_TRY_COMPILE(
-		[
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
 #include <sys/socket.h>
-		],
-		[ struct sockaddr_storage s; ],
+		]],
+		[[ struct sockaddr_storage s; ]])],
 		[ ac_cv_have_struct_sockaddr_storage="yes" ],
 		[ ac_cv_have_struct_sockaddr_storage="no" ]
 	)
@@ -272,12 +275,11 @@ if test "x$ac_cv_have_struct_sockaddr_storage" = "xyes" ; then
 fi
 
 AC_CACHE_CHECK([for struct sockaddr_in6], ac_cv_have_struct_sockaddr_in6, [
-	AC_TRY_COMPILE(
-		[
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
 #include <netinet/in.h>
-		],
-		[ struct sockaddr_in6 s; s.sin6_family = 0; ],
+		]],
+		[[ struct sockaddr_in6 s; s.sin6_family = 0; ]])],
 		[ ac_cv_have_struct_sockaddr_in6="yes" ],
 		[ ac_cv_have_struct_sockaddr_in6="no" ]
 	)
@@ -287,12 +289,11 @@ if test "x$ac_cv_have_struct_sockaddr_in6" = "xyes" ; then
 fi
 
 AC_CACHE_CHECK([for struct in6_addr], ac_cv_have_struct_in6_addr, [
-	AC_TRY_COMPILE(
-		[
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
 #include <netinet/in.h>
-		],
-		[ struct in6_addr s; s.s6_addr[0] = 0; ],
+		]],
+		[[ struct in6_addr s; s.s6_addr[0] = 0; ]])],
 		[ ac_cv_have_struct_in6_addr="yes" ],
 		[ ac_cv_have_struct_in6_addr="no" ]
 	)
@@ -302,13 +303,12 @@ if test "x$ac_cv_have_struct_in6_addr" = "xyes" ; then
 fi
 
 AC_CACHE_CHECK([for struct addrinfo], ac_cv_have_struct_addrinfo, [
-	AC_TRY_COMPILE(
-		[
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
-		],
-		[ struct addrinfo s; s.ai_flags = AI_PASSIVE; ],
+		]],
+		[[ struct addrinfo s; s.ai_flags = AI_PASSIVE; ]])],
 		[ ac_cv_have_struct_addrinfo="yes" ],
 		[ ac_cv_have_struct_addrinfo="no" ]
 	)
@@ -321,15 +321,15 @@ fi
 # IRIX has a const char return value for gai_strerror()
 AC_CHECK_FUNCS(gai_strerror,[
 	AC_DEFINE(HAVE_GAI_STRERROR)
-	AC_TRY_COMPILE([
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 
-const char *gai_strerror(int);],[
+const char *gai_strerror(int);]],[[
 char *str;
 
-str = gai_strerror(0);],[
+str = gai_strerror(0);]])],[
 		AC_DEFINE(HAVE_CONST_GAI_STRERROR_PROTO, 1,
 		[Define if gai_strerror() returns const char *])])])
 
@@ -360,6 +360,35 @@ AC_CHECK_FUNCS(utmpname)
 AC_CHECK_FUNCS(endutxent getutxent getutxid getutxline pututxline )
 AC_CHECK_FUNCS(setutxent utmpxname)
 AC_CHECK_FUNCS(logout updwtmp logwtmp)
+
+AC_ARG_ENABLE(bundled-libtom,
+[  --enable-bundled-libtom       Force using bundled libtomcrypt/libtommath even if a system version exists.
+  --disable-bundled-libtom      Force using system libtomcrypt/libtommath, fail if it does not exist.
+                                Default is to use system if available, otherwise bundled.],
+	[
+		if test "x$enableval" = "xyes"; then
+			BUNDLED_LIBTOM=1
+			AC_MSG_NOTICE(Forcing bundled libtom*)
+		else
+			BUNDLED_LIBTOM=0
+			AC_CHECK_LIB(tommath, mp_exptmod, , 
+				[AC_MSG_ERROR([Missing system libtomcrypt and --disable-bundled-libtom was specified])] )
+			AC_CHECK_LIB(tomcrypt, register_cipher, , 
+				[AC_MSG_ERROR([Missing system libtomcrypt and --disable-bundled-libtom was specified])] )
+		fi
+	],
+	[
+		BUNDLED_LIBTOM=0
+		AC_CHECK_LIB(tommath, mp_exptmod, , BUNDLED_LIBTOM=1)
+		AC_CHECK_LIB(tomcrypt, register_cipher, , BUNDLED_LIBTOM=1)
+	]
+)
+
+if test $BUNDLED_LIBTOM = 1 ; then
+	AC_DEFINE(BUNDLED_LIBTOM,,Use bundled libtom) 
+fi
+
+AC_SUBST(BUNDLED_LIBTOM)
 
 dnl Added from OpenSSH 3.6.1p2's configure.ac
 
@@ -422,7 +451,7 @@ dnl lastlog and [uw]tmp are subject to a file search if all else fails
 dnl lastlog detection
 dnl  NOTE: the code itself will detect if lastlog is a directory
 AC_MSG_CHECKING([if your system defines LASTLOG_FILE])
-AC_TRY_COMPILE([
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
 #include <utmp.h>
 #ifdef HAVE_LASTLOG_H
@@ -434,13 +463,13 @@ AC_TRY_COMPILE([
 #ifdef HAVE_LOGIN_H
 # include <login.h>
 #endif
-	],
-	[ char *lastlog = LASTLOG_FILE; ],
+	]],
+	[[ char *lastlog = LASTLOG_FILE; ]])],
 	[ AC_MSG_RESULT(yes) ],
 	[
 		AC_MSG_RESULT(no)
 		AC_MSG_CHECKING([if your system defines _PATH_LASTLOG])
-		AC_TRY_COMPILE([
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
 #include <utmp.h>
 #ifdef HAVE_LASTLOG_H
@@ -449,8 +478,8 @@ AC_TRY_COMPILE([
 #ifdef HAVE_PATHS_H
 #  include <paths.h>
 #endif
-		],
-		[ char *lastlog = _PATH_LASTLOG; ],
+		]],
+		[[ char *lastlog = _PATH_LASTLOG; ]])],
 		[ AC_MSG_RESULT(yes) ],
 		[
 			AC_MSG_RESULT(no)
@@ -479,14 +508,14 @@ fi
 
 dnl utmp detection
 AC_MSG_CHECKING([if your system defines UTMP_FILE])
-AC_TRY_COMPILE([
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
 #include <utmp.h>
 #ifdef HAVE_PATHS_H
 #  include <paths.h>
 #endif
-	],
-	[ char *utmp = UTMP_FILE; ],
+	]],
+	[[ char *utmp = UTMP_FILE; ]])],
 	[ AC_MSG_RESULT(yes) ],
 	[ AC_MSG_RESULT(no)
 	  system_utmp_path=no ]
@@ -509,14 +538,16 @@ fi
 
 dnl wtmp detection
 AC_MSG_CHECKING([if your system defines WTMP_FILE])
-AC_TRY_COMPILE([
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
-#include <utmp.h>
+#ifdef HAVE_UTMP_H
+#  include <utmp.h>
+#endif
 #ifdef HAVE_PATHS_H
 #  include <paths.h>
 #endif
-	],
-	[ char *wtmp = WTMP_FILE; ],
+	]],
+	[[ char *wtmp = WTMP_FILE; ]])],
 	[ AC_MSG_RESULT(yes) ],
 	[ AC_MSG_RESULT(no)
 	  system_wtmp_path=no ]
@@ -542,7 +573,7 @@ dnl utmpx detection - I don't know any system so perverse as to require
 dnl  utmpx, but not define UTMPX_FILE (ditto wtmpx.) No doubt it's out
 dnl  there, though.
 AC_MSG_CHECKING([if your system defines UTMPX_FILE])
-AC_TRY_COMPILE([
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
 #include <utmp.h>
 #ifdef HAVE_UTMPX_H
@@ -551,8 +582,8 @@ AC_TRY_COMPILE([
 #ifdef HAVE_PATHS_H
 #  include <paths.h>
 #endif
-	],
-	[ char *utmpx = UTMPX_FILE; ],
+	]],
+	[[ char *utmpx = UTMPX_FILE; ]])],
 	[ AC_MSG_RESULT(yes) ],
 	[ AC_MSG_RESULT(no)
 	  system_utmpx_path=no ]
@@ -567,17 +598,19 @@ fi
 
 dnl wtmpx detection
 AC_MSG_CHECKING([if your system defines WTMPX_FILE])
-AC_TRY_COMPILE([
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
-#include <utmp.h>
+#ifdef HAVE_UTMP_H
+#  include <utmp.h>
+#endif
 #ifdef HAVE_UTMPX_H
-#include <utmpx.h>
+#  include <utmpx.h>
 #endif
 #ifdef HAVE_PATHS_H
 #  include <paths.h>
 #endif
-	],
-	[ char *wtmpx = WTMPX_FILE; ],
+	]],
+	[[ char *wtmpx = WTMPX_FILE; ]])],
 	[ AC_MSG_RESULT(yes) ],
 	[ AC_MSG_RESULT(no)
 	  system_wtmpx_path=no ]
@@ -594,15 +627,16 @@ fi
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
 AC_FUNC_SELECT_ARGTYPES
-AC_TYPE_SIGNAL
-AC_CHECK_FUNCS([dup2 getspnam getusershell memset putenv select socket strdup clearenv strlcpy strlcat daemon basename _getpty getaddrinfo freeaddrinfo getnameinfo])
+AC_CHECK_FUNCS([dup2 getspnam getusershell memset putenv select socket strdup clearenv strlcpy strlcat daemon basename _getpty getaddrinfo freeaddrinfo getnameinfo fork writev])
 
 AC_SEARCH_LIBS(basename, gen, AC_DEFINE(HAVE_BASENAME))
 
 # Solaris needs ptmx
 if test -z "$no_ptmx_check" ; then
 	if test x"$cross_compiling" = x"no" ; then
-		AC_CHECK_FILE("/dev/ptmx", AC_DEFINE(USE_DEV_PTMX,,Use /dev/ptmx))
+		if test -e /dev/ptmx ; then
+			AC_DEFINE(USE_DEV_PTMX,,Use /dev/ptmx)
+		fi
 	else
 		AC_MSG_NOTICE([Not checking for /dev/ptmx, we're cross-compiling])
 	fi
@@ -610,7 +644,9 @@ fi
 
 if test -z "$no_ptc_check" ; then
 	if test x"$cross_compiling" = x"no" ; then
-		AC_CHECK_FILE("/dev/ptc", AC_DEFINE(HAVE_DEV_PTS_AND_PTC,,Use /dev/ptc & /dev/pts))
+		if test -e /dev/ptc ; then
+			AC_DEFINE(HAVE_DEV_PTS_AND_PTC,,Use /dev/ptc & /dev/pts)
+		fi
 	else
 		AC_MSG_NOTICE([Not checking for /dev/ptc & /dev/pts since we're cross-compiling])
 	fi
@@ -650,6 +686,7 @@ AS_MKDIR_P(libtomcrypt/src/modes/ofb)
 AS_MKDIR_P(libtomcrypt/src/modes/f8)
 AS_MKDIR_P(libtomcrypt/src/modes/lrw)
 AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/bit)
+AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/boolean)
 AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/choice)
 AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/ia5)
 AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/integer)
@@ -657,17 +694,27 @@ AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/object_identifier)
 AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/octet)
 AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/printable_string)
 AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/sequence)
+AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/set)
 AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/short_integer)
 AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/utctime)
+AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/utf8)
 AS_MKDIR_P(libtomcrypt/src/pk/dh)
 AS_MKDIR_P(libtomcrypt/src/pk/dsa)
 AS_MKDIR_P(libtomcrypt/src/pk/ecc)
+AS_MKDIR_P(libtomcrypt/src/pk/katja)
 AS_MKDIR_P(libtomcrypt/src/pk/pkcs1)
 AS_MKDIR_P(libtomcrypt/src/pk/rsa)
-AS_MKDIR_P(libtomcrypt/src/prng)
+AS_MKDIR_P(libtomcrypt/src/prngs)
 AC_CONFIG_HEADER(config.h)
-AC_OUTPUT(Makefile)
-AC_OUTPUT(libtomcrypt/Makefile)
-AC_OUTPUT(libtommath/Makefile)
+AC_CONFIG_FILES(Makefile libtomcrypt/Makefile libtommath/Makefile)
+AC_OUTPUT
+
+AC_MSG_NOTICE()
+if test $BUNDLED_LIBTOM = 1 ; then
+AC_MSG_NOTICE(Using bundled libtomcrypt and libtommath)
+else
+AC_MSG_NOTICE(Using system libtomcrypt and libtommath)
+fi
+
 AC_MSG_NOTICE()
 AC_MSG_NOTICE(Now edit options.h to choose features.)

@@ -37,65 +37,60 @@
 #include "packet.h"
 #include "tcpfwd.h"
 #include "chansession.h"
+#include "dbutil.h"
 
 extern int sessinitdone; /* Is set to 0 somewhere */
 extern int exitflag;
 
-void common_session_init(int sock_in, int sock_out, char* remotehost);
+void common_session_init(int sock_in, int sock_out);
 void session_loop(void(*loophandler)());
-void common_session_cleanup();
-void session_identification();
+void session_cleanup();
+void send_session_identification();
 void send_msg_ignore();
 
 const char* get_user_shell();
 void fill_passwd(const char* username);
 
 /* Server */
-void svr_session(int sock, int childpipe, char *remotehost, char *addrstring);
-void svr_dropbear_exit(int exitcode, const char* format, va_list param);
+void svr_session(int sock, int childpipe);
+void svr_dropbear_exit(int exitcode, const char* format, va_list param) ATTRIB_NORETURN;
 void svr_dropbear_log(int priority, const char* format, va_list param);
 
 /* Client */
-void cli_session(int sock_in, int sock_out, char *remotehost);
-void cli_session_cleanup();
+void cli_session(int sock_in, int sock_out);
 void cleantext(unsigned char* dirtytext);
 
-struct key_context {
-
-	const struct dropbear_cipher *recv_algo_crypt; /* NULL for none */
-	const struct dropbear_cipher *trans_algo_crypt; /* NULL for none */
-	const struct dropbear_cipher_mode *recv_crypt_mode;
-	const struct dropbear_cipher_mode *trans_crypt_mode;
-	const struct dropbear_hash *recv_algo_mac; /* NULL for none */
-	const struct dropbear_hash *trans_algo_mac; /* NULL for none */
-	char algo_kex;
-	char algo_hostkey;
-
-	char recv_algo_comp; /* compression */
-	char trans_algo_comp;
-	int allow_compress; /* whether compression has started (useful in 
-							zlib@openssh.com delayed compression case) */
+/* crypto parameters that are stored individually for transmit and receive */
+struct key_context_directional {
+	const struct dropbear_cipher *algo_crypt;
+	const struct dropbear_cipher_mode *crypt_mode;
+	const struct dropbear_hash *algo_mac;
+	int hash_index; /* lookup for libtomcrypt */
+	int algo_comp; /* compression */
 #ifndef DISABLE_ZLIB
-	z_streamp recv_zstream;
-	z_streamp trans_zstream;
+	z_streamp zstream;
 #endif
-
 	/* actual keys */
 	union {
 		symmetric_CBC cbc;
 #ifdef DROPBEAR_ENABLE_CTR_MODE
 		symmetric_CTR ctr;
 #endif
-	} recv_cipher_state;
-	union {
-		symmetric_CBC cbc;
-#ifdef DROPBEAR_ENABLE_CTR_MODE
-		symmetric_CTR ctr;
-#endif
-	} trans_cipher_state;
-	unsigned char recvmackey[MAX_MAC_KEY];
-	unsigned char transmackey[MAX_MAC_KEY];
+	} cipher_state;
+	unsigned char mackey[MAX_MAC_LEN];
+	int valid;
+};
 
+struct key_context {
+
+	struct key_context_directional recv;
+	struct key_context_directional trans;
+
+	const struct dropbear_kex *algo_kex;
+	int algo_hostkey;
+
+	int allow_compress; /* whether compression has started (useful in 
+							zlib@openssh.com delayed compression case) */
 };
 
 struct packetlist;
@@ -116,9 +111,10 @@ struct sshsession {
 	int sock_in;
 	int sock_out;
 
-	unsigned char *remotehost; /* the peer hostname */
-
-	unsigned char *remoteident;
+	/* remotehost will be initially NULL as we delay
+	 * reading the remote version string. it will be set
+	 * by the time any recv_() packet methods are called */
+	unsigned char *remoteident; 
 
 	int maxfd; /* the maximum file descriptor to check with select() */
 
@@ -128,8 +124,7 @@ struct sshsession {
 							 throughout the code, as handlers fill out this
 							 buffer with the packet to send. */
 	struct Queue writequeue; /* A queue of encrypted packets to send */
-	buffer *readbuf; /* Encrypted */
-	buffer *decryptreadbuf; /* Post-decryption */
+	buffer *readbuf; /* From the wire, decrypted in-place */
 	buffer *payload; /* Post-decompression, the actual SSH packet */
 	unsigned int transseq, recvseq; /* Sequence IDs */
 
@@ -140,8 +135,9 @@ struct sshsession {
 	unsigned dataallowed : 1; /* whether we can send data packets or we are in
 								 the middle of a KEX or something */
 
-	unsigned char requirenext; /* byte indicating what packet we require next, 
-								or 0x00 for any */
+	unsigned char requirenext[2]; /* bytes indicating what packets we require next, 
+									 or 0x00 for any. Second option can only be
+									 used if the first byte is also set */
 
 	unsigned char ignorenext; /* whether to ignore the next packet,
 								 used for kex_follows stuff */
@@ -162,27 +158,26 @@ struct sshsession {
 	struct KEXState kexstate;
 	struct key_context *keys;
 	struct key_context *newkeys;
-	unsigned char *session_id; /* this is the hash from the first kex */
-	/* The below are used temorarily during kex, are freed after use */
+	buffer *session_id; /* this is the hash from the first kex */
+	/* The below are used temporarily during kex, are freed after use */
 	mp_int * dh_K; /* SSH_MSG_KEXDH_REPLY and sending SSH_MSH_NEWKEYS */
-	unsigned char hash[SHA1_HASH_SIZE]; /* the hash*/
+	buffer *hash; /* the session hash */
 	buffer* kexhashbuf; /* session hash buffer calculated from various packets*/
 	buffer* transkexinit; /* the kexinit packet we send should be kept so we
 							 can add it to the hash when generating keys */
+
+	/* Enables/disables compression */
+	algo_type *compress_algos;
 							
 	/* a list of queued replies that should be sent after a KEX has
 	   concluded (ie, while dataallowed was unset)*/
 	struct packetlist *reply_queue_head, *reply_queue_tail;
 
-	algo_type*(*buf_match_algo)(buffer*buf, algo_type localalgos[],
-			int *goodguess); /* The function to use to choose which algorithm
-								to use from the ones presented by the remote
-								side. Is specific to the client/server mode,
-								hence the function-pointer callback.*/
-
 	void(*remoteclosed)(); /* A callback to handle closure of the
 									  remote connection */
 
+	void(*extra_session_cleanup)(); /* client or server specific cleanup */
+	void(*send_kex_first_guess)();
 
 	struct AuthState authstate; /* Common amongst client and server, since most
 								   struct elements are common */
@@ -220,6 +215,13 @@ struct serversession {
 	/* The numeric address they connected from, used for logging */
 	char * addrstring;
 
+	/* The resolved remote address, used for lastlog etc */
+	char *remotehost;
+
+#ifdef USE_VFORK
+	pid_t server_pid;
+#endif
+
 };
 
 typedef enum {
@@ -231,10 +233,6 @@ typedef enum {
 
 typedef enum {
 	STATE_NOTHING,
-	SERVICE_AUTH_REQ_SENT,
-	SERVICE_AUTH_ACCEPT_RCVD,
-	SERVICE_CONN_REQ_SENT,
-	SERVICE_CONN_ACCEPT_RCVD,
 	USERAUTH_REQ_SENT,
 	USERAUTH_FAIL_RCVD,
 	USERAUTH_SUCCESS_RCVD,
@@ -243,7 +241,12 @@ typedef enum {
 
 struct clientsession {
 
-	mp_int *dh_e, *dh_x; /* Used during KEX */
+	/* XXX - move these to kexstate? */
+	struct kex_dh_param *dh_param;
+	struct kex_ecdh_param *ecdh_param;
+	struct kex_curve25519_param *curve25519_param;
+	const struct dropbear_kex *param_kex_algo; /* KEX algorithm corresponding to current dh_e and dh_x */
+
 	cli_kex_state kex_state; /* Used for progressing KEX */
 	cli_state state; /* Used to progress auth/channelsession etc */
 	unsigned donefirstkex : 1; /* Set when we set sentnewkeys, never reset */
@@ -257,6 +260,9 @@ struct clientsession {
 	int stderrcopy;
 	int stderrflags;
 
+	/* for escape char handling */
+	int last_char;
+
 	int winchange; /* Set to 1 when a windowchange signal happens */
 
 	int lastauthtype; /* either AUTH_TYPE_PUBKEY or AUTH_TYPE_PASSWORD,
@@ -267,8 +273,11 @@ struct clientsession {
 	int interact_request_received; /* flag whether we've received an 
 									  info request from the server for
 									  interactive auth.*/
+
+	int cipher_none_after_auth; /* Set to 1 if the user requested "none"
+								   auth */
 #endif
-	struct SignKeyList *lastprivkey;
+	sign_key *lastprivkey;
 
 	int retval; /* What the command exit status was - we emulate it */
 #if 0

@@ -26,6 +26,7 @@
 #define _AUTH_H_
 
 #include "includes.h"
+#include "signkey.h"
 #include "chansession.h"
 
 void svr_authinitialise();
@@ -35,6 +36,7 @@ void cli_authinitialise();
 void recv_msg_userauth_request();
 void send_msg_userauth_failure(int partial, int incrfail);
 void send_msg_userauth_success();
+void send_msg_userauth_banner(buffer *msg);
 void svr_auth_password();
 void svr_auth_pubkey();
 void svr_auth_pam();
@@ -66,13 +68,14 @@ void recv_msg_userauth_pk_ok();
 void recv_msg_userauth_info_request();
 void cli_get_user();
 void cli_auth_getmethods();
-void cli_auth_try();
+int cli_auth_try();
 void recv_msg_userauth_banner();
 void cli_pubkeyfail();
 void cli_auth_password();
 int cli_auth_pubkey();
 void cli_auth_interactive();
 char* getpass_or_cancel(char* prompt);
+void cli_auth_pubkey_cleanup();
 
 
 #define MAX_USERNAME_LEN 25 /* arbitrary for the moment */
@@ -97,7 +100,6 @@ char* getpass_or_cancel(char* prompt);
  * relatively little extraneous bits when used for the client rather than the
  * server */
 struct AuthState {
-
 	char *username; /* This is the username the client presents to check. It
 					   is updated each run through, used for auth checking */
 	unsigned char authtypes; /* Flags indicating which auth types are still 
@@ -120,19 +122,6 @@ struct AuthState {
 #ifdef ENABLE_SVR_PUBKEY_OPTIONS
 	struct PubKeyOptions* pubkey_options;
 #endif
-
-};
-
-struct SignKeyList;
-/* A singly linked list of signing keys */
-struct SignKeyList {
-
-	sign_key *key;
-	int type; /* The type of key */
-	struct SignKeyList *next;
-	/* filename? or the buffer? for encrypted keys, so we can later get
-	 * the private key portion */
-
 };
 
 #ifdef ENABLE_SVR_PUBKEY_OPTIONS
@@ -145,7 +134,6 @@ struct PubKeyOptions {
 	int no_pty_flag;
 	/* "command=" option. */
 	unsigned char * forced_command;
-
 };
 #endif
 

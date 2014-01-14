@@ -37,19 +37,31 @@ typedef struct runopts {
 	int listen_fwd_all;
 #endif
 	unsigned int recv_window;
-	unsigned int keepalive_secs;
-	unsigned int idle_timeout_secs;
+	time_t keepalive_secs;
+	time_t idle_timeout_secs;
+
+#ifndef DISABLE_ZLIB
+	/* TODO: add a commandline flag. Currently this is on by default if compression
+	 * is compiled in, but disabled for a client's non-final multihop stages. (The
+	 * intermediate stages are compressed streams, so are uncompressible. */
+	int enable_compress;
+#endif
+
+#ifdef ENABLE_USER_ALGO_LIST
+	char *cipher_list;
+	char *mac_list;
+#endif
 
 } runopts;
 
 extern runopts opts;
 
-int readhostkey(const char * filename, sign_key * hostkey, int *type);
+int readhostkey(const char * filename, sign_key * hostkey, 
+	enum signkey_type *type);
+void load_all_hostkeys();
 
 typedef struct svr_runopts {
 
-	char * rsakeyfile;
-	char * dsskeyfile;
 	char * bannerfile;
 
 	int forkbg;
@@ -77,6 +89,7 @@ typedef struct svr_runopts {
 
 	int noauthpass;
 	int norootpass;
+	int allowblankpass;
 
 #ifdef ENABLE_SVR_REMOTETCPFWD
 	int noremotetcp;
@@ -86,6 +99,12 @@ typedef struct svr_runopts {
 #endif
 
 	sign_key *hostkey;
+
+	int delay_hostkey;
+
+	char *hostkey_files[MAX_HOSTKEYS];
+	int num_hostkey_files;
+
 	buffer * banner;
 	char * pidfile;
 
@@ -108,17 +127,25 @@ typedef struct cli_runopts {
 	char *cmd;
 	int wantpty;
 	int always_accept_key;
+	int no_hostkey_check;
 	int no_cmd;
 	int backgrounded;
 	int is_subsystem;
 #ifdef ENABLE_CLI_PUBKEY_AUTH
-	struct SignKeyList *privkeys; /* Keys to use for public-key auth */
+	m_list *privkeys; /* Keys to use for public-key auth */
 #endif
 #ifdef ENABLE_CLI_REMOTETCPFWD
-	struct TCPFwdList * remotefwds;
+	m_list * remotefwds;
 #endif
 #ifdef ENABLE_CLI_LOCALTCPFWD
-	struct TCPFwdList * localfwds;
+	m_list * localfwds;
+#endif
+#ifdef ENABLE_CLI_AGENTFWD
+	int agent_fwd;
+	int agent_keys_loaded; /* whether pubkeys has been populated with a 
+							  list of keys held by the agent */
+	int agent_fd; /* The agent fd is only set during authentication. Forwarded
+	                 agent sessions have their own file descriptors */
 #endif
 
 #ifdef ENABLE_CLI_NETCAT
@@ -128,10 +155,13 @@ typedef struct cli_runopts {
 #ifdef ENABLE_CLI_PROXYCMD
 	char *proxycmd;
 #endif
-
 } cli_runopts;
 
 extern cli_runopts cli_opts;
 void cli_getopts(int argc, char ** argv);
+
+#ifdef ENABLE_USER_ALGO_LIST
+void parse_ciphers_macs();
+#endif
 
 #endif /* _RUNOPTS_H_ */

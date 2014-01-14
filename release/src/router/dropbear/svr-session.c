@@ -30,7 +30,7 @@
 #include "buffer.h"
 #include "dss.h"
 #include "ssh.h"
-#include "random.h"
+#include "dbrandom.h"
 #include "kex.h"
 #include "channel.h"
 #include "chansession.h"
@@ -39,6 +39,7 @@
 #include "service.h"
 #include "auth.h"
 #include "runopts.h"
+#include "crypto_desc.h"
 
 static void svr_remoteclosed();
 
@@ -52,9 +53,7 @@ static const packettype svr_packettypes[] = {
 	{SSH_MSG_KEXINIT, recv_msg_kexinit},
 	{SSH_MSG_KEXDH_INIT, recv_msg_kexdh_init}, /* server */
 	{SSH_MSG_NEWKEYS, recv_msg_newkeys},
-#ifdef ENABLE_SVR_REMOTETCPFWD
 	{SSH_MSG_GLOBAL_REQUEST, recv_msg_global_request_remotetcp},
-#endif
 	{SSH_MSG_CHANNEL_REQUEST, recv_msg_channel_request},
 	{SSH_MSG_CHANNEL_OPEN, recv_msg_channel_open},
 	{SSH_MSG_CHANNEL_EOF, recv_msg_channel_eof},
@@ -74,29 +73,47 @@ static const struct ChanType *svr_chantypes[] = {
 	NULL /* Null termination is mandatory. */
 };
 
-void svr_session(int sock, int childpipe, 
-		char* remotehost, char *addrstring) {
+static void
+svr_session_cleanup(void)
+{
+	/* free potential public key options */
+	svr_pubkey_options_cleanup();
+}
 
-    reseedrandom();
+void svr_session(int sock, int childpipe) {
+	char *host, *port;
+	size_t len;
 
-	crypto_init();
-	common_session_init(sock, sock, remotehost);
+	common_session_init(sock, sock);
 
 	/* Initialise server specific parts of the session */
 	svr_ses.childpipe = childpipe;
-	svr_ses.addrstring = addrstring;
+#ifdef USE_VFORK
+	svr_ses.server_pid = getpid();
+#endif
 	svr_authinitialise();
 	chaninitialise(svr_chantypes);
 	svr_chansessinitialise();
 
 	ses.connect_time = time(NULL);
 
+	/* for logging the remote address */
+	get_socket_address(ses.sock_in, NULL, NULL, &host, &port, 0);
+	len = strlen(host) + strlen(port) + 2;
+	svr_ses.addrstring = m_malloc(len);
+	snprintf(svr_ses.addrstring, len, "%s:%s", host, port);
+	m_free(host);
+	m_free(port);
+
+	get_socket_address(ses.sock_in, NULL, NULL, 
+			&svr_ses.remotehost, NULL, 1);
+
 	/* set up messages etc */
 	ses.remoteclosed = svr_remoteclosed;
+	ses.extra_session_cleanup = svr_session_cleanup;
 
 	/* packet handlers */
 	ses.packettypes = svr_packettypes;
-	ses.buf_match_algo = svr_buf_match_algo;
 
 	ses.isserver = 1;
 
@@ -104,7 +121,7 @@ void svr_session(int sock, int childpipe,
 	sessinitdone = 1;
 
 	/* exchange identification, version etc */
-	session_identification();
+	send_session_identification();
 
 	/* start off with key exchange */
 	send_msg_kexinit();
@@ -125,30 +142,34 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 	if (!sessinitdone) {
 		/* before session init */
 		snprintf(fmtbuf, sizeof(fmtbuf), 
-				"premature exit: %s", format);
+				"Early exit: %s", format);
 	} else if (ses.authstate.authdone) {
 		/* user has authenticated */
 		snprintf(fmtbuf, sizeof(fmtbuf),
-				"exit after auth (%s): %s", 
+				"Exit (%s): %s", 
 				ses.authstate.pw_name, format);
 	} else if (ses.authstate.pw_name) {
 		/* we have a potential user */
 		snprintf(fmtbuf, sizeof(fmtbuf), 
-				"exit before auth (user '%s', %d fails): %s",
+				"Exit before auth (user '%s', %d fails): %s",
 				ses.authstate.pw_name, ses.authstate.failcount, format);
 	} else {
 		/* before userauth */
 		snprintf(fmtbuf, sizeof(fmtbuf), 
-				"exit before auth: %s", format);
+				"Exit before auth: %s", format);
 	}
 
 	_dropbear_log(LOG_INFO, fmtbuf, param);
 
-	/* free potential public key options */
-	svr_pubkey_options_cleanup();
-
-	/* must be after we've done with username etc */
-	common_session_cleanup();
+#ifdef USE_VFORK
+	/* For uclinux only the main server process should cleanup - we don't want
+	 * forked children doing that */
+	if (svr_ses.server_pid == getpid())
+#endif
+	{
+		/* must be after we've done with username etc */
+		session_cleanup();
+	}
 
 	exit(exitcode);
 
@@ -183,7 +204,7 @@ void svr_dropbear_log(int priority, const char* format, va_list param) {
 		local_tm = localtime(&timesec);
 		if (local_tm == NULL
 			|| strftime(datestr, sizeof(datestr), "%b %d %H:%M:%S", 
-						localtime(&timesec)) == 0)
+						local_tm) == 0)
 		{
 			/* upon failure, just print the epoch-seconds time. */
 			snprintf(datestr, sizeof(datestr), "%d", (int)timesec);
