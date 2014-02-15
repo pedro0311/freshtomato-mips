@@ -45,6 +45,9 @@ obj-y += rstats
 obj-y += mssl
 obj-y += mdu
 
+obj-y += libpcap
+obj-y += tcpdump
+
 obj-y += miniupnpd
 #	obj-y += upnp
 
@@ -490,6 +493,30 @@ ebtables-clean:
 	make -C ebtables clean
 
 
+libpcap:
+	cd $(TOP)/libpcap && CC=$(CC) CFLAGS="-Os -fomit-frame-pointer" \
+	./configure --prefix="/tmp" --host=mipsel-linux --target=mipsel-linux --with-pcap=linux ac_cv_linux_vers=2 \
+		--disable-largefile --disable-protochain --enable-ipv6=no --enable-optimizer-dbg=no --enable-shared=no \
+		--enable-bluetooth=no --enable-canusb=no --enable-can=no --enable-dbus=no --with-dag=no --with-snf=no
+	$(MAKE) -C libpcap
+
+libpcap-clean:
+	-$(MAKE) -C libpcap clean
+	rm -rf libpcap/Makefile
+	
+tcpdump: libpcap
+	cd $(TOP)/tcpdump && CC=$(CC) STRIP='mipsel-uclibc-strip' CFLAGS="-Os -fomit-frame-pointer" \
+	./configure --prefix="/usr" --host=mipsel-linux --target=mipsel-linux ac_cv_linux_vers=2 \
+		--disable-smb --disable-ipv6 --with-crypto=no
+	$(MAKE) -C tcpdump
+	
+tcpdump-install: tcpdump
+	install -D tcpdump/tcpdump $(INSTALLDIR)/tcpdump/usr/sbin/tcpdump
+	$(STRIP) -s $(INSTALLDIR)/tcpdump/usr/sbin/tcpdump
+
+tcpdump-clean:
+	-$(MAKE) -C tcpdump clean
+	rm -rf tcpdump/Makefile
 
 
 #
