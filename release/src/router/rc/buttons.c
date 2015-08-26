@@ -218,7 +218,10 @@ int buttons_main(int argc, char *argv[])
 	case MODEL_WNDR3400v2:
 		reset_mask = 1 << 4;
 		ses_mask = 1 << 8;
-		ses_led = LED_AOSS;
+		break;
+	case MODEL_WNDR3400v3:
+		reset_mask = 1 << 12;
+		ses_mask = 1 << 23;
 		break;
 	case MODEL_F7D3301:
 	case MODEL_F7D3302:
@@ -381,7 +384,7 @@ int buttons_main(int argc, char *argv[])
 			//for WNDR3400/3400v2/3700v3/4000, bwq518
 			int model;
 			model = nvram_get_int("btn_override") ? MODEL_UNKNOWN : get_model();
-			if (model == MODEL_WNDR3400 || model == MODEL_WNDR3400v2 || model == MODEL_WNDR3700v3 || model == MODEL_WNDR4000)
+			if (model == MODEL_WNDR3400 || model == MODEL_WNDR3400v2 || model == MODEL_WNDR3400v3 || model == MODEL_WNDR3700v3 || model == MODEL_WNDR4000)
 				led(ses_led, LED_ON);
 
 			if ((ses_led == LED_DMZ) && (nvram_get_int("dmz_enable") > 0)) led(LED_DMZ, 1);
