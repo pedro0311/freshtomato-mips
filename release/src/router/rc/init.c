@@ -770,8 +770,8 @@ static void check_bootnv(void)
 		else
 			dirty |= check_nv("wl1_hwaddr", mac);
 		// Have to check wl ifname(s) ... if not set before eth config, 5 GHz radio does not come up properly
-		dirty |= check_nv("wl0_ifname", "eth1");
-		dirty |= check_nv("wl1_ifname", "eth2");
+		dirty |= check_nv("wl0_ifname", "eth0");
+		dirty |= check_nv("wl1_ifname", "eth1");
 		break;
 	case MODEL_E900:
 	case MODEL_E1000v2:
