@@ -1165,6 +1165,7 @@ const defaults_t defaults[] = {
 	{"tinc_hosts",			""		},
 	{"tinc_manual_firewall",	""		},
 	{"tinc_manual_tinc_up",		"0"		},
+	{"tinc_poll",			"0"		},
 	// scripts
 	{"tinc_tinc_up",		""		},
 	{"tinc_tinc_down",		""		},
