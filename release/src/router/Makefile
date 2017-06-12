@@ -141,8 +141,6 @@ endif
 ifeq ($(TCONFIG_SAMBASRV),y)
 ifeq ($(TCONFIG_SAMBA3),y)
 NEED_SAMBA3 = y
-else
-NEED_SAMBA2 = y
 endif
 endif
 
@@ -164,7 +162,6 @@ else
 TCONFIG_RAID :=
 endif
 
-obj-$(NEED_SAMBA2) += samba
 obj-$(NEED_SAMBA3) += samba3
 obj-$(TCONFIG_NTFS) += ntfs-3g
 obj-$(TCONFIG_EBTABLES) += ebtables
@@ -1148,7 +1145,6 @@ dhcpv6-clean:
 
 
 p910nd:
-samba:
 samba3:
 
 nvram: shared
