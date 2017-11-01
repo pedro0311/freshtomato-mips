@@ -1174,6 +1174,7 @@ const defaults_t defaults[] = {
 	{ "bt_port",				"51515"			},
 	{ "bt_dir",				"/mnt"			},
 	{ "bt_incomplete",			"1"			},
+	{ "bt_autoadd",				"1"			},
 	{ "bt_settings",			"down_dir"		},
 	{ "bt_settings_custom",			"/tmp/btclient"		},
 	{ "bt_rpc_enable",			"1"			},
