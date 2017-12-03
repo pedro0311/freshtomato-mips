@@ -142,11 +142,12 @@ const defaults_t defaults[] = {
 	{ "dnscrypt_priority",		"1"			}, // 0=none, 1=strict-order, 2=no-resolv
 	{ "dnscrypt_port",		"40"			}, // local port
 	{ "dnscrypt_resolver",		"opendns"		}, // default resolver
-	{ "dnscrypt_log",		"99"			}, // log level
+	{ "dnscrypt_log",		"6"			}, // log level
 	{ "dnscrypt_manual",		"0"			}, // Set manual resolver
 	{ "dnscrypt_provider_name",	""			}, // Set manual provider name
 	{ "dnscrypt_provider_key",	""			}, // Set manual provider key
 	{ "dnscrypt_resolver_address",	""			}, // Set manual resolver address
+	{ "dnscrypt_ephemeral_keys",	"0"				}, // Set manual ephemeral keys
 #endif
 	{ "wan_wins",			""				},	// x.x.x.x x.x.x.x ...
 	{ "wan_lease",			"86400"			},	// WAN lease time in seconds
