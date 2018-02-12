@@ -1901,8 +1901,7 @@ php/stamp-h1: pcre zlib libiconv sqlite libxml2 libpng jpeg libcurl
 	--without-mcrypt \
 	--without-openssl \
 	--disable-pcntl \
-	--without-mysqli \
-	--with-mysql \
+	--with-mysqli \
 	--with-mysql-sock="/var/run/mysqld.sock" \
 	--with-pdo-mysql \
 	--without-pdo-pgsql \
