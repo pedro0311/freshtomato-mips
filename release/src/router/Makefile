@@ -1549,6 +1549,7 @@ ifeq ($(TCONFIG_NGINX),y)
 endif
 
 libid3tag/stamp-h1: zlib
+	$(call patch_files,libid3tag)
 	cd libid3tag && \
 	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" CPPFLAGS="-I$(TOP)/zlib" \
 	LDFLAGS="-L$(TOP)/zlib -fPIC -ffunction-sections -fdata-sections -Wl,--gc-sections" \
@@ -1562,6 +1563,7 @@ libid3tag: libid3tag/stamp-h1 zlib
 libid3tag-clean:
 	-@$(MAKE) -C libid3tag clean
 	@rm -f libid3tag/stamp-h1
+	$(call unpatch_files,libid3tag)
 
 libid3tag-install:
 	@$(SEP)
