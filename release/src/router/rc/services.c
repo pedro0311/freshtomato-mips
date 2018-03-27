@@ -549,6 +549,7 @@ void start_dnsmasq()
 
 #ifdef TCONFIG_DNSSEC
 	if ((time(0) > Y2K) && nvram_match("dnssec_enable", "1")){
+		sleep(1);
 		killall("dnsmasq", SIGHUP);
 	}
 #endif
