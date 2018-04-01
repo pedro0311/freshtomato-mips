@@ -2112,7 +2112,7 @@ openvpn_plugin_auth_nvram:nvram
 
 #shibby
 nano/stamp-h1: libncurses
-	cd nano && CC=$(CC) STRIP='mipsel-uclibc-strip' \
+	cd nano && autoreconf -fvi && CC=$(CC) STRIP='mipsel-uclibc-strip' \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -I$(TOP)/libncurses/staged/usr/include -ffunction-sections -fdata-sections" \
 		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -I$(TOP)/libncurses/staged/usr/include -ffunction-sections -fdata-sections" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(TOP)/libncurses/staged/usr/lib -fPIC" \
