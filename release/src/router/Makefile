@@ -1913,12 +1913,12 @@ php-clean:
 	-@rm php/stamp-h1
 	$(call unpatch_files,php)
 
-php-install: php
+php-install:
 	@$(SEP)
 	install -d $(INSTALLDIR)/php/usr/sbin
-	install -D php/sapi/cli/.libs/php $(INSTALLDIR)/php/usr/sbin/php-cli && chmod 0755 $(INSTALLDIR)/php/usr/sbin/php-cli
+	install -D php/sapi/cli/php $(INSTALLDIR)/php/usr/sbin/php-cli && chmod 0755 $(INSTALLDIR)/php/usr/sbin/php-cli
 	$(STRIP) $(INSTALLDIR)/php/usr/sbin/php-cli
-	install -D php/sapi/cgi/.libs/php-cgi $(INSTALLDIR)/php/usr/sbin/php-cgi && chmod 0755 $(INSTALLDIR)/php/usr/sbin/php-cgi
+	install -D php/sapi/cgi/php-cgi $(INSTALLDIR)/php/usr/sbin/php-cgi && chmod 0755 $(INSTALLDIR)/php/usr/sbin/php-cgi
 	cd $(INSTALLDIR)/php/usr/sbin && ln -sf php-cgi php-fcgi
 	$(STRIP) $(INSTALLDIR)/php/usr/sbin/php-cgi
 
