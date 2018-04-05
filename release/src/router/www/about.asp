@@ -89,7 +89,7 @@ function init()
 <img src='tux.png' alt='Linux &amp; Tomato' id='tux'>
 </div>
 <div class='about'>
-<b>Tomato Firmware <% version(1); %></b><br>
+<b>FreshTomato Firmware <% version(1); %></b><br>
 
 <!-- USB-BEGIN -->
 <br>USB support integration and GUI,<br>
@@ -260,7 +260,7 @@ Based on Tomato Firmware v<% version(); %><br>
 Copyright (C) 2006-2010 Jonathan Zarate<br>
 <a href='http://www.polarcloud.com/tomato/' target='_new'>http://www.polarcloud.com/tomato/</a><br>
 <br>
-Built on <% build_time(); %> by Shibby, <a href='http://openlinksys.info' target='_new'>http://openlinksys.info</a><br><br>
+Built on <% build_time(); %> by pedro, <a href='http://openlinksys.info' target='_new'>http://openlinksys.info</a><br><br>
 <br><br>
 
 <!--
