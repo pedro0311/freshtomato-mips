@@ -256,7 +256,7 @@ Copyright (C) 2009 Tomasz Słodkowicz<br>
 <br>
 
 <br>
-Based on Tomato Firmware v<% version(); %><br>
+Based on Tomato Firmware v1.28<br>
 Copyright (C) 2006-2010 Jonathan Zarate<br>
 <a href='http://www.polarcloud.com/tomato/' target='_new'>http://www.polarcloud.com/tomato/</a><br>
 <br>
