@@ -88,7 +88,7 @@ else
 
 all: tomato_ver
 	@echo ""
-	@echo "Building Tomato $(ND) $(current_BUILD_USB) $(current_TOMATO_VER).$(V1)$(mips_rev)$(beta)$(V2) $(current_BUILD_DESC) $(current_BUILD_NAME) with $(TOMATO_PROFILE_NAME) Profile"
+	@echo "Building FreshTomato $(ND) $(current_BUILD_USB) $(current_TOMATO_VER).$(V1)$(mips_rev)$(beta)$(V2) $(current_BUILD_DESC) $(current_BUILD_NAME) with $(TOMATO_PROFILE_NAME) Profile"
 
 	@echo ""
 	@echo ""
@@ -98,15 +98,15 @@ all: tomato_ver
 	@$(MAKE) -C router install
 	@$(MAKE) -C btools
 
-	@rm -f image/tomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER).$(V1)$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).trx
-	@rm -f image/tomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER).$(V1)$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).bin
+	@rm -f image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER).$(V1)$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).trx
+	@rm -f image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER).$(V1)$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).bin
 ifeq ($(LINKSYS_E),1)
-	@rm -f image/tomato-E??00$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER).$(V1)$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).bin
+	@rm -f image/freshtomato-E??00$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER).$(V1)$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).bin
 endif
 ifeq ($(BELKIN),y)
 ifneq ($(NVRAM_SIZE),60)
-	@rm -f image/tomato-F7D????$(current_BUILD_USB)-$(current_TOMATO_VER).$(current_TOMATO_V1)$(mips_rev)$(beta)$(current_TOMATO_V2)-$(current_BUILD_DESC).bin
-	@rm -f image/tomato-F5D8235v3$(current_BUILD_USB)-$(current_TOMATO_VER).$(current_TOMATO_V1)$(mips_rev)$(beta)$(current_TOMATO_V2)-$(current_BUILD_DESC).bin
+	@rm -f image/freshtomato-F7D????$(current_BUILD_USB)-$(current_TOMATO_VER).$(current_TOMATO_V1)$(mips_rev)$(beta)$(current_TOMATO_V2)-$(current_BUILD_DESC).bin
+	@rm -f image/freshtomato-F5D8235v3$(current_BUILD_USB)-$(current_TOMATO_VER).$(current_TOMATO_V1)$(mips_rev)$(beta)$(current_TOMATO_V2)-$(current_BUILD_DESC).bin
 endif
 endif
 	@echo "" >>fpkg.log
@@ -116,7 +116,7 @@ endif
 	@cat router/target.info >>fpkg.log
 ifeq ($(wildcard include/bcm20xx.h),)
 	@btools/fpkg -i lzma-loader/loader.gz -i $(LINUXDIR)/arch/mips/brcm-boards/bcm947xx/compressed/vmlinuz -a 1024 -i router/mipsel-uclibc/target.image \
-		-t image/tomato.trx \
+		-t image/freshtomato.trx \
 		-l W54G,image/WRT54G_WRT54GL.bin \
 		-l W54S,image/WRT54GS.bin \
 		-l W54s,image/WRT54GSv4.bin \
@@ -127,27 +127,27 @@ else
 ifeq ($(LINKSYS_E),1)
 	# Linksys E-series build plus generic TRX image
 	@btools/fpkg -i lzma-loader/loader.gz -i $(LINUXDIR)/arch/mips/brcm-boards/bcm947xx/compressed/vmlinuz -a 1024 -i router/mipsel-uclibc/target.image \
-		-t image/tomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER).$(V1)$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).trx \
-		-l 4200,image/tomato-E4200$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER).$(V1)$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).bin \
-		-l 61XN,image/tomato-E3000$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER).$(V1)$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).bin \
-		-l 32XN,image/tomato-E2000$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER).$(V1)$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).bin \
+		-t image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER).$(V1)$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).trx \
+		-l 4200,image/freshtomato-E4200$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER).$(V1)$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).bin \
+		-l 61XN,image/freshtomato-E3000$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER).$(V1)$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).bin \
+		-l 32XN,image/freshtomato-E2000$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER).$(V1)$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).bin \
 		| tee -a fpkg.log
 else
 ifeq ($(BELKIN),y)
 ifneq ($(NVRAM_SIZE),60)
 	# Create Belkin images
 	@btools/fpkg -i lzma-loader/loader.gz -i $(LINUXDIR)/arch/mips/brcm-boards/bcm947xx/compressed/vmlinuz -a 1024 -i router/mipsel-uclibc/target.image \
-		-t image/tomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER).$(V1)$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).trx \
-		-b 0x20100322,image/tomato-F7D3301$(current_BUILD_USB)-$(current_TOMATO_VER).$(current_TOMATO_V1)$(mips_rev)$(beta)$(current_TOMATO_V2)-$(current_BUILD_DESC).bin \
-		-b 0x20090928,image/tomato-F7D3302$(current_BUILD_USB)-$(current_TOMATO_VER).$(current_TOMATO_V1)$(mips_rev)$(beta)$(current_TOMATO_V2)-$(current_BUILD_DESC).bin \
-		-b 0x20091006,image/tomato-F7D4302$(current_BUILD_USB)-$(current_TOMATO_VER).$(current_TOMATO_V1)$(mips_rev)$(beta)$(current_TOMATO_V2)-$(current_BUILD_DESC).bin \
-		-b 0x00017116,image/tomato-F5D8235v3$(current_BUILD_USB)-$(current_TOMATO_VER).$(current_TOMATO_V1)$(mips_rev)$(beta)$(current_TOMATO_V2)-$(current_BUILD_DESC).bin \
+		-t image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER).$(V1)$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).trx \
+		-b 0x20100322,image/freshtomato-F7D3301$(current_BUILD_USB)-$(current_TOMATO_VER).$(current_TOMATO_V1)$(mips_rev)$(beta)$(current_TOMATO_V2)-$(current_BUILD_DESC).bin \
+		-b 0x20090928,image/freshtomato-F7D3302$(current_BUILD_USB)-$(current_TOMATO_VER).$(current_TOMATO_V1)$(mips_rev)$(beta)$(current_TOMATO_V2)-$(current_BUILD_DESC).bin \
+		-b 0x20091006,image/freshtomato-F7D4302$(current_BUILD_USB)-$(current_TOMATO_VER).$(current_TOMATO_V1)$(mips_rev)$(beta)$(current_TOMATO_V2)-$(current_BUILD_DESC).bin \
+		-b 0x00017116,image/freshtomato-F5D8235v3$(current_BUILD_USB)-$(current_TOMATO_VER).$(current_TOMATO_V1)$(mips_rev)$(beta)$(current_TOMATO_V2)-$(current_BUILD_DESC).bin \
 		| tee -a fpkg.log
 endif
 else
 	# Create generic TRX image
 	@btools/fpkg -i lzma-loader/loader.gz -i $(LINUXDIR)/arch/mips/brcm-boards/bcm947xx/compressed/vmlinuz -a 1024 -i router/mipsel-uclibc/target.image \
-		-t image/tomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER).$(V1)$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).trx \
+		-t image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER).$(V1)$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).trx \
 		| tee -a fpkg.log
 endif
 endif
@@ -158,7 +158,7 @@ endif
 	@echo "-----------------"
 	@echo `cat router/shared/tomato_version` " ready"
 	@echo "-----------------"
-ifneq ($(NOVERSION),1)	
+ifneq ($(NOVERSION),1)
 	@cp router/shared/tomato_version router/shared/tomato_version_last
 	@btools/uversion.pl --bump
 endif
@@ -746,8 +746,8 @@ else
 endif
 
 ## miniVPN (small BTgui-VPN) for routers with 8MB flash like Netgear 3500L, RT-N10u or RT-N15U
-a:
 ifeq ($(CONFIG_LINUX26),y)
+a:
 	@$(MAKE) bin NTFS=y OPENVPN=y BBEXTRAS=y USBEXTRAS=y MULTIWAN=y EBTABLES=y MEDIASRV=y IPV6SUPP=y B=M BUILD_DESC="miniVPN" USB="USB" BTGUI=y PPTPD=y NO_JFFS=y
 endif
 
@@ -792,8 +792,8 @@ else
 endif
 
 ## Mega-VPN
-o:
 ifeq ($(CONFIG_LINUX26),y)
+o:
 	@$(MAKE) bin OPENVPN=y NTFS=y BBEXTRAS=y USBEXTRAS=y MULTIWAN=y EBTABLES=y MEDIASRV=y IPV6SUPP=y B=E BUILD_DESC="Mega-VPN" USB="USB" NOCAT=y BTCLIENT=y DNSCRYPT=y SNMP=y UPS=y PPTPD=y TR_EXTRAS=y TOR=y IPSEC=y RAID=y DNSSEC=y TINC=y NANO=y
 
 ## All-In-One (AIO) MIPS1 - only for router with more than 8MB flash!! ZTE H618B
@@ -803,9 +803,8 @@ endif
 
 #################################
 
-ifeq ($(CONFIG_LINUX26),y)
-
 ## Mini - targeted for Netgear routers
+ifeq ($(CONFIG_LINUX26),y)
 f:
 	@$(MAKE) bin JFFSv1=y NO_CIFS=y NO_ZEBRA=y B=F BUILD_DESC="Mini" USB="" MULTIWAN=y
 
@@ -834,16 +833,17 @@ else
 	@$(MAKE) bin OPENVPN=y BBEXTRAS=y B=E BUILD_DESC="Max" USB="" NOCAT=y NFS=y SNMP=y DNSCRYPT=y PPTPD=y TOR=y
 endif
 
-## SD-VPN - Only k24
-w:
+## SD-VPN - K24 only
 ifneq ($(CONFIG_LINUX26),y)
+w:
 	@$(MAKE) bin OPENVPN=y BBEXTRAS=y BCM57=y B=V BUILD_DESC="SD-VPN" USB="" SDHC=y DNSCRYPT=y PPTPD=y
 endif
 
 
-## Make Mips32r2 builds ##
+## Mips32r2 builds ##
 
 #AIO MIPS2 for RT-N16 and E4200
+ifeq ($(CONFIG_LINUX26),y)
 r2z:
 	@$(MAKE) z MIPS32=r2
 
@@ -922,6 +922,7 @@ n60v:
 
 n60m:
 	@$(MAKE) r2m NVRAM_SIZE=60 LINKSYS_E=1
+endif
 
 setprofile:
 	echo '#ifndef TOMATO_PROFILE' > router/shared/tomato_profile.h
@@ -975,7 +976,9 @@ setprofile:
 	@$(MAKE) -C router oldconfig
 
 help:
-	@echo "n            Mini-USB - for oruter with 4MB flash and USB port - K24 only"
+ifneq ($(CONFIG_LINUX26),y)
+	@echo "n            Mini-USB - for router with 4MB flash and USB port - K24 only"
+endif
 	@echo "e            VPN - (standard plus VPN, extra utilities and NTFS support)"
 	@echo "c            BTgui-VPN - (Ext plus BT gui)"
 	@echo "d            Nocat-VPN - (BTgui plus VPN plus Nocat)"
@@ -989,9 +992,11 @@ ifeq ($(CONFIG_LINUX26),y)
 	@echo "j            MiniVPN - (VPN with no USB support minus CIFS and RIPv1/2)"
 endif
 	@echo "f            Mini - (no USB support minus CIFS and RIPv1/2)"
-	@echo "v            VPN (no usb) - (VPN with no USB support)" / in K26 + IPv6 support
-	@echo "m            Max (no usb) - (Max with no USB support)" / in K26 + IPv6 support
-	@echo "w            SD-VPN (no usb) - (VPN with SD-MOD and no USB support)"
+	@echo "v            VPN (no usb) - (VPN with no USB support) / in K26 with IPv6 support"
+	@echo "m            Max (no usb) - (Max with no USB support) / in K26 with IPv6 support"
+ifneq ($(CONFIG_LINUX26),y)
+	@echo "w            SD-VPN (no usb) - (VPN with SD-MOD and no USB support) - K24 only"
+endif
 ifeq ($(CONFIG_LINUX26),y)
 	@echo "r2e          MIPS Release 2 VPN"
 	@echo "r2c          MIPS Release 2 BTgui-VPN"
@@ -1024,6 +1029,6 @@ endif
 	@echo "cleankernel  -C Linux distclean (but preserves .config)"
 	@echo "distclean    distclean of Linux & busybox (but preserve .configs)"
 	@echo "prepk        -C Linux oldconfig dep"
-	
+
 .PHONY: all clean distclean cleanimage cleantools cleankernel prepk what setprofile help
 .PHONY: a b c d m nc Makefile allversions tomato_profile.mak
