@@ -1,4 +1,4 @@
-/* dnsmasq is Copyright (c) 2000-2016 Simon Kelley
+/* dnsmasq is Copyright (c) 2000-2017 Simon Kelley
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -1180,7 +1180,7 @@ static void add_dhcp_cname(struct crec *target, time_t ttd)
   
   for (a = daemon->cnames; a; a = a->next)
     if (a->alias[1] != '*' &&
-      hostname_isequal(cache_get_name(target), a->target))
+	hostname_isequal(cache_get_name(target), a->target))
       {
 	if ((aliasc = dhcp_spare))
 	  dhcp_spare = dhcp_spare->next;
@@ -1293,6 +1293,7 @@ void cache_add_dhcp_entry(char *host_name, int prot,
 }
 #endif
 
+#ifndef NO_ID
 int cache_make_stat(struct txt_record *t)
 { 
   static char *buff = NULL;
@@ -1388,6 +1389,7 @@ int cache_make_stat(struct txt_record *t)
   *buff = len;
   return 1;
 }
+#endif
 
 /* There can be names in the cache containing control chars, don't 
    mess up logging or open security holes. */
@@ -1509,7 +1511,7 @@ void dump_cache(time_t now)
 	    /* ctime includes trailing \n - eat it */
 	    *(p-1) = 0;
 #endif
-	    my_syslog(LOG_INFO, daemon->namebuff);
+	    my_syslog(LOG_INFO, "%s", daemon->namebuff);
 	  }
     }
 }
