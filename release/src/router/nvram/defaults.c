@@ -245,8 +245,8 @@ const defaults_t defaults[] = {
 	{ "wan_ppp_username",		""				},	// PPP username
 	{ "wan_ppp_passwd",		""				},	// PPP password
 	{ "wan_ppp_idletime",		"5"				},	// Dial on demand max idle time (mins)
-	{ "wan_ppp_keepalive",		"0"				},	// Restore link automatically
 	{ "wan_ppp_demand",		"0"				},	// Dial on demand
+	{ "wan_ppp_demand_dnsip",	"198.51.100.1"			},	// IP to which DNS queries are sent to trigger Connect On Demand
 	{ "wan_ppp_redialperiod",	"10"				},	// Redial Period  (seconds)*/
 	{ "wan_ppp_mru",		"1500"				},	// Negotiate MRU to this value
 	{ "wan_ppp_mtu",		"1500"				},	// Negotiate MTU to the smaller of this value or the peer MRU
@@ -265,6 +265,7 @@ const defaults_t defaults[] = {
 	{ "wan2_ppp_passwd",		""				},	// PPP password
 	{ "wan2_ppp_idletime",		"5"				},	// Dial on demand max idle time (mins)
 	{ "wan2_ppp_demand",		"0"				},	// Dial on demand
+	{ "wan2_ppp_demand_dnsip",	"198.51.100.1"			},	// IP to which DNS queries are sent to trigger Connect On Demand
 	{ "wan2_ppp_service",		""				},	// PPPoE service name
 	{ "wan2_ppp_custom",		""				},	// PPPD additional options
 	{ "wan2_ppp_mlppp",		"0"				},	// PPPoE single line MLPPP
@@ -276,6 +277,7 @@ const defaults_t defaults[] = {
 	{ "wan3_ppp_passwd",		""				},	// PPP password
 	{ "wan3_ppp_idletime",		"5"				},	// Dial on demand max idle time (mins)
 	{ "wan3_ppp_demand",		"0"				},	// Dial on demand
+	{ "wan3_ppp_demand_dnsip",	"198.51.100.1"			},	// IP to which DNS queries are sent to trigger Connect On Demand
 	{ "wan3_ppp_service",		""				},	// PPPoE service name
 	{ "wan3_ppp_custom",		""				},	// PPPD additional options
 	{ "wan3_ppp_mlppp",		"0"				},	// PPPoE single line MLPPP
@@ -286,6 +288,7 @@ const defaults_t defaults[] = {
 	{ "wan4_ppp_passwd",		""				},	// PPP password
 	{ "wan4_ppp_idletime",		"5"				},	// Dial on demand max idle time (mins)
 	{ "wan4_ppp_demand",		"0"				},	// Dial on demand
+	{ "wan4_ppp_demand_dnsip",	"198.51.100.1"			},	// IP to which DNS queries are sent to trigger Connect On Demand
 	{ "wan4_ppp_service",		""				},	// PPPoE service name
 	{ "wan4_ppp_custom",		""				},	// PPPD additional options
 	{ "wan4_ppp_mlppp",		"0"				},	// PPPoE single line MLPPP
