@@ -436,8 +436,12 @@ endif
 
 	@cd $(TARGETDIR) && $(TOP)/others/rootprep.sh
 
+ifneq ($(TCONFIG_BBT),y)
+	@cd $(TARGETDIR) && $(TOP)/others/rootprep.sh ln_usr_share
+else
 ifeq ($(TCONFIG_TOR),y)
-		@cd $(TARGETDIR) && $(TOP)/others/rootprep.sh ln_Tor
+	@cd $(TARGETDIR) && $(TOP)/others/rootprep.sh ln_tor_geoip
+endif
 endif
 
 	@echo ---
@@ -2333,7 +2337,7 @@ btgui:
 
 btgui-install: btgui
 	install -d $(INSTALLDIR)/btgui/usr/bin
-	install -D transmission/btcheck $(INSTALLDIR)/btgui/usr/bin/btcheck
+	install -D patches/transmission/btcheck $(INSTALLDIR)/btgui/usr/bin/btcheck
 
 libnfsidmap/stamp-h1:
 	cd libnfsidmap && autoreconf -fvi && \
