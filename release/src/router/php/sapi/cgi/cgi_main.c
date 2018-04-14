@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -91,6 +91,10 @@ int __riscosify_control = __RISCOSIFY_STRICT_UNIX_SPECS;
 #include "php_getopt.h"
 
 #include "fastcgi.h"
+
+#if defined(PHP_WIN32) && defined(HAVE_OPENSSL)
+# include "openssl/applink.c"
+#endif
 
 #ifndef PHP_WIN32
 /* XXX this will need to change later when threaded fastcgi is implemented.  shane */
@@ -387,6 +391,7 @@ static const http_error http_error_codes[] = {
 	{428, "Precondition Required"},
 	{429, "Too Many Requests"},
 	{431, "Request Header Fields Too Large"},
+	{451, "Unavailable For Legal Reasons"},
 	{500, "Internal Server Error"},
 	{501, "Not Implemented"},
 	{502, "Bad Gateway"},
@@ -508,7 +513,7 @@ static int sapi_cgi_read_post(char *buffer, uint count_bytes TSRMLS_DC)
 	uint read_bytes = 0;
 	int tmp_read_bytes;
 
-	count_bytes = MIN(count_bytes, (uint) SG(request_info).content_length - SG(read_post_bytes));
+	count_bytes = MIN(count_bytes, SG(request_info).content_length - SG(read_post_bytes));
 	while (read_bytes < count_bytes) {
 		tmp_read_bytes = read(STDIN_FILENO, buffer + read_bytes, count_bytes - read_bytes);
 		if (tmp_read_bytes <= 0) {
@@ -524,8 +529,11 @@ static int sapi_fcgi_read_post(char *buffer, uint count_bytes TSRMLS_DC)
 	uint read_bytes = 0;
 	int tmp_read_bytes;
 	fcgi_request *request = (fcgi_request*) SG(server_context);
+	size_t remaining = SG(request_info).content_length - SG(read_post_bytes);
 
-	count_bytes = MIN(count_bytes, (uint) SG(request_info).content_length - SG(read_post_bytes));
+	if (remaining < count_bytes) {
+		count_bytes = remaining;
+	}
 	while (read_bytes < count_bytes) {
 		tmp_read_bytes = fcgi_read(request, buffer + read_bytes, count_bytes - read_bytes);
 		if (tmp_read_bytes <= 0) {
@@ -730,13 +738,16 @@ static void sapi_cgi_log_message(char *message TSRMLS_DC)
 
 		request = (fcgi_request*) SG(server_context);
 		if (request) {
-			int len = strlen(message);
+			int ret, len = strlen(message);
 			char *buf = malloc(len+2);
 
 			memcpy(buf, message, len);
 			memcpy(buf + len, "\n", sizeof("\n"));
-			fcgi_write(request, FCGI_STDERR, buf, len+1);
+			ret = fcgi_write(request, FCGI_STDERR, buf, len + 1);
 			free(buf);
+			if (ret < 0) {
+				php_handle_aborted_connection();
+			}
 		} else {
 			fprintf(stderr, "%s\n", message);
 		}
@@ -815,7 +826,7 @@ static void php_cgi_ini_activate_user_config(char *path, int path_len, const cha
 		}
 
 		if (real_path) {
-			free(real_path);
+			efree(real_path);
 		}
 		entry->expires = request_time + PG(user_ini_cache_ttl);
 	}
@@ -1396,7 +1407,7 @@ static void init_request_info(fcgi_request *request TSRMLS_DC)
 				} else {
 					SG(request_info).request_uri = env_script_name;
 				}
-				free(real_path);
+				efree(real_path);
 			}
 		} else {
 			/* pre 4.3 behaviour, shouldn't be used but provides BC */
@@ -1487,11 +1498,6 @@ static void php_cgi_globals_ctor(php_cgi_globals_struct *php_cgi_globals TSRMLS_
  */
 static PHP_MINIT_FUNCTION(cgi)
 {
-#ifdef ZTS
-	ts_allocate_id(&php_cgi_globals_id, sizeof(php_cgi_globals_struct), (ts_allocate_ctor) php_cgi_globals_ctor, NULL);
-#else
-	php_cgi_globals_ctor(&php_cgi_globals TSRMLS_CC);
-#endif
 	REGISTER_INI_ENTRIES();
 	return SUCCESS;
 }
@@ -1661,13 +1667,15 @@ PHP_FUNCTION(apache_request_headers) /* {{{ */
 static void add_response_header(sapi_header_struct *h, zval *return_value TSRMLS_DC) /* {{{ */
 {
 	char *s, *p;
-	int  len;
+	int  len = 0;
 	ALLOCA_FLAG(use_heap)
 
 	if (h->header_len > 0) {
 		p = strchr(h->header, ':');
-		len = p - h->header;
-		if (p && (len > 0)) {
+		if (NULL != p) {
+			len = p - h->header;
+		}
+		if (len > 0) {
 			while (len > 0 && (h->header[len-1] == ' ' || h->header[len-1] == '\t')) {
 				len--;
 			}
@@ -1793,6 +1801,12 @@ int main(int argc, char *argv[])
 	tsrm_ls = ts_resource(0);
 #endif
 
+#ifdef ZTS
+	ts_allocate_id(&php_cgi_globals_id, sizeof(php_cgi_globals_struct), (ts_allocate_ctor) php_cgi_globals_ctor, NULL);
+#else
+	php_cgi_globals_ctor(&php_cgi_globals TSRMLS_CC);
+#endif
+
 	sapi_startup(&cgi_sapi_module);
 	fastcgi = fcgi_is_fastcgi();
 	cgi_sapi_module.php_ini_path_override = NULL;
@@ -1821,7 +1835,7 @@ int main(int argc, char *argv[])
 		unsigned char *p;
 		decoded_query_string = strdup(query_string);
 		php_url_decode(decoded_query_string, strlen(decoded_query_string));
-		for (p = decoded_query_string; *p &&  *p <= ' '; p++) {
+		for (p = (unsigned char *)decoded_query_string; *p &&  *p <= ' '; p++) {
 			/* skip all leading spaces */
 		}
 		if(*p == '-') {
@@ -2223,9 +2237,9 @@ consult the installation file that came with this distribution, or visit \n\
 								SG(request_info).no_headers = 1;
 							}
 #if ZEND_DEBUG
-							php_printf("PHP %s (%s) (built: %s %s) (DEBUG)\nCopyright (c) 1997-2014 The PHP Group\n%s", PHP_VERSION, sapi_module.name, __DATE__, __TIME__, get_zend_version());
+							php_printf("PHP %s (%s) (built: %s %s) (DEBUG)\nCopyright (c) 1997-2016 The PHP Group\n%s", PHP_VERSION, sapi_module.name, __DATE__, __TIME__, get_zend_version());
 #else
-							php_printf("PHP %s (%s) (built: %s %s)\nCopyright (c) 1997-2014 The PHP Group\n%s", PHP_VERSION, sapi_module.name, __DATE__, __TIME__, get_zend_version());
+							php_printf("PHP %s (%s) (built: %s %s)\nCopyright (c) 1997-2016 The PHP Group\n%s", PHP_VERSION, sapi_module.name, __DATE__, __TIME__, get_zend_version());
 #endif
 							php_request_shutdown((void *) 0);
 							fcgi_shutdown();
@@ -2270,7 +2284,7 @@ consult the installation file that came with this distribution, or visit \n\
 
 				/* all remaining arguments are part of the query string
 				 * this section of code concatenates all remaining arguments
-				 * into a single string, seperating args with a &
+				 * into a single string, separating args with a &
 				 * this allows command lines like:
 				 *
 				 *  test.php v1=test v2=hello+world!
@@ -2432,13 +2446,16 @@ consult the installation file that came with this distribution, or visit \n\
 						    int i = 1;
 
 						    c = file_handle.handle.stream.mmap.buf[i++];
-							while (c != '\n' && c != '\r' && c != EOF) {
+							while (c != '\n' && c != '\r' && i < file_handle.handle.stream.mmap.len) {
 								c = file_handle.handle.stream.mmap.buf[i++];
 							}
 							if (c == '\r') {
-								if (file_handle.handle.stream.mmap.buf[i] == '\n') {
+								if (i < file_handle.handle.stream.mmap.len && file_handle.handle.stream.mmap.buf[i] == '\n') {
 									i++;
 								}
+							}
+							if(i > file_handle.handle.stream.mmap.len) {
+								i = file_handle.handle.stream.mmap.len;
 							}
 							file_handle.handle.stream.mmap.buf += i;
 							file_handle.handle.stream.mmap.len -= i;

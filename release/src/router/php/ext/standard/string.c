@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -13,21 +13,14 @@
    | license@php.net so we can mail you a copy immediately.               |
    +----------------------------------------------------------------------+
    | Authors: Rasmus Lerdorf <rasmus@php.net>                             |
-   |          Stig Sæther Bakken <ssb@php.net>                            |
+   |          Stig Sï¿½ther Bakken <ssb@php.net>                            |
    |          Zeev Suraski <zeev@zend.com>                                |
    +----------------------------------------------------------------------+
  */
 
 /* $Id$ */
 
-/* Synced with php 3.0 revision 1.193 1999-06-16 [ssb] */
-
 #include <stdio.h>
-#ifdef PHP_WIN32
-# include "win32/php_stdint.h"
-#else
-# include <stdint.h>
-#endif
 #include "php.h"
 #include "php_rand.h"
 #include "php_string.h"
@@ -137,6 +130,9 @@ static char *php_bin2hex(const unsigned char *old, const size_t oldlen, size_t *
 	register unsigned char *result = NULL;
 	size_t i, j;
 
+	if (UNEXPECTED(oldlen * 2 * sizeof(char) > INT_MAX)) {
+		zend_error(E_ERROR, "String size overflow");
+	}
 	result = (unsigned char *) safe_emalloc(oldlen, 2 * sizeof(char), 1);
 
 	for (i = j = 0; i < oldlen; i++) {
@@ -197,16 +193,23 @@ static char *php_hex2bin(const unsigned char *old, const size_t oldlen, size_t *
  * glibc's localeconv is not reentrant, so lets make it so ... sorta */
 PHPAPI struct lconv *localeconv_r(struct lconv *out)
 {
-	struct lconv *res;
 
 # ifdef ZTS
 	tsrm_mutex_lock( locale_mutex );
 # endif
 
+#if defined(PHP_WIN32) && defined(ZTS)
+	{
+		/* Even with the enabled per thread locale, localeconv
+			won't check any locale change in the master thread. */
+		_locale_t cur = _get_current_locale();
+		*out = *cur->locinfo->lconv;
+		_free_locale(cur);
+	}
+#else
 	/* localeconv doesn't return an error condition */
-	res = localeconv();
-
-	*out = *res;
+	*out = *localeconv();
+#endif
 
 # ifdef ZTS
 	tsrm_mutex_unlock( locale_mutex );
@@ -878,11 +881,12 @@ PHP_FUNCTION(wordwrap)
 {
 	const char *text, *breakchar = "\n";
 	char *newtext;
-	int textlen, breakcharlen = 1, newtextlen, chk;
+	int textlen, breakcharlen = 1, chk;
 	size_t alloced;
-	long current = 0, laststart = 0, lastspace = 0;
+	size_t current = 0, laststart = 0, lastspace = 0;
 	long linelength = 75;
 	zend_bool docut = 0;
+	size_t newtextlen;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|lsb", &text, &textlen, &linelength, &breakchar, &breakcharlen, &docut) == FAILURE) {
 		return;
@@ -899,6 +903,15 @@ PHP_FUNCTION(wordwrap)
 
 	if (linelength == 0 && docut) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Can't force cut when width is zero");
+		RETURN_FALSE;
+	}
+
+	if (linelength < 0) {
+		/* For BC */
+		linelength = 0;
+	}
+	if (linelength > INT_MAX) {
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Length should be between 0 and %d", INT_MAX);
 		RETURN_FALSE;
 	}
 
@@ -929,10 +942,10 @@ PHP_FUNCTION(wordwrap)
 		if (linelength > 0) {
 			chk = (int)(textlen/linelength + 1);
 			newtext = safe_emalloc(chk, breakcharlen, textlen + 1);
-			alloced = textlen + chk * breakcharlen + 1;
+			alloced = (size_t)textlen + chk * (size_t)breakcharlen + 1;
 		} else {
 			chk = textlen;
-			alloced = textlen * (breakcharlen + 1) + 1;
+			alloced = (size_t)textlen * ((size_t)breakcharlen + 1) + 1;
 			newtext = safe_emalloc(textlen, (breakcharlen + 1), 1);
 		}
 
@@ -1006,7 +1019,7 @@ PHP_FUNCTION(wordwrap)
 		/* free unused memory */
 		newtext = erealloc(newtext, newtextlen+1);
 
-		RETURN_STRINGL(newtext, newtextlen, 0);
+		RETVAL_STRINGL_CHECK(newtext, newtextlen, 0);
 	}
 }
 /* }}} */
@@ -1444,7 +1457,7 @@ PHPAPI void php_basename(const char *s, size_t len, char *suffix, size_t sufflen
 					}
 #if defined(PHP_WIN32) || defined(NETWARE)
 				/* Catch relative paths in c:file.txt style. They're not to confuse
-				   with the NTFS streams. This part ensures also, that no drive 
+				   with the NTFS streams. This part ensures also, that no drive
 				   letter traversing happens. */
 				} else if ((*c == ':' && (c - comp == 1))) {
 					if (state == 0) {
@@ -2396,7 +2409,7 @@ PHP_FUNCTION(substr_replace)
 				l = Z_STRLEN_PP(str);
 			}
 
-			if ((f + l) > Z_STRLEN_PP(str)) {
+			if (f > Z_STRLEN_PP(str) - l) {
 				l = Z_STRLEN_PP(str) - f;
 			}
 			if (Z_TYPE_PP(repl) == IS_ARRAY) {
@@ -2409,7 +2422,7 @@ PHP_FUNCTION(substr_replace)
 				repl_len = Z_STRLEN_PP(repl);
 			}
 			result_len = Z_STRLEN_PP(str) - l + repl_len;
-			result = emalloc(result_len + 1);
+			result = safe_emalloc_string(1, result_len, 1);
 
 			memcpy(result, Z_STRVAL_PP(str), f);
 			if (repl_len) {
@@ -2551,7 +2564,7 @@ PHP_FUNCTION(substr_replace)
 
 					result_len += Z_STRLEN_P(repl_str);
 					zend_hash_move_forward_ex(Z_ARRVAL_PP(repl), &pos_repl);
-					result = emalloc(result_len + 1);
+					result = safe_emalloc_string(1, result_len, 1);
 
 					memcpy(result, Z_STRVAL_P(orig_str), f);
 					memcpy((result + f), Z_STRVAL_P(repl_str), Z_STRLEN_P(repl_str));
@@ -2560,7 +2573,7 @@ PHP_FUNCTION(substr_replace)
 						zval_dtor(repl_str);
 					}
 				} else {
-					result = emalloc(result_len + 1);
+					result = safe_emalloc_string(1, result_len, 1);
 
 					memcpy(result, Z_STRVAL_P(orig_str), f);
 					memcpy((result + f), Z_STRVAL_P(orig_str) + f + l, Z_STRLEN_P(orig_str) - f - l);
@@ -2568,7 +2581,7 @@ PHP_FUNCTION(substr_replace)
 			} else {
 				result_len += Z_STRLEN_PP(repl);
 
-				result = emalloc(result_len + 1);
+				result = safe_emalloc_string(1, result_len, 1);
 
 				memcpy(result, Z_STRVAL_P(orig_str), f);
 				memcpy((result + f), Z_STRVAL_PP(repl), Z_STRLEN_PP(repl));
@@ -2603,6 +2616,7 @@ PHP_FUNCTION(quotemeta)
 	char *p, *q;
 	char c;
 	int  old_len;
+	size_t new_len;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &old, &old_len) == FAILURE) {
 		return;
@@ -2614,7 +2628,7 @@ PHP_FUNCTION(quotemeta)
 		RETURN_FALSE;
 	}
 
-	str = safe_emalloc(2, old_len, 1);
+	str = safe_emalloc_string(2, old_len, 1);
 
 	for (p = old, q = str; p != old_end; p++) {
 		c = *p;
@@ -2637,8 +2651,13 @@ PHP_FUNCTION(quotemeta)
 		}
 	}
 	*q = 0;
+	new_len = q - str;
+	if (UNEXPECTED(new_len > INT_MAX)) {
+		efree(str);
+		zend_error(E_ERROR, "String size overflow");
+	}
 
-	RETURN_STRINGL(erealloc(str, q - str + 1), q - str, 0);
+	RETURN_STRINGL(erealloc(str, new_len + 1), new_len, 0);
 }
 /* }}} */
 
@@ -2739,15 +2758,16 @@ PHP_FUNCTION(lcfirst)
 }
 /* }}} */
 
-/* {{{ proto string ucwords(string str)
+/* {{{ proto string ucwords(string str [, string delims])
    Uppercase the first character of every word in a string */
 PHP_FUNCTION(ucwords)
 {
-	char *str;
+	char *str, *delims = " \t\r\n\f\v";
 	register char *r, *r_end;
-	int str_len;
+	int str_len, delims_len = 6;
+	char mask[256];
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &str, &str_len) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|s", &str, &str_len, &delims, &delims_len) == FAILURE) {
 		return;
 	}
 
@@ -2755,12 +2775,14 @@ PHP_FUNCTION(ucwords)
 		RETURN_EMPTY_STRING();
 	}
 
+	php_charmask((unsigned char *)delims, delims_len, mask TSRMLS_CC);
+
 	ZVAL_STRINGL(return_value, str, str_len, 1);
 	r = Z_STRVAL_P(return_value);
 
 	*r = toupper((unsigned char) *r);
 	for (r_end = r + Z_STRLEN_P(return_value) - 1; r < r_end; ) {
-		if (isspace((int) *(unsigned char *)r++)) {
+		if (mask[(unsigned char)*r++]) {
 			*r = toupper((unsigned char) *r);
 		}
 	}
@@ -2975,7 +2997,7 @@ static PPRES *php_strtr_array_prepare(STR *text, PATNREPL *patterns, int patnum,
 			res->m = L(&patterns[i].pat);
 		}
 	}
-	assert(res->m > 0);
+	assert(res->m > 0 && res->m != (STRLEN)-1);
 	res->B	= B		= MIN(B, res->m);
 	res->Bp	= Bp	= MIN(Bp, res->m);
 
@@ -3106,12 +3128,22 @@ static void php_strtr_array(zval *return_value, char *str, int slen, HashTable *
 	int			patterns_len;
 	zend_llist	*allocs;
 
+	if (zend_hash_num_elements(pats) == 0) {
+		RETURN_STRINGL(str, slen, 1);
+	}
+
 	S(&text) = str;
 	L(&text) = slen;
 
 	patterns = php_strtr_array_prepare_repls(slen, pats, &allocs, &patterns_len);
 	if (patterns == NULL) {
 		RETURN_FALSE;
+	}
+	if (patterns_len == 0) {
+		efree(patterns);
+		zend_llist_destroy(allocs);
+		efree(allocs);
+		RETURN_STRINGL(str, slen, 1);
 	}
 	data = php_strtr_array_prepare(&text, patterns, patterns_len, 2, 2);
 	efree(patterns);
@@ -3483,7 +3515,7 @@ PHPAPI char *php_addcslashes(const char *str, int length, int *new_length, int s
 	char *source, *target;
 	char *end;
 	char c;
-	int  newlen;
+	size_t  newlen;
 
 	if (!wlength) {
 		wlength = strlen(what);
@@ -3514,11 +3546,15 @@ PHPAPI char *php_addcslashes(const char *str, int length, int *new_length, int s
 	}
 	*target = 0;
 	newlen = target - new_str;
+	if (UNEXPECTED(newlen > INT_MAX)) {
+		efree(new_str);
+		zend_error(E_ERROR, "String size overflow");
+	}
 	if (target - new_str < length * 4) {
 		new_str = erealloc(new_str, newlen + 1);
 	}
 	if (new_length) {
-		*new_length = newlen;
+		*new_length = (int)newlen;
 	}
 	if (should_free) {
 		STR_FREE((char*)str);
@@ -3570,6 +3606,9 @@ PHPAPI char *php_addslashes(char *str, int length, int *new_length, int should_f
 
 	*target = 0;
 	*new_length = target - new_str;
+	if (UNEXPECTED(*new_length < 0)) {
+		zend_error(E_ERROR, "String size overflow");
+	}
 	if (should_free) {
 		STR_FREE(str);
 	}
@@ -3612,7 +3651,10 @@ PHPAPI int php_char_to_str_ex(char *str, uint len, char from, char *to, int to_l
 	}
 
 	Z_STRLEN_P(result) = len + (char_count * (to_len - 1));
-	Z_STRVAL_P(result) = target = safe_emalloc(char_count, to_len, len + 1);
+	if (Z_STRLEN_P(result) < 0) {
+		zend_error(E_ERROR, "String size overflow");
+	}
+	Z_STRVAL_P(result) = target = safe_emalloc_string(char_count, to_len, len + 1);
 	Z_TYPE_P(result) = IS_STRING;
 
 	if (case_sensitivity) {
@@ -3742,7 +3784,7 @@ PHPAPI char *php_str_to_str_ex(char *haystack, int length,
 					}
 					return new_str;
 				} else {
-					new_str = safe_emalloc(count, str_len - needle_len, length + 1);
+					new_str = safe_emalloc_string(count, str_len - needle_len, length + 1);
 				}
 			}
 
@@ -3923,7 +3965,7 @@ static void php_str_replace_in_subject(zval *search, zval *replace, zval **subje
 														   replace_value, replace_len, &Z_STRLEN(temp_result), case_sensitivity, replace_count);
 			}
 
-           str_efree(Z_STRVAL_P(result));
+			str_efree(Z_STRVAL_P(result));
 			Z_STRVAL_P(result) = Z_STRVAL(temp_result);
 			Z_STRLEN_P(result) = Z_STRLEN(temp_result);
 
@@ -4234,7 +4276,7 @@ PHP_FUNCTION(nl2br)
 {
 	/* in brief this inserts <br /> or <br> before matched regexp \n\r?|\r\n? */
 	char		*tmp, *str;
-	int		new_length;
+	size_t		new_length;
 	char		*end, *target;
 	int		repl_cnt = 0;
 	int		str_len;
@@ -4273,7 +4315,7 @@ PHP_FUNCTION(nl2br)
 		size_t repl_len = is_xhtml ? (sizeof("<br />") - 1) : (sizeof("<br>") - 1);
 
 		new_length = str_len + repl_cnt * repl_len;
-		tmp = target = safe_emalloc(repl_cnt, repl_len, str_len + 1);
+		tmp = target = safe_emalloc_string(repl_cnt, repl_len, str_len + 1);
 	}
 
 	while (str < end) {
@@ -4578,6 +4620,7 @@ PHPAPI size_t php_strip_tags_ex(char *rbuf, int len, int *stateptr, char *allow,
 	int br, i=0, depth=0, in_q = 0;
 	int state = 0, pos;
 	char *allow_free = NULL;
+	char is_xml = 0;
 
 	if (stateptr)
 		state = *stateptr;
@@ -4677,7 +4720,10 @@ PHPAPI size_t php_strip_tags_ex(char *rbuf, int len, int *stateptr, char *allow,
 				switch (state) {
 					case 1: /* HTML/XML */
 						lc = '>';
-						in_q = state = 0;
+						if (is_xml && *(p -1) == '-') {
+							break;
+						}
+						in_q = state = is_xml = 0;
 						if (allow) {
 							if (tp - tbuf >= PHP_TAG_BUF_SIZE) {
 								pos = tp - tbuf;
@@ -4806,8 +4852,8 @@ PHPAPI size_t php_strip_tags_ex(char *rbuf, int len, int *stateptr, char *allow,
 				 * state == 2 (PHP). Switch back to HTML.
 				 */
 
-				if (state == 2 && p > buf+2 && strncasecmp(p-2, "xm", 2) == 0) {
-					state = 1;
+				if (state == 2 && p > buf+4 && strncasecmp(p-4, "<?xm", 4) == 0) {
+					state = 1; is_xml=1;
 					break;
 				}
 
@@ -4893,6 +4939,10 @@ PHP_FUNCTION(str_repeat)
 
 	/* Initialize the result string */
 	result_len = input_len * mult;
+	if(result_len > INT_MAX) {
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Result is too big, maximum %d allowed", INT_MAX);
+		RETURN_EMPTY_STRING();
+	}
 	result = (char *)safe_emalloc(input_len, mult, 1);
 
 	/* Heavy optimization for situations where input string is 1 byte long */
@@ -5258,7 +5308,7 @@ PHP_FUNCTION(str_pad)
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Padding length is too long");
 		return;
 	}
-	result = (char *)emalloc(input_len + num_pad_chars + 1);
+	result = (char *)safe_emalloc_string(1, input_len, num_pad_chars + 1);
 
 	/* We need to figure out the left/right padding lengths. */
 	switch (pad_type_val) {
@@ -5597,8 +5647,12 @@ PHP_FUNCTION(substr_compare)
 	}
 
 	if (ZEND_NUM_ARGS() >= 4 && len <= 0) {
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "The length must be greater than zero");
-		RETURN_FALSE;
+		if (len == 0) {
+			RETURN_LONG(0L);
+		} else {
+			php_error_docref(NULL TSRMLS_CC, E_WARNING, "The length must be greater than or equal to zero");
+			RETURN_FALSE;
+		}
 	}
 
 	if (offset < 0) {

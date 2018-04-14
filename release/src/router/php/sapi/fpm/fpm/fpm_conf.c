@@ -123,6 +123,10 @@ static struct ini_value_parser_s ini_fpm_pool_options[] = {
 	{ "group",                     &fpm_conf_set_string,      WPO(group) },
 	{ "listen",                    &fpm_conf_set_string,      WPO(listen_address) },
 	{ "listen.backlog",            &fpm_conf_set_integer,     WPO(listen_backlog) },
+#ifdef HAVE_FPM_ACL
+	{ "listen.acl_users",          &fpm_conf_set_string,      WPO(listen_acl_users) },
+	{ "listen.acl_groups",         &fpm_conf_set_string,      WPO(listen_acl_groups) },
+#endif
 	{ "listen.owner",              &fpm_conf_set_string,      WPO(listen_owner) },
 	{ "listen.group",              &fpm_conf_set_string,      WPO(listen_group) },
 	{ "listen.mode",               &fpm_conf_set_string,      WPO(listen_mode) },
@@ -148,7 +152,11 @@ static struct ini_value_parser_s ini_fpm_pool_options[] = {
 	{ "chroot",                    &fpm_conf_set_string,      WPO(chroot) },
 	{ "chdir",                     &fpm_conf_set_string,      WPO(chdir) },
 	{ "catch_workers_output",      &fpm_conf_set_boolean,     WPO(catch_workers_output) },
+	{ "clear_env",                 &fpm_conf_set_boolean,     WPO(clear_env) },
 	{ "security.limit_extensions", &fpm_conf_set_string,      WPO(security_limit_extensions) },
+#ifdef HAVE_APPARMOR
+	{ "apparmor_hat",              &fpm_conf_set_string,      WPO(apparmor_hat) },
+#endif
 	{ 0, 0, 0 }
 };
 
@@ -566,6 +574,8 @@ static char *fpm_conf_set_array(zval *key, zval *value, void **config, int conve
 	} else {
 		kv->value = strdup(Z_STRVAL_P(value));
 		if (fpm_conf_expand_pool_name(&kv->value) == -1) {
+			free(kv->key);
+			free(kv);
 			return "Can't use '$pool' when the pool is not defined";
 		}
 	}
@@ -603,6 +613,7 @@ static void *fpm_worker_pool_config_alloc() /* {{{ */
 	wp->config->listen_backlog = FPM_BACKLOG_DEFAULT;
 	wp->config->pm_process_idle_timeout = 10; /* 10s by default */
 	wp->config->process_priority = 64; /* 64 means unset */
+	wp->config->clear_env = 1;
 
 	if (!fpm_worker_all_pools) {
 		fpm_worker_all_pools = wp;
@@ -644,6 +655,9 @@ int fpm_worker_pool_config_free(struct fpm_worker_pool_config_s *wpc) /* {{{ */
 	free(wpc->chroot);
 	free(wpc->chdir);
 	free(wpc->security_limit_extensions);
+#ifdef HAVE_APPARMOR
+	free(wpc->apparmor_hat);
+#endif
 
 	for (kv = wpc->php_values; kv; kv = kv_next) {
 		kv_next = kv->next;
@@ -749,8 +763,8 @@ static int fpm_conf_process_all_pools() /* {{{ */
 			}
 		}
 
-		/* alert if user is not set only if we are not root*/
-		if (!wp->config->user && !geteuid()) {
+		/* alert if user is not set; only if we are root and fpm is not running with --allow-to-run-as-root */
+		if (!wp->config->user && !geteuid() && !fpm_globals.run_as_root) {
 			zlog(ZLOG_ALERT, "[pool %s] user has not been defined", wp->config->name);
 			return -1;
 		}
@@ -811,7 +825,7 @@ static int fpm_conf_process_all_pools() /* {{{ */
 
 			if (config->pm_start_servers <= 0) {
 				config->pm_start_servers = config->pm_min_spare_servers + ((config->pm_max_spare_servers - config->pm_min_spare_servers) / 2);
-				zlog(ZLOG_WARNING, "[pool %s] pm.start_servers is not set. It's been set to %d.", wp->config->name, config->pm_start_servers);
+				zlog(ZLOG_NOTICE, "[pool %s] pm.start_servers is not set. It's been set to %d.", wp->config->name, config->pm_start_servers);
 
 			} else if (config->pm_start_servers < config->pm_min_spare_servers || config->pm_start_servers > config->pm_max_spare_servers) {
 				zlog(ZLOG_ALERT, "[pool %s] pm.start_servers(%d) must not be less than pm.min_spare_servers(%d) and not greater than pm.max_spare_servers(%d)", wp->config->name, config->pm_start_servers, config->pm_min_spare_servers, config->pm_max_spare_servers);
@@ -1067,6 +1081,9 @@ static int fpm_conf_process_all_pools() /* {{{ */
 				}
 			}
 			for (kv = wp->config->php_admin_values; kv; kv = kv->next) {
+				if (!strcasecmp(kv->key, "error_log") && !strcasecmp(kv->value, "syslog")) {
+					continue;
+				}
 				for (p = options; *p; p++) {
 					if (!strcasecmp(kv->key, *p)) {
 						fpm_evaluate_full_path(&kv->value, wp, NULL, 0);
@@ -1148,6 +1165,7 @@ static int fpm_conf_post_process(int force_daemon TSRMLS_DC) /* {{{ */
 	}
 
 	fpm_globals.log_level = fpm_global_config.log_level;
+	zlog_set_level(fpm_globals.log_level);
 
 	if (fpm_global_config.process_max < 0) {
 		zlog(ZLOG_ERROR, "process_max can't be negative");
@@ -1188,15 +1206,15 @@ static int fpm_conf_post_process(int force_daemon TSRMLS_DC) /* {{{ */
 		return -1;
 	}
 
-	if (0 > fpm_log_open(0)) {
-		return -1;
-	}
-
 	if (0 > fpm_event_pre_init(fpm_global_config.events_mechanism)) {
 		return -1;
 	}
 
 	if (0 > fpm_conf_process_all_pools()) {
+		return -1;
+	}
+
+	if (0 > fpm_log_open(0)) {
 		return -1;
 	}
 
@@ -1245,7 +1263,7 @@ static void fpm_conf_ini_parser_include(char *inc, void *arg TSRMLS_DC) /* {{{ *
 #ifdef HAVE_GLOB
 	{
 		g.gl_offs = 0;
-		if ((i = glob(inc, GLOB_ERR | GLOB_MARK | GLOB_NOSORT, NULL, &g)) != 0) {
+		if ((i = glob(inc, GLOB_ERR | GLOB_MARK, NULL, &g)) != 0) {
 #ifdef GLOB_NOMATCH
 			if (i == GLOB_NOMATCH) {
 				zlog(ZLOG_WARNING, "Nothing matches the include pattern '%s' from %s at line %d.", inc, filename, ini_lineno);
@@ -1571,6 +1589,10 @@ static void fpm_conf_dump() /* {{{ */
 		zlog(ZLOG_NOTICE, "\tgroup = %s",                      STR2STR(wp->config->group));
 		zlog(ZLOG_NOTICE, "\tlisten = %s",                     STR2STR(wp->config->listen_address));
 		zlog(ZLOG_NOTICE, "\tlisten.backlog = %d",             wp->config->listen_backlog);
+#ifdef HAVE_FPM_ACL
+		zlog(ZLOG_NOTICE, "\tlisten.acl_users = %s",           STR2STR(wp->config->listen_acl_users));
+		zlog(ZLOG_NOTICE, "\tlisten.acl_groups = %s",          STR2STR(wp->config->listen_acl_groups));
+#endif
 		zlog(ZLOG_NOTICE, "\tlisten.owner = %s",               STR2STR(wp->config->listen_owner));
 		zlog(ZLOG_NOTICE, "\tlisten.group = %s",               STR2STR(wp->config->listen_group));
 		zlog(ZLOG_NOTICE, "\tlisten.mode = %s",                STR2STR(wp->config->listen_mode));
@@ -1600,6 +1622,7 @@ static void fpm_conf_dump() /* {{{ */
 		zlog(ZLOG_NOTICE, "\tchroot = %s",                     STR2STR(wp->config->chroot));
 		zlog(ZLOG_NOTICE, "\tchdir = %s",                      STR2STR(wp->config->chdir));
 		zlog(ZLOG_NOTICE, "\tcatch_workers_output = %s",       BOOL2STR(wp->config->catch_workers_output));
+		zlog(ZLOG_NOTICE, "\tclear_env = %s",                  BOOL2STR(wp->config->clear_env));
 		zlog(ZLOG_NOTICE, "\tsecurity.limit_extensions = %s",  wp->config->security_limit_extensions);
 
 		for (kv = wp->config->env; kv; kv = kv->next) {

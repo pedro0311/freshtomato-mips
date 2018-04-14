@@ -57,21 +57,21 @@ static inline int clip(float v, int a, int b) {
   return (v > b) ? b : (v < 0) ? 0 : (int)(v);
 }
 enum {
-    COLOR_RED = 0,
-    COLOR_GREEN = 1,
-    COLOR_BLUE = 2,
-    ALPHA_CHANNEL = 3
+    COLOR_RED = 1,
+    COLOR_GREEN = 2,
+    COLOR_BLUE = 3,
+    ALPHA_CHANNEL = 0
 };
 
-/* endian neutral extractions of RGBA from a 32 bit pixel */
+/* endian neutral extractions of ARGB from a 32 bit pixel */
 static const uint32  RED_SHIFT =
-       8 * (sizeof(uint32) - 1 - COLOR_RED);           /* 24 */
+       8 * (sizeof(uint32) - 1 - COLOR_RED);           /* 16 */
 static const uint32  GREEN_SHIFT =
-       8 * (sizeof(uint32) - 1 - COLOR_GREEN);         /* 16 */
+       8 * (sizeof(uint32) - 1 - COLOR_GREEN);         /*  8 */
 static const uint32  BLUE_SHIFT =
-       8 * (sizeof(uint32) - 1 - COLOR_BLUE);          /*  8 */
+       8 * (sizeof(uint32) - 1 - COLOR_BLUE);          /*  0 */
 static const uint32  ALPHA_SHIFT =
-       8 * (sizeof(uint32) - 1 - ALPHA_CHANNEL);       /*  0 */
+       8 * (sizeof(uint32) - 1 - ALPHA_CHANNEL);       /* 24 */
 
 static inline int GetRed(const uint32* rgba) {
 	return gdTrueColorGetRed(*rgba);
@@ -169,7 +169,7 @@ static inline uint32 get_le32(const uint8* const data) {
  *   Y2/U2/V2: The Y/U/V data of the second image
  *
  * Returns the PSNR (http://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio)
- * value computed bewteen the two images
+ * value computed between the two images
  */
 double GetPSNRYuv(const uint8* Y1,
                   const uint8* U1,
@@ -210,7 +210,7 @@ double GetPSNRYuv(const uint8* Y1,
  *   imgdata: data buffer containing webp image
  *   imgdata_size: size of the imgdata buffer
  *
- * Returns the PSNR value computed bewteen the two images
+ * Returns the PSNR value computed between the two images
  */
 double WebPGetPSNR(const uint8* Y1,
                    const uint8* U1,
@@ -706,14 +706,14 @@ static WebPResult VPXEncode(const uint8* Y,
     codec_ctl(&enc, VP8E_SET_STATIC_THRESHOLD, 0);
     codec_ctl(&enc, VP8E_SET_TOKEN_PARTITIONS, 2);
 
-    vpx_img_wrap(&img, IMG_FMT_I420,
+    vpx_img_wrap(&img, VPX_IMG_FMT_I420,
                  y_width, y_height, 16, (uint8*)(Y));
-    img.planes[PLANE_Y] = (uint8*)(Y);
-    img.planes[PLANE_U] = (uint8*)(U);
-    img.planes[PLANE_V] = (uint8*)(V);
-    img.stride[PLANE_Y] = y_stride;
-    img.stride[PLANE_U] = uv_stride;
-    img.stride[PLANE_V] = uv_stride;
+    img.planes[VPX_PLANE_Y] = (uint8*)(Y);
+    img.planes[VPX_PLANE_U] = (uint8*)(U);
+    img.planes[VPX_PLANE_V] = (uint8*)(V);
+    img.stride[VPX_PLANE_Y] = y_stride;
+    img.stride[VPX_PLANE_U] = uv_stride;
+    img.stride[VPX_PLANE_V] = uv_stride;
 
     res = vpx_codec_encode(&enc, &img, 0, 1, 0, VPX_DL_BEST_QUALITY);
 
@@ -778,6 +778,20 @@ WebPResult WebPEncode(const uint8* Y,
 										(chunk_size >> 16) & 255,
 										(chunk_size >> 24) & 255 };
 	  memcpy(*p_out, kRiffHeader, kRiffHeaderSize);
+
+	  if (img_size_bytes & 1) {  /* write a padding byte */
+		const int new_size = *p_out_size_bytes + 1;
+		unsigned char* p = (unsigned char*)realloc(*p_out, new_size);
+		if (p == NULL) {
+		  free(*p_out);
+		  *p_out = NULL;
+		  *p_out_size_bytes = 0;
+		  return webp_failure;
+		}
+		p[new_size - 1] = 0;
+        *p_out = p;
+		*p_out_size_bytes = new_size;
+	  }
 
 	  if (psnr) {
 		*psnr = WebPGetPSNR(Y, U, V, *p_out, *p_out_size_bytes);

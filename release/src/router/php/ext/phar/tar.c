@@ -2,7 +2,7 @@
   +----------------------------------------------------------------------+
   | TAR archive support for Phar                                         |
   +----------------------------------------------------------------------+
-  | Copyright (c) 2005-2014 The PHP Group                                |
+  | Copyright (c) 2005-2016 The PHP Group                                |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -102,7 +102,7 @@ int phar_is_tar(char *buf, char *fname) /* {{{ */
 	tar_header *header = (tar_header *) buf;
 	php_uint32 checksum = phar_tar_number(header->checksum, sizeof(header->checksum));
 	php_uint32 ret;
-	char save[sizeof(header->checksum)];
+	char save[sizeof(header->checksum)], *bname;
 
 	/* assume that the first filename in a tar won't begin with <?php */
 	if (!strncmp(buf, "<?php", sizeof("<?php")-1)) {
@@ -113,7 +113,10 @@ int phar_is_tar(char *buf, char *fname) /* {{{ */
 	memset(header->checksum, ' ', sizeof(header->checksum));
 	ret = (checksum == phar_tar_checksum(buf, 512));
 	memcpy(header->checksum, save, sizeof(header->checksum));
-	if (!ret && strstr(fname, ".tar")) {
+	if ((bname = strrchr(fname, PHP_DIR_SEPARATOR))) {
+		fname = bname;
+	}
+	if (!ret && (bname = strstr(fname, ".tar")) && (bname[4] == '\0' || bname[4] == '.')) {
 		/* probably a corrupted tar - so we will pretend it is one */
 		return 1;
 	}
@@ -192,6 +195,13 @@ static int phar_tar_process_metadata(phar_entry_info *entry, php_stream *fp TSRM
 }
 /* }}} */
 
+#if !HAVE_STRNLEN
+static size_t strnlen(const char *s, size_t maxlen) {
+        char *r = (char *)memchr(s, '\0', maxlen);
+        return r ? r-s : maxlen;
+}
+#endif
+
 int phar_parse_tarfile(php_stream* fp, char *fname, int fname_len, char *alias, int alias_len, phar_archive_data** pphar, int is_data, php_uint32 compression, char **error TSRMLS_DC) /* {{{ */
 {
 	char buf[512], *actual_alias = NULL, *p;
@@ -201,6 +211,7 @@ int phar_parse_tarfile(php_stream* fp, char *fname, int fname_len, char *alias, 
 	php_uint32 sum1, sum2, size, old;
 	phar_archive_data *myphar, **actual;
 	int last_was_longlink = 0;
+	int linkname_len;
 
 	if (error) {
 		*error = NULL;
@@ -255,7 +266,13 @@ int phar_parse_tarfile(php_stream* fp, char *fname, int fname_len, char *alias, 
 		size = entry.uncompressed_filesize = entry.compressed_filesize =
 			phar_tar_number(hdr->size, sizeof(hdr->size));
 
-		if (((!old && hdr->prefix[0] == 0) || old) && strlen(hdr->name) == sizeof(".phar/signature.bin")-1 && !strncmp(hdr->name, ".phar/signature.bin", sizeof(".phar/signature.bin")-1)) {
+		/* skip global/file headers (pax) */
+		if (!old && (hdr->typeflag == TAR_GLOBAL_HDR || hdr->typeflag == TAR_FILE_HDR)) {
+			size = (size+511)&~511;
+			goto next;
+		}
+
+		if (((!old && hdr->prefix[0] == 0) || old) && strnlen(hdr->name, 100) == sizeof(".phar/signature.bin")-1 && !strncmp(hdr->name, ".phar/signature.bin", sizeof(".phar/signature.bin")-1)) {
 			off_t curloc;
 
 			if (size > 511) {
@@ -269,7 +286,7 @@ bail:
 			}
 			curloc = php_stream_tell(fp);
 			read = php_stream_read(fp, buf, size);
-			if (read != size) {
+			if (read != size || read <= 8) {
 				if (error) {
 					spprintf(error, 4096, "phar error: tar-based phar \"%s\" signature cannot be read", fname);
 				}
@@ -339,7 +356,7 @@ bail:
 			entry.filename_len = entry.uncompressed_filesize;
 
 			/* Check for overflow - bug 61065 */
-			if (entry.filename_len == UINT_MAX) {
+			if (entry.filename_len == UINT_MAX || entry.filename_len == 0) {
 				if (error) {
 					spprintf(error, 4096, "phar error: \"%s\" is a corrupted tar file (invalid entry size)", fname);
 				}
@@ -425,7 +442,7 @@ bail:
 			entry.filename_len = i;
 			entry.filename = pestrndup(hdr->name, i, myphar->is_persistent);
 
-			if (entry.filename[entry.filename_len - 1] == '/') {
+			if (i > 0 && entry.filename[entry.filename_len - 1] == '/') {
 				/* some tar programs store directories with trailing slash */
 				entry.filename[entry.filename_len - 1] = '\0';
 				entry.filename_len--;
@@ -465,23 +482,27 @@ bail:
 		}
 
 		entry.link = NULL;
-
+		/* link field is null-terminated unless it has 100 non-null chars.
+		 * Thus we can not use strlen. */
+		linkname_len = strnlen(hdr->linkname, 100);
 		if (entry.tar_type == TAR_LINK) {
-			if (!zend_hash_exists(&myphar->manifest, hdr->linkname, strlen(hdr->linkname))) {
+			if (!zend_hash_exists(&myphar->manifest, hdr->linkname, linkname_len)) {
 				if (error) {
-					spprintf(error, 4096, "phar error: \"%s\" is a corrupted tar file - hard link to non-existent file \"%s\"", fname, hdr->linkname);
+					spprintf(error, 4096, "phar error: \"%s\" is a corrupted tar file - hard link to non-existent file \"%.*s\"", fname, linkname_len, hdr->linkname);
 				}
 				pefree(entry.filename, entry.is_persistent);
 				php_stream_close(fp);
 				phar_destroy_phar_data(myphar TSRMLS_CC);
 				return FAILURE;
 			}
-			entry.link = estrdup(hdr->linkname);
+			entry.link = estrndup(hdr->linkname, linkname_len);
 		} else if (entry.tar_type == TAR_SYMLINK) {
-			entry.link = estrdup(hdr->linkname);
+			entry.link = estrndup(hdr->linkname, linkname_len);
 		}
 		phar_set_inode(&entry TSRMLS_CC);
-		zend_hash_add(&myphar->manifest, entry.filename, entry.filename_len, (void*)&entry, sizeof(phar_entry_info), (void **) &newentry);
+
+		zend_hash_update(&myphar->manifest, entry.filename, entry.filename_len, (void*)&entry, sizeof(phar_entry_info), (void **) &newentry);
+		ZEND_ASSERT(newentry != NULL);
 
 		if (entry.is_persistent) {
 			++entry.manifest_pos;
@@ -548,6 +569,7 @@ bail:
 		size = (size+511)&~511;
 
 		if (((hdr->typeflag == '\0') || (hdr->typeflag == TAR_FILE)) && size > 0) {
+next:
 			/* this is not good enough - seek succeeds even on truncated tars */
 			php_stream_seek(fp, size, SEEK_CUR);
 			if ((uint)php_stream_tell(fp) > totalsize) {
@@ -783,7 +805,7 @@ static int phar_tar_writeheaders(void *pDest, void *argument TSRMLS_DC) /* {{{ *
 			return ZEND_HASH_APPLY_STOP;
 		}
 
-		if (SUCCESS != phar_stream_copy_to_stream(phar_get_efp(entry, 0 TSRMLS_CC), fp->new, entry->uncompressed_filesize, NULL)) {
+		if (SUCCESS != php_stream_copy_to_stream_ex(phar_get_efp(entry, 0 TSRMLS_CC), fp->new, entry->uncompressed_filesize, NULL)) {
 			if (fp->error) {
 				spprintf(fp->error, 4096, "tar-based phar \"%s\" cannot be created, contents of file \"%s\" could not be written", entry->phar->fname, entry->filename);
 			}
@@ -870,6 +892,9 @@ static int phar_tar_setupmetadata(void *pDest, void *argument TSRMLS_DC) /* {{{ 
 
 	if (entry->filename_len >= sizeof(".phar/.metadata") && !memcmp(entry->filename, ".phar/.metadata", sizeof(".phar/.metadata")-1)) {
 		if (entry->filename_len == sizeof(".phar/.metadata.bin")-1 && !memcmp(entry->filename, ".phar/.metadata.bin", sizeof(".phar/.metadata.bin")-1)) {
+			if (entry->phar->metadata == NULL) {
+				return ZEND_HASH_APPLY_REMOVE;
+			}
 			return phar_tar_setmetadata(entry->phar->metadata, entry, error TSRMLS_CC);
 		}
 		/* search for the file this metadata entry references */
@@ -1288,7 +1313,7 @@ nostub:
 
 			if (!filter) {
 				/* copy contents uncompressed rather than lose them */
-				phar_stream_copy_to_stream(newfile, phar->fp, PHP_STREAM_COPY_ALL, NULL);
+				php_stream_copy_to_stream_ex(newfile, phar->fp, PHP_STREAM_COPY_ALL, NULL);
 				php_stream_close(newfile);
 				if (error) {
 					spprintf(error, 4096, "unable to compress all contents of phar \"%s\" using zlib, PHP versions older than 5.2.6 have a buggy zlib", phar->fname);
@@ -1297,7 +1322,7 @@ nostub:
 			}
 
 			php_stream_filter_append(&phar->fp->writefilters, filter);
-			phar_stream_copy_to_stream(newfile, phar->fp, PHP_STREAM_COPY_ALL, NULL);
+			php_stream_copy_to_stream_ex(newfile, phar->fp, PHP_STREAM_COPY_ALL, NULL);
 			php_stream_filter_flush(filter, 1);
 			php_stream_filter_remove(filter, 1 TSRMLS_CC);
 			php_stream_close(phar->fp);
@@ -1308,14 +1333,14 @@ nostub:
 
 			filter = php_stream_filter_create("bzip2.compress", NULL, php_stream_is_persistent(phar->fp) TSRMLS_CC);
 			php_stream_filter_append(&phar->fp->writefilters, filter);
-			phar_stream_copy_to_stream(newfile, phar->fp, PHP_STREAM_COPY_ALL, NULL);
+			php_stream_copy_to_stream_ex(newfile, phar->fp, PHP_STREAM_COPY_ALL, NULL);
 			php_stream_filter_flush(filter, 1);
 			php_stream_filter_remove(filter, 1 TSRMLS_CC);
 			php_stream_close(phar->fp);
 			/* use the temp stream as our base */
 			phar->fp = newfile;
 		} else {
-			phar_stream_copy_to_stream(newfile, phar->fp, PHP_STREAM_COPY_ALL, NULL);
+			php_stream_copy_to_stream_ex(newfile, phar->fp, PHP_STREAM_COPY_ALL, NULL);
 			/* we could also reopen the file in "rb" mode but there is no need for that */
 			php_stream_close(newfile);
 		}

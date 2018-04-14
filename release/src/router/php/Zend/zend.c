@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | Zend Engine                                                          |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1998-2014 Zend Technologies Ltd. (http://www.zend.com) |
+   | Copyright (c) 1998-2016 Zend Technologies Ltd. (http://www.zend.com) |
    +----------------------------------------------------------------------+
    | This source file is subject to version 2.00 of the Zend license,     |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -30,6 +30,7 @@
 #include "zend_ini.h"
 #include "zend_vm.h"
 #include "zend_dtrace.h"
+#include "zend_virtual_cwd.h"
 
 #ifdef ZTS
 # define GLOBAL_FUNCTION_TABLE		global_function_table
@@ -127,7 +128,7 @@ ZEND_API zval zval_used_for_init; /* True global variable */
 /* version information */
 static char *zend_version_info;
 static uint zend_version_info_length;
-#define ZEND_CORE_VERSION_INFO	"Zend Engine v" ZEND_VERSION ", Copyright (c) 1998-2014 Zend Technologies\n"
+#define ZEND_CORE_VERSION_INFO	"Zend Engine v" ZEND_VERSION ", Copyright (c) 1998-2016 Zend Technologies\n"
 #define PRINT_ZVAL_INDENT 4
 
 static void print_hash(zend_write_func_t write_func, HashTable *ht, int indent, zend_bool is_object TSRMLS_DC) /* {{{ */
@@ -648,6 +649,8 @@ int zend_startup(zend_utility_functions *utility_functions, char **extensions TS
 
 	start_memory_manager(TSRMLS_C);
 
+	virtual_cwd_startup(); /* Could use shutdown to free the main cwd but it would just slow it down for CGI */
+
 #if defined(__FreeBSD__) || defined(__DragonFly__)
 	/* FreeBSD and DragonFly floating point precision fix */
 	fpsetmask(0);
@@ -798,9 +801,14 @@ void zend_post_startup(TSRMLS_D) /* {{{ */
 		compiler_globals_ctor(compiler_globals, tsrm_ls);
 	}
 	free(EG(zend_constants));
+
+	virtual_cwd_deactivate(TSRMLS_C);
+
 	executor_globals_ctor(executor_globals, tsrm_ls);
 	global_persistent_list = &EG(persistent_list);
 	zend_copy_ini_directives(TSRMLS_C);
+#else
+	virtual_cwd_deactivate(TSRMLS_C);
 #endif
 }
 /* }}} */
@@ -810,11 +818,25 @@ void zend_shutdown(TSRMLS_D) /* {{{ */
 #ifdef ZEND_SIGNALS
 	zend_signal_shutdown(TSRMLS_C);
 #endif
-#ifdef ZEND_WIN32
-	zend_shutdown_timeout_thread();
-#endif
 	zend_destroy_rsrc_list(&EG(persistent_list) TSRMLS_CC);
+
+	if (EG(active))
+	{
+		/*
+		 * The order of destruction is important here.
+		 * See bugs #65463 and 66036.
+		 */
+		zend_hash_reverse_apply(GLOBAL_FUNCTION_TABLE, (apply_func_t) zend_cleanup_function_data_full TSRMLS_CC);
+		zend_hash_reverse_apply(GLOBAL_CLASS_TABLE, (apply_func_t) zend_cleanup_user_class_data TSRMLS_CC);
+		zend_cleanup_internal_classes(TSRMLS_C);
+		zend_hash_reverse_apply(GLOBAL_FUNCTION_TABLE, (apply_func_t) clean_non_persistent_function_full TSRMLS_CC);
+		zend_hash_reverse_apply(GLOBAL_CLASS_TABLE, (apply_func_t) clean_non_persistent_class_full TSRMLS_CC);
+	}
+
 	zend_destroy_modules();
+
+ 	virtual_cwd_deactivate(TSRMLS_C);
+ 	virtual_cwd_shutdown();
 
 	zend_hash_destroy(GLOBAL_FUNCTION_TABLE);
 	zend_hash_destroy(GLOBAL_CLASS_TABLE);
@@ -876,7 +898,7 @@ ZEND_API void _zend_bailout(char *filename, uint lineno) /* {{{ */
 /* }}} */
 END_EXTERN_C()
 
-void zend_append_version_info(const zend_extension *extension) /* {{{ */
+ZEND_API void zend_append_version_info(const zend_extension *extension) /* {{{ */
 {
 	char *new_info;
 	uint new_info_length;
@@ -904,8 +926,11 @@ ZEND_API char *get_zend_version(void) /* {{{ */
 }
 /* }}} */
 
-void zend_activate(TSRMLS_D) /* {{{ */
+ZEND_API void zend_activate(TSRMLS_D) /* {{{ */
 {
+#ifdef ZTS
+	virtual_cwd_activate(TSRMLS_C);
+#endif
 	gc_reset(TSRMLS_C);
 	init_compiler(TSRMLS_C);
 	init_executor(TSRMLS_C);
@@ -921,7 +946,7 @@ void zend_call_destructors(TSRMLS_D) /* {{{ */
 }
 /* }}} */
 
-void zend_deactivate(TSRMLS_D) /* {{{ */
+ZEND_API void zend_deactivate(TSRMLS_D) /* {{{ */
 {
 	/* we're no longer executing anything */
 	EG(opline_ptr) = NULL;
@@ -940,7 +965,7 @@ void zend_deactivate(TSRMLS_D) /* {{{ */
 
 	zend_destroy_rsrc_list(&EG(regular_list) TSRMLS_CC);
 
-#ifdef ZEND_DEBUG
+#if ZEND_DEBUG
 	if (GC_G(gc_enabled) && !CG(unclean_shutdown)) {
 		gc_collect_cycles(TSRMLS_C);
 	}

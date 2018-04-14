@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -33,6 +33,18 @@
 #include "ext/standard/file.h"
 #include "ext/standard/php_string.h"
 #include "php_zlib.h"
+
+/*
+ * zlib include files can define the following preprocessor defines which rename
+ * the corresponding PHP functions to gzopen64, gzseek64 and gztell64 and thereby
+ * breaking some software, most notably PEAR's Archive_Tar, which halts execution
+ * without error message on gzip compressed archivesa.
+ *
+ * This only seems to happen on 32bit systems with large file support.
+ */
+#undef gzopen
+#undef gzseek
+#undef gztell
 
 ZEND_DECLARE_MODULE_GLOBALS(zlib);
 
@@ -70,8 +82,8 @@ static int php_zlib_output_encoding(TSRMLS_D)
 	zval **enc;
 
 	if (!ZLIBG(compression_coding)) {
-		zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC);
-		if (PG(http_globals)[TRACK_VARS_SERVER] && SUCCESS == zend_hash_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), "HTTP_ACCEPT_ENCODING", sizeof("HTTP_ACCEPT_ENCODING"), (void *) &enc)) {
+		if ((PG(http_globals)[TRACK_VARS_SERVER]  || zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC)) &&
+				SUCCESS == zend_hash_find(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]), "HTTP_ACCEPT_ENCODING", sizeof("HTTP_ACCEPT_ENCODING"), (void *) &enc)) {
 			convert_to_string(*enc);
 			if (strstr(Z_STRVAL_PP(enc), "gzip")) {
 				ZLIBG(compression_coding) = PHP_ZLIB_ENCODING_GZIP;
@@ -562,7 +574,7 @@ static PHP_FUNCTION(gzfile)
 
 	/* Now loop through the file and do the magic quotes thing if needed */
 	memset(buf, 0, sizeof(buf));
-	    
+
 	while (php_stream_gets(stream, buf, sizeof(buf) - 1) != NULL) {
 		add_index_string(return_value, i++, buf, 1);
 	}
@@ -581,7 +593,7 @@ static PHP_FUNCTION(gzopen)
 	php_stream *stream;
 	long use_include_path = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss|l", &filename, &filename_len, &mode, &mode_len, &use_include_path) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ps|l", &filename, &filename_len, &mode, &mode_len, &use_include_path) == FAILURE) {
 		return;
 	}
 
@@ -609,7 +621,7 @@ static PHP_FUNCTION(readgzfile)
 	int size;
 	long use_include_path = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l", &filename, &filename_len, &use_include_path) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "p|l", &filename, &filename_len, &use_include_path) == FAILURE) {
 		return;
 	}
 
@@ -661,7 +673,7 @@ static PHP_FUNCTION(name) \
 	if (SUCCESS != php_zlib_encode(in_buf, in_len, &out_buf, &out_len, encoding, level TSRMLS_CC)) { \
 		RETURN_FALSE; \
 	} \
-	RETURN_STRINGL(out_buf, out_len, 0); \
+	RETVAL_STRINGL_CHECK(out_buf, out_len, 0); \
 }
 
 #define PHP_ZLIB_DECODE_FUNC(name, encoding) \
@@ -681,7 +693,7 @@ static PHP_FUNCTION(name) \
 	if (SUCCESS != php_zlib_decode(in_buf, in_len, &out_buf, &out_len, encoding, max_len TSRMLS_CC)) { \
 		RETURN_FALSE; \
 	} \
-	RETURN_STRINGL(out_buf, out_len, 0); \
+	RETVAL_STRINGL_CHECK(out_buf, out_len, 0); \
 }
 
 /* {{{ proto binary zlib_encode(binary data, int encoding[, int level = -1])
@@ -919,7 +931,7 @@ static PHP_INI_MH(OnUpdate_zlib_output_handler)
 	return OnUpdateString(entry, new_value, new_value_length, mh_arg1, mh_arg2, mh_arg3, stage TSRMLS_CC);
 }
 /* }}} */
- 
+
 /* {{{ INI */
 PHP_INI_BEGIN()
 	STD_PHP_INI_BOOLEAN("zlib.output_compression",      "0", PHP_INI_ALL, OnUpdate_zlib_output_compression,       output_compression_default,       zend_zlib_globals, zlib_globals)

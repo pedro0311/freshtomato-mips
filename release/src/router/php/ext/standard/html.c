@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -84,6 +84,18 @@
 #define sjis_lead(c) ((c) != 0x80 && (c) != 0xA0 && (c) < 0xFD)
 #define sjis_trail(c) ((c) >= 0x40  && (c) != 0x7F && (c) < 0xFD)
 
+/* {{{ get_default_charset
+ */
+static char *get_default_charset(TSRMLS_D) {
+	if (PG(internal_encoding) && PG(internal_encoding)[0]) {
+		return PG(internal_encoding);
+	} else if (SG(default_charset) && SG(default_charset)[0] ) {
+		return SG(default_charset);
+	}
+	return NULL;
+}
+/* }}} */
+
 /* {{{ get_next_char
  */
 static inline unsigned int get_next_char(
@@ -163,7 +175,7 @@ static inline unsigned int get_next_char(
 					else
 						MB_FAILURE(pos, 4);
 				}
-				
+
 				this_char = ((c & 0x07) << 18) | ((str[pos + 1] & 0x3f) << 12) | ((str[pos + 2] & 0x3f) << 6) | (str[pos + 3] & 0x3f);
 				if (this_char < 0x10000 || this_char > 0x10FFFF) { /* non-shortest form or outside range */
 					MB_FAILURE(pos, 4);
@@ -383,7 +395,7 @@ static enum entity_charset determine_charset(char *charset_hint TSRMLS_DC)
 			if ((len == 4) /* sizeof (none|auto|pass) */ &&
 					(!memcmp("pass", charset_hint, 4) ||
 					 !memcmp("auto", charset_hint, 4) ||
-					 !memcmp("auto", charset_hint, 4))) {
+					 !memcmp("none", charset_hint, 4))) {
 				charset_hint = NULL;
 				len = 0;
 			} else {
@@ -437,7 +449,7 @@ det_charset:
 
 	if (charset_hint) {
 		int found = 0;
-		
+
 		/* now walk the charset map and look for the codeset */
 		for (i = 0; charset_map[i].codeset; i++) {
 			if (len == strlen(charset_map[i].codeset) && strncasecmp(charset_hint, charset_map[i].codeset, len) == 0) {
@@ -545,7 +557,7 @@ static inline unsigned char unimap_bsearch(const uni_to_enc *table, unsigned cod
 		return 0;
 
 	code_key = (unsigned short) code_key_a;
-	
+
 	while (l <= h) {
 		m = l + (h - l) / 2;
 		if (code_key < m->un_code_point)
@@ -571,7 +583,7 @@ static inline int map_from_unicode(unsigned code, enum entity_charset charset, u
 		/* identity mapping of code points to unicode */
 		if (code > 0xFF) {
 			return FAILURE;
-		} 
+		}
 		*res = code;
 		break;
 
@@ -590,7 +602,7 @@ static inline int map_from_unicode(unsigned code, enum entity_charset charset, u
 			return FAILURE;
 		}
 		break;
-		
+
 	case cs_8859_15:
 		if (code < 0xA4 || (code > 0xBE && code <= 0xFF)) {
 			*res = code;
@@ -634,7 +646,7 @@ static inline int map_from_unicode(unsigned code, enum entity_charset charset, u
 	case cs_cp866:
 		table = unimap_cp866;
 		table_size = sizeof(unimap_cp866) / sizeof(*unimap_cp866);
-		
+
 table_over_7F:
 		if (code <= 0x7F) {
 			*res = code;
@@ -710,7 +722,7 @@ static inline int unicode_cp_is_allowed(unsigned uni_cp, int document_type)
 	 * Not sure this is the relevant part for HTML 5, though. I opted to
 	 * disallow the characters that would result in a parse error when
 	 * preprocessing of the input stream. See also section 8.1.3.
-	 * 
+	 *
 	 * It's unclear if XHTML 1.0 allows C1 characters. I'll opt to apply to
 	 * XHTML 1.0 the same rules as for XML 1.0.
 	 * See <http://cmsmcq.com/2007/C1.xml>.
@@ -774,7 +786,7 @@ static inline int numeric_entity_is_allowed(unsigned uni_cp, int document_type)
 /* {{{ process_numeric_entity
  * Auxiliary function to traverse_for_entities.
  * On input, *buf should point to the first character after # and on output, it's the last
- * byte read, no matter if there was success or insuccess. 
+ * byte read, no matter if there was success or insuccess.
  */
 static inline int process_numeric_entity(const char **buf, unsigned *code_point)
 {
@@ -784,7 +796,7 @@ static inline int process_numeric_entity(const char **buf, unsigned *code_point)
 
 	if (hexadecimal && (**buf != '\0'))
 		(*buf)++;
-			
+
 	/* strtol allows whitespace and other stuff in the beginning
 		* we're not interested */
 	if ((hexadecimal && !isxdigit(**buf)) ||
@@ -889,7 +901,7 @@ static inline size_t write_octet_sequence(unsigned char *buf, enum entity_charse
 #if 0
 		return php_mb2_int_to_char(buf, code);
 #else
-#ifdef ZEND_DEBUG
+#if ZEND_DEBUG
 		assert(code <= 0xFFU);
 #endif
 		*buf = code;
@@ -900,7 +912,7 @@ static inline size_t write_octet_sequence(unsigned char *buf, enum entity_charse
 #if 0 /* idem */
 		return php_mb2_int_to_char(buf, code);
 #else
-#ifdef ZEND_DEBUG
+#if ZEND_DEBUG
 		assert(code <= 0xFFU);
 #endif
 		*buf = code;
@@ -969,7 +981,7 @@ static void traverse_for_entities(
 				goto invalid_code;
 
 			/* are we allowed to decode this entity in this document type?
-			 * HTML 5 is the only that has a character that cannot be used in 
+			 * HTML 5 is the only that has a character that cannot be used in
 			 * a numeric entity but is allowed literally (U+000D). The
 			 * unoptimized version would be ... || !numeric_entity_is_allowed(code) */
 			if (!unicode_cp_is_allowed(code, doctype) ||
@@ -996,9 +1008,9 @@ static void traverse_for_entities(
 				}
 			}
 		}
-		
+
 		assert(*next == ';');
-		
+
 		if (((code == '\'' && !(flags & ENT_HTML_QUOTE_SINGLE)) ||
 				(code == '"' && !(flags & ENT_HTML_QUOTE_DOUBLE)))
 				/* && code2 == '\0' always true for current maps */)
@@ -1026,7 +1038,7 @@ invalid_code:
 			*(q++) = *p;
 		}
 	}
-	
+
 	*q = '\0';
 	*retlen = (size_t)(q - ret);
 }
@@ -1066,7 +1078,7 @@ static entity_table_opt determine_entity_table(int all, int doctype)
 	entity_table_opt retval = {NULL};
 
 	assert(!(doctype == ENT_HTML_DOC_XML1 && all));
-	
+
 	if (all) {
 		retval.ms_table = (doctype == ENT_HTML_DOC_HTML5) ?
 			entity_ms_table_html5 : entity_ms_table_html4;
@@ -1111,13 +1123,13 @@ PHPAPI char *php_unescape_html_entities(unsigned char *old, size_t oldlen, size_
 	if (retlen == 0) {
 		goto empty_source;
 	}
-	
+
 	inverse_map = unescape_inverse_map(all, flags);
-	
+
 	/* replace numeric entities */
 	traverse_for_entities(old, oldlen, ret, &retlen, all, flags, inverse_map, charset);
 
-empty_source:	
+empty_source:
 	*newlen = retlen;
 	return ret;
 }
@@ -1141,7 +1153,7 @@ static inline void find_entity_for_char(
 {
 	unsigned stage1_idx = ENT_STAGE1_INDEX(k);
 	const entity_stage3_row *c;
-	
+
 	if (stage1_idx > 0x1D) {
 		*entity     = NULL;
 		*entity_len = 0;
@@ -1162,7 +1174,7 @@ static inline void find_entity_for_char(
 		if (!(*cursor < oldlen))
 			goto no_suitable_2nd;
 
-		next_char = get_next_char(charset, old, oldlen, cursor, &status); 
+		next_char = get_next_char(charset, old, oldlen, cursor, &status);
 
 		if (status == FAILURE)
 			goto no_suitable_2nd;
@@ -1187,7 +1199,7 @@ no_suitable_2nd:
 		*entity = (const unsigned char *)
 			c->data.multicodepoint_table[0].leading_entry.default_entity;
 		*entity_len = c->data.multicodepoint_table[0].leading_entry.default_entity_len;
-	}	
+	}
 }
 /* }}} */
 
@@ -1255,7 +1267,7 @@ PHPAPI char *php_escape_html_entities_ex(unsigned char *old, size_t oldlen, size
 
 	/* initial estimate */
 	if (oldlen < 64) {
-		maxlen = 128;	
+		maxlen = 128;
 	} else {
 		maxlen = 2 * oldlen;
 		if (maxlen < oldlen) {
@@ -1423,6 +1435,11 @@ encode_amp:
 	}
 	replaced[len] = '\0';
 	*newlen = len;
+	if(len > INT_MAX) {
+		zend_error_noreturn(E_ERROR, "Escaped string is too long");
+		efree(replaced);
+		return NULL;
+	}
 
 	return replaced;
 }
@@ -1443,7 +1460,11 @@ static void php_html_entities(INTERNAL_FUNCTION_PARAMETERS, int all)
 		return;
 	}
 
+	if (!hint_charset) {
+		hint_charset = get_default_charset(TSRMLS_C);
+	}
 	replaced = php_escape_html_entities_ex(str, str_len, &new_len, all, (int) flags, hint_charset, double_encode TSRMLS_CC);
+
 	RETVAL_STRINGL(replaced, (int)new_len, 0);
 }
 /* }}} */
@@ -1505,7 +1526,7 @@ PHP_FUNCTION(htmlspecialchars_decode)
 PHP_FUNCTION(html_entity_decode)
 {
 	char *str, *hint_charset = NULL;
-	int str_len, hint_charset_len = 0;
+	int str_len, hint_charset_len;
 	size_t new_len = 0;
 	long quote_style = ENT_COMPAT;
 	char *replaced;
@@ -1515,7 +1536,11 @@ PHP_FUNCTION(html_entity_decode)
 		return;
 	}
 
+	if (!hint_charset) {
+		hint_charset = get_default_charset(TSRMLS_C);
+	}
 	replaced = php_unescape_html_entities(str, str_len, &new_len, 1 /*all*/, quote_style, hint_charset TSRMLS_CC);
+
 	if (replaced) {
 		RETURN_STRINGL(replaced, (int)new_len, 0);
 	}
@@ -1577,7 +1602,7 @@ static inline void write_s3row_data(
 			} else {
 				spe_cp = uni_cp;
 			}
-			
+
 			written_k2 = write_octet_sequence(&key[written_k1], charset, spe_cp);
 			memcpy(&entity[1], mcpr[i].normal_entry.entity, l);
 			entity[l + 1] = ';';
@@ -1615,7 +1640,7 @@ PHP_FUNCTION(get_html_translation_table)
 	LIMIT_ALL(all, doctype, charset);
 
 	array_init(return_value);
-	
+
 	entity_table = determine_entity_table(all, doctype);
 	if (all && !CHARSET_UNICODE_COMPAT(charset)) {
 		to_uni_table = enc_to_uni_index[charset];

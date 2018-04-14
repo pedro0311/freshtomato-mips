@@ -97,8 +97,8 @@ echo "Done";
 --> http://::?   : NULL
 --> http://::#   : NULL
 --> x://::6.5   : NULL
---> http://?:/   : NULL
---> http://@?:/   : NULL
+--> http://?:/   : bool(false)
+--> http://@?:/   : bool(false)
 --> file:///:   : NULL
 --> file:///a:/   : NULL
 --> file:///ab:/   : NULL
@@ -109,6 +109,7 @@ echo "Done";
 --> http://[x:80]/   : NULL
 -->    : NULL
 --> /   : NULL
+--> /rest/Users?filter={"id":"123"}   : NULL
 --> http:///blah.com   : bool(false)
 --> http://:80   : bool(false)
 --> http://user@:80   : bool(false)

@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -293,7 +293,8 @@ static void *php_libxml_streams_IO_open_wrapper(const char *filename, const char
 	php_stream_statbuf ssbuf;
 	php_stream_context *context = NULL;
 	php_stream_wrapper *wrapper = NULL;
-	char *resolved_path, *path_to_open = NULL;
+	char *resolved_path;
+	const char *path_to_open = NULL;
 	void *ret_val = NULL;
 	int isescaped=0;
 	xmlURI *uri;
@@ -305,6 +306,21 @@ static void *php_libxml_streams_IO_open_wrapper(const char *filename, const char
 			(xmlStrncmp(BAD_CAST uri->scheme, BAD_CAST "file", 4) == 0))) {
 		resolved_path = xmlURIUnescapeString(filename, 0, NULL);
 		isescaped = 1;
+#if LIBXML_VERSION >= 20902 && defined(PHP_WIN32)
+		/* Libxml 2.9.2 prefixes local paths with file:/ instead of file://,
+			thus the php stream wrapper will fail on a valid case. For this
+			reason the prefix is rather better cut off. */
+		{
+			size_t pre_len = sizeof("file:/") - 1;
+
+			if (strncasecmp(resolved_path, "file:/", pre_len) == 0
+				&& '/' != resolved_path[pre_len]) {
+				xmlChar *tmp = xmlStrdup(resolved_path + pre_len);
+				xmlFree(resolved_path);
+				resolved_path = tmp;
+			}
+		}
+#endif
 	} else {
 		resolved_path = (char *)filename;
 	}
@@ -857,6 +873,12 @@ static PHP_RINIT_FUNCTION(libxml)
 		xmlSetGenericErrorFunc(NULL, php_libxml_error_handler);
 		xmlParserInputBufferCreateFilenameDefault(php_libxml_input_buffer_create_filename);
 		xmlOutputBufferCreateFilenameDefault(php_libxml_output_buffer_create_filename);
+
+		/* Enable the entity loader by default. This ensure that
+		 * other threads/requests that might have disable the loader
+		 * do not affect the current request.
+		 */
+		LIBXML(entity_loader_disabled) = 0;
 	}
 	return SUCCESS;
 }
@@ -1137,7 +1159,7 @@ int php_libxml_register_export(zend_class_entry *ce, php_libxml_export_node expo
 {
 	php_libxml_func_handler export_hnd;
 	
-	/* Initialize in case this module hasnt been loaded yet */
+	/* Initialize in case this module hasn't been loaded yet */
 	php_libxml_initialize();
 	export_hnd.export_func = export_function;
 
@@ -1250,8 +1272,8 @@ PHP_LIBXML_API int php_libxml_decrement_doc_ref(php_libxml_node_object *object T
 				efree(object->document->doc_props);
 			}
 			efree(object->document);
-			object->document = NULL;
 		}
+		object->document = NULL;
 	}
 
 	return ret_refcount;

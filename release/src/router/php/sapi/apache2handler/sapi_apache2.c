@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -126,15 +126,15 @@ php_apache_sapi_header_handler(sapi_header_struct *sapi_header, sapi_header_op_e
 				}
 				ctx->content_type = estrdup(val);
 			} else if (!strcasecmp(sapi_header->header, "content-length")) {
-#ifdef PHP_WIN32
-# ifdef APR_HAS_LARGE_FILES
-				ap_set_content_length(ctx->r, (apr_off_t) _strtoui64(val, (char **)NULL, 10));
-# else
-				ap_set_content_length(ctx->r, (apr_off_t) strtol(val, (char **)NULL, 10));
-# endif
-#else
-				ap_set_content_length(ctx->r, (apr_off_t) strtol(val, (char **)NULL, 10));
-#endif
+				apr_off_t clen = 0;
+
+				if (APR_SUCCESS != apr_strtoff(&clen, val, (char **) NULL, 10)) {
+					/* We'll fall back to strtol, since that's what we used to
+					 * do anyway. */
+					clen = (apr_off_t) strtol(val, (char **) NULL, 10);
+				}
+
+				ap_set_content_length(ctx->r, clen);
 			} else if (op == SAPI_HEADER_REPLACE) {
 				apr_table_set(ctx->r->headers_out, sapi_header->header, val);
 			} else {
@@ -276,12 +276,12 @@ php_apache_sapi_register_variables(zval *track_vars_array TSRMLS_DC)
 		if (!val) {
 			val = "";
 		}
-		if (sapi_module.input_filter(PARSE_SERVER, key, &val, strlen(val), &new_val_len TSRMLS_CC)) {
+		if (sapi_module.input_filter(PARSE_SERVER, key, &val, strlen(val), (unsigned int *)&new_val_len TSRMLS_CC)) {
 			php_register_variable_safe(key, val, new_val_len, track_vars_array TSRMLS_CC);
 		}
 	APR_ARRAY_FOREACH_CLOSE()
 
-	if (sapi_module.input_filter(PARSE_SERVER, "PHP_SELF", &ctx->r->uri, strlen(ctx->r->uri), &new_val_len TSRMLS_CC)) {
+	if (sapi_module.input_filter(PARSE_SERVER, "PHP_SELF", &ctx->r->uri, strlen(ctx->r->uri), (unsigned int *)&new_val_len TSRMLS_CC)) {
 		php_register_variable_safe("PHP_SELF", ctx->r->uri, new_val_len, track_vars_array TSRMLS_CC);
 	}
 }
@@ -670,7 +670,7 @@ zend_first_try {
 		}
 
 		apr_table_set(r->notes, "mod_php_memory_usage",
-			apr_psprintf(ctx->r->pool, "%zu", zend_memory_peak_usage(1 TSRMLS_CC)));
+			apr_psprintf(ctx->r->pool, "%" APR_SIZE_T_FMT, zend_memory_peak_usage(1 TSRMLS_CC)));
 	}
 
 } zend_end_try();
@@ -688,6 +688,7 @@ zend_first_try {
 } zend_end_try();
 		}
 		apr_brigade_cleanup(brigade);
+		apr_pool_cleanup_run(r->pool, (void *)&SG(server_context), php_server_context_cleanup);
 	} else {
 		ctx->r = parent_req;
 	}

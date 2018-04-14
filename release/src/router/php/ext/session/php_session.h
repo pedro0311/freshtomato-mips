@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -180,6 +180,7 @@ typedef struct _php_ps_globals {
 	double rfc1867_min_freq;   /* session.upload_progress.min_freq */
 
 	zend_bool use_strict_mode; /* whether or not PHP accepts unknown session ids */
+	unsigned char session_data_hash[16]; /* binary MD5 hash length */
 } php_ps_globals;
 
 typedef php_ps_globals zend_ps_globals;
@@ -278,7 +279,6 @@ PHPAPI void php_session_reset_id(TSRMLS_D);
 PHPAPI ZEND_EXTERN_MODULE_GLOBALS(ps)
 
 void php_session_auto_start(void *data);
-void php_session_shutdown(void *data);
 
 #define PS_CLASS_NAME "SessionHandler"
 extern zend_class_entry *php_session_class_entry;

@@ -98,8 +98,8 @@ echo "Done";
 --> http://::?   : string(4) "http"
 --> http://::#   : string(4) "http"
 --> x://::6.5   : string(1) "x"
---> http://?:/   : string(4) "http"
---> http://@?:/   : string(4) "http"
+--> http://?:/   : bool(false)
+--> http://@?:/   : bool(false)
 --> file:///:   : string(4) "file"
 --> file:///a:/   : string(4) "file"
 --> file:///ab:/   : string(4) "file"
@@ -110,6 +110,7 @@ echo "Done";
 --> http://[x:80]/   : string(4) "http"
 -->    : NULL
 --> /   : NULL
+--> /rest/Users?filter={"id":"123"}   : NULL
 --> http:///blah.com   : bool(false)
 --> http://:80   : bool(false)
 --> http://user@:80   : bool(false)

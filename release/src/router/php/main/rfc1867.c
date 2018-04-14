@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -33,6 +33,12 @@
 #include "php_variables.h"
 #include "rfc1867.h"
 #include "ext/standard/php_string.h"
+#include "ext/standard/php_smart_str.h"
+
+#if defined(PHP_WIN32) && !defined(HAVE_ATOLL)
+# define atoll(s) _atoi64(s)
+# define HAVE_ATOLL 1
+#endif
 
 #define DEBUG_FILE_UPLOAD ZEND_DEBUG
 
@@ -398,8 +404,9 @@ static int find_boundary(multipart_buffer *self, char *boundary TSRMLS_DC)
 static int multipart_buffer_headers(multipart_buffer *self, zend_llist *header TSRMLS_DC)
 {
 	char *line;
-	mime_header_entry prev_entry = {0}, entry;
-	int prev_len, cur_len;
+	mime_header_entry entry = {0};
+	smart_str buf_value = {0};
+	char *key = NULL;
 
 	/* didn't find boundary, abort */
 	if (!find_boundary(self, self->boundary TSRMLS_CC)) {
@@ -411,11 +418,10 @@ static int multipart_buffer_headers(multipart_buffer *self, zend_llist *header T
 	while( (line = get_line(self TSRMLS_CC)) && line[0] != '\0' )
 	{
 		/* add header to table */
-		char *key = line;
 		char *value = NULL;
 
 		if (php_rfc1867_encoding_translation(TSRMLS_C)) {
-			self->input_encoding = zend_multibyte_encoding_detector(line, strlen(line), self->detect_order, self->detect_order_size TSRMLS_CC);
+			self->input_encoding = zend_multibyte_encoding_detector((unsigned char *)line, strlen(line), self->detect_order, self->detect_order_size TSRMLS_CC);
 		}
 
 		/* space in the beginning means same header */
@@ -424,31 +430,33 @@ static int multipart_buffer_headers(multipart_buffer *self, zend_llist *header T
 		}
 
 		if (value) {
-			*value = 0;
+			if(buf_value.c && key) {
+				/* new entry, add the old one to the list */
+				smart_str_0(&buf_value);
+				entry.key = key;
+				entry.value = buf_value.c;
+				zend_llist_add_element(header, &entry);
+				buf_value.c = NULL;
+				key = NULL;
+			}
+
+			*value = '\0';
 			do { value++; } while(isspace(*value));
 
-			entry.value = estrdup(value);
-			entry.key = estrdup(key);
-
-		} else if (zend_llist_count(header)) { /* If no ':' on the line, add to previous line */
-
-			prev_len = strlen(prev_entry.value);
-			cur_len = strlen(line);
-
-			entry.value = emalloc(prev_len + cur_len + 1);
-			memcpy(entry.value, prev_entry.value, prev_len);
-			memcpy(entry.value + prev_len, line, cur_len);
-			entry.value[cur_len + prev_len] = '\0';
-
-			entry.key = estrdup(prev_entry.key);
-
-			zend_llist_remove_tail(header);
+			key = estrdup(line);
+			smart_str_appends(&buf_value, value);
+		} else if (buf_value.c) { /* If no ':' on the line, add to previous line */
+			smart_str_appends(&buf_value, line);
 		} else {
 			continue;
 		}
-
+	}
+	if(buf_value.c && key) {
+		/* add the last one to the list */
+		smart_str_0(&buf_value);
+		entry.key = key;
+		entry.value = buf_value.c;
 		zend_llist_add_element(header, &entry);
-		prev_entry = entry;
 	}
 
 	return 1;
@@ -676,8 +684,9 @@ SAPI_API SAPI_POST_HANDLER_FUNC(rfc1867_post_handler) /* {{{ */
 {
 	char *boundary, *s = NULL, *boundary_end = NULL, *start_arr = NULL, *array_index = NULL;
 	char *temp_filename = NULL, *lbuf = NULL, *abuf = NULL;
-	int boundary_len = 0, total_bytes = 0, cancel_upload = 0, is_arr_upload = 0, array_len = 0;
-	int max_file_size = 0, skip_upload = 0, anonindex = 0, is_anonymous;
+	int boundary_len = 0, cancel_upload = 0, is_arr_upload = 0, array_len = 0;
+	int64_t total_bytes = 0, max_file_size = 0;
+	int skip_upload = 0, anonindex = 0, is_anonymous;
 	zval *http_post_files = NULL;
 	HashTable *uploaded_files = NULL;
 	multipart_buffer *mbuff;
@@ -884,7 +893,7 @@ SAPI_API SAPI_POST_HANDLER_FUNC(rfc1867_post_handler) /* {{{ */
 					if (count == PG(max_input_vars) + 1) {
 						php_error_docref(NULL TSRMLS_CC, E_WARNING, "Input variables exceeded %ld. To increase the limit change max_input_vars in php.ini.", PG(max_input_vars));
 					}
-				
+
 					if (php_rfc1867_callback != NULL) {
 						multipart_event_formdata event_formdata;
 
@@ -898,7 +907,11 @@ SAPI_API SAPI_POST_HANDLER_FUNC(rfc1867_post_handler) /* {{{ */
 				}
 
 				if (!strcasecmp(param, "MAX_FILE_SIZE")) {
-					max_file_size = atol(value);
+#ifdef HAVE_ATOLL
+					max_file_size = atoll(value);
+#else
+					max_file_size = strtoll(value, NULL, 10);
+#endif
 				}
 
 				efree(param);
@@ -1210,17 +1223,32 @@ SAPI_API SAPI_POST_HANDLER_FUNC(rfc1867_post_handler) /* {{{ */
 
 			{
 				zval file_size, error_type;
+				int size_overflow = 0;
+				char file_size_buf[65];
 
-				error_type.value.lval = cancel_upload;
-				error_type.type = IS_LONG;
+				ZVAL_LONG(&error_type, cancel_upload);
 
 				/* Add $foo[error] */
 				if (cancel_upload) {
-					file_size.value.lval = 0;
-					file_size.type = IS_LONG;
+					ZVAL_LONG(&file_size, 0);
 				} else {
-					file_size.value.lval = total_bytes;
-					file_size.type = IS_LONG;
+					if (total_bytes > LONG_MAX) {
+#ifdef PHP_WIN32
+						if (_i64toa_s(total_bytes, file_size_buf, 65, 10)) {
+							file_size_buf[0] = '0';
+							file_size_buf[1] = '\0';
+						}
+#else
+						{
+							int __len = snprintf(file_size_buf, 65, "%lld", total_bytes);
+							file_size_buf[__len] = '\0';
+						}
+#endif
+						size_overflow = 1;
+
+					} else {
+						ZVAL_LONG(&file_size, total_bytes);
+					}
 				}
 
 				if (is_arr_upload) {
@@ -1237,7 +1265,10 @@ SAPI_API SAPI_POST_HANDLER_FUNC(rfc1867_post_handler) /* {{{ */
 					snprintf(lbuf, llen, "%s_size", param);
 				}
 				if (!is_anonymous) {
-					safe_php_register_variable_ex(lbuf, &file_size, NULL, 0 TSRMLS_CC);
+					if (size_overflow) {
+						ZVAL_STRING(&file_size, file_size_buf, 1);
+					}
+					safe_php_register_variable_ex(lbuf, &file_size, NULL, size_overflow TSRMLS_CC);
 				}
 
 				/* Add $foo[size] */
@@ -1246,7 +1277,10 @@ SAPI_API SAPI_POST_HANDLER_FUNC(rfc1867_post_handler) /* {{{ */
 				} else {
 					snprintf(lbuf, llen, "%s[size]", param);
 				}
-				register_http_post_files_variable_ex(lbuf, &file_size, http_post_files, 0 TSRMLS_CC);
+				if (size_overflow) {
+					ZVAL_STRING(&file_size, file_size_buf, 1);
+				}
+				register_http_post_files_variable_ex(lbuf, &file_size, http_post_files, size_overflow TSRMLS_CC);
 			}
 			efree(param);
 		}

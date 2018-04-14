@@ -4,10 +4,10 @@ Testing stream_get_meta_data() "eof" field on a udp socket
 <?php
 
 /* Setup socket server */
-$server = stream_socket_server('tcp://127.0.0.1:31337');
+$server = stream_socket_server('tcp://127.0.0.1:31334');
 
 /* Connect to it */
-$client = fsockopen('tcp://127.0.0.1:31337');
+$client = fsockopen('tcp://127.0.0.1:31334');
 if (!$client) {
 	die("Unable to create socket");
 }
@@ -37,6 +37,12 @@ fclose($client);
 --EXPECTF--
 Write some data:
 array(7) {
+  ["timed_out"]=>
+  bool(false)
+  ["blocked"]=>
+  bool(true)
+  ["eof"]=>
+  bool(false)
   ["stream_type"]=>
   string(%d) "tcp_socke%s"
   ["mode"]=>
@@ -44,18 +50,18 @@ array(7) {
   ["unread_bytes"]=>
   int(%i)
   ["seekable"]=>
-  bool(false)
-  ["timed_out"]=>
-  bool(false)
-  ["blocked"]=>
-  bool(true)
-  ["eof"]=>
   bool(false)
 }
 
 
 Read a line from the client:
 array(7) {
+  ["timed_out"]=>
+  bool(false)
+  ["blocked"]=>
+  bool(true)
+  ["eof"]=>
+  bool(false)
   ["stream_type"]=>
   string(%d) "tcp_socke%s"
   ["mode"]=>
@@ -63,18 +69,18 @@ array(7) {
   ["unread_bytes"]=>
   int(%i)
   ["seekable"]=>
-  bool(false)
-  ["timed_out"]=>
-  bool(false)
-  ["blocked"]=>
-  bool(true)
-  ["eof"]=>
   bool(false)
 }
 
 
 Close the server side socket and read the remaining data from the client:
 array(7) {
+  ["timed_out"]=>
+  bool(false)
+  ["blocked"]=>
+  bool(true)
+  ["eof"]=>
+  bool(true)
   ["stream_type"]=>
   string(%d) "tcp_socke%s"
   ["mode"]=>
@@ -83,10 +89,4 @@ array(7) {
   int(%i)
   ["seekable"]=>
   bool(false)
-  ["timed_out"]=>
-  bool(false)
-  ["blocked"]=>
-  bool(true)
-  ["eof"]=>
-  bool(true)
 }
