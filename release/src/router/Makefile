@@ -971,7 +971,7 @@ rp-pppoe-install: rp-pppoe
 upnp: nvram shared iptables
 
 libnfnetlink/stamp-h1:
-	cd $(TOP)/libnfnetlink && CC=$(CC) STRIP='mipsel-uclibc-strip' \
+	cd $(TOP)/libnfnetlink && CC=$(CC) STRIP=$(CROSS_COMPILE)strip \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
 		$(CONFIGURE) --prefix=/usr --enable-shared --enable-static
@@ -1199,8 +1199,8 @@ accel-pptp-install: accel-pptp
 	$(STRIP) $(INSTALLDIR)/accel-pptp/usr/lib/pppd/pptp.so
 
 pptpd/stamp-h1:
-	cd pptpd && $(CONFIGURE) --prefix=$(INSTALLDIR)/pptpd --enable-bcrelay CC=mipsel-uclibc-gcc \
-		STRIP=mipsel-uclibc-strip AR=mipsel-uclibc-ar LD=mipsel-uclibc-ld NM=mipsel-uclibc-nm RANLIB=mipsel-uclibc-ranlib
+	cd pptpd && $(CONFIGURE) --prefix=$(INSTALLDIR)/pptpd --enable-bcrelay CC=$(CC) \
+		STRIP=$(CROSS_COMPILE)strip AR=$(AR) LD=$(LD) NM=$(NM) RANLIB=$(RANLIB)
 	touch pptpd/stamp-h1
 
 pptpd: pptpd/stamp-h1
@@ -2174,7 +2174,7 @@ openvpn_plugin_auth_nvram:nvram
 
 #shibby
 nano/stamp-h1: libncurses
-	cd nano && CC=$(CC) STRIP='mipsel-uclibc-strip' \
+	cd nano && CC=$(CC) STRIP=$(CROSS_COMPILE)strip \
 		autoreconf && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -I$(TOP)/libncurses/staged/usr/include -ffunction-sections -fdata-sections" \
 		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -I$(TOP)/libncurses/staged/usr/include -ffunction-sections -fdata-sections" \
@@ -2203,7 +2203,7 @@ CACERT:=
 endif
 
 libcurl/stamp-h1: zlib openssl
-	cd libcurl && CC=$(CC) STRIP='mipsel-uclibc-strip' \
+	cd libcurl && CC=$(CC) STRIP=$(CROSS_COMPILE)strip \
 		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -I$(TOP)/zlib" \
 		LDFLAGS="-L$(TOP)/zlib -ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
 		$(CONFIGURE) --prefix=$(TOP)/libcurl/staged --disable-thread --enable-shared --enable-static \
@@ -2280,13 +2280,13 @@ libiconv-clean:
 libiconv-install: libiconv
 	install -d $(INSTALLDIR)/libiconv/usr/lib
 	install libiconv/lib/.libs/libiconv.so.2.6.0 $(INSTALLDIR)/libiconv/usr/lib/libiconv.so.2.6.0
-	$(STRIP)-s $(INSTALLDIR)/libiconv/usr/lib/libiconv.so.2.6.0
+	$(STRIP) -s $(INSTALLDIR)/libiconv/usr/lib/libiconv.so.2.6.0
 	cd $(INSTALLDIR)/libiconv/usr/lib/ && \
 		ln -sf libiconv.so.2.6.0 libiconv.so.2 && \
 		ln -sf libiconv.so.2.6.0 libiconv.so
 
 transmission/stamp-h1: openssl libcurl libevent zlib
-	cd transmission && CC=$(CC) STRIP='mipsel-uclibc-strip' \
+	cd transmission && CC=$(CC) STRIP=$(CROSS_COMPILE)strip \
 		autoreconf && \
 		CFLAGS="-Os -Wall -fno-delete-null-pointer-checks -funit-at-a-time \
 			--param large-function-growth=800 --param max-inline-insns-single=3000 \
@@ -2396,7 +2396,7 @@ e2fsprogs-clean:
 	@rm -rf e2fsprogs/staged
 
 nfs-utils/stamp-h1: libevent-install e2fsprogs portmap libnfsidmap-install
-	cd nfs-utils && STRIP='mipsel-uclibc-strip' \
+	cd nfs-utils && STRIP=$(CROSS_COMPILE)strip \
 	CFLAGS="-Os -Wall -fno-delete-null-pointer-checks -funit-at-a-time \
 	-I$(TOP)/libevent/staged/usr/local/include -I$(TOP)/e2fsprogs/lib \
 	-I$(TOP)/libnfsidmap/staged/usr/include -ffunction-sections -fdata-sections" \
@@ -2507,7 +2507,7 @@ snmp-install: snmp
 	$(STRIP) $(INSTALLDIR)/snmp/usr/sbin/snmpd
 
 apcupsd/stamp-h1:
-	cd apcupsd && touch autoconf/variables.mak && CC=$(CC) STRIP='mipsel-uclibc-strip' \
+	cd apcupsd && touch autoconf/variables.mak && CC=$(CC) STRIP=$(CROSS_COMPILE)strip \
 	$(MAKE) configure && \
 	CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
 	LDFLAGS="-L$(TOOLCHAIN)/lib -ffunction-sections -fdata-sections" \
@@ -2532,7 +2532,7 @@ apcupsd-install: apcupsd
 	$(STRIP) $(INSTALLDIR)/apcupsd/www/apcupsd/*
 
 libsodium/stamp-h1:
-	cd $(TOP)/libsodium && CC=$(CC) STRIP='mipsel-uclibc-strip' \
+	cd $(TOP)/libsodium && CC=$(CC) STRIP=$(CROSS_COMPILE)strip \
 	$(CONFIGURE) --prefix=/usr --disable-ssp --enable-minimal
 	touch libsodium/stamp-h1
 
@@ -2552,7 +2552,7 @@ libsodium-clean:
 	@rm -rf libsodium/stamp-h1
 
 dnscrypt/stamp-h1: libsodium
-	cd $(TOP)/dnscrypt && CC=$(CC) STRIP='mipsel-uclibc-strip' \
+	cd $(TOP)/dnscrypt && CC=$(CC) STRIP=$(CROSS_COMPILE)strip \
 	autoreconf && \
 	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 	CPPFLAGS="-I$(TOP)/libsodium/src/libsodium/include" \
@@ -2574,7 +2574,7 @@ dnscrypt-clean:
 	@rm -rf dnscrypt/stamp-h1 dnscrypt/src/dnscrypt-proxy/.deps dnscrypt/Makefile
 
 tor/stamp-h1: openssl zlib libevent
-	cd $(TOP)/tor && CC=$(CC) STRIP='mipsel-uclibc-strip' \
+	cd $(TOP)/tor && CC=$(CC) STRIP=$(CROSS_COMPILE)strip \
 	autoreconf && \
 	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
