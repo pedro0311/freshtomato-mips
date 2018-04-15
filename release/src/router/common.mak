@@ -22,10 +22,13 @@ export BUILD := $(shell (gcc -dumpmachine))
 export HOSTCC := gcc
 
 export PLATFORM := mipsel-uclibc
-
 export CROSS_COMPILE := mipsel-uclibc-
 export CROSS_COMPILER := $(CROSS_COMPILE)
 export CONFIGURE := ./configure --host=mipsel-linux --build=$(BUILD)
+export HOSTCONFIG := linux-mipsel
+export ARCH := mips
+export HOST := mipsel-linux
+
 export TOOLCHAIN := $(shell cd $(dir $(shell which $(CROSS_COMPILE)gcc))/.. && pwd -P)
 
 export CC := $(CROSS_COMPILE)gcc

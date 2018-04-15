@@ -2294,7 +2294,7 @@ transmission/stamp-h1: openssl libcurl libevent zlib
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC \
 			-L$(TOP)/zlib -L$(TOP)/openssl -L$(TOP)/libcurl/lib/.libs -L$(TOP)/libevent/.libs" \
 		HAVE_CXX=yes \
-		$(CONFIGURE) --target=mipsel-linux --host=mipsel-linux --build=x86_64-linux-gnu --prefix=/usr --disable-nls \
+		$(CONFIGURE) --target=mipsel-linux --host=$(HOST) --build=x86_64-linux-gnu --prefix=/usr --disable-nls \
 			--enable-lightweight --enable-largefile --enable-utp --without-gtk \
 			LIBCURL_CFLAGS="-I$(TOP)/libcurl/include" \
 			LIBCURL_LDFLAGS="-L$(TOP)/libcurl/lib/.libs/" \
@@ -2467,7 +2467,7 @@ tinc-install:
 
 sd-idle/stamp-h1:
 	cd sd-idle \
-	CFLAGS="-Os -Wall --host=mipsel-linux --target=mipsel-linux $(EXTRACFLAGS)" \
+	CFLAGS="-Os -Wall --host=$(HOST) --target=$(HOST) $(EXTRACFLAGS)" \
 	$(MAKE) -C sd-idle
 	chmod 0755 sd-idle/sd-idle
 	touch sd-idle/stamp-h1
@@ -2596,7 +2596,7 @@ tor-clean:
 	@rm -rf tor/stamp-h1 tor/Makefile
 
 udpxy/stamp-h1:
-	$(MAKE) -C udpxy CFLAGS="-Os -Wall --host=mipsel-linux --target=mipsel-linux $(EXTRACFLAGS)" \
+	$(MAKE) -C udpxy CFLAGS="-Os -Wall --host=$(HOST) --target=$(HOST) $(EXTRACFLAGS)" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections"
 	touch udpxy/stamp-h1
 
