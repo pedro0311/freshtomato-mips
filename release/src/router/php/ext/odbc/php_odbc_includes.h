@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -24,12 +24,6 @@
 #define PHP_ODBC_INCLUDES_H
 
 #if HAVE_UODBC
-
-#define ODBCVER 0x0250
-/*#ifndef MSVC5
-#define FAR
-#endif
-*/
 
 /* checking in the same order as in configure.in */
 
@@ -115,6 +109,7 @@ PHP_FUNCTION(solid_fetch_prev);
 #endif
 
 #define ODBC_TYPE "unixODBC"
+#undef ODBCVER
 #include <sql.h>
 #include <sqlext.h>
 #define HAVE_SQL_EXTENDED_FETCH 1
@@ -238,6 +233,13 @@ typedef struct odbc_result_value {
 	SQLLEN coltype;
 } odbc_result_value;
 
+typedef struct odbc_param_info {
+	SQLSMALLINT sqltype;
+	SQLSMALLINT scale;
+	SQLSMALLINT nullable;
+	SQLULEN precision;
+} odbc_param_info;
+
 typedef struct odbc_result {
 	ODBC_SQL_STMT_T stmt;
 	odbc_result_value *values;
@@ -249,6 +251,7 @@ typedef struct odbc_result {
 	long longreadlen;
 	int binmode;
 	int fetched;
+	odbc_param_info * param_info;
 	odbc_connection *conn_ptr;
 } odbc_result;
 
@@ -284,7 +287,21 @@ int odbc_bindcols(odbc_result *result TSRMLS_DC);
 
 void odbc_sql_error(ODBC_SQL_ERROR_PARAMS);
 
+#if defined(ODBCVER) && (ODBCVER >= 0x0300)
+#define IS_SQL_LONG(x) (x == SQL_LONGVARBINARY || x == SQL_LONGVARCHAR || x == SQL_WLONGVARCHAR)
+
+#define PHP_ODBC_SQLCOLATTRIBUTE SQLColAttribute
+#define PHP_ODBC_SQLALLOCSTMT(hdbc, phstmt) SQLAllocHandle(SQL_HANDLE_STMT, hdbc, phstmt)
+
+#define PHP_ODBC_SQL_DESC_NAME SQL_DESC_NAME
+#else
 #define IS_SQL_LONG(x) (x == SQL_LONGVARBINARY || x == SQL_LONGVARCHAR)
+
+#define PHP_ODBC_SQLCOLATTRIBUTE SQLColAttributes
+#define PHP_ODBC_SQLALLOCSTMT SQLAllocStmt
+
+#define PHP_ODBC_SQL_DESC_NAME SQL_COLUMN_NAME
+#endif
 #define IS_SQL_BINARY(x) (x == SQL_BINARY || x == SQL_VARBINARY || x == SQL_LONGVARBINARY)
 
 #ifdef ZTS

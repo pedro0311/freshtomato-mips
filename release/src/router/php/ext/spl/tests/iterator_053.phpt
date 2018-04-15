@@ -46,122 +46,14 @@ var_dump($ar);
 <?php exit(0); ?>
 --EXPECTF--
 bool(true)
-int(0)
-array(3) {
-  [0]=>
-  array(0) {
-  }
-  [1]=>
-  array(0) {
-  }
-  [2]=>
-  array(0) {
-  }
-}
 bool(true)
-int(1)
-array(3) {
-  [0]=>
-  array(0) {
-  }
-  [1]=>
-  array(0) {
-  }
-  [2]=>
-  array(0) {
-  }
-}
 bool(true)
-int(2)
-array(3) {
-  [0]=>
-  array(0) {
-  }
-  [1]=>
-  array(0) {
-  }
-  [2]=>
-  array(0) {
-  }
-}
 bool(true)
-int(3)
-array(3) {
-  [0]=>
-  array(0) {
-  }
-  [1]=>
-  array(0) {
-  }
-  [2]=>
-  array(0) {
-  }
-}
 bool(true)
-int(4)
-array(3) {
-  [0]=>
-  array(0) {
-  }
-  [1]=>
-  array(0) {
-  }
-  [2]=>
-  array(0) {
-  }
-}
 bool(true)
-int(5)
-array(3) {
-  [0]=>
-  array(0) {
-  }
-  [1]=>
-  array(0) {
-  }
-  [2]=>
-  array(0) {
-  }
-}
 bool(true)
-int(6)
-array(3) {
-  [0]=>
-  array(0) {
-  }
-  [1]=>
-  array(0) {
-  }
-  [2]=>
-  array(0) {
-  }
-}
 bool(true)
-int(7)
-array(3) {
-  [0]=>
-  array(0) {
-  }
-  [1]=>
-  array(0) {
-  }
-  [2]=>
-  array(0) {
-  }
-}
 bool(true)
-int(8)
-array(3) {
-  [0]=>
-  array(0) {
-  }
-  [1]=>
-  array(0) {
-  }
-  [2]=>
-  array(0) {
-  }
-}
 bool(true)
 int(0)
 array(2) {

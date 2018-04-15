@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | Zend OPcache                                                         |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1998-2014 The PHP Group                                |
+   | Copyright (c) 1998-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -27,7 +27,8 @@
 #endif
 
 #define ACCELERATOR_PRODUCT_NAME	"Zend OPcache"
-#define ACCELERATOR_VERSION "7.0.3"
+#define PHP_ZENDOPCACHE_VERSION "7.0.6-dev"
+#define ACCELERATOR_VERSION PHP_ZENDOPCACHE_VERSION
 /* 2 - added Profiler support, on 20010712 */
 /* 3 - added support for Optimizer's encoded-only-files mode */
 /* 4 - works with the new Optimizer, that supports the file format with licenses */
@@ -92,6 +93,7 @@
 #define PHP_5_3_X_API_NO		220090626
 #define PHP_5_4_X_API_NO		220100525
 #define PHP_5_5_X_API_NO		220121212
+#define PHP_5_6_X_API_NO		220131226
 
 /*** file locking ***/
 #ifndef ZEND_WIN32
@@ -228,6 +230,10 @@ typedef struct _zend_accel_directives {
 	zend_bool      file_override_enabled;
 	zend_bool      inherited_hack;
 	zend_bool      enable_cli;
+	zend_bool      validate_permission;
+#ifndef ZEND_WIN32
+	zend_bool      validate_root;
+#endif
 	unsigned long  revalidate_freq;
 	unsigned long  file_update_protection;
 	char          *error_log;
@@ -262,6 +268,9 @@ typedef struct _zend_accel_globals {
 	int                     include_path_len; /* "include_path" string length */
 	int                     include_path_check;
 	time_t                  request_time;
+#ifndef ZEND_WIN32
+	unsigned long           root_hash;
+#endif
 	/* preallocated shared-memory block to save current script */
 	void                   *mem;
 	/* cache to save hash lookup on the same INCLUDE opcode */
@@ -296,7 +305,6 @@ typedef struct _zend_accel_shared_globals {
     unsigned long   restart_in;
 #endif
 	zend_bool       restart_in_progress;
-    time_t          revalidate_at;
 #if ZEND_EXTENSION_API_NO > PHP_5_3_X_API_NO
 	/* Interned Strings Support */
 	char           *interned_strings_start;
@@ -332,6 +340,7 @@ void zend_accel_schedule_restart(zend_accel_restart_reason reason TSRMLS_DC);
 void zend_accel_schedule_restart_if_necessary(zend_accel_restart_reason reason TSRMLS_DC);
 int  validate_timestamp_and_record(zend_persistent_script *persistent_script, zend_file_handle *file_handle TSRMLS_DC);
 int  zend_accel_invalidate(const char *filename, int filename_len, zend_bool force TSRMLS_DC);
+int  zend_accel_script_optimize(zend_persistent_script *persistent_script TSRMLS_DC);
 int  accelerator_shm_read_lock(TSRMLS_D);
 void accelerator_shm_read_unlock(TSRMLS_D);
 

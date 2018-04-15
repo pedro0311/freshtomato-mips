@@ -2,7 +2,7 @@
   +----------------------------------------------------------------------+
   | PHP Version 5                                                        |
   +----------------------------------------------------------------------+
-  | Copyright (c) 1997-2014 The PHP Group                                |
+  | Copyright (c) 1997-2016 The PHP Group                                |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.0 of the PHP license,       |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -279,7 +279,7 @@ static int odbc_stmt_param_hook(pdo_stmt_t *stmt, struct pdo_bound_param_data *p
 	pdo_odbc_stmt *S = (pdo_odbc_stmt*)stmt->driver_data;
 	RETCODE rc;
 	SWORD sqltype = 0, ctype = 0, scale = 0, nullable = 0;
-	UDWORD precision = 0;
+	SQLULEN precision = 0;
 	pdo_odbc_param *P;
 	
 	/* we're only interested in parameters for prepared SQL right now */
@@ -551,12 +551,30 @@ static int odbc_stmt_describe(pdo_stmt_t *stmt, int colno TSRMLS_DC)
 	struct pdo_column_data *col = &stmt->columns[colno];
 	RETCODE rc;
 	SWORD	colnamelen;
-	SDWORD	colsize;
+	SQLULEN	colsize;
 	SQLLEN displaysize;
 
 	rc = SQLDescribeCol(S->stmt, colno+1, S->cols[colno].colname,
 			sizeof(S->cols[colno].colname)-1, &colnamelen,
 			&S->cols[colno].coltype, &colsize, NULL, NULL);
+
+	/* This fixes a known issue with SQL Server and (max) lengths,
+	may affect others as well.  If we are SQL_VARCHAR,
+	SQL_VARBINARY, or SQL_WVARCHAR (or any of the long variations)
+	and zero is returned from colsize then consider it long */
+	if (0 == colsize && 
+		(S->cols[colno].coltype == SQL_VARCHAR ||
+		 S->cols[colno].coltype == SQL_LONGVARCHAR ||
+#ifdef SQL_WVARCHAR
+		 S->cols[colno].coltype == SQL_WVARCHAR ||
+#endif
+#ifdef SQL_WLONGVARCHAR
+		 S->cols[colno].coltype == SQL_WLONGVARCHAR ||
+#endif
+		 S->cols[colno].coltype == SQL_VARBINARY ||
+		 S->cols[colno].coltype == SQL_LONGVARBINARY)) {
+			 S->going_long = 1;
+	}
 
 	if (rc != SQL_SUCCESS) {
 		pdo_odbc_stmt_error("SQLDescribeCol");

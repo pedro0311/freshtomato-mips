@@ -72,8 +72,10 @@ static struct {
 
 #define STACK_SIZE ((1<<(MAX_LWZ_BITS))*2)
 
+#define CSD_BUF_SIZE 280
+
 typedef struct {
-	unsigned char    buf[280];
+	unsigned char    buf[CSD_BUF_SIZE];
 	int              curbit, lastbit, done, last_byte;
 } CODE_STATIC_DATA;
 
@@ -144,6 +146,9 @@ gdImagePtr gdImageCreateFromGifCtx(gdIOCtxPtr fd) /* {{{ */
 	int ZeroDataBlock = FALSE;
 	int haveGlobalColormap;
 	gdImagePtr im = 0;
+
+	memset(ColorMap, 0, 3 * MAXCOLORMAPSIZE);
+	memset(localColorMap, 0, 3 * MAXCOLORMAPSIZE);
 
 	/*1.4//imageNumber = 1; */
 	if (! ReadOK(fd,buf,6)) {
@@ -256,10 +261,6 @@ terminated:
 	if (!im) {
 		return 0;
 	}
-	if (!im->colorsTotal) {
-		gdImageDestroy(im);
-		return 0;
-	}
 	/* Check for open colors at the end, so
 	   we can reduce colorsTotal and ultimately
 	   BitsPerPixel */
@@ -269,6 +270,10 @@ terminated:
 		} else {
 			break;
 		}
+	}
+	if (!im->colorsTotal) {
+		gdImageDestroy(im);
+		return 0;
 	}
 	return im;
 }
@@ -370,7 +375,7 @@ static int
 GetCode_(gdIOCtx *fd, CODE_STATIC_DATA *scd, int code_size, int flag, int *ZeroDataBlockP)
 {
 	int           i, j, ret;
-	unsigned char count;
+	int           count;
 
 	if (flag) {
 		scd->curbit = 0;
@@ -398,9 +403,14 @@ GetCode_(gdIOCtx *fd, CODE_STATIC_DATA *scd, int code_size, int flag, int *ZeroD
 		scd->lastbit = (2+count)*8 ;
 	}
 
-	ret = 0;
-	for (i = scd->curbit, j = 0; j < code_size; ++i, ++j)
-		ret |= ((scd->buf[ i / 8 ] & (1 << (i % 8))) != 0) << j;
+	if ((scd->curbit + code_size - 1) >= (CSD_BUF_SIZE * 8)) {
+		ret = -1;
+	} else {
+		ret = 0;
+		for (i = scd->curbit, j = 0; j < code_size; ++i, ++j) {
+			ret |= ((scd->buf[i / 8] & (1 << (i % 8))) != 0) << j;
+		}
+	}
 
 	scd->curbit += code_size;
 	return ret;

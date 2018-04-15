@@ -454,13 +454,15 @@ echo "Done";
   string(16) "some_page_ref123"
 }
 
---> http://secret:@www.php.net/index.php?test=1&test2=char&test3=mixesCI#some_page_ref123: array(6) {
+--> http://secret:@www.php.net/index.php?test=1&test2=char&test3=mixesCI#some_page_ref123: array(7) {
   ["scheme"]=>
   string(4) "http"
   ["host"]=>
   string(11) "www.php.net"
   ["user"]=>
   string(6) "secret"
+  ["pass"]=>
+  string(0) ""
   ["path"]=>
   string(10) "/index.php"
   ["query"]=>
@@ -469,13 +471,15 @@ echo "Done";
   string(16) "some_page_ref123"
 }
 
---> http://:hideout@www.php.net:80/index.php?test=1&test2=char&test3=mixesCI#some_page_ref123: array(7) {
+--> http://:hideout@www.php.net:80/index.php?test=1&test2=char&test3=mixesCI#some_page_ref123: array(8) {
   ["scheme"]=>
   string(4) "http"
   ["host"]=>
   string(11) "www.php.net"
   ["port"]=>
   int(80)
+  ["user"]=>
+  string(0) ""
   ["pass"]=>
   string(7) "hideout"
   ["path"]=>
@@ -759,25 +763,9 @@ echo "Done";
   int(6)
 }
 
---> http://?:/: array(3) {
-  ["scheme"]=>
-  string(4) "http"
-  ["host"]=>
-  string(1) "?"
-  ["path"]=>
-  string(1) "/"
-}
+--> http://?:/: bool(false)
 
---> http://@?:/: array(4) {
-  ["scheme"]=>
-  string(4) "http"
-  ["host"]=>
-  string(1) "?"
-  ["user"]=>
-  string(0) ""
-  ["path"]=>
-  string(1) "/"
-}
+--> http://@?:/: bool(false)
 
 --> file:///:: array(2) {
   ["scheme"]=>
@@ -843,6 +831,13 @@ echo "Done";
 --> /: array(1) {
   ["path"]=>
   string(1) "/"
+}
+
+--> /rest/Users?filter={"id":"123"}: array(2) {
+  ["path"]=>
+  string(11) "/rest/Users"
+  ["query"]=>
+  string(19) "filter={"id":"123"}"
 }
 
 --> http:///blah.com: bool(false)

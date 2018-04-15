@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 2008-2009 The PHP Group                                |
+   | Copyright (c) 2008-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -458,7 +458,7 @@ PHP_FUNCTION(dns_get_record)
 				if (status == DNS_INFO_NO_RECORDS || status == DNS_ERROR_RCODE_NAME_ERROR) {
 					continue;
 				} else {
-					php_error_docref(NULL TSRMLS_CC, E_WARNING, "Dns Query failed");
+					php_error_docref(NULL TSRMLS_CC, E_WARNING, "DNS Query failed");
 					zval_dtor(return_value);
 					RETURN_FALSE;
 				}

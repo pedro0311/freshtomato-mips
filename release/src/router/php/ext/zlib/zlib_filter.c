@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -174,7 +174,7 @@ static php_stream_filter_ops php_zlib_inflate_ops = {
 };
 /* }}} */
 
-/* {{{ zlib.inflate filter implementation */
+/* {{{ zlib.deflate filter implementation */
 
 static php_stream_filter_status_t php_zlib_deflate_filter(
 	php_stream *stream,
@@ -302,7 +302,7 @@ static php_stream_filter *php_zlib_filter_create(const char *filtername, zval *f
 
 	data->strm.zalloc = (alloc_func) php_zlib_alloc;
 	data->strm.zfree = (free_func) php_zlib_free;
-	data->strm.avail_out = data->outbuf_len = data->inbuf_len = 2048;
+	data->strm.avail_out = data->outbuf_len = data->inbuf_len = 0x8000;
 	data->strm.next_in = data->inbuf = (Bytef *) pemalloc(data->inbuf_len, persistent);
 	if (!data->inbuf) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Failed allocating %zd bytes", data->inbuf_len);
@@ -391,7 +391,7 @@ static php_stream_filter *php_zlib_filter_create(const char *filtername, zval *f
 					if (zend_hash_find(HASH_OF(filterparams), "level", sizeof("level"), (void**) &tmpzval) == SUCCESS) {
 						tmp = **tmpzval;
 
-						/* Psuedo pass through to catch level validating code */
+						/* Pseudo pass through to catch level validating code */
 						goto factory_setlevel;
 					}
 					break;

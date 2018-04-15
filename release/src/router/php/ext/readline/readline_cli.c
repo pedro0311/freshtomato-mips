@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -18,6 +18,10 @@
 */
 
 /* $Id$ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "php.h"
 
@@ -99,6 +103,9 @@ static size_t readline_shell_write(const char *str, uint str_length TSRMLS_DC) /
 
 static int readline_shell_ub_write(const char *str, uint str_length TSRMLS_DC) /* {{{ */
 {
+	/* We just store the last char here and then pass back to the
+	   caller (sapi_cli_single_write in sapi/cli) which will actually
+	   write due to -1 return code */
 	php_last_char = str[str_length-1];
 	return -1;
 }
@@ -587,6 +594,7 @@ static int readline_shell_run(TSRMLS_D) /* {{{ */
 	char *code = emalloc(size);
 	char *prompt = cli_get_prompt("php", '>' TSRMLS_CC);
 	char *history_file;
+	int history_lines_to_write = 0;
 
 	if (PG(auto_prepend_file) && PG(auto_prepend_file)[0]) {
 		zend_file_handle *prepend_file_p;
@@ -651,6 +659,7 @@ static int readline_shell_run(TSRMLS_D) /* {{{ */
 
 		if (*line) {
 			add_history(line);
+			history_lines_to_write += 1;
 		}
 
 		free(line);
@@ -660,6 +669,15 @@ static int readline_shell_run(TSRMLS_D) /* {{{ */
 			continue;
 		}
 
+		if (history_lines_to_write) {
+#if HAVE_LIBEDIT
+			write_history(history_file);
+#else
+			append_history(history_lines_to_write, history_file);
+#endif
+			history_lines_to_write = 0;
+		}
+
 		zend_try {
 			zend_eval_stringl(code, pos, NULL, "php shell code" TSRMLS_CC);
 		} zend_end_try();
@@ -667,7 +685,7 @@ static int readline_shell_run(TSRMLS_D) /* {{{ */
 		pos = 0;
 					
 		if (!pager_pipe && php_last_char != '\0' && php_last_char != '\n') {
-			readline_shell_write("\n", 1 TSRMLS_CC);
+			php_write("\n", 1 TSRMLS_CC);
 		}
 
 		if (EG(exception)) {
@@ -681,7 +699,6 @@ static int readline_shell_run(TSRMLS_D) /* {{{ */
 
 		php_last_char = '\0';
 	}
-	write_history(history_file);
 	free(history_file);
 	efree(code);
 	efree(prompt);

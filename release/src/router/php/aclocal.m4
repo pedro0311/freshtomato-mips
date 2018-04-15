@@ -1711,7 +1711,7 @@ int main(int argc, char *argv[])
 {
   FILE *fp;
   long position;
-  char *filename = "/tmp/phpglibccheck";
+  char *filename = tmpnam(NULL);
   
   fp = fopen(filename, "w");
   if (fp == NULL) {
@@ -2263,7 +2263,7 @@ AC_DEFUN([PHP_SETUP_KERBEROS],[
   fi
 
   dnl If krb5-config is found try using it
-  if test "$PHP_KERBEROS" = "yes" && test -x "$KRB5_CONFIG"; then
+  if test "$PHP_KERBEROS" != "no" && test -x "$KRB5_CONFIG"; then
     KERBEROS_LIBS=`$KRB5_CONFIG --libs gssapi`
     KERBEROS_CFLAGS=`$KRB5_CONFIG --cflags gssapi`
 
@@ -2686,14 +2686,14 @@ EOF
   fi
   for arg in $ac_configure_args; do
     if test `expr -- $arg : "'.*"` = 0; then
-      if test `expr -- $arg : "--.*"` = 0; then
-        break;
+      if test `expr -- $arg : "-.*"` = 0 && test `expr -- $arg : ".*=.*"` = 0; then
+        continue;
       fi
       echo "'[$]arg' \\" >> $1
       CONFIGURE_OPTIONS="$CONFIGURE_OPTIONS '[$]arg'"
     else
-      if test `expr -- $arg : "'--.*"` = 0; then
-        break;
+      if test `expr -- $arg : "'-.*"` = 0 && test `expr -- $arg : "'.*=.*"` = 0; then
+        continue;
       fi
       echo "[$]arg \\" >> $1
       CONFIGURE_OPTIONS="$CONFIGURE_OPTIONS [$]arg"
@@ -2800,7 +2800,7 @@ AC_DEFUN([PHP_DETECT_ICC],
 
 dnl PHP_DETECT_SUNCC
 dnl Detect if the systems default compiler is suncc.
-dnl We also set some usefull CFLAGS if the user didn't set any
+dnl We also set some useful CFLAGS if the user didn't set any
 AC_DEFUN([PHP_DETECT_SUNCC],[
   SUNCC="no"
   AC_MSG_CHECKING([for suncc])
@@ -3011,6 +3011,25 @@ $ac_bdir[$]ac_provsrc.o: \$(PHP_DTRACE_OBJS)
 EOF
     ;;
   esac
+])
+
+dnl
+dnl PHP_CHECK_STDINT_TYPES
+dnl
+AC_DEFUN([PHP_CHECK_STDINT_TYPES], [
+  AC_CHECK_SIZEOF([short], 2)
+  AC_CHECK_SIZEOF([int], 4)
+  AC_CHECK_SIZEOF([long], 4)
+  AC_CHECK_SIZEOF([long long], 8)
+  AC_CHECK_TYPES([int8, int16, int32, int64, int8_t, int16_t, int32_t, int64_t, uint8, uint16, uint32, uint64, uint8_t, uint16_t, uint32_t, uint64_t, u_int8_t, u_int16_t, u_int32_t, u_int64_t], [], [], [
+#if HAVE_STDINT_H
+# include <stdint.h>
+#endif
+#if HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
+  ])
+  AC_DEFINE([PHP_HAVE_STDINT_TYPES], [1], [Checked for stdint types])
 ])
 # libtool.m4 - Configure libtool for the host system. -*-Autoconf-*-
 ## Copyright 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2005, 2006, 2007,
@@ -3629,7 +3648,7 @@ ia64-*-hpux*)
   rm -rf conftest*
   ;;
 
-x86_64-*kfreebsd*-gnu|x86_64-*linux*|ppc*-*linux*|powerpc*-*linux*| \
+x86_64-*kfreebsd*-gnu|x86_64-*linux*|powerpc*-*linux*| \
 s390*-*linux*|sparc*-*linux*)
   # Find out which ABI we are using.
   echo 'int i;' > conftest.$ac_ext
@@ -3643,7 +3662,10 @@ s390*-*linux*|sparc*-*linux*)
         x86_64-*linux*)
           LD="${LD-ld} -m elf_i386"
           ;;
-        ppc64-*linux*|powerpc64-*linux*)
+        powerpc64le-*linux*)
+          LD="${LD-ld} -m elf32lppclinux"
+          ;;
+        powerpc64-*linux*)
           LD="${LD-ld} -m elf32ppclinux"
           ;;
         s390x-*linux*)
@@ -3662,7 +3684,10 @@ s390*-*linux*|sparc*-*linux*)
         x86_64-*linux*)
           LD="${LD-ld} -m elf_x86_64"
           ;;
-        ppc*-*linux*|powerpc*-*linux*)
+        powerpcle-*linux*)
+          LD="${LD-ld} -m elf64lppc"
+          ;;
+        powerpc-*linux*)
           LD="${LD-ld} -m elf64ppc"
           ;;
         s390*-*linux*)
@@ -4546,10 +4571,6 @@ dgux*)
   shlibpath_var=LD_LIBRARY_PATH
   ;;
 
-freebsd1*)
-  dynamic_linker=no
-  ;;
-
 freebsd* | dragonfly*)
   # DragonFly does not have aout.  When/if they implement a new
   # versioning mechanism, adjust this.
@@ -4557,7 +4578,7 @@ freebsd* | dragonfly*)
     objformat=`/usr/bin/objformat`
   else
     case $host_os in
-    freebsd[[123]]*) objformat=aout ;;
+    freebsd[[123]].*) objformat=aout ;;
     *) objformat=elf ;;
     esac
   fi
@@ -6174,7 +6195,7 @@ case $host_os in
 	;;
     esac
     ;;
-  freebsd[[12]]*)
+  freebsd[[12]].*)
     # C++ shared libraries reported to be fairly broken before switch to ELF
     _LT_AC_TAGVAR(ld_shlibs, $1)=no
     ;;
@@ -8855,10 +8876,6 @@ _LT_EOF
       _LT_AC_TAGVAR(archive_cmds, $1)='$LD -G -h $soname -o $lib $libobjs $deplibs $linker_flags'
       _LT_AC_TAGVAR(hardcode_libdir_flag_spec, $1)='-L$libdir'
       _LT_AC_TAGVAR(hardcode_shlibpath_var, $1)=no
-      ;;
-
-    freebsd1*)
-      _LT_AC_TAGVAR(ld_shlibs, $1)=no
       ;;
 
     # FreeBSD 2.2.[012] allows us to include c++rt0.o to get C++ constructor
