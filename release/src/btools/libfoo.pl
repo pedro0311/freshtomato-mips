@@ -263,13 +263,13 @@ sub fixDyn
 
 	fixDynDep("nginx", "libpcre.so.1.2.3");
 	fixDynDep("nginx", "libpcreposix.so.0.0.2");
-	fixDynDep("php-cgi", "libxml2.so.2.9.1");
+	fixDynDep("php-cgi", "libxml2.so.2.9.3");
 	fixDynDep("php-cgi", "libpng12.so.0.51.0");
 	fixDynDep("php-cgi", "libpng.so.3.51.0");
 	fixDynDep("php-cgi", "libiconv.so.2.6.0");
 	fixDynDep("php-cgi", "libsqlite3.so.0.8.6");
 	fixDynDep("php-cgi", "libcurl.so.4.4.0");
-	fixDynDep("php-cli", "libxml2.so.2.9.1");
+	fixDynDep("php-cli", "libxml2.so.2.9.3");
 	fixDynDep("php-cli", "libpng12.so.0.51.0");
 	fixDynDep("php-cli", "libpng.so.3.51.0");
 	fixDynDep("php-cli", "libiconv.so.2.6.0");
@@ -589,7 +589,7 @@ genSO("${root}/usr/lib/libnfnetlink.so.0.2.0", "${router}/libnfnetlink/src/.libs
 genSO("${root}/usr/lib/libsodium.so.18.2.0", "${router}/libsodium/src/libsodium/.libs/libsodium.a");
 genSO("${root}/usr/lib/libpng.so.3.51.0", "${router}/libpng/.libs/libpng.a", "", "-L${router}/zlib");
 genSO("${root}/usr/lib/libpng12.so.0.51.0", "${router}/libpng/.libs/libpng12.a", "", "-L${router}/zlib");
-genSO("${root}/usr/lib/libxml2.so.2.9.1", "${router}/libxml2/.libs/libxml2.a");
+genSO("${root}/usr/lib/libxml2.so.2.9.3", "${router}/libxml2/.libs/libxml2.a");
 genSO("${root}/usr/lib/libpcre.so.1.2.7", "${router}/pcre/.libs/libpcre.a");
 genSO("${root}/usr/lib/libpcreposix.so.0.0.4", "${router}/pcre/.libs/libpcreposix.a");
 genSO("${root}/usr/lib/libatomic_ops.so.1.0.3", "${router}/libatomic_ops/src/.libs/libatomic_ops.a");

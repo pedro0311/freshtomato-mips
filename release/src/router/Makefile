@@ -1804,6 +1804,7 @@ pcre-clean:
 
 libxml2/stamp-h1:
 	cd libxml2 && \
+	autoreconf -fsi && \
 	CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
 	$(CONFIGURE) --prefix=/usr --without-python --enable-static --enable-shared
 	touch $@
@@ -1814,11 +1815,11 @@ libxml2: libxml2/stamp-h1
 
 libxml2-install: libxml2
 	@$(SEP)
-	install -D libxml2/.libs/libxml2.so.2.9.1 $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.9.1
-	$(STRIP) $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.9.1
+	install -D libxml2/.libs/libxml2.so.2.9.3 $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.9.3
+	$(STRIP) $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.9.3
 	cd $(INSTALLDIR)/libxml2/usr/lib && \
-		ln -sf libxml2.so.2.9.1 libxml2.so.2 && \
-		ln -sf libxml2.so.2.9.1 libxml2.so
+		ln -sf libxml2.so.2.9.3 libxml2.so.2 && \
+		ln -sf libxml2.so.2.9.3 libxml2.so
 
 libxml2-clean:
 	-@$(MAKE) -C libxml2 clean
