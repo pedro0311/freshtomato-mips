@@ -137,7 +137,7 @@ ifneq ($(ASUS_TRX),0)
 	# and tee only reads from stdout (not stderr)
 	@echo "*********************** Convert TRX to CHK (add Netgear Checksum) ************************" >>fpkg.log
 	@echo "Creating Firmware for Netgear R6300 v1 .... "
-	@$(SRCBASE)/wnrtool/mkchkimg -o image/freshtomato-Netgear-R6300V1-$(V2)-$(current_BUILD_DESC).chk \
+	@$(SRCBASE)/wnrtool/mkchkimg -o image/freshtomato-Netgear-R6300V1-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).chk \
 	-k image/linux-lzma.trx \
 	-b U12H218T00_NETGEAR -r 2 2>&1 | tee -a fpkg.log
 	@rm -f image/linux-lzma.trx
@@ -153,7 +153,7 @@ ifneq ($(ASUS_TRX),0)
 	# and tee only reads from stdout (not stderr)
 	@echo "*********************** Convert TRX to CHK (add Netgear Checksum) ************************" >>fpkg.log
 	@echo "Creating Firmware for Netgear WNDR4500 v1 .... "
-	@$(SRCBASE)/wnrtool/mkchkimg -o image/freshtomato-Netgear-WNDR4500V1-$(V2)-$(current_BUILD_DESC).chk \
+	@$(SRCBASE)/wnrtool/mkchkimg -o image/freshtomato-Netgear-WNDR4500V1-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).chk \
 	-k image/linux-lzma.trx \
 	-b U12H189T00_NETGEAR -r 2 2>&1 | tee -a fpkg.log
 	@rm -f image/linux-lzma.trx
@@ -169,7 +169,7 @@ ifneq ($(ASUS_TRX),0)
 	# and tee only reads from stdout (not stderr)
 	@echo "*********************** Convert TRX to CHK (add Netgear Checksum) ************************" >>fpkg.log
 	@echo "Creating Firmware for Netgear WNDR4500 v2 .... "
-	@$(SRCBASE)/wnrtool/mkchkimg -o image/freshtomato-Netgear-WNDR4500V2-$(V2)-$(current_BUILD_DESC).chk \
+	@$(SRCBASE)/wnrtool/mkchkimg -o image/freshtomato-Netgear-WNDR4500V2-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).chk \
 	-k image/linux-lzma.trx \
 	-b U12H224T00_NETGEAR -r 2 2>&1 | tee -a fpkg.log
 	@rm -f image/linux-lzma.trx
@@ -180,7 +180,7 @@ ifneq ($(ASUS_TRX),0)
 	ctools/lzma_4k e ctools/piggy  ctools/vmlinuz-lzma
 	ctools/mksquashfs router/mipsel-uclibc/target ctools/target.squashfs -noappend -all-root
 	ctools/trx -o image/linux-lzma.trx ctools/vmlinuz-lzma ctools/target.squashfs
-	ctools/trx_asus -i image/linux-lzma.trx -r $(BUILD_NAME),$(KERNEL_VER).$(FS_VER),image/freshtomato-$(ASUS_TRX)-$(V2)-$(current_BUILD_DESC).trx
+	ctools/trx_asus -i image/linux-lzma.trx -r $(BUILD_NAME),$(KERNEL_VER).$(FS_VER),image/freshtomato-$(ASUS_TRX)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).trx
 	@rm -f image/linux-lzma.trx
 	@echo ""
    endif #WNDR4500V2
@@ -196,7 +196,7 @@ ifeq ($(WNR3500LV2),1)
 	rm -f image/vmlinux.bin image/vmlinux.lzma
 	cd image && touch rootfs
 	cd image && $(WNRTOOL)/packet -k freshtomato-wnr3500lv2.trx -f rootfs -b $(BOARD_FILE) -ok kernel_image -oall kernel_rootfs_image -or rootfs_image -i $(fw_cfg_file) && rm -f rootfs && \
-	cp kernel_rootfs_image.chk freshtomato-Netgear-3500Lv2-$(ND)$(current_BUILD_USB)-$(current_TOMATO_VER)-$(V2)-$(current_BUILD_DESC).chk
+	cp kernel_rootfs_image.chk freshtomato-Netgear-3500Lv2-$(ND)$(current_BUILD_USB)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).chk
 	@echo "Cleanup ...."
 #	rm -f image/*image.chk image/*.trx
 endif
@@ -334,7 +334,7 @@ ifeq ($(WNDR),y)
 	@$(MAKE) netgear-check MAXFSIZE=7274496 NG_FNAME=image/freshtomato-WNDR3400v2-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER)-$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).chk
 
 	@echo "Cleanup ...."
-	@cp fpkg.log image/fpkg-$(mips_rev)$(beta)$(V2).log
+	@cp fpkg.log image/fpkg-$(current_TOMATO_VER)-$(mips_rev)$(beta)$(V2).log
 	@rm -f image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER)-$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).trx
 	@rm -f fpkg.log
 else
@@ -998,11 +998,11 @@ define KernelConfig
 			echo "CONFIG_BRIDGE_EBT_IP6=m" >>$(1); \
 		fi; \
 	fi; \
-        sed -i "/CONFIG_NVRAM_64K/d" $(1); \
-        if [ "$(NVRAM_64K)" = "y" ]; then \
-                echo "CONFIG_NVRAM_64K=y" >>$(1); \
-        else \
-                echo "# CONFIG_NVRAM_64K is not set" >>$(1); \
+	sed -i "/CONFIG_NVRAM_64K/d" $(1); \
+	if [ "$(NVRAM_64K)" = "y" ]; then \
+	        echo "CONFIG_NVRAM_64K=y" >>$(1); \
+	else \
+	        echo "# CONFIG_NVRAM_64K is not set" >>$(1); \
 	fi \
 	)
 endef
@@ -1144,11 +1144,13 @@ else
 	@$(MAKE) bin OPENVPN=y BBEXTRAS=y BCM57=y B=V BUILD_DESC="$(VPN)" USB="" PPTPD=y
 endif
 
+
 ## Max build for router with 8MB flash without USB Support (like WRT54GS v1)
-m:
 ifeq ($(CONFIG_LINUX26),y)
+m:
 	@$(MAKE) bin OPENVPN=y BBEXTRAS=y EBTABLES=y IPV6SUPP=y B=E BUILD_DESC="Max" USB="" NOCAT=y NFS=y SNMP=y DNSCRYPT=y PPTPD=y TOR=y IPSEC=y MULTIWAN=y
 endif
+
 
 ## SD-VPN - K24 only
 ifneq ($(CONFIG_LINUX26),y)
@@ -1208,8 +1210,8 @@ r2v:
 r2m:
 	@$(MAKE) m MIPS32=r2
 
-#Linksys E-series witk 60K NVRAM builds
 
+## Linksys E-series witk 60K NVRAM builds
 n60z:
 	@$(MAKE) r2z NVRAM_SIZE=60 LINKSYS_E=y
 
@@ -1249,8 +1251,8 @@ n60v:
 n60m:
 	@$(MAKE) r2m NVRAM_SIZE=60 LINKSYS_E=y
 
-#Linksys E-Series with 64K Nvram Builds
 
+## Linksys E-Series with 64K Nvram Builds
 n64z:
 	@$(MAKE) r2z NVRAM_SIZE=64 LINKSYS_E_64k=y
 
@@ -1285,8 +1287,7 @@ n64m:
 	@$(MAKE) r2m NVRAM_SIZE=64 LINKSYS_E_64k=y
 
 
-#Linksys E-Series with 4MB Flash (Max Flashsize=3866624)
-
+## Linksys E-Series with 4MB Flash (Max Flashsize=3866624)
 e1000v2f:
 	@$(MAKE) bin MIPS32=r2 NVRAM_SIZE=32 LINKSYS_E1000v2=y NO_JFFS=y NO_ZEBRA=y B=F BUILD_DESC="Mini" USB="" NO_HTTPS=y KERN_SIZE_OPT=y
 
@@ -1299,14 +1300,16 @@ e1200v1f:
 e1200v1i:
 	@$(MAKE) bin MIPS32=r2 NVRAM_SIZE=64 LINKSYS_E1200v1=y NO_JFFS=y NO_CIFS=y NO_ZEBRA=y IPV6SUPP=y B=I USB="" NO_HTTPS=y KERN_SIZE_OPT=y BUILD_DESC="MiniIPv6"
 
-#Builds for WNR3500L v2
+
+## Builds for WNR3500L v2
 v2z:
 	@$(MAKE) z MIPS32=r2 WNR3500LV2=1 NO_JFFS=y
 
 v2e:
 	@$(MAKE) e MIPS32=r2 WNR3500LV2=1 NO_JFFS=y
 
-#Builds with wl_high module
+
+## Builds with wl_high module
 rtn53:
 	@$(MAKE) bin MIPS32=r2 OPENVPN=y BBEXTRAS=y EBTABLES=y NO_LIBOPT=y IPV6SUPP=y B=E BUILD_DESC="RT-N53" USB="USB" SNMP=y DNSCRYPT=y PPTPD=y TOR=y NOCAT=y USBAP=y NO_USBAPP=y
 
@@ -1328,11 +1331,13 @@ n60:
 n60init:
 	@$(MAKE) bin MIPS32=r2 B=E BUILD_DESC="TendaN60-init" USB="" NO_JFFS=y NO_CIFS=y NO_HTTPS=y NO_XXTP=y NO_ZEBRA=y NO_SSH=y
 
+
 # it`s not possible to flash tomato on this router. Maybe in the future.
-#l600n:
+## l600n:
 #	@$(MAKE) bin MIPS32=r2 OPENVPN=y BBEXTRAS=y EBTABLES=y NO_LIBOPT=y IPV6SUPP=y B=E BUILD_DESC="L600N" USB="USB" SNMP=y DNSCRYPT=y PPTPD=y TOR=y NOCAT=y USBAP=y
 
-#Builds for Asus RT-N66u with 64k NVRAM support
+
+## Builds for Asus RT-N66u with 64k NVRAM support
 ifeq ($(CONFIG_BCMWL6),y)
 r64z:
 	@$(MAKE) z MIPS32=r2 NVRAM_64K=y MICROSD=y ASUS_TRX="RT-N66U" UFSD=y
@@ -1357,7 +1362,7 @@ ac66z:
 w1800re:
 	@$(MAKE) e MIPS32=r2 NVRAM_64K=y ASUS_TRX="W1800R"
 
-w1800ro:
+w1800rz:
 	@$(MAKE) o MIPS32=r2 NVRAM_64K=y ASUS_TRX="W1800R"
 
 r6300e:
@@ -1396,6 +1401,7 @@ endif
 
 # end of CONFIG_LINUX26
 endif
+
 
 setprofile:
 	echo '#ifndef TOMATO_PROFILE' > router/shared/tomato_profile.h
@@ -1488,7 +1494,7 @@ ifeq ($(CONFIG_LINUX26),y)
 	@echo "r2j          MIPS Release 2 MiniVPN (for 4MB flash)"
 	@echo "r2f          MIPS Release 2 Mini (for netgear)"
 	@echo ""
-	@echo "       Linksys E-Series with 4MB Flash(E1000v2/v2.1/E1200v1)"
+	@echo "       Linksys E-Series with 4MB Flash (E1000v2/v2.1/E1200v1)"
 	@echo "e1000v2f     Linksys E1000v2-v2.1/Cisco M10v2 Mini"
 	@echo "e1000v2i     Linksys E1000v2-v2.1/Cisco M10v2 MiniIPv6"
 	@echo "e1200v1f     Linksys E1200v1 Mini"
@@ -1508,7 +1514,7 @@ ifeq ($(CONFIG_LINUX26),y)
 	@echo "n60v         Linksys E-series build IPv6-VPN for E2000"
 	@echo "n60m         Linksys E-series build Max for E2000"
 	@echo ""
-	@echo "       Linksys E-Series with 64k Nvram/8MB Flash(E800/E900/E1200v2/E1500)"
+	@echo "       Linksys E-Series with 64k Nvram/8MB Flash (E800/E900/E1200v2/E1500)"
 	@echo "n64e         Linksys E-series(64k Nvram) build VPN"
 	@echo "n64c         Linksys E-series(64k Nvram) build BTGui-VPN"
 	@echo "n64d         Linksys E-series(64k Nvram) build BTGui-VPN plus Nocat"
@@ -1532,15 +1538,21 @@ ifeq ($(CONFIG_LINUX26),y)
 	@echo "v2e          Netgear WNR3500Lv2 build VPN"
 	@echo "v2z          Netgear WNR3500Lv2 build AIO"
 	@echo ""
-	@echo "r64e         RT-N66u build VPN"
-	@echo "r64z         RT-N66u build AIO"
+	@echo "r64e         Asus RT-N66u build VPN"
+	@echo "r64z         Asus RT-N66u build AIO"
 ifeq ($(CONFIG_BCMWL6),y)
 	@echo ""
-	@echo "       Routers with AC mode support"
-	@echo "ac66e        RT-AC66u build VPN"
-	@echo "ac66z        RT-AC66u build AIO"
+	@echo "ac66e        Asus RT-AC66u build VPN"
+	@echo "ac66z        Asus RT-AC66u build AIO"
 	@echo "w1800re      Tenda W1800R build VPN"
 	@echo "w1800rz      Tenda W1800R build AIO"
+	@echo "r6300e       Netgear R6300V1 build VPN"
+	@echo "r6300z       Netgear R6300V1 build AIO"
+	@echo "wndr4500e    Netgear WNDR4500V1 build VPN"
+	@echo "wndr4500z    Netgear WNDR4500V1 build AIO"
+	@echo "wndr4500v2e  Netgear WNDR4500V2 build VPN"
+	@echo "wndr4500v2z  Netgear WNDR4500V2 build AIO"
+	@echo "n80o         Tenda N80 build Mega-VPN"
 #	@echo "d1800he      Buffalo D1800H build VPN"
 #	@echo "d1800hz      Buffalo D1800H build AIO"
 #	@echo "ea6500e      Linksys EA6500v1 build VPN"
