@@ -1452,6 +1452,7 @@ endif
 
 flac/stamp-h1: libogg
 	cd flac && \
+	autoreconf -fsi && \
 	CFLAGS="-Os $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections" \
 	CPPFLAGS="-I$(TOP)/libogg/include -I$(LINUXDIR)/include" \
 	LDFLAGS="-L$(TOP)/libogg/src/.libs -fPIC -ffunction-sections -fdata-sections -Wl,--gc-sections" \
@@ -1838,16 +1839,16 @@ libpng: libpng/stamp-h1
 
 libpng-install:
 	@$(SEP)
-	install -D libpng/.libs/libpng.so.3.51.0 $(INSTALLDIR)/libpng/usr/lib/libpng.so.3.51.0
-	$(STRIP) $(INSTALLDIR)/libpng/usr/lib/libpng.so.3.51.0
+	install -D libpng/.libs/libpng.so.3.57.0 $(INSTALLDIR)/libpng/usr/lib/libpng.so.3.57.0
+	$(STRIP) $(INSTALLDIR)/libpng/usr/lib/libpng.so.3.57.0
 	cd $(INSTALLDIR)/libpng/usr/lib && \
-		ln -sf libpng.so.3.51.0 libpng.so && \
-		ln -sf libpng.so.3.51.0 libpng.so.3
-	install -D libpng/.libs/libpng12.so.0.51.0 $(INSTALLDIR)/libpng/usr/lib/libpng12.so.0.51.0
-	$(STRIP) $(INSTALLDIR)/libpng/usr/lib/libpng12.so.0.51.0
+		ln -sf libpng.so.3.57.0 libpng.so && \
+		ln -sf libpng.so.3.57.0 libpng.so.3
+	install -D libpng/.libs/libpng12.so.0.57.0 $(INSTALLDIR)/libpng/usr/lib/libpng12.so.0.57.0
+	$(STRIP) $(INSTALLDIR)/libpng/usr/lib/libpng12.so.0.57.0
 	cd $(INSTALLDIR)/libpng/usr/lib && \
-		ln -sf libpng12.so.0.51.0 libpng12.so && \
-		ln -sf libpng12.so.0.51.0 libpng12.so.0
+		ln -sf libpng12.so.0.57.0 libpng12.so && \
+		ln -sf libpng12.so.0.57.0 libpng12.so.0
 
 libatomic_ops/stamp-h1:
 	cd libatomic_ops && \
@@ -2212,7 +2213,7 @@ libcurl/stamp-h1: zlib openssl
 		--enable-ares --enable-cookies --enable-crypto-auth --enable-nonblocking \
 		--enable-file --enable-ftp --enable-http --enable-ipv6 --enable-tftp \
 		--disable-nls --disable-ares --disable-dict --disable-debug --disable-gopher \
-		--disable-ldap --disable-manual --disable-telnet --disable-verbose \
+		--disable-ldap --disable-proxy --disable-manual --disable-libcurl-option --disable-telnet --disable-verbose \
 		--with-random="/dev/urandom" --with-ssl="$(TOP)/openssl/ssl" \
 		--without-gnutls --without-krb4 --without-libidn \
 		--with-linux-headers=$(LINUXDIR)/include $(CACERT) \
@@ -2234,11 +2235,11 @@ libcurl-install:
 	install -D libcurl/src/.libs/curl $(INSTALLDIR)/libcurl/usr/sbin/curl
 	$(STRIP) -s $(INSTALLDIR)/libcurl/usr/sbin/curl
 	install -d $(INSTALLDIR)/libcurl/usr/lib
-	install -D libcurl/lib/.libs/libcurl.so.4.4.0 $(INSTALLDIR)/libcurl/usr/lib/libcurl.so.4.4.0
-	$(STRIP) -s $(INSTALLDIR)/libcurl/usr/lib/libcurl.so.4.4.0
+	install -D libcurl/lib/.libs/libcurl.so.4.5.0 $(INSTALLDIR)/libcurl/usr/lib/libcurl.so.4.5.0
+	$(STRIP) -s $(INSTALLDIR)/libcurl/usr/lib/libcurl.so.4.5.0
 	cd $(INSTALLDIR)/libcurl/usr/lib/ && \
-		ln -sf libcurl.so.4.4.0 libcurl.so.4 && \
-		ln -sf libcurl.so.4.4.0 libcurl.so
+		ln -sf libcurl.so.4.5.0 libcurl.so.4 && \
+		ln -sf libcurl.so.4.5.0 libcurl.so
 
 libevent/stamp-h1:
 	cd libevent && CC=$(CC) \
