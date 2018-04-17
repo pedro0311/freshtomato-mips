@@ -56,10 +56,10 @@ var qosg = new TomatoGrid();
 qosg.setup = function() {
 	this.init('qosg-grid', '', 80, [
 		{ type: 'text', maxlen: 31 },
-		{ type: 'text', maxlen: 6 },
-		{ type: 'text', maxlen: 6 },
-		{ type: 'text', maxlen: 6 },
-		{ type: 'text', maxlen: 6 },
+		{ type: 'text', maxlen: 8 },
+		{ type: 'text', maxlen: 8 },
+		{ type: 'text', maxlen: 8 },
+		{ type: 'text', maxlen: 8 },
 		{ type: 'select', options: class_prio },
 		{ type: 'select', options: class_tcp },
 		{ type: 'select', options: class_udp }]);
@@ -132,7 +132,7 @@ qosg.existIP = function(ip)
 qosg.checkRate = function(rate)
 {
 	var s = parseInt(rate, 10);
-	if( isNaN(s) || s <= 0 || a >= 100000 ) return true;
+	if (isNaN(s) || s <= 0 || s >= 100000000) return true;
 	return false;
 }
 
@@ -140,7 +140,7 @@ qosg.checkRateCeil = function(rate, ceil)
 {
 	var r = parseInt(rate, 10);
 	var c = parseInt(ceil, 10);
-	if( r > c ) return true;
+	if (r > c) return true;
 	return false;
 }
 
@@ -152,45 +152,45 @@ qosg.verifyFields = function(row, quiet)
 
 /*
 	if (v_ip(f[0], quiet)) {
-               if(this.existIP(f[0].value)) {
-                       ferror.set(f[0], 'duplicate IP address', quiet);
+		if (this.existIP(f[0].value)) {
+			ferror.set(f[0], 'duplicate IP address', quiet);
 			ok = 0;
 		}
 	}
 */
-	if(v_macip(f[0], quiet, 0, nvram.lan_ipaddr, nvram.lan_netmask)) {
-               if(this.existIP(f[0].value)) {
-                    ferror.set(f[0], 'duplicate IP or MAC address', quiet);
+	if (v_macip(f[0], quiet, 0, nvram.lan_ipaddr, nvram.lan_netmask)) {
+		if (this.existIP(f[0].value)) {
+			ferror.set(f[0], 'duplicate IP or MAC address', quiet);
 			ok = 0;
 		}
 	}
-     
-	if( this.checkRate(f[1].value)) {
-	        ferror.set(f[1], 'DLRate must between 1 and 99999', quiet);
+
+	if (this.checkRate(f[1].value)) {
+	        ferror.set(f[1], 'DLRate must be between 1 and 99999999', quiet);
 		ok = 0;
 	}
 
-	if( this.checkRate(f[2].value)) {
-		ferror.set(f[2], 'DLCeil must between 1 and 99999', quiet);
+	if (this.checkRate(f[2].value)) {
+		ferror.set(f[2], 'DLCeil must be between 1 and 99999999', quiet);
 		ok = 0;
 	}
 
-	if( this.checkRateCeil(f[1].value, f[2].value)) {
+	if (this.checkRateCeil(f[1].value, f[2].value)) {
                ferror.set(f[2], 'DLCeil must be greater than DLRate', quiet);
 		ok = 0;
 	}
 
-	if( this.checkRate(f[3].value)) {
-                ferror.set(f[3], 'ULRate must between 1 and 99999', quiet);
+	if (this.checkRate(f[3].value)) {
+                ferror.set(f[3], 'ULRate must be between 1 and 99999999', quiet);
 		ok = 0;
 	}
 
-	if( this.checkRate(f[4].value)) {
-                ferror.set(f[4], 'ULCeil must between 1 and 99999', quiet);
+	if (this.checkRate(f[4].value)) {
+                ferror.set(f[4], 'ULCeil must be between 1 and 99999999', quiet);
 		ok = 0;
 	}
 
-	if( this.checkRateCeil(f[3].value, f[4].value)) {
+	if (this.checkRateCeil(f[3].value, f[4].value)) {
                     ferror.set(f[4], 'ULCeil must be greater than ULRate', quiet);
 			ok = 0;
 	}
@@ -309,8 +309,8 @@ function init()
 		<script type='text/javascript'>
 			createFieldTable('', [
 			{ title: 'Enable Limiter', name: 'f_new_qoslimit_enable', type: 'checkbox', value: nvram.new_qoslimit_enable != '0' },
-			{ title: 'Max Available Download <br><small>(same as used in QoS)</small>', indent: 2, name: 'wan_qos_ibw', type: 'text', maxlen: 6, size: 8, suffix: ' <small>kbit/s</small>', value: nvram.wan_qos_ibw },
-			{ title: 'Max Available Upload <br><small>(same as used in QoS)</small>', indent: 2, name: 'wan_qos_obw', type: 'text', maxlen: 6, size: 8, suffix: ' <small>kbit/s</small>', value: nvram.wan_qos_obw }
+			{ title: 'Max Available Download <br><small>(same as used in QoS)<\/small>', indent: 2, name: 'wan_qos_ibw', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.wan_qos_ibw },
+			{ title: 'Max Available Upload <br><small>(same as used in QoS)<\/small>', indent: 2, name: 'wan_qos_obw', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.wan_qos_obw }
 			]);
 		</script>
 		<br>
@@ -326,7 +326,7 @@ function init()
 			</ul>
 		</div>
 	</div>
-	
+
 	<br>
 
 	<div class='section-title'>Default Class for unlisted MAC / IP's in LAN (br0)</div>
@@ -334,10 +334,10 @@ function init()
 		<script type='text/javascript'>
 			createFieldTable('', [
 				{ title: 'Enable', name: 'f_qosl_enable', type: 'checkbox', value: nvram.qosl_enable == '1'},
-				{ title: 'Download rate', indent: 2, name: 'qosl_dlr', type: 'text', maxlen: 6, size: 8, suffix: ' <small>kbit/s</small>', value: nvram.qosl_dlr },
-				{ title: 'Download ceil', indent: 2, name: 'qosl_dlc', type: 'text', maxlen: 6, size: 8, suffix: ' <small>kbit/s</small>', value: nvram.qosl_dlc },
-				{ title: 'Upload rate', indent: 2, name: 'qosl_ulr', type: 'text', maxlen: 6, size: 8, suffix: ' <small>kbit/s</small>', value: nvram.qosl_ulr },
-				{ title: 'Upload ceil', indent: 2, name: 'qosl_ulc', type: 'text', maxlen: 6, size: 8, suffix: ' <small>kbit/s</small>', value: nvram.qosl_ulc },
+				{ title: 'Download rate', indent: 2, name: 'qosl_dlr', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.qosl_dlr },
+				{ title: 'Download ceil', indent: 2, name: 'qosl_dlc', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.qosl_dlc },
+				{ title: 'Upload rate', indent: 2, name: 'qosl_ulr', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.qosl_ulr },
+				{ title: 'Upload ceil', indent: 2, name: 'qosl_ulc', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.qosl_ulc },
 				{ title: 'Priority', indent: 2, name: 'limit_br0_prio', type: 'select', options:
 					[['0','Highest'],['1','High'],['2','Normal'],['3','Low'],['4','Lowest']], value: nvram.limit_br0_prio },
 				{ title: 'TCP Limit', indent: 2, name: 'qosl_tcp', type: 'select', options:
@@ -376,10 +376,10 @@ function init()
 		<script type='text/javascript'>
 			createFieldTable('', [
 				{ title: 'Enable', name: 'f_limit_br1_enable', type: 'checkbox', value: nvram.limit_br1_enable == '1'},
-				{ title: 'Download rate', indent: 2, name: 'limit_br1_dlr', type: 'text', maxlen: 6, size: 8, suffix: ' <small>kbit/s</small>', value: nvram.limit_br1_dlr },
-				{ title: 'Download ceil', indent: 2, name: 'limit_br1_dlc', type: 'text', maxlen: 6, size: 8, suffix: ' <small>kbit/s</small>', value: nvram.limit_br1_dlc },
-				{ title: 'Upload rate', indent: 2, name: 'limit_br1_ulr', type: 'text', maxlen: 6, size: 8, suffix: ' <small>kbit/s</small>', value: nvram.limit_br1_ulr },
-				{ title: 'Upload ceil', indent: 2, name: 'limit_br1_ulc', type: 'text', maxlen: 6, size: 8, suffix: ' <small>kbit/s</small>', value: nvram.limit_br1_ulc },
+				{ title: 'Download rate', indent: 2, name: 'limit_br1_dlr', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.limit_br1_dlr },
+				{ title: 'Download ceil', indent: 2, name: 'limit_br1_dlc', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.limit_br1_dlc },
+				{ title: 'Upload rate', indent: 2, name: 'limit_br1_ulr', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.limit_br1_ulr },
+				{ title: 'Upload ceil', indent: 2, name: 'limit_br1_ulc', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.limit_br1_ulc },
 				{ title: 'Priority', indent: 2, name: 'limit_br1_prio', type: 'select', options:
 					[['0','Highest'],['1','High'],['2','Normal'],['3','Low'],['4','Lowest']], value: nvram.limit_br1_prio }
 			]);
@@ -396,10 +396,10 @@ function init()
 		<script type='text/javascript'>
 			createFieldTable('', [
 				{ title: 'Enable', name: 'f_limit_br2_enable', type: 'checkbox', value: nvram.limit_br2_enable == '1'},
-				{ title: 'Download rate', indent: 2, name: 'limit_br2_dlr', type: 'text', maxlen: 6, size: 8, suffix: ' <small>kbit/s</small>', value: nvram.limit_br2_dlr },
-				{ title: 'Download ceil', indent: 2, name: 'limit_br2_dlc', type: 'text', maxlen: 6, size: 8, suffix: ' <small>kbit/s</small>', value: nvram.limit_br2_dlc },
-				{ title: 'Upload rate', indent: 2, name: 'limit_br2_ulr', type: 'text', maxlen: 6, size: 8, suffix: ' <small>kbit/s</small>', value: nvram.limit_br2_ulr },
-				{ title: 'Upload ceil', indent: 2, name: 'limit_br2_ulc', type: 'text', maxlen: 6, size: 8, suffix: ' <small>kbit/s</small>', value: nvram.limit_br2_ulc },
+				{ title: 'Download rate', indent: 2, name: 'limit_br2_dlr', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.limit_br2_dlr },
+				{ title: 'Download ceil', indent: 2, name: 'limit_br2_dlc', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.limit_br2_dlc },
+				{ title: 'Upload rate', indent: 2, name: 'limit_br2_ulr', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.limit_br2_ulr },
+				{ title: 'Upload ceil', indent: 2, name: 'limit_br2_ulc', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.limit_br2_ulc },
 				{ title: 'Priority', indent: 2, name: 'limit_br2_prio', type: 'select', options:
 					[['0','Highest'],['1','High'],['2','Normal'],['3','Low'],['4','Lowest']], value: nvram.limit_br2_prio }
 			]);
@@ -416,10 +416,10 @@ function init()
 		<script type='text/javascript'>
 			createFieldTable('', [
 				{ title: 'Enable', name: 'f_limit_br3_enable', type: 'checkbox', value: nvram.limit_br3_enable == '1'},
-				{ title: 'Download rate', indent: 2, name: 'limit_br3_dlr', type: 'text', maxlen: 6, size: 8, suffix: ' <small>kbit/s</small>', value: nvram.limit_br3_dlr },
-				{ title: 'Download ceil', indent: 2, name: 'limit_br3_dlc', type: 'text', maxlen: 6, size: 8, suffix: ' <small>kbit/s</small>', value: nvram.limit_br3_dlc },
-				{ title: 'Upload rate', indent: 2, name: 'limit_br3_ulr', type: 'text', maxlen: 6, size: 8, suffix: ' <small>kbit/s</small>', value: nvram.limit_br3_ulr },
-				{ title: 'Upload ceil', indent: 2, name: 'limit_br3_ulc', type: 'text', maxlen: 6, size: 8, suffix: ' <small>kbit/s</small>', value: nvram.limit_br3_ulc },
+				{ title: 'Download rate', indent: 2, name: 'limit_br3_dlr', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.limit_br3_dlr },
+				{ title: 'Download ceil', indent: 2, name: 'limit_br3_dlc', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.limit_br3_dlc },
+				{ title: 'Upload rate', indent: 2, name: 'limit_br3_ulr', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.limit_br3_ulr },
+				{ title: 'Upload ceil', indent: 2, name: 'limit_br3_ulc', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.limit_br3_ulc },
 				{ title: 'Priority', indent: 2, name: 'limit_br3_prio', type: 'select', options:
 					[['0','Highest'],['1','High'],['2','Normal'],['3','Low'],['4','Lowest']], value: nvram.limit_br3_prio }
 			]);
