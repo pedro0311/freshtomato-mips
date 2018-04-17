@@ -85,7 +85,6 @@ switch(nvram['t_model_name']) {
 	case 'vlan-testid0':
 	case 'Belkin Share N300 (F7D3302/F7D7302) v1':
 	case 'Belkin Play N600 (F7D4302/F7D8302) v1':
-	case 'Belkin N600 DB Wireless N+':
 	case 'D-Link Dir-620 C1':
 //	case 'FiberHome HG320':
 	case 'Linksys E800 v1.0':
@@ -998,8 +997,8 @@ function earlyInit() {
 </div>
 
 <!-- / / / -->
-<!-- Unneeded - Hide display for Now, remove later?? -->
-<div id='vid_offset' style='display:none'>
+<!-- Needed for RT branch, no support for VIDs above 16 -->
+<!-- <div id='vid_offset' style='display:none'> -->
 <div class='section-title'>VID Offset</div>
 <div class='section'>
 <script type='text/javascript'>
@@ -1010,7 +1009,7 @@ createFieldTable('', [
 ]);
 </script>
 </div>
-</div>
+<!-- </div> -->
 
 <!-- / / / -->
 
@@ -1041,6 +1040,11 @@ if(port_vlan_supported) vlg.setup();
 <li><b>Default</b> - VLAN ID assigned to untagged frames received by the router.</li>
 <li><b>Bridge</b> - Determines if this VLAN ID should be treated as WAN, part of a LAN bridge or just left alone (i.e. member of a 802.1Q trunk, being managed manually via scripts, etc...).</li>
 </ul>
+
+<ul>
+<li><b>VID Offset</b> - First 802.1Q VLAN tag to be used as <i>base/initial tag/VID</i> for VLAN and VID assignments. This allows using VIDs larger than 15 on (older) devices, in contiguous blocks/ranges with up to 16 VLANs/VIDs. Set to '0' (zero) to disable this feature and VLANs will have the very same/identical value for its VID, as usual (from 0 to 15).</li>
+</ul>
+
 <ul>
 <li><b>Wireless</b> - Assignments of wireless interfaces to different LAN briges. You should probably be using and/or check things on <a href=advanced-wlanvifs.asp>Advanced/Virtual Wireless</a> and <a href=basic-network.asp>Basic/Network</a>.</li>
 </ul>
