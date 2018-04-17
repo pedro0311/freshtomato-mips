@@ -1606,6 +1606,7 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_client1_cn",       V_NONE              },
 	{ "vpn_client1_br",       V_LENGTH(0, 50)     },
 	{ "vpn_client1_nopull",   V_01                },
+	{ "vpn_client1_noexec",   V_01                },
 	{ "vpn_client1_route",    V_01                },
 	{ "vpn_client1_routing_val", V_NONE           },
 	{ "vpn_client2_poll",     V_RANGE(0, 1440)    },
@@ -1641,6 +1642,7 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_client2_cn",       V_NONE              },
 	{ "vpn_client2_br",       V_LENGTH(0, 50)     },
 	{ "vpn_client2_nopull",   V_01                },
+	{ "vpn_client2_noexec",   V_01                },
 	{ "vpn_client2_route",    V_01                },
 	{ "vpn_client2_routing_val", V_NONE           },
 #endif // vpn
