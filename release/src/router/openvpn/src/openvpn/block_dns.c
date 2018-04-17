@@ -5,7 +5,7 @@
  *             packet encryption, packet authentication, and
  *             packet compression.
  *
- *  Copyright (C) 2002-2017 OpenVPN Technologies, Inc. <sales@openvpn.net>
+ *  Copyright (C) 2002-2018 OpenVPN Inc <sales@openvpn.net>
  *                2015-2016  <iam@valdikss.org.ru>
  *                2016 Selva Nair <selva.nair@gmail.com>
  *
@@ -18,10 +18,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program (see the file COPYING included with this
- *  distribution); if not, write to the Free Software Foundation, Inc.,
- *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -109,6 +108,9 @@ DEFINE_GUID(
     );
 
 static WCHAR *FIREWALL_NAME = L"OpenVPN";
+
+VOID NETIOAPI_API_
+InitializeIpInterfaceEntry(PMIB_IPINTERFACE_ROW Row);
 
 /*
  * Default msg handler does nothing
@@ -337,6 +339,91 @@ delete_block_dns_filters(HANDLE engine_handle)
     if (engine_handle)
     {
         err = FwpmEngineClose0(engine_handle);
+    }
+    return err;
+}
+
+/*
+ * Return interface metric value for the specified interface index.
+ *
+ * Arguments:
+ *   index         : The index of TAP adapter.
+ *   family        : Address family (AF_INET for IPv4 and AF_INET6 for IPv6).
+ *   is_auto       : On return set to true if automatic metric is in use.
+ *                   Unused if NULL.
+ *
+ * Returns positive metric value or -1 on error.
+ */
+int
+get_interface_metric(const NET_IFINDEX index, const ADDRESS_FAMILY family, int *is_auto)
+{
+    DWORD err = 0;
+    MIB_IPINTERFACE_ROW ipiface;
+    InitializeIpInterfaceEntry(&ipiface);
+    ipiface.Family = family;
+    ipiface.InterfaceIndex = index;
+
+    if (is_auto)
+    {
+        *is_auto = 0;
+    }
+    err = GetIpInterfaceEntry(&ipiface);
+
+    /* On Windows metric is never > INT_MAX so return value of int is ok.
+     * But we check for overflow nevertheless.
+     */
+    if (err == NO_ERROR && ipiface.Metric <= INT_MAX)
+    {
+        if (is_auto)
+        {
+            *is_auto = ipiface.UseAutomaticMetric;
+        }
+        return (int)ipiface.Metric;
+    }
+    return -1;
+}
+
+/*
+ * Sets interface metric value for specified interface index.
+ *
+ * Arguments:
+ *   index         : The index of TAP adapter.
+ *   family        : Address family (AF_INET for IPv4 and AF_INET6 for IPv6).
+ *   metric        : Metric value. 0 for automatic metric.
+ * Returns 0 on success, a non-zero status code of the last failed action on failure.
+ */
+
+DWORD
+set_interface_metric(const NET_IFINDEX index, const ADDRESS_FAMILY family,
+                     const ULONG metric)
+{
+    DWORD err = 0;
+    MIB_IPINTERFACE_ROW ipiface;
+    InitializeIpInterfaceEntry(&ipiface);
+    ipiface.Family = family;
+    ipiface.InterfaceIndex = index;
+    err = GetIpInterfaceEntry(&ipiface);
+    if (err == NO_ERROR)
+    {
+        if (family == AF_INET)
+        {
+            /* required for IPv4 as per MSDN */
+            ipiface.SitePrefixLength = 0;
+        }
+        ipiface.Metric = metric;
+        if (metric == 0)
+        {
+            ipiface.UseAutomaticMetric = TRUE;
+        }
+        else
+        {
+            ipiface.UseAutomaticMetric = FALSE;
+        }
+        err = SetIpInterfaceEntry(&ipiface);
+        if (err == NO_ERROR)
+        {
+            return 0;
+        }
     }
     return err;
 }

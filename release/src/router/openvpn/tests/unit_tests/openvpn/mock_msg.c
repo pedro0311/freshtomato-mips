@@ -5,7 +5,7 @@
  *             packet encryption, packet authentication, and
  *             packet compression.
  *
- *  Copyright (C) 2016-2017 Fox Crypto B.V. <openvpn@fox-it.com>
+ *  Copyright (C) 2016-2018 Fox Crypto B.V. <openvpn@fox-it.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 2
@@ -16,10 +16,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program (see the file COPYING included with this
- *  distribution); if not, write to the Free Software Foundation, Inc.,
- *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -29,9 +28,12 @@
 #endif
 
 #include <stdarg.h>
-#include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <setjmp.h>
+#include <cmocka.h>
+
 
 #include "errlevel.h"
 #include "error.h"
@@ -70,14 +72,8 @@ x_msg(const unsigned int flags, const char *format, ...)
 void
 assert_failed(const char *filename, int line, const char *condition)
 {
-    if (condition)
-    {
-        printf("Assertion failed at %s:%d (%s)", filename, line, condition);
-    }
-    else
-    {
-        printf("Assertion failed at %s:%d", filename, line);
-    }
+    mock_assert(false, condition ? condition : "", filename, line);
+    /* Keep compiler happy.  Should not happen, mock_assert() does not return */
     exit(1);
 }
 

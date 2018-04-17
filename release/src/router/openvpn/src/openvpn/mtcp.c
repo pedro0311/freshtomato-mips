@@ -5,7 +5,7 @@
  *             packet encryption, packet authentication, and
  *             packet compression.
  *
- *  Copyright (C) 2002-2017 OpenVPN Technologies, Inc. <sales@openvpn.net>
+ *  Copyright (C) 2002-2018 OpenVPN Inc <sales@openvpn.net>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 2
@@ -16,10 +16,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program (see the file COPYING included with this
- *  distribution); if not, write to the Free Software Foundation, Inc.,
- *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -522,7 +521,7 @@ multi_tcp_dispatch(struct multi_context *m, struct multi_instance *mi, const int
     return touched;
 }
 
-int
+static int
 multi_tcp_post(struct multi_context *m, struct multi_instance *mi, const int action)
 {
     struct context *c = multi_tcp_context(m, mi);
@@ -798,7 +797,7 @@ tunnel_server_tcp(struct context *top)
     multi.top.c2.inotify_fd = inotify_init();
     if (multi.top.c2.inotify_fd < 0)
     {
-        msg(D_MULTI_ERRORS, "MULTI: inotify_init error: %s", strerror(errno));
+        msg(D_MULTI_ERRORS | M_ERRNO, "MULTI: inotify_init error");
     }
 #endif
 

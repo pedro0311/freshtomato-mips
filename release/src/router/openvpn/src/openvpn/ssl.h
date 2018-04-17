@@ -5,8 +5,8 @@
  *             packet encryption, packet authentication, and
  *             packet compression.
  *
- *  Copyright (C) 2002-2017 OpenVPN Technologies, Inc. <sales@openvpn.net>
- *  Copyright (C) 2010-2017 Fox Crypto B.V. <openvpn@fox-it.com>
+ *  Copyright (C) 2002-2018 OpenVPN Inc <sales@openvpn.net>
+ *  Copyright (C) 2010-2018 Fox Crypto B.V. <openvpn@fox-it.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 2
@@ -17,10 +17,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program (see the file COPYING included with this
- *  distribution); if not, write to the Free Software Foundation, Inc.,
- *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 /**
@@ -482,7 +481,7 @@ void tls_update_remote_addr(struct tls_multi *multi,
  * @return true if updating succeeded, false otherwise.
  */
 bool tls_session_update_crypto_params(struct tls_session *session,
-                                      const struct options *options, struct frame *frame);
+                                      struct options *options, struct frame *frame);
 
 /**
  * "Poor man's NCP": Use peer cipher if it is an allowed (NCP) cipher.
@@ -590,6 +589,16 @@ void show_tls_performance_stats(void);
 
 /*#define EXTRACT_X509_FIELD_TEST*/
 void extract_x509_field_test(void);
+
+/**
+ * Given a key_method, return true if opcode represents the required form of
+ * hard_reset.
+ *
+ * If key_method == 0, return true if any form of hard reset is used.
+ */
+bool is_hard_reset(int op, int key_method);
+
+void delayed_auth_pass_purge(void);
 
 #endif /* ENABLE_CRYPTO */
 

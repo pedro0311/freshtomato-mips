@@ -17,10 +17,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program (see the file COPYING included with this
- *  distribution); if not, write to the Free Software Foundation, Inc.,
- *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 /**
@@ -42,7 +41,7 @@
  */
 
 static bool
-check_systemd_running()
+check_systemd_running(void)
 {
     struct stat c;
 
@@ -96,7 +95,7 @@ get_console_input_systemd(const char *prompt, const bool echo, char *input, cons
  *
  */
 bool
-query_user_exec()
+query_user_exec(void)
 {
     bool ret = true;  /* Presume everything goes okay */
     int i;

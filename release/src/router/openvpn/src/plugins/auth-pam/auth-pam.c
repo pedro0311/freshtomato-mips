@@ -5,7 +5,7 @@
  *             packet encryption, packet authentication, and
  *             packet compression.
  *
- *  Copyright (C) 2002-2017 OpenVPN Technologies, Inc. <sales@openvpn.net>
+ *  Copyright (C) 2002-2018 OpenVPN Inc <sales@openvpn.net>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 2
@@ -16,10 +16,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program (see the file COPYING included with this
- *  distribution); if not, write to the Free Software Foundation, Inc.,
- *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 /*
@@ -62,6 +61,9 @@
 #define RESPONSE_INIT_FAILED      11
 #define RESPONSE_VERIFY_SUCCEEDED 12
 #define RESPONSE_VERIFY_FAILED    13
+
+/* Pointers to functions exported from openvpn */
+static plugin_secure_memzero_t plugin_secure_memzero = NULL;
 
 /*
  * Plugin state, used by foreground
@@ -274,8 +276,10 @@ name_value_match(const char *query, const char *match)
     return strncasecmp(match, query, strlen(match)) == 0;
 }
 
-OPENVPN_EXPORT openvpn_plugin_handle_t
-openvpn_plugin_open_v1(unsigned int *type_mask, const char *argv[], const char *envp[])
+OPENVPN_EXPORT int
+openvpn_plugin_open_v3(const int v3structver,
+                       struct openvpn_plugin_args_open_in const *args,
+                       struct openvpn_plugin_args_open_return *ret)
 {
     pid_t pid;
     int fd[2];
@@ -284,6 +288,16 @@ openvpn_plugin_open_v1(unsigned int *type_mask, const char *argv[], const char *
     struct name_value_list name_value_list;
 
     const int base_parms = 2;
+
+    const char **argv = args->argv;
+    const char **envp = args->envp;
+
+    /* Check API compatibility -- struct version 4 or higher needed */
+    if (v3structver < 4)
+    {
+        fprintf(stderr, "AUTH-PAM: This plugin is incompatible with the running version of OpenVPN\n");
+        return OPENVPN_PLUGIN_FUNC_ERROR;
+    }
 
     /*
      * Allocate our context
@@ -298,7 +312,10 @@ openvpn_plugin_open_v1(unsigned int *type_mask, const char *argv[], const char *
     /*
      * Intercept the --auth-user-pass-verify callback.
      */
-    *type_mask = OPENVPN_PLUGIN_MASK(OPENVPN_PLUGIN_AUTH_USER_PASS_VERIFY);
+    ret->type_mask = OPENVPN_PLUGIN_MASK(OPENVPN_PLUGIN_AUTH_USER_PASS_VERIFY);
+
+    /* Save global pointers to functions exported from openvpn */
+    plugin_secure_memzero = args->callbacks->plugin_secure_memzero;
 
     /*
      * Make sure we have two string arguments: the first is the .so name,
@@ -386,7 +403,8 @@ openvpn_plugin_open_v1(unsigned int *type_mask, const char *argv[], const char *
         if (status == RESPONSE_INIT_SUCCEEDED)
         {
             context->foreground_fd = fd[0];
-            return (openvpn_plugin_handle_t) context;
+            ret->handle = (openvpn_plugin_handle_t *) context;
+            return OPENVPN_PLUGIN_FUNC_SUCCESS;
         }
     }
     else
@@ -420,7 +438,7 @@ error:
     {
         free(context);
     }
-    return NULL;
+    return OPENVPN_PLUGIN_FUNC_ERROR;
 }
 
 OPENVPN_EXPORT int
@@ -785,6 +803,7 @@ pam_server(int fd, const char *service, int verb, const struct name_value_list *
                         goto done;
                     }
                 }
+                plugin_secure_memzero(up.password, sizeof(up.password));
                 break;
 
             case COMMAND_EXIT:
@@ -802,6 +821,7 @@ pam_server(int fd, const char *service, int verb, const struct name_value_list *
     }
 done:
 
+    plugin_secure_memzero(up.password, sizeof(up.password));
 #ifdef USE_PAM_DLOPEN
     dlclose_pam();
 #endif

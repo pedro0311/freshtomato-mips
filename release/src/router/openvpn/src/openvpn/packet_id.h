@@ -5,7 +5,7 @@
  *             packet encryption, packet authentication, and
  *             packet compression.
  *
- *  Copyright (C) 2002-2017 OpenVPN Technologies, Inc. <sales@openvpn.net>
+ *  Copyright (C) 2002-2018 OpenVPN Inc <sales@openvpn.net>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 2
@@ -16,10 +16,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program (see the file COPYING included with this
- *  distribution); if not, write to the Free Software Foundation, Inc.,
- *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 /*
@@ -50,6 +49,7 @@
  * to for network transmission.
  */
 typedef uint32_t packet_id_type;
+#define PACKET_ID_MAX UINT32_MAX
 typedef uint32_t net_time_t;
 
 /*
@@ -254,7 +254,18 @@ const char *packet_id_persist_print(const struct packet_id_persist *p, struct gc
 
 bool packet_id_read(struct packet_id_net *pin, struct buffer *buf, bool long_form);
 
-bool packet_id_write(const struct packet_id_net *pin, struct buffer *buf, bool long_form, bool prepend);
+/**
+ * Write a packet ID to buf, and update the packet ID state.
+ *
+ * @param p             Packet ID state.
+ * @param buf           Buffer to write the packet ID too
+ * @param long_form     If true, also update and write time_t to buf
+ * @param prepend       If true, prepend to buffer, otherwise apppend.
+ *
+ * @return true if successful, false otherwise.
+ */
+bool packet_id_write(struct packet_id_send *p, struct buffer *buf,
+        bool long_form, bool prepend);
 
 /*
  * Inline functions.
@@ -288,7 +299,7 @@ packet_id_persist_save_obj(struct packet_id_persist *p, const struct packet_id *
 const char *packet_id_net_print(const struct packet_id_net *pin, bool print_timestamp, struct gc_arena *gc);
 
 #ifdef PID_TEST
-void packet_id_interactive_test();
+void packet_id_interactive_test(void);
 
 #endif
 
@@ -302,28 +313,6 @@ static inline bool
 packet_id_close_to_wrapping(const struct packet_id_send *p)
 {
     return p->id >= PACKET_ID_WRAP_TRIGGER;
-}
-
-/*
- * Allocate an outgoing packet id.
- * Sequence number ranges from 1 to 2^32-1.
- * In long_form, a time_t is added as well.
- */
-static inline void
-packet_id_alloc_outgoing(struct packet_id_send *p, struct packet_id_net *pin, bool long_form)
-{
-    if (!p->time)
-    {
-        p->time = now;
-    }
-    pin->id = ++p->id;
-    if (!pin->id)
-    {
-        ASSERT(long_form);
-        p->time = now;
-        pin->id = p->id = 1;
-    }
-    pin->time = p->time;
 }
 
 static inline bool

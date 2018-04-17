@@ -5,7 +5,7 @@
  *             packet encryption, packet authentication, and
  *             packet compression.
  *
- *  Copyright (C) 2002-2017 OpenVPN Technologies, Inc. <sales@openvpn.net>
+ *  Copyright (C) 2002-2018 OpenVPN Inc <sales@openvpn.net>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 2
@@ -16,10 +16,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program (see the file COPYING included with this
- *  distribution); if not, write to the Free Software Foundation, Inc.,
- *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 /*
@@ -325,12 +324,40 @@ packet_id_read(struct packet_id_net *pin, struct buffer *buf, bool long_form)
     return true;
 }
 
-bool
-packet_id_write(const struct packet_id_net *pin, struct buffer *buf, bool long_form, bool prepend)
+static bool
+packet_id_send_update(struct packet_id_send *p, bool long_form)
 {
-    packet_id_type net_id = htonpid(pin->id);
-    net_time_t net_time = htontime(pin->time);
+    if (!p->time)
+    {
+        p->time = now;
+    }
+    if (p->id == PACKET_ID_MAX)
+    {
+        /* Packet ID only allowed to roll over if using long form and time has
+         * moved forward since last roll over.
+         */
+        if (!long_form || now <= p->time)
+        {
+            return false;
+        }
+        p->time = now;
+        p->id = 0;
+    }
+    p->id++;
+    return true;
+}
 
+bool
+packet_id_write(struct packet_id_send *p, struct buffer *buf, bool long_form,
+        bool prepend)
+{
+    if (!packet_id_send_update(p, long_form))
+    {
+        return false;
+    }
+
+    const packet_id_type net_id = htonpid(p->id);
+    const net_time_t net_time = htontime(p->time);
     if (prepend)
     {
         if (long_form)
@@ -616,7 +643,7 @@ packet_id_debug_print(int msglevel,
 #ifdef PID_TEST
 
 void
-packet_id_interactive_test()
+packet_id_interactive_test(void)
 {
     struct packet_id pid;
     struct packet_id_net pin;

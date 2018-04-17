@@ -2115,7 +2115,8 @@ lzo-install:
 		ln -sf liblzo2.so.2.0.0 liblzo2.so
 
 openvpn/.conf: openssl lzo
-	cd openvpn && autoreconf -fvi && \
+	$(call patch_files,openvpn)
+	cd openvpn && autoreconf && \
 	CFLAGS="-O3 -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 	LDFLAGS="-L$(TOP)/openssl -L$(TOP)/lzo/src/.libs -ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	CPPFLAGS="-I$(TOP)/lzo/include -I$(TOP)/openssl/include" \
@@ -2134,6 +2135,7 @@ openvpn: openvpn/.conf
 openvpn-clean:
 	-@$(MAKE) -C openvpn clean
 	@rm -f openvpn/.conf
+	$(call unpatch_files,openvpn)
 
 openvpn-install:
 	install -D openvpn/src/openvpn/.libs/openvpn $(INSTALLDIR)/openvpn/usr/sbin/openvpn

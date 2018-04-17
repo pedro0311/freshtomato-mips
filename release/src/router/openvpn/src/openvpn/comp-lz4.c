@@ -5,8 +5,8 @@
  *             packet encryption, packet authentication, and
  *             packet compression.
  *
- *  Copyright (C) 2002-2017 OpenVPN Technologies, Inc. <sales@openvpn.net>
- *  Copyright (C) 2013-2017 Gert Doering <gert@greenie.muc.de>
+ *  Copyright (C) 2002-2018 OpenVPN Inc <sales@openvpn.net>
+ *  Copyright (C) 2013-2018 Gert Doering <gert@greenie.muc.de>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 2
@@ -17,10 +17,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program (see the file COPYING included with this
- *  distribution); if not, write to the Free Software Foundation, Inc.,
- *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -43,6 +42,7 @@
 #include "error.h"
 
 #include "memdbg.h"
+
 
 static void
 lz4_compress_init(struct compress_context *compctx)
@@ -87,7 +87,7 @@ do_lz4_compress(struct buffer *buf,
             return false;
         }
 
-        zlen = LZ4_compress_limitedOutput((const char *)BPTR(buf), (char *)BPTR(work), BLEN(buf), zlen_max );
+        zlen = LZ4_compress_default((const char *)BPTR(buf), (char *)BPTR(work), BLEN(buf), zlen_max);
 
         if (zlen <= 0)
         {
@@ -186,7 +186,7 @@ lz4v2_compress(struct buffer *buf, struct buffer work,
     }
 }
 
-void
+static void
 do_lz4_decompress(size_t zlen_max,
                   struct buffer *work,
                   struct buffer *buf,
