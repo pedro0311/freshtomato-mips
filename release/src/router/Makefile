@@ -2503,6 +2503,7 @@ apcupsd-install:
 
 libsodium/stamp-h1:
 	cd $(TOP)/libsodium && CC=$(CC) STRIP=$(CROSS_COMPILE)strip \
+	autoreconf -fsi && \
 	$(CONFIGURE) --prefix=/usr --disable-ssp --enable-minimal
 	touch libsodium/stamp-h1
 
@@ -2511,11 +2512,11 @@ libsodium: libsodium/stamp-h1
 
 libsodium-install:
 	install -d $(INSTALLDIR)/libsodium/usr/lib
-	install -D libsodium/src/libsodium/.libs/libsodium.so.18.2.0 $(INSTALLDIR)/libsodium/usr/lib/libsodium.so.18.2.0
-	$(STRIP) -s $(INSTALLDIR)/libsodium/usr/lib/libsodium.so.18.2.0
+	install -D libsodium/src/libsodium/.libs/libsodium.so.23.0.0 $(INSTALLDIR)/libsodium/usr/lib/libsodium.so.23.0.0
+	$(STRIP) -s $(INSTALLDIR)/libsodium/usr/lib/libsodium.so.23.0.0
 	cd $(INSTALLDIR)/libsodium/usr/lib/ && \
-		ln -sf libsodium.so.18.2.0 libsodium.so.18 && \
-		ln -sf libsodium.so.18.2.0 libsodium.so
+		ln -sf libsodium.so.23.0.0 libsodium.so.23 && \
+		ln -sf libsodium.so.23.0.0 libsodium.so
 
 libsodium-clean:
 	-$(MAKE) -C libsodium clean
