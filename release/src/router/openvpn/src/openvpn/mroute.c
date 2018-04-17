@@ -5,7 +5,7 @@
  *             packet encryption, packet authentication, and
  *             packet compression.
  *
- *  Copyright (C) 2002-2017 OpenVPN Technologies, Inc. <sales@openvpn.net>
+ *  Copyright (C) 2002-2018 OpenVPN Inc <sales@openvpn.net>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 2
@@ -16,10 +16,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program (see the file COPYING included with this
- *  distribution); if not, write to the Free Software Foundation, Inc.,
- *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -66,25 +65,49 @@ is_mac_mcast_maddr(const struct mroute_addr *addr)
  * Don't learn certain addresses.
  */
 bool
-mroute_learnable_address(const struct mroute_addr *addr)
+mroute_learnable_address(const struct mroute_addr *addr, struct gc_arena *gc)
 {
     int i;
-    bool not_all_zeros = false;
-    bool not_all_ones = false;
+    bool all_zeros = true;
+    bool all_ones = true;
 
     for (i = 0; i < addr->len; ++i)
     {
         int b = addr->raw_addr[i];
         if (b != 0x00)
         {
-            not_all_zeros = true;
+            all_zeros = false;
         }
         if (b != 0xFF)
         {
-            not_all_ones = true;
+            all_ones = false;
         }
     }
-    return not_all_zeros && not_all_ones && !is_mac_mcast_maddr(addr);
+
+    /* only networkss shorter than 8 bits are allowed to be all 0s. */
+    if (all_zeros
+        && !((addr->type & MR_WITH_NETBITS) && (addr->netbits < 8)))
+    {
+        msg(D_MULTI_LOW, "Can't learn %s: network is all 0s, but netbits >= 8",
+            mroute_addr_print(addr, gc));
+        return false;
+    }
+
+    if (all_ones)
+    {
+        msg(D_MULTI_LOW, "Can't learn %s: network is all 1s",
+            mroute_addr_print(addr, gc));
+        return false;
+    }
+
+    if (is_mac_mcast_maddr(addr))
+    {
+        msg(D_MULTI_LOW, "Can't learn %s: network is a multicast address",
+            mroute_addr_print(addr, gc));
+        return false;
+    }
+
+    return true;
 }
 
 static inline void
@@ -160,9 +183,8 @@ mroute_extract_addr_arp(struct mroute_addr *src,
 #endif /* ifdef ENABLE_PF */
 
 unsigned int
-mroute_extract_addr_ipv4(struct mroute_addr *src,
-                         struct mroute_addr *dest,
-                         const struct buffer *buf)
+mroute_extract_addr_ip(struct mroute_addr *src, struct mroute_addr *dest,
+                       const struct buffer *buf)
 {
     unsigned int ret = 0;
     if (BLEN(buf) >= 1)
@@ -268,7 +290,7 @@ mroute_extract_addr_ether(struct mroute_addr *src,
                 switch (ntohs(eth->proto))
                 {
                     case OPENVPN_ETH_P_IPV4:
-                        ret |= (mroute_extract_addr_ipv4(esrc, edest, &b) << MROUTE_SEC_SHIFT);
+                        ret |= (mroute_extract_addr_ip(esrc, edest, &b) << MROUTE_SEC_SHIFT);
                         break;
 
                     case OPENVPN_ETH_P_ARP:

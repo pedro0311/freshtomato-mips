@@ -5,7 +5,7 @@
  *             packet encryption, packet authentication, and
  *             packet compression.
  *
- *  Copyright (C) 2002-2017 OpenVPN Technologies, Inc. <sales@openvpn.net>
+ *  Copyright (C) 2002-2018 OpenVPN Inc <sales@openvpn.net>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 2
@@ -16,10 +16,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program (see the file COPYING included with this
- *  distribution); if not, write to the Free Software Foundation, Inc.,
- *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -410,7 +409,8 @@ plugin_log(openvpn_plugin_log_flags_t flags, const char *name, const char *forma
 
 static struct openvpn_plugin_callbacks callbacks = {
     plugin_log,
-    plugin_vlog
+    plugin_vlog,
+    secure_memzero   /* plugin_secure_memzero */
 };
 
 

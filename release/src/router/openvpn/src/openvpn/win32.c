@@ -5,7 +5,7 @@
  *             packet encryption, packet authentication, and
  *             packet compression.
  *
- *  Copyright (C) 2002-2017 OpenVPN Technologies, Inc. <sales@openvpn.net>
+ *  Copyright (C) 2002-2018 OpenVPN Inc <sales@openvpn.net>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 2
@@ -16,10 +16,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program (see the file COPYING included with this
- *  distribution); if not, write to the Free Software Foundation, Inc.,
- *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 /*
@@ -59,6 +58,12 @@
  * WFP handle
  */
 static HANDLE m_hEngineHandle = NULL; /* GLOBAL */
+
+/*
+ * TAP adapter original metric value
+ */
+static int tap_metric_v4 = -1; /* GLOBAL */
+static int tap_metric_v6 = -1; /* GLOBAL */
 
 /*
  * Windows internal socket API state (opaque).
@@ -1230,7 +1235,7 @@ set_win_sys_path_via_env(struct env_set *es)
 
 
 const char *
-win_get_tempdir()
+win_get_tempdir(void)
 {
     static char tmpdir[MAX_PATH];
     WCHAR wtmpdir[MAX_PATH];
@@ -1328,8 +1333,8 @@ win_wfp_block_dns(const NET_IFINDEX index, const HANDLE msg_channel)
         goto out;
     }
 
-    status = GetModuleFileNameW(NULL, openvpnpath, sizeof(openvpnpath));
-    if (status == 0 || status == sizeof(openvpnpath))
+    status = GetModuleFileNameW(NULL, openvpnpath, _countof(openvpnpath));
+    if (status == 0 || status == _countof(openvpnpath))
     {
         msg(M_WARN|M_ERRNO, "block_dns: cannot get executable path");
         goto out;
@@ -1337,6 +1342,26 @@ win_wfp_block_dns(const NET_IFINDEX index, const HANDLE msg_channel)
 
     status = add_block_dns_filters(&m_hEngineHandle, index, openvpnpath,
                                    block_dns_msg_handler);
+    if (status == 0)
+    {
+        int is_auto = 0;
+        tap_metric_v4 = get_interface_metric(index, AF_INET, &is_auto);
+        if (is_auto)
+        {
+            tap_metric_v4 = 0;
+        }
+        tap_metric_v6 = get_interface_metric(index, AF_INET6, &is_auto);
+        if (is_auto)
+        {
+            tap_metric_v6 = 0;
+        }
+        status = set_interface_metric(index, AF_INET, BLOCK_DNS_IFACE_METRIC);
+        if (!status)
+        {
+            set_interface_metric(index, AF_INET6, BLOCK_DNS_IFACE_METRIC);
+        }
+    }
+
     ret = (status == 0);
 
 out:
@@ -1345,26 +1370,34 @@ out:
 }
 
 bool
-win_wfp_uninit(const HANDLE msg_channel)
+win_wfp_uninit(const NET_IFINDEX index, const HANDLE msg_channel)
 {
     dmsg(D_LOW, "Uninitializing WFP");
 
     if (msg_channel)
     {
         msg(D_LOW, "Using service to delete block dns filters");
-        win_block_dns_service(false, -1, msg_channel);
+        win_block_dns_service(false, index, msg_channel);
     }
     else
     {
         delete_block_dns_filters(m_hEngineHandle);
         m_hEngineHandle = NULL;
+        if (tap_metric_v4 >= 0)
+        {
+            set_interface_metric(index, AF_INET, tap_metric_v4);
+        }
+        if (tap_metric_v6 >= 0)
+        {
+            set_interface_metric(index, AF_INET6, tap_metric_v6);
+        }
     }
 
     return true;
 }
 
 int
-win32_version_info()
+win32_version_info(void)
 {
     if (!IsWindowsXPOrGreater())
     {
@@ -1392,7 +1425,7 @@ win32_version_info()
 }
 
 bool
-win32_is_64bit()
+win32_is_64bit(void)
 {
 #if defined(_WIN64)
     return true;  /* 64-bit programs run only on Win64 */

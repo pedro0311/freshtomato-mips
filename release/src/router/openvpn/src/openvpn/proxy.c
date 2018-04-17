@@ -5,7 +5,7 @@
  *             packet encryption, packet authentication, and
  *             packet compression.
  *
- *  Copyright (C) 2002-2017 OpenVPN Technologies, Inc. <sales@openvpn.net>
+ *  Copyright (C) 2002-2018 OpenVPN Inc <sales@openvpn.net>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 2
@@ -16,10 +16,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program (see the file COPYING included with this
- *  distribution); if not, write to the Free Software Foundation, Inc.,
- *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -254,9 +253,24 @@ username_password_as_base64(const struct http_proxy_info *p,
 }
 
 static void
+clear_user_pass_http(void)
+{
+    purge_user_pass(&static_proxy_user_pass, true);
+}
+
+static void
 get_user_pass_http(struct http_proxy_info *p, const bool force)
 {
-    if (!static_proxy_user_pass.defined || force)
+    /*
+     * in case of forced (re)load, make sure the static storage is set as
+     * undefined, otherwise get_user_pass() won't try to load any credential
+     */
+    if (force)
+    {
+        clear_user_pass_http();
+    }
+
+    if (!static_proxy_user_pass.defined)
     {
         unsigned int flags = GET_USER_PASS_MANAGEMENT;
         if (p->queried_creds)
@@ -274,11 +288,6 @@ get_user_pass_http(struct http_proxy_info *p, const bool force)
         p->queried_creds = true;
         p->up = static_proxy_user_pass;
     }
-}
-static void
-clear_user_pass_http(void)
-{
-    purge_user_pass(&static_proxy_user_pass, true);
 }
 
 #if 0
@@ -318,6 +327,7 @@ get_proxy_authenticate(socket_descriptor_t sd,
     {
         if (!recv_line(sd, buf, sizeof(buf), timeout, true, NULL, signal_received))
         {
+            free(*data);
             *data = NULL;
             return HTTP_AUTH_NONE;
         }
@@ -550,7 +560,7 @@ http_proxy_close(struct http_proxy_info *hp)
     free(hp);
 }
 
-bool
+static bool
 add_proxy_headers(struct http_proxy_info *p,
                   socket_descriptor_t sd, /* already open to proxy */
                   const char *host,       /* openvpn server remote */
@@ -875,6 +885,13 @@ establish_http_proxy_passthru(struct http_proxy_info *p,
                 const char *algor = get_pa_var("algorithm", pa, &gc);
                 const char *opaque = get_pa_var("opaque", pa, &gc);
 
+                if ( !realm || !nonce )
+                {
+                    msg(D_LINK_ERRORS, "HTTP proxy: digest auth failed, malformed response "
+                            "from server: realm= or nonce= missing" );
+                    goto error;
+                }
+
                 /* generate a client nonce */
                 ASSERT(rand_bytes(cnonce_raw, sizeof(cnonce_raw)));
                 cnonce = make_base64_string2(cnonce_raw, sizeof(cnonce_raw), &gc);
@@ -991,6 +1008,7 @@ establish_http_proxy_passthru(struct http_proxy_info *p,
                 if (p->options.auth_retry == PAR_NCT && method == HTTP_AUTH_BASIC)
                 {
                     msg(D_PROXY, "HTTP proxy: support for basic auth and other cleartext proxy auth methods is disabled");
+                    free(pa);
                     goto error;
                 }
                 p->auth_method = method;

@@ -5,7 +5,7 @@
  *             packet encryption, packet authentication, and
  *             packet compression.
  *
- *  Copyright (C) 2016-2017 Fox Crypto B.V. <openvpn@fox-it.com>
+ *  Copyright (C) 2016-2018 Fox Crypto B.V. <openvpn@fox-it.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 2
@@ -16,10 +16,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program (see the file COPYING included with this
- *  distribution); if not, write to the Free Software Foundation, Inc.,
- *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -36,6 +35,30 @@
 
 #include "tls_crypt.h"
 
+static struct key_type
+tls_crypt_kt(void)
+{
+    struct key_type kt;
+    kt.cipher = cipher_kt_get("AES-256-CTR");
+    kt.digest = md_kt_get("SHA256");
+
+    if (!kt.cipher)
+    {
+        msg(M_WARN, "ERROR: --tls-crypt requires AES-256-CTR support.");
+        return (struct key_type) { 0 };
+    }
+    if (!kt.digest)
+    {
+        msg(M_WARN, "ERROR: --tls-crypt requires HMAC-SHA-256 support.");
+        return (struct key_type) { 0 };
+    }
+
+    kt.cipher_length = cipher_kt_key_size(kt.cipher);
+    kt.hmac_length = md_kt_size(kt.digest);
+
+    return kt;
+}
+
 int
 tls_crypt_buf_overhead(void)
 {
@@ -48,23 +71,11 @@ tls_crypt_init_key(struct key_ctx_bi *key, const char *key_file,
 {
     const int key_direction = tls_server ?
                               KEY_DIRECTION_NORMAL : KEY_DIRECTION_INVERSE;
-
-    struct key_type kt;
-    kt.cipher = cipher_kt_get("AES-256-CTR");
-    kt.digest = md_kt_get("SHA256");
-
-    if (!kt.cipher)
+    struct key_type kt = tls_crypt_kt();
+    if (!kt.cipher || !kt.digest)
     {
-        msg(M_FATAL, "ERROR: --tls-crypt requires AES-256-CTR support.");
+        msg (M_FATAL, "ERROR: --tls-crypt not supported");
     }
-    if (!kt.digest)
-    {
-        msg(M_FATAL, "ERROR: --tls-crypt requires HMAC-SHA-256 support.");
-    }
-
-    kt.cipher_length = cipher_kt_key_size(kt.cipher);
-    kt.hmac_length = md_kt_size(kt.digest);
-
     crypto_read_openvpn_key(&kt, key, key_file, key_inline, key_direction,
                             "Control Channel Encryption", "tls-crypt");
 }
@@ -98,10 +109,10 @@ tls_crypt_wrap(const struct buffer *src, struct buffer *dst,
          format_hex(BPTR(src), BLEN(src), 80, &gc));
 
     /* Get packet ID */
+    if (!packet_id_write(&opt->packet_id.send, dst, true, false))
     {
-        struct packet_id_net pin;
-        packet_id_alloc_outgoing(&opt->packet_id.send, &pin, true);
-        packet_id_write(&pin, dst, true, false);
+        msg(D_CRYPT_ERRORS, "TLS-CRYPT ERROR: packet ID roll over.");
+        goto err;
     }
 
     dmsg(D_PACKET_CONTENT, "TLS-CRYPT WRAP AD: %s",

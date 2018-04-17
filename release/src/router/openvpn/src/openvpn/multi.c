@@ -5,7 +5,7 @@
  *             packet encryption, packet authentication, and
  *             packet compression.
  *
- *  Copyright (C) 2002-2017 OpenVPN Technologies, Inc. <sales@openvpn.net>
+ *  Copyright (C) 2002-2018 OpenVPN Inc <sales@openvpn.net>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 2
@@ -16,10 +16,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program (see the file COPYING included with this
- *  distribution); if not, write to the Free Software Foundation, Inc.,
- *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -486,7 +485,7 @@ multi_instance_string(const struct multi_instance *mi, bool null, struct gc_aren
     }
 }
 
-void
+static void
 generate_prefix(struct multi_instance *mi)
 {
     struct gc_arena gc = gc_new();
@@ -1078,6 +1077,7 @@ multi_learn_addr(struct multi_context *m,
     struct hash_bucket *bucket = hash_bucket(m->vhash, hv);
     struct multi_route *oldroute = NULL;
     struct multi_instance *owner = NULL;
+    struct gc_arena gc = gc_new();
 
     /* if route currently exists, get the instance which owns it */
     he = hash_lookup_fast(m->vhash, bucket, addr, hv);
@@ -1091,11 +1091,9 @@ multi_learn_addr(struct multi_context *m,
     }
 
     /* do we need to add address to hash table? */
-    if ((!owner || owner != mi)
-        && mroute_learnable_address(addr)
+    if ((!owner || owner != mi) && mroute_learnable_address(addr, &gc)
         && !mroute_addr_equal(addr, &m->local))
     {
-        struct gc_arena gc = gc_new();
         struct multi_route *newroute;
         bool learn_succeeded = false;
 
@@ -1152,9 +1150,8 @@ multi_learn_addr(struct multi_context *m,
         {
             free(newroute);
         }
-
-        gc_free(&gc);
     }
+    gc_free(&gc);
 
     return owner;
 }
@@ -2356,7 +2353,7 @@ multi_process_post(struct multi_context *m, struct multi_instance *mi, const uns
             }
             else
             {
-                msg(M_NONFATAL, "MULTI: inotify_add_watch error: %s", strerror(errno));
+                msg(M_NONFATAL | M_ERRNO, "MULTI: inotify_add_watch error");
             }
         }
 #endif
@@ -2968,7 +2965,7 @@ gremlin_flood_clients(struct multi_context *m)
 }
 #endif /* ifdef ENABLE_DEBUG */
 
-bool
+static bool
 stale_route_check_trigger(struct multi_context *m)
 {
     struct timeval null;

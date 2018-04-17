@@ -44,6 +44,13 @@ ECDH key exchange
     The TLS control channel now supports for elliptic curve diffie-hellmann
     key exchange (ECDH).
 
+Improved Certificate Revocation List (CRL) processing
+    CRLs are now handled by the crypto library (OpenSSL or mbed TLS), instead
+    of inside OpenVPN itself.  The crypto library implementations are more
+    strict than the OpenVPN implementation was.  This might reject peer
+    certificates that would previously be accepted.  If this occurs, OpenVPN
+    will log the crypto library's error description.
+
 Dualstack round-robin DNS client connect
     Instead of only using the first address of each ``--remote`` OpenVPN
     will now try all addresses (IPv6 and IPv4) of a ``--remote`` entry.
@@ -126,10 +133,6 @@ keying-material-exporter
     Keying Material Exporter [RFC-5705] allow additional keying material to be
     derived from existing TLS channel.
 
-Mac OS X Keychain management client
-    Added contrib/keychain-mcd which allows to use Mac OS X keychain
-    certificates with OpenVPN.
-
 Android platform support
     Support for running on Android using Android's VPNService API has been added.
     See doc/android.txt for more details. This support is primarily used in
@@ -154,28 +157,42 @@ Asynchronous push reply
 
 Deprecated features
 -------------------
-- ``--key-method 1`` is deprecated in 2.4 and will be removed in 2.5.  Migrate
-  away from ``--key-method 1`` as soon as possible.  The recommended approach
-  is to remove the ``--key-method`` option from the configuration files, OpenVPN
-  will then use ``--key-method 2`` by default.  Note that this requires changing
-  the option in both the client and server side configs.
+For an up-to-date list of all deprecated options, see this wiki page:
+https://community.openvpn.net/openvpn/wiki/DeprecatedOptions
 
-- CRLs are now handled by the crypto library (OpenSSL or mbed TLS), instead of
-  inside OpenVPN itself.  The crypto library implementations are more strict
-  than the OpenVPN implementation was.  This might reject peer certificates
-  that would previously be accepted.  If this occurs, OpenVPN will log the
-  crypto library's error description.
+- ``--key-method 1`` is deprecated in OpenVPN 2.4 and will be removed in v2.5.
+  Migrate away from ``--key-method 1`` as soon as possible.  The recommended
+  approach is to remove the ``--key-method`` option from the configuration
+  files, OpenVPN will then use ``--key-method 2`` by default.  Note that this
+  requires changing the option in both the client and server side configs.
 
-- ``--tls-remote`` is removed in 2.4, as indicated in the 2.3 man-pages.  Similar
-  functionality is provided via ``--verify-x509-name``, which does the same job in
-  a better way.
+- ``--tls-remote`` is removed in OpenVPN 2.4, as indicated in the v2.3
+  man-pages.  Similar functionality is provided via ``--verify-x509-name``,
+  which does the same job in a better way.
 
-- ``--compat-names`` and ``--no-name-remapping`` were deprecated in 2.3 and will
-  be removed in 2.5.  All scripts and plug-ins depending on the old non-standard
-  X.509 subject formatting must be updated to the standardized formatting.  See
-  the man page for more information.
+- ``--compat-names`` and ``--no-name-remapping`` were deprecated in OpenVPN 2.3
+  and will be removed in v2.5.  All scripts and plug-ins depending on the old
+  non-standard X.509 subject formatting must be updated to the standardized
+  formatting.  See the man page for more information.
 
-- ``--no-iv`` is deprecated in 2.4 and will be removed in 2.5.
+- ``--no-iv`` is deprecated in OpenVPN 2.4 and will be removed in v2.5.
+
+- ``--keysize`` is deprecated in OpenVPN 2.4 and will be removed in v2.6
+  together with the support of ciphers with cipher block size less than
+  128-bits.
+
+- ``--comp-lzo`` is deprecated in OpenVPN 2.4.  Use ``--compress`` instead.
+
+- ``--ifconfig-pool-linear`` has been deprecated since OpenVPN 2.1 and will be
+  removed in v2.5.  Use ``--topology p2p`` instead.
+
+- ``--client-cert-not-required`` is deprecated in OpenVPN 2.4 and will be removed
+  in v2.5.  Use ``--verify-client-cert none`` for a functional equivalent.
+
+- ``--ns-cert-type`` is deprecated in OpenVPN 2.3.18 and v2.4.  It will be removed
+  in v2.5.  Use the far better ``--remote-cert-tls`` option which replaces this
+  feature.
+
 
 User-visible Changes
 --------------------
@@ -297,24 +314,255 @@ Maintainer-visible changes
   files instead of older ones, to provide a unified behaviour across systemd
   based Linux distributions.
 
-- With OpenVPN v2.4, the project has moved over to depend on and actively use
+- With OpenVPN 2.4, the project has moved over to depend on and actively use
   the official C99 standard (-std=c99).  This may fail on some older compiler/libc
   header combinations.  In most of these situations it is recommended to
   use -std=gnu99 in CFLAGS.  This is known to be needed when doing
   i386/i686 builds on RHEL5.
 
 
+Version 2.4.5
+=============
+This is primarily a maintenance release, with further improved OpenSSL 1.1
+integration, several minor bug fixes and other minor improvements.
+
+
+New features
+------------
+- The new option ``--tls-cert-profile`` can be used to restrict the set of
+  allowed crypto algorithms in TLS certificates in mbed TLS builds.  The
+  default profile is 'legacy' for now, which allows SHA1+, RSA-1024+ and any
+  elliptic curve certificates.  The default will be changed to the 'preferred'
+  profile in the future, which requires SHA2+, RSA-2048+ and any curve.
+
+- make CryptoAPI support (Windows) compatible with OpenSSL 1.1 builds
+
+- TLS v1.2 support for cryptoapicert (on Windows) -- RSA only
+
+- openvpnserv: Add support for multi-instances (to support multiple
+  parallel OpenVPN installations, like EduVPN and regular OpenVPN)
+
+- Use P_DATA_V2 for server->client packets too (better packet alignment)
+
+- improve management interface documentation
+
+- rework registry key handling for OpenVPN service, notably making most
+  registry values optional, falling back to reasonable defaults
+
+- accept IPv6 address for pushed "dhcp-option DNS ..."
+  (make OpenVPN 2 option compatible with OpenVPN 3 iOS and Android clients)
+
+
+Bug fixes
+---------
+- Fix --tls-version-min and --tls-version-max for OpenSSL 1.1+
+
+- Fix lots of compiler warnings (format string, type casts, ...)
+
+- Fix --redirect-gateway route installation on Windows systems that have
+  multiple interfaces into the same network (e.g. Wifi and wired LAN).
+
+- Fix IPv6 interface route cleanup on Windows
+
+- reload HTTP proxy credentials when moving to the next connection profile
+
+- Fix build with LibreSSL (multiple times)
+
+- Remove non-useful warning on pushed tun-ipv6 option.
+
+- fix building with MSVC due to incompatible C constructs
+
+- autoconf: Fix engine checks for openssl 1.1
+
+- lz4: Rebase compat-lz4 against upstream v1.7.5
+
+- lz4: Fix broken builds when pkg-config is not present but system library is
+
+- Fix '--bind ipv6only'
+
+- Allow learning iroutes with network made up of all 0s
+
+
+Version 2.4.4
+=============
+This is primarily a maintenance release, with further improved OpenSSL 1.1
+integration, several minor bug fixes and other minor improvements.
+
+Bug fixes
+---------
+- Fix issues when a pushed cipher via the Negotiable Crypto Parameters (NCP) is
+  rejected by the remote side
+
+- Ignore ``--keysize`` when NCP have resulted in a changed cipher.
+
+- Configurations using ``--auth-nocache`` and the management interface to provide
+  user credentials (like NetworkManager on Linux) on client side with servers
+  implementing authentication tokens (for example, using ``--auth-gen-token``)
+  will now behave correctly and not query the user for an, to them, unknown
+  authentication token on renegotiations of the tunnel.
+
+- Fix bug causing invalid or corrupt SOCKS port number when changing the
+  proxy via the management interface.
+
+- The man page should now have proper escaping of hyphens/minus characters
+  and have seen some minor corrections.
+
+User-visible Changes
+--------------------
+- Linux servers with systemd which uses the ``openvpn-server@.service`` unit
+  file for server configurations will now utilize the automatic restart feature
+  in systemd.  If the OpenVPN server process dies unexpectedly, systemd will
+  ensure the OpenVPN configuration will be restarted without any user interaction.
+
+Deprecated features
+-------------------
+- ``--no-replay`` is deprecated and will be removed in OpenVPN 2.5.
+- ``--keysize`` is deprecated in OpenVPN 2.4 and will be removed in v2.6
+
+Security
+--------
+- CVE-2017-12166: Fix bounds check for configurations using ``--key-method 1``.
+  Before this fix, it could allow an attacker to send a malformed packet to
+  trigger a stack overflow.  This is considered to be a low risk issue, as
+  ``--key-method 2`` has been the default since OpenVPN 2.0 (released on
+  2005-04-17).  This option is already deprecated in v2.4 and will be
+  completely removed in v2.5.
+
+
+Version 2.4.3
+=============
+
+New features
+------------
+- Support building with OpenSSL 1.1 now (in addition to older versions)
+
+- On Win10, set low interface metric for TAP adapter when block-outside-dns
+  is in use, to make Windows prefer the TAP adapter for DNS queries
+  (avoiding large delays)
+
+
+Security
+--------
+- CVE-2017-7522: Fix ``--x509-track`` post-authentication remote DoS
+  A client could crash a v2.4+ mbedtls server, if that server uses the
+  ``--x509-track`` option and the client has a correct, signed and unrevoked
+  certificate that contains an embedded NUL in the certificate subject.
+  Discovered and reported to the OpenVPN security team by Guido Vranken.
+
+- CVE-2017-7521: Fix post-authentication remote-triggerable memory leaks
+  A client could cause a server to leak a few bytes each time it connects to the
+  server.  That can eventuall cause the server to run out of memory, and thereby
+  causing the server process to terminate. Discovered and reported to the
+  OpenVPN security team by Guido Vranken.  (OpenSSL builds only.)
+
+- CVE-2017-7521: Fix a potential post-authentication remote code execution
+  attack on servers that use the ``--x509-username-field`` option with an X.509
+  extension field (option argument prefixed with ``ext:``).  A client that can
+  cause a server to run out-of-memory (see above) might be able to cause the
+  server to double free, which in turn might lead to remote code execution.
+  Discovered and reported to the OpenVPN security team by Guido Vranken.
+  (OpenSSL builds only.)
+
+- CVE-2017-7520: Pre-authentication remote crash/information disclosure for
+  clients. If clients use a HTTP proxy with NTLM authentication (i.e.
+  ``--http-proxy <server> <port> [<authfile>|'auto'|'auto-nct'] ntlm2``),
+  a man-in-the-middle attacker between the client and the proxy can cause
+  the client to crash or disclose at most 96 bytes of stack memory. The
+  disclosed stack memory is likely to contain the proxy password. If the
+  proxy password is not reused, this is unlikely to compromise the security
+  of the OpenVPN tunnel itself.  Clients who do not use the ``--http-proxy``
+  option with ntlm2 authentication are not affected.
+
+- CVE-2017-7508: Fix remotely-triggerable ASSERT() on malformed IPv6 packet.
+  This can be used to remotely shutdown an openvpn server or client, if
+  IPv6 and ``--mssfix`` are enabled and the IPv6 networks used inside the VPN
+  are known.
+
+- Fix null-pointer dereference when talking to a malicious http proxy
+  that returns a malformed Proxy-Authenticate: headers for digest auth.
+
+- Fix overflow check for long ``--tls-cipher`` option
+
+- Windows: Pass correct buffer size to ``GetModuleFileNameW()``
+  (OSTIF/Quarkslabs audit, finding 5.6)
+
+
+User-visible Changes
+--------------------
+- ``--verify-hash`` can now take an optional flag which changes the hashing
+  algorithm. It can be either SHA1 or SHA256.  The default if not provided is
+  SHA1 to preserve backwards compatibility with existing configurations.
+
+- Restrict the supported ``--x509-username-field`` extension fields to subjectAltName
+  and issuerAltName.  Other extensions probably didn't work anyway, and would
+  cause OpenVPN to crash when a client connects.
+
+
+Bugfixes
+--------
+- Fix fingerprint calculation in mbed TLS builds.  This means that mbed TLS users
+  of OpenVPN 2.4.0, v2.4.1 and v2.4.2 that rely on the values of the
+  ``tls_digest_*`` env vars, or that use ``--verify-hash`` will have to change
+  the fingerprint values they check against.  The security impact of the
+  incorrect calculation is very minimal; the last few bytes (max 4, typically
+  4) are not verified by the fingerprint.  We expect no real-world impact,
+  because users that used this feature before will notice that it has suddenly
+  stopped working, and users that didn't will notice that connection setup
+  fails if they specify correct fingerprints.
+
+- Fix edge case with NCP when the server sends an empty PUSH_REPLY message
+  back, and the client would not initialize it's data channel crypto layer
+  properly (trac #903)
+
+- Fix SIGSEGV on unaligned buffer access on OpenBSD/Sparc64
+
+- Fix TCP_NODELAY on OpenBSD
+
+- Remove erroneous limitation on max number of args for --plugin
+
+- Fix NCP behaviour on TLS reconnect (Server would not send a proper
+  "cipher ..." message back to the client, leading to client and server
+  using different ciphers) (trac #887)
+
+
+Version 2.4.2
+=============
+
+Bugfixes
+--------
+- Fix memory leak introduced in OpenVPN 2.4.1: if ``--remote-cert-tls`` is
+  used, we leaked some memory on each TLS (re)negotiation.
+
+
+Security
+--------
+- Fix a pre-authentication denial-of-service attack on both clients and
+  servers.  By sending a too-large control packet, OpenVPN 2.4.0 or v2.4.1 can
+  be forced to hit an ASSERT() and stop the process.  If ``--tls-auth`` or
+  ``--tls-crypt`` is used, only attackers that have the ``--tls-auth`` or
+  ``--tls-crypt`` key can mount an attack.
+  (OSTIF/Quarkslab audit finding 5.1, CVE-2017-7478)
+
+- Fix an authenticated remote DoS vulnerability that could be triggered by
+  causing a packet id roll over.  An attack is rather inefficient; a peer
+  would need to get us to send at least about 196 GB of data.
+  (OSTIF/Quarkslab audit finding 5.2, CVE-2017-7479)
+
+
 Version 2.4.1
 =============
- - ``--remote-cert-ku`` now only requires the certificate to have at least the
-   bits set of one of the values in the supplied list, instead of requiring an
-   exact match to one of the values in the list.
- - ``--remote-cert-tls`` now only requires that a keyUsage is present in the
-   certificate, and leaves the verification of the value up to the crypto
-   library, which has more information (i.e. the key exchange method in use)
-   to verify that the keyUsage is correct.
- - ``--ns-cert-type`` is deprecated.  Use ``--remote-cert-tls`` instead.
-   The nsCertType x509 extension is very old, and barely used.
-   ``--remote-cert-tls`` uses the far more common keyUsage and extendedKeyUsage
-   extension instead.  Make sure your certificates carry these to be able to
-   use ``--remote-cert-tls``.
+- ``--remote-cert-ku`` now only requires the certificate to have at least the
+  bits set of one of the values in the supplied list, instead of requiring an
+  exact match to one of the values in the list.
+
+- ``--remote-cert-tls`` now only requires that a keyUsage is present in the
+  certificate, and leaves the verification of the value up to the crypto
+  library, which has more information (i.e. the key exchange method in use)
+  to verify that the keyUsage is correct.
+
+- ``--ns-cert-type`` is deprecated.  Use ``--remote-cert-tls`` instead.
+  The nsCertType x509 extension is very old, and barely used.
+  ``--remote-cert-tls`` uses the far more common keyUsage and extendedKeyUsage
+  extension instead.  Make sure your certificates carry these to be able to
+  use ``--remote-cert-tls``.
+

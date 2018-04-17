@@ -5,7 +5,7 @@
  *             packet encryption, packet authentication, and
  *             packet compression.
  *
- *  Copyright (C) 2002-2017 OpenVPN Technologies, Inc. <sales@openvpn.net>
+ *  Copyright (C) 2002-2018 OpenVPN Inc <sales@openvpn.net>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 2
@@ -16,10 +16,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program (see the file COPYING included with this
- *  distribution); if not, write to the Free Software Foundation, Inc.,
- *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -160,7 +159,7 @@ set_machine_readable_output(bool parsable)
 }
 
 void
-error_reset()
+error_reset(void)
 {
     use_syslog = std_redir = false;
     suppress_timestamps = false;
@@ -268,7 +267,7 @@ x_msg_va(const unsigned int flags, const char *format, va_list arglist)
     if ((flags & M_ERRNO) && e)
     {
         openvpn_snprintf(m2, ERR_BUF_SIZE, "%s: %s (errno=%d)",
-                         m1, strerror_ts(e, &gc), e);
+                         m1, strerror(e), e);
         SWAP;
     }
 
@@ -343,8 +342,8 @@ x_msg_va(const unsigned int flags, const char *format, va_list arglist)
                 struct timeval tv;
                 gettimeofday(&tv, NULL);
 
-                fprintf(fp, "%lu.%06lu %x %s%s%s%s",
-                        tv.tv_sec,
+                fprintf(fp, "%"PRIi64".%06lu %x %s%s%s%s",
+                        (int64_t)tv.tv_sec,
                         (unsigned long)tv.tv_usec,
                         flags,
                         prefix,
@@ -481,7 +480,7 @@ open_syslog(const char *pgmname, bool stdio_to_null)
 }
 
 void
-close_syslog()
+close_syslog(void)
 {
 #if SYSLOG_CAPABILITY
     if (use_syslog)
@@ -636,7 +635,7 @@ unsigned int x_cs_verbose_level; /* GLOBAL */
 unsigned int x_cs_err_delay_ms;  /* GLOBAL */
 
 void
-reset_check_status()
+reset_check_status(void)
 {
     x_cs_info_level = 0;
     x_cs_verbose_level = 0;
@@ -694,20 +693,15 @@ x_check_status(int status,
         {
             if (extended_msg)
             {
-                msg(x_cs_info_level, "%s %s [%s]: %s (code=%d)",
-                    description,
+                msg(x_cs_info_level, "%s %s [%s]: %s (code=%d)", description,
                     sock ? proto2ascii(sock->info.proto, sock->info.af, true) : "",
-                    extended_msg,
-                    strerror_ts(my_errno, &gc),
-                    my_errno);
+                    extended_msg, strerror(my_errno), my_errno);
             }
             else
             {
-                msg(x_cs_info_level, "%s %s: %s (code=%d)",
-                    description,
+                msg(x_cs_info_level, "%s %s: %s (code=%d)", description,
                     sock ? proto2ascii(sock->info.proto, sock->info.af, true) : "",
-                    strerror_ts(my_errno, &gc),
-                    my_errno);
+                    strerror(my_errno), my_errno);
             }
 
             if (x_cs_err_delay_ms)

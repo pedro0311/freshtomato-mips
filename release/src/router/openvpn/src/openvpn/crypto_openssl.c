@@ -5,8 +5,8 @@
  *             packet encryption, packet authentication, and
  *             packet compression.
  *
- *  Copyright (C) 2002-2017 OpenVPN Technologies, Inc. <sales@openvpn.net>
- *  Copyright (C) 2010-2017 Fox Crypto B.V. <openvpn@fox-it.com>
+ *  Copyright (C) 2002-2018 OpenVPN Inc <sales@openvpn.net>
+ *  Copyright (C) 2010-2018 Fox Crypto B.V. <openvpn@fox-it.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 2
@@ -17,10 +17,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program (see the file COPYING included with this
- *  distribution); if not, write to the Free Software Foundation, Inc.,
- *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 /**
@@ -42,6 +41,7 @@
 #include "integer.h"
 #include "crypto.h"
 #include "crypto_backend.h"
+#include "openssl_compat.h"
 
 #include <openssl/des.h>
 #include <openssl/err.h>
@@ -280,7 +280,7 @@ print_cipher(const EVP_CIPHER *cipher)
 }
 
 void
-show_available_ciphers()
+show_available_ciphers(void)
 {
     int nid;
     size_t i;
@@ -339,7 +339,7 @@ show_available_ciphers()
 }
 
 void
-show_available_digests()
+show_available_digests(void)
 {
     int nid;
 
@@ -364,7 +364,7 @@ show_available_digests()
 }
 
 void
-show_available_engines()
+show_available_engines(void)
 {
 #if HAVE_OPENSSL_ENGINE /* Only defined for OpenSSL */
     ENGINE *e;
@@ -650,14 +650,25 @@ cipher_kt_mode_aead(const cipher_kt_t *cipher)
  *
  */
 
+cipher_ctx_t *
+cipher_ctx_new(void)
+{
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    check_malloc_return(ctx);
+    return ctx;
+}
 
 void
-cipher_ctx_init(EVP_CIPHER_CTX *ctx, uint8_t *key, int key_len,
+cipher_ctx_free(EVP_CIPHER_CTX *ctx)
+{
+    EVP_CIPHER_CTX_free(ctx);
+}
+
+void
+cipher_ctx_init(EVP_CIPHER_CTX *ctx, const uint8_t *key, int key_len,
                 const EVP_CIPHER *kt, int enc)
 {
     ASSERT(NULL != kt && NULL != ctx);
-
-    CLEAR(*ctx);
 
     EVP_CIPHER_CTX_init(ctx);
     if (!EVP_CipherInit(ctx, kt, NULL, NULL, enc))
@@ -844,12 +855,23 @@ md_full(const EVP_MD *kt, const uint8_t *src, int src_len, uint8_t *dst)
     return EVP_Digest(src, src_len, dst, &in_md_len, kt, NULL);
 }
 
+EVP_MD_CTX *
+md_ctx_new(void)
+{
+    EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+    check_malloc_return(ctx);
+    return ctx;
+}
+
+void md_ctx_free(EVP_MD_CTX *ctx)
+{
+    EVP_MD_CTX_free(ctx);
+}
+
 void
 md_ctx_init(EVP_MD_CTX *ctx, const EVP_MD *kt)
 {
     ASSERT(NULL != ctx && NULL != kt);
-
-    CLEAR(*ctx);
 
     EVP_MD_CTX_init(ctx);
     EVP_DigestInit(ctx, kt);
@@ -858,7 +880,7 @@ md_ctx_init(EVP_MD_CTX *ctx, const EVP_MD *kt)
 void
 md_ctx_cleanup(EVP_MD_CTX *ctx)
 {
-    EVP_MD_CTX_cleanup(ctx);
+    EVP_MD_CTX_reset(ctx);
 }
 
 int
@@ -888,6 +910,19 @@ md_ctx_final(EVP_MD_CTX *ctx, uint8_t *dst)
  *
  */
 
+HMAC_CTX *
+hmac_ctx_new(void)
+{
+    HMAC_CTX *ctx = HMAC_CTX_new();
+    check_malloc_return(ctx);
+    return ctx;
+}
+
+void
+hmac_ctx_free(HMAC_CTX *ctx)
+{
+    HMAC_CTX_free(ctx);
+}
 
 void
 hmac_ctx_init(HMAC_CTX *ctx, const uint8_t *key, int key_len,
@@ -895,9 +930,7 @@ hmac_ctx_init(HMAC_CTX *ctx, const uint8_t *key, int key_len,
 {
     ASSERT(NULL != kt && NULL != ctx);
 
-    CLEAR(*ctx);
-
-    HMAC_CTX_init(ctx);
+    HMAC_CTX_reset(ctx);
     HMAC_Init_ex(ctx, key, key_len, kt, NULL);
 
     /* make sure we used a big enough key */
@@ -907,7 +940,7 @@ hmac_ctx_init(HMAC_CTX *ctx, const uint8_t *key, int key_len,
 void
 hmac_ctx_cleanup(HMAC_CTX *ctx)
 {
-    HMAC_CTX_cleanup(ctx);
+    HMAC_CTX_reset(ctx);
 }
 
 int

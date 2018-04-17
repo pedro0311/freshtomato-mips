@@ -5,7 +5,7 @@
  *             packet encryption, packet authentication, and
  *             packet compression.
  *
- *  Copyright (C) 2002-2017 OpenVPN Technologies, Inc. <sales@openvpn.net>
+ *  Copyright (C) 2002-2018 OpenVPN Inc <sales@openvpn.net>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 2
@@ -16,10 +16,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program (see the file COPYING included with this
- *  distribution); if not, write to the Free Software Foundation, Inc.,
- *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -95,6 +94,94 @@ context_clear_all_except_first_time(struct context *c)
 }
 
 /*
+ * Pass tunnel endpoint and MTU parms to a user-supplied script.
+ * Used to execute the up/down script/plugins.
+ */
+static void
+run_up_down(const char *command,
+            const struct plugin_list *plugins,
+            int plugin_type,
+            const char *arg,
+#ifdef _WIN32
+            DWORD adapter_index,
+#endif
+            const char *dev_type,
+            int tun_mtu,
+            int link_mtu,
+            const char *ifconfig_local,
+            const char *ifconfig_remote,
+            const char *context,
+            const char *signal_text,
+            const char *script_type,
+            struct env_set *es)
+{
+    struct gc_arena gc = gc_new();
+
+    if (signal_text)
+    {
+        setenv_str(es, "signal", signal_text);
+    }
+    setenv_str(es, "script_context", context);
+    setenv_int(es, "tun_mtu", tun_mtu);
+    setenv_int(es, "link_mtu", link_mtu);
+    setenv_str(es, "dev", arg);
+    if (dev_type)
+    {
+        setenv_str(es, "dev_type", dev_type);
+    }
+#ifdef _WIN32
+    setenv_int(es, "dev_idx", adapter_index);
+#endif
+
+    if (!ifconfig_local)
+    {
+        ifconfig_local = "";
+    }
+    if (!ifconfig_remote)
+    {
+        ifconfig_remote = "";
+    }
+    if (!context)
+    {
+        context = "";
+    }
+
+    if (plugin_defined(plugins, plugin_type))
+    {
+        struct argv argv = argv_new();
+        ASSERT(arg);
+        argv_printf(&argv,
+                    "%s %d %d %s %s %s",
+                    arg,
+                    tun_mtu, link_mtu,
+                    ifconfig_local, ifconfig_remote,
+                    context);
+
+        if (plugin_call(plugins, plugin_type, &argv, NULL, es) != OPENVPN_PLUGIN_FUNC_SUCCESS)
+        {
+            msg(M_FATAL, "ERROR: up/down plugin call failed");
+        }
+
+        argv_reset(&argv);
+    }
+
+    if (command)
+    {
+        struct argv argv = argv_new();
+        ASSERT(arg);
+        setenv_str(es, "script_type", script_type);
+        argv_parse_cmd(&argv, command);
+        argv_printf_cat(&argv, "%s %d %d %s %s %s", arg, tun_mtu, link_mtu,
+                        ifconfig_local, ifconfig_remote, context);
+        argv_msg(M_INFO, &argv);
+        openvpn_run_script(&argv, es, S_FATAL, "--up/--down");
+        argv_reset(&argv);
+    }
+
+    gc_free(&gc);
+}
+
+/*
  * Should be called after options->ce is modified at the top
  * of a SIGUSR1 restart.
  */
@@ -151,7 +238,7 @@ management_callback_proxy_cmd(void *arg, const char **p)
         else if (streq(p[1], "SOCKS"))
         {
             ce->socks_proxy_server = string_alloc(p[2], gc);
-            ce->socks_proxy_port = p[3];
+            ce->socks_proxy_port = string_alloc(p[3], gc);
             ret = true;
         }
     }
@@ -611,6 +698,7 @@ init_port_share(struct context *c)
 
 #endif /* if PORT_SHARE */
 
+
 bool
 init_static(void)
 {
@@ -620,8 +708,20 @@ init_static(void)
     crypto_init_dmalloc();
 #endif
 
-    init_random_seed();         /* init random() function, only used as
-                                 * source for weak random numbers */
+
+    /*
+     * Initialize random number seed.  random() is only used
+     * when "weak" random numbers are acceptable.
+     * SSL library routines are always used when cryptographically
+     * strong random numbers are required.
+     */
+    struct timeval tv;
+    if (!gettimeofday(&tv, NULL))
+    {
+        const unsigned int seed = (unsigned int) tv.tv_sec ^ tv.tv_usec;
+        srandom(seed);
+    }
+
     error_reset();              /* initialize error.c */
     reset_check_status();       /* initialize status check code in socket.c */
 
@@ -916,7 +1016,8 @@ print_openssl_info(const struct options *options)
         }
         if (options->show_tls_ciphers)
         {
-            show_available_tls_ciphers(options->cipher_list);
+            show_available_tls_ciphers(options->cipher_list,
+                                       options->tls_cert_profile);
         }
         if (options->show_curves)
         {
@@ -1383,6 +1484,21 @@ initialization_sequence_completed(struct context *c, const unsigned int flags)
     /* If we delayed UID/GID downgrade or chroot, do it now */
     do_uid_gid_chroot(c, true);
 
+
+#ifdef ENABLE_CRYPTO
+    /*
+     * In some cases (i.e. when receiving auth-token via
+     * push-reply) the auth-nocache option configured on the
+     * client is overridden; for this reason we have to wait
+     * for the push-reply message before attempting to wipe
+     * the user/pass entered by the user
+     */
+    if (c->options.mode == MODE_POINT_TO_POINT)
+    {
+        delayed_auth_pass_purge();
+    }
+#endif /* ENABLE_CRYPTO */
+
     /* Test if errors */
     if (flags & ISC_ERRORS)
     {
@@ -1837,7 +1953,7 @@ do_close_tun(struct context *c, bool force)
 #if defined(_WIN32)
             if (c->options.block_outside_dns)
             {
-                if (!win_wfp_uninit(c->options.msg_channel))
+                if (!win_wfp_uninit(adapter_index, c->options.msg_channel))
                 {
                     msg(M_FATAL, "Uninitialising WFP failed!");
                 }
@@ -1877,7 +1993,7 @@ do_close_tun(struct context *c, bool force)
 #if defined(_WIN32)
             if (c->options.block_outside_dns)
             {
-                if (!win_wfp_uninit(c->options.msg_channel))
+                if (!win_wfp_uninit(adapter_index, c->options.msg_channel))
                 {
                     msg(M_FATAL, "Uninitialising WFP failed!");
                 }
@@ -1890,7 +2006,7 @@ do_close_tun(struct context *c, bool force)
 }
 
 void
-tun_abort()
+tun_abort(void)
 {
     struct context *c = static_context;
     if (c)
@@ -1926,7 +2042,7 @@ do_up(struct context *c, bool pulled_options, unsigned int option_types_found)
     {
         reset_coarse_timers(c);
 
-        if (pulled_options && option_types_found)
+        if (pulled_options)
         {
             if (!do_deferred_options(c, option_types_found))
             {
@@ -1955,7 +2071,7 @@ do_up(struct context *c, bool pulled_options, unsigned int option_types_found)
                 /* if so, close tun, delete routes, then reinitialize tun and add routes */
                 msg(M_INFO, "NOTE: Pulled options changed on restart, will need to close and reopen TUN/TAP device.");
                 do_close_tun(c, true);
-                openvpn_sleep(1);
+                management_sleep(1);
                 c->c2.did_open_tun = do_open_tun(c);
                 update_time();
             }
@@ -2249,7 +2365,7 @@ socket_restart_pause(struct context *c)
     if (sec)
     {
         msg(D_RESTART, "Restart pause, %d second(s)", sec);
-        openvpn_sleep(sec);
+        management_sleep(sec);
     }
 }
 
@@ -2632,6 +2748,7 @@ do_init_crypto_tls(struct context *c, const unsigned int flags)
     memmove(to.remote_cert_ku, options->remote_cert_ku, sizeof(to.remote_cert_ku));
     to.remote_cert_eku = options->remote_cert_eku;
     to.verify_hash = options->verify_hash;
+    to.verify_hash_algo = options->verify_hash_algo;
 #ifdef ENABLE_X509ALTUSERNAME
     to.x509_username_field = (char *) options->x509_username_field;
 #else
@@ -2759,7 +2876,10 @@ do_init_crypto_none(const struct context *c)
 {
     ASSERT(!c->options.test_crypto);
     msg(M_WARN,
-        "******* WARNING *******: all encryption and authentication features disabled -- all data will be tunnelled as cleartext");
+        "******* WARNING *******: All encryption and authentication features "
+        "disabled -- All data will be tunnelled as clear text and will not be "
+        "protected against man-in-the-middle changes. "
+        "PLEASE DO RECONSIDER THIS CONFIGURATION!");
 }
 #endif /* ifdef ENABLE_CRYPTO */
 
@@ -3314,6 +3434,12 @@ do_close_tls(struct context *c)
     }
     c->c2.options_string_local = c->c2.options_string_remote = NULL;
 #endif
+
+    if (c->c2.pulled_options_state)
+    {
+        md_ctx_cleanup(c->c2.pulled_options_state);
+        md_ctx_free(c->c2.pulled_options_state);
+    }
 #endif
 }
 
@@ -4065,6 +4191,8 @@ init_instance(struct context *c, const struct env_set *env, const unsigned int f
     {
         c->c2.did_open_tun = do_open_tun(c);
     }
+
+    c->c2.frame_initial = c->c2.frame;
 
     /* print MTU info */
     do_print_data_channel_mtu_parms(c);

@@ -5,7 +5,7 @@
  *             packet encryption, packet authentication, and
  *             packet compression.
  *
- *  Copyright (C) 2002-2017 OpenVPN Technologies, Inc. <sales@openvpn.net>
+ *  Copyright (C) 2002-2018 OpenVPN Inc <sales@openvpn.net>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 2
@@ -16,10 +16,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program (see the file COPYING included with this
- *  distribution); if not, write to the Free Software Foundation, Inc.,
- *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #ifndef OPENVPN_H
@@ -263,7 +262,8 @@ struct context_2
     struct link_socket_actual from;             /* address of incoming datagram */
 
     /* MTU frame parameters */
-    struct frame frame;
+    struct frame frame;                         /* Active frame parameters */
+    struct frame frame_initial;                 /* Restored on new session */
 
 #ifdef ENABLE_FRAGMENT
     /* Object to handle advanced MTU negotiation and datagram fragmentation */
@@ -472,7 +472,7 @@ struct context_2
 
     /* hash of pulled options, so we can compare when options change */
     bool pulled_options_digest_init_done;
-    md_ctx_t pulled_options_state;
+    md_ctx_t *pulled_options_state;
     struct sha256_digest pulled_options_digest;
 
     struct event_timeout scheduled_exit;

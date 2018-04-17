@@ -5,8 +5,8 @@
  *             packet encryption, packet authentication, and
  *             packet compression.
  *
- *  Copyright (C) 2002-2017 OpenVPN Technologies, Inc. <sales@openvpn.net>
- *  Copyright (C) 2010-2017 Fox Crypto B.V. <openvpn@fox-it.com>
+ *  Copyright (C) 2002-2018 OpenVPN Inc <sales@openvpn.net>
+ *  Copyright (C) 2010-2018 Fox Crypto B.V. <openvpn@fox-it.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 2
@@ -17,10 +17,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program (see the file COPYING included with this
- *  distribution); if not, write to the Free Software Foundation, Inc.,
- *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 /**
@@ -160,7 +159,7 @@ print_cipher(const cipher_kt_t *info)
 }
 
 void
-show_available_ciphers()
+show_available_ciphers(void)
 {
     const int *ciphers = mbedtls_cipher_list();
 
@@ -197,7 +196,7 @@ show_available_ciphers()
 }
 
 void
-show_available_digests()
+show_available_digests(void)
 {
     const int *digests = mbedtls_md_list();
 
@@ -224,7 +223,7 @@ show_available_digests()
 }
 
 void
-show_available_engines()
+show_available_engines(void)
 {
     printf("Sorry, mbed TLS hardware crypto engine functionality is not "
            "available\n");
@@ -244,7 +243,7 @@ show_available_engines()
  * entropy gathering function.
  */
 mbedtls_ctr_drbg_context *
-rand_ctx_get()
+rand_ctx_get(void)
 {
     static mbedtls_entropy_context ec = {0};
     static mbedtls_ctr_drbg_context cd_ctx = {0};
@@ -281,7 +280,7 @@ rand_ctx_get()
 
 #ifdef ENABLE_PREDICTION_RESISTANCE
 void
-rand_ctx_enable_prediction_resistance()
+rand_ctx_enable_prediction_resistance(void)
 {
     mbedtls_ctr_drbg_context *cd_ctx = rand_ctx_get();
 
@@ -509,9 +508,22 @@ cipher_kt_mode_aead(const cipher_kt_t *cipher)
  *
  */
 
+mbedtls_cipher_context_t *
+cipher_ctx_new(void)
+{
+    mbedtls_cipher_context_t *ctx;
+    ALLOC_OBJ(ctx, mbedtls_cipher_context_t);
+    return ctx;
+}
 
 void
-cipher_ctx_init(mbedtls_cipher_context_t *ctx, uint8_t *key, int key_len,
+cipher_ctx_free(mbedtls_cipher_context_t *ctx)
+{
+    free(ctx);
+}
+
+void
+cipher_ctx_init(mbedtls_cipher_context_t *ctx, const uint8_t *key, int key_len,
                 const mbedtls_cipher_info_t *kt, const mbedtls_operation_t operation)
 {
     ASSERT(NULL != kt && NULL != ctx);
@@ -766,6 +778,18 @@ md_full(const md_kt_t *kt, const uint8_t *src, int src_len, uint8_t *dst)
     return 0 == mbedtls_md(kt, src, src_len, dst);
 }
 
+mbedtls_md_context_t *
+md_ctx_new(void)
+{
+    mbedtls_md_context_t *ctx;
+    ALLOC_OBJ_CLEAR(ctx, mbedtls_md_context_t);
+    return ctx;
+}
+
+void md_ctx_free(mbedtls_md_context_t *ctx)
+{
+    free(ctx);
+}
 
 void
 md_ctx_init(mbedtls_md_context_t *ctx, const mbedtls_md_info_t *kt)
@@ -780,6 +804,7 @@ md_ctx_init(mbedtls_md_context_t *ctx, const mbedtls_md_info_t *kt)
 void
 md_ctx_cleanup(mbedtls_md_context_t *ctx)
 {
+    mbedtls_md_free(ctx);
 }
 
 int
@@ -816,6 +841,21 @@ md_ctx_final(mbedtls_md_context_t *ctx, uint8_t *dst)
 /*
  * TODO: re-enable dmsg for crypto debug
  */
+
+mbedtls_md_context_t *
+hmac_ctx_new(void)
+{
+    mbedtls_md_context_t *ctx;
+    ALLOC_OBJ(ctx, mbedtls_md_context_t);
+    return ctx;
+}
+
+void
+hmac_ctx_free(mbedtls_md_context_t *ctx)
+{
+    free(ctx);
+}
+
 void
 hmac_ctx_init(mbedtls_md_context_t *ctx, const uint8_t *key, int key_len,
               const mbedtls_md_info_t *kt)

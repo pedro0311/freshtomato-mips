@@ -5,7 +5,7 @@
  *             packet encryption, packet authentication, and
  *             packet compression.
  *
- *  Copyright (C) 2002-2017 OpenVPN Technologies, Inc. <sales@openvpn.net>
+ *  Copyright (C) 2002-2018 OpenVPN Inc <sales@openvpn.net>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 2
@@ -16,10 +16,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program (see the file COPYING included with this
- *  distribution); if not, write to the Free Software Foundation, Inc.,
- *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #ifdef _WIN32
@@ -286,21 +285,21 @@ char *get_win_sys_path(void);
 void fork_to_self(const char *cmdline);
 
 /* Find temporary directory */
-const char *win_get_tempdir();
+const char *win_get_tempdir(void);
 
 /* Convert a string from UTF-8 to UCS-2 */
 WCHAR *wide_string(const char *utf8, struct gc_arena *gc);
 
 bool win_wfp_block_dns(const NET_IFINDEX index, const HANDLE msg_channel);
 
-bool win_wfp_uninit(const HANDLE msg_channel);
+bool win_wfp_uninit(const NET_IFINDEX index, const HANDLE msg_channel);
 
 #define WIN_XP 0
 #define WIN_VISTA 1
 #define WIN_7 2
 #define WIN_8 3
 
-int win32_version_info();
+int win32_version_info(void);
 
 /*
  * String representation of Windows version number and name, see
