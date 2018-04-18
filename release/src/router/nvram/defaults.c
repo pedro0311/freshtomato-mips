@@ -209,12 +209,16 @@ const defaults_t defaults[] = {
 	{ "wan_modem_init",		"*99#"				},
 	{ "wan_modem_apn",		"internet"			},
 	{ "wan_modem_speed",		"00"				},
+	{ "wan_modem_band",		"7FFFFFFFFFFFFFFF"		},
+	{ "wan_modem_roam",		"2"				},
 
 	{ "wan2_modem_pin",		""				},
 	{ "wan2_modem_dev",		"ttyUSB0"			},
 	{ "wan2_modem_init",		"*99#"				},
 	{ "wan2_modem_apn",		"internet"			},
 	{ "wan2_modem_speed",		"00"				},
+	{ "wan2_modem_band",		"7FFFFFFFFFFFFFFF"		},
+	{ "wan2_modem_roam",		"2"				},
 
 #ifdef TCONFIG_MULTIWAN
 	{ "wan3_modem_pin",		""				},
@@ -222,12 +226,16 @@ const defaults_t defaults[] = {
 	{ "wan3_modem_init",		"*99#"				},
 	{ "wan3_modem_apn",		"internet"			},
 	{ "wan3_modem_speed",		"00"				},
+	{ "wan3_modem_band",		"7FFFFFFFFFFFFFFF"		},
+	{ "wan3_modem_roam",		"2"				},
 
 	{ "wan4_modem_pin",		""				},
 	{ "wan4_modem_dev",		"ttyUSB0"			},
 	{ "wan4_modem_init",		"*99#"				},
 	{ "wan4_modem_apn",		"internet"			},
 	{ "wan4_modem_speed",		"00"				},
+	{ "wan4_modem_band",		"7FFFFFFFFFFFFFFF"		},
+	{ "wan4_modem_roam",		"2"				},
 #endif
 #endif
 
