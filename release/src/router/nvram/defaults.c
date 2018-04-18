@@ -464,15 +464,15 @@ const defaults_t defaults[] = {
 	{ "wl_mcast_regen_bss_enable",	"1"			},	// MCAST REGEN Enable/Disable
 #endif
 
-	{ "wan_pptp_server_ip",		""				},	// as same as WAN gateway
 	{ "wan_ppp_get_ip",			""				},	// IP Address assigned by PPTP/L2TP server
-	{ "wan_pptp_dhcp",			"0"				},
 
 	// for firewall
+	{ "wan_pptp_server_ip",		""			},	// as same as WAN gateway
+	{ "wan_pptp_dhcp",		"0"			},
 	{ "wan_mtu_enable",			"0"				},	// WAN MTU [1|0]
 	{ "wan_mtu",			"1500"			},	// Negotiate MTU to the smaller of this value or the peer MRU
-
 	{ "wan_l2tp_server_ip",		""				},	// L2TP auth server (IP Address)
+
 	{ "wan2_pptp_server_ip",	""				},	// as same as WAN gateway
 	{ "wan2_pptp_dhcp",		"0"				},
 	{ "wan2_mtu_enable",		"0"				},	// WAN MTU [1|0]

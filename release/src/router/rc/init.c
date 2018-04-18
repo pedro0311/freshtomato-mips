@@ -1205,7 +1205,7 @@ static int init_nvram(void)
 	//nvram_set("wl_country_code", "JP");
 	nvram_set("wan_get_dns", "");
 	nvram_set("wan_get_domain", "");
-	nvram_set("ppp_get_ip", "");
+	nvram_set("wan_ppp_get_ip", "");
 	nvram_set("action_service", "");
 	nvram_set("jffs2_format", "0");
 	nvram_set("rrules_radio", "-1");
@@ -1555,9 +1555,12 @@ int init_main(int argc, char *argv[])
 			start_lan();
 			start_arpbind();
 			mwan_state_files();
-			start_wan(BOOT);
 			start_services();
 			start_wl();
+			/*
+			 * last one as ssh telnet httpd etc can fail to load untill start_wan_done
+			 */
+			start_wan(BOOT);
 
 #ifdef CONFIG_BCMWL5
 			if (wds_enable()) {
