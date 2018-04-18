@@ -1,6 +1,6 @@
 /* Copyright (c) 2001-2004, Roger Dingledine.
  * Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -26,8 +26,11 @@ int routerset_contains_routerstatus(const routerset_t *set,
                                     country_t country);
 int routerset_contains_extendinfo(const routerset_t *set,
                                   const extend_info_t *ei);
-
+struct bridge_info_t;
+int routerset_contains_bridge(const routerset_t *set,
+                              const struct bridge_info_t *bridge);
 int routerset_contains_node(const routerset_t *set, const node_t *node);
+
 void routerset_get_all_nodes(smartlist_t *out, const routerset_t *routerset,
                              const routerset_t *excludeset,
                              int running_only);
@@ -79,6 +82,6 @@ struct routerset_t {
    * reloaded. */
   bitarray_t *countries;
 };
-#endif
-#endif
+#endif /* defined(ROUTERSET_PRIVATE) */
+#endif /* !defined(TOR_ROUTERSET_H) */
 

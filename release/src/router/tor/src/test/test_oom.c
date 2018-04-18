@@ -1,4 +1,4 @@
-/* Copyright (c) 2014-2016, The Tor Project, Inc. */
+/* Copyright (c) 2014-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /* Unit tests for OOM handling logic */
@@ -15,6 +15,7 @@
 #include "config.h"
 #include "relay.h"
 #include "test.h"
+#include "test_helpers.h"
 
 /* small replacement mock for circuit_mark_for_close_ to avoid doing all
  * the other bookkeeping that comes with marking circuits. */
@@ -58,24 +59,6 @@ dummy_or_circuit_new(int n_p_cells, int n_n_cells)
   return TO_CIRCUIT(circ);
 }
 
-static circuit_t *
-dummy_origin_circuit_new(int n_cells)
-{
-  origin_circuit_t *circ = origin_circuit_new();
-  int i;
-  cell_t cell;
-
-  for (i=0; i < n_cells; ++i) {
-    crypto_rand((void*)&cell, sizeof(cell));
-    cell_queue_append_packed_copy(TO_CIRCUIT(circ),
-                                  &TO_CIRCUIT(circ)->n_chan_cells,
-                                  1, &cell, 1, 0);
-  }
-
-  TO_CIRCUIT(circ)->purpose = CIRCUIT_PURPOSE_C_GENERAL;
-  return TO_CIRCUIT(circ);
-}
-
 static void
 add_bytes_to_buf(buf_t *buf, size_t n_bytes)
 {
@@ -84,7 +67,7 @@ add_bytes_to_buf(buf_t *buf, size_t n_bytes)
   while (n_bytes) {
     size_t this_add = n_bytes > sizeof(b) ? sizeof(b) : n_bytes;
     crypto_rand(b, this_add);
-    write_to_buf(b, this_add, buf);
+    buf_add(buf, b, this_add);
     n_bytes -= this_add;
   }
 }

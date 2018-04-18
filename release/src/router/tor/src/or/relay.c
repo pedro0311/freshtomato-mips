@@ -1,30 +1,68 @@
 /* Copyright (c) 2001 Matej Pfajfar.
  * Copyright (c) 2001-2004, Roger Dingledine.
  * Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
  * \file relay.c
  * \brief Handle relay cell encryption/decryption, plus packaging and
  *    receiving from circuits, plus queuing on circuits.
+ *
+ * This is a core modules that makes Tor work. It's responsible for
+ * dealing with RELAY cells (the ones that travel more than one hop along a
+ * circuit), by:
+ *  <ul>
+ *   <li>constructing relays cells,
+ *   <li>encrypting relay cells,
+ *   <li>decrypting relay cells,
+ *   <li>demultiplexing relay cells as they arrive on a connection,
+ *   <li>queueing relay cells for retransmission,
+ *   <li>or handling relay cells that are for us to receive (as an exit or a
+ *   client).
+ *  </ul>
+ *
+ * RELAY cells are generated throughout the code at the client or relay side,
+ * using relay_send_command_from_edge() or one of the functions like
+ * connection_edge_send_command() that calls it.  Of particular interest is
+ * connection_edge_package_raw_inbuf(), which takes information that has
+ * arrived on an edge connection socket, and packages it as a RELAY_DATA cell
+ * -- this is how information is actually sent across the Tor network.  The
+ * cryptography for these functions is handled deep in
+ * circuit_package_relay_cell(), which either adds a single layer of
+ * encryption (if we're an exit), or multiple layers (if we're the origin of
+ * the circuit).  After construction and encryption, the RELAY cells are
+ * passed to append_cell_to_circuit_queue(), which queues them for
+ * transmission and tells the circuitmux (see circuitmux.c) that the circuit
+ * is waiting to send something.
+ *
+ * Incoming RELAY cells arrive at circuit_receive_relay_cell(), called from
+ * command.c.  There they are decrypted and, if they are for us, are passed to
+ * connection_edge_process_relay_cell(). If they're not for us, they're
+ * re-queued for retransmission again with append_cell_to_circuit_queue().
+ *
+ * The connection_edge_process_relay_cell() function handles all the different
+ * types of relay cells, launching requests or transmitting data as needed.
  **/
 
 #define RELAY_PRIVATE
 #include "or.h"
 #include "addressmap.h"
+#include "backtrace.h"
 #include "buffers.h"
 #include "channel.h"
 #include "circpathbias.h"
 #include "circuitbuild.h"
 #include "circuitlist.h"
 #include "circuituse.h"
+#include "compress.h"
 #include "config.h"
 #include "connection.h"
 #include "connection_edge.h"
 #include "connection_or.h"
 #include "control.h"
 #include "geoip.h"
+#include "hs_cache.h"
 #include "main.h"
 #include "networkstatus.h"
 #include "nodelist.h"
@@ -38,6 +76,7 @@
 #include "routerlist.h"
 #include "routerparse.h"
 #include "scheduler.h"
+#include "rephist.h"
 
 static edge_connection_t *relay_lookup_conn(circuit_t *circ, cell_t *cell,
                                             cell_direction_t cell_direction,
@@ -146,18 +185,88 @@ relay_digest_matches(crypto_digest_t *digest, cell_t *cell)
 /** Apply <b>cipher</b> to CELL_PAYLOAD_SIZE bytes of <b>in</b>
  * (in place).
  *
- * If <b>encrypt_mode</b> is 1 then encrypt, else decrypt.
- *
- * Returns 0.
+ * Note that we use the same operation for encrypting and for decrypting.
  */
-static int
-relay_crypt_one_payload(crypto_cipher_t *cipher, uint8_t *in,
-                        int encrypt_mode)
+static void
+relay_crypt_one_payload(crypto_cipher_t *cipher, uint8_t *in)
 {
-  (void)encrypt_mode;
   crypto_cipher_crypt_inplace(cipher, (char*) in, CELL_PAYLOAD_SIZE);
+}
 
-  return 0;
+/**
+ * Update channel usage state based on the type of relay cell and
+ * circuit properties.
+ *
+ * This is needed to determine if a client channel is being
+ * used for application traffic, and if a relay channel is being
+ * used for multihop circuits and application traffic. The decision
+ * to pad in channelpadding.c depends upon this info (as well as
+ * consensus parameters) to decide what channels to pad.
+ */
+static void
+circuit_update_channel_usage(circuit_t *circ, cell_t *cell)
+{
+  if (CIRCUIT_IS_ORIGIN(circ)) {
+    /*
+     * The client state was first set much earlier in
+     * circuit_send_next_onion_skin(), so we can start padding as early as
+     * possible.
+     *
+     * However, if padding turns out to be expensive, we may want to not do
+     * it until actual application traffic starts flowing (which is controlled
+     * via consensus param nf_pad_before_usage).
+     *
+     * So: If we're an origin circuit and we've created a full length circuit,
+     * then any CELL_RELAY cell means application data. Increase the usage
+     * state of the channel to indicate this.
+     *
+     * We want to wait for CELL_RELAY specifically here, so we know that
+     * the channel was definitely being used for data and not for extends.
+     * By default, we pad as soon as a channel has been used for *any*
+     * circuits, so this state is irrelevant to the padding decision in
+     * the default case. However, if padding turns out to be expensive,
+     * we would like the ability to avoid padding until we're absolutely
+     * sure that a channel is used for enough application data to be worth
+     * padding.
+     *
+     * (So it does not matter that CELL_RELAY_EARLY can actually contain
+     * application data. This is only a load reducing option and that edge
+     * case does not matter if we're desperately trying to reduce overhead
+     * anyway. See also consensus parameter nf_pad_before_usage).
+     */
+    if (BUG(!circ->n_chan))
+      return;
+
+    if (circ->n_chan->channel_usage == CHANNEL_USED_FOR_FULL_CIRCS &&
+        cell->command == CELL_RELAY) {
+      circ->n_chan->channel_usage = CHANNEL_USED_FOR_USER_TRAFFIC;
+    }
+  } else {
+    /* If we're a relay circuit, the question is more complicated. Basically:
+     * we only want to pad connections that carry multihop (anonymous)
+     * circuits.
+     *
+     * We assume we're more than one hop if either the previous hop
+     * is not a client, or if the previous hop is a client and there's
+     * a next hop. Then, circuit traffic starts at RELAY_EARLY, and
+     * user application traffic starts when we see RELAY cells.
+     */
+    or_circuit_t *or_circ = TO_OR_CIRCUIT(circ);
+
+    if (BUG(!or_circ->p_chan))
+      return;
+
+    if (!channel_is_client(or_circ->p_chan) ||
+        (channel_is_client(or_circ->p_chan) && circ->n_chan)) {
+      if (cell->command == CELL_RELAY_EARLY) {
+        if (or_circ->p_chan->channel_usage < CHANNEL_USED_FOR_FULL_CIRCS) {
+          or_circ->p_chan->channel_usage = CHANNEL_USED_FOR_FULL_CIRCS;
+        }
+      } else if (cell->command == CELL_RELAY) {
+        or_circ->p_chan->channel_usage = CHANNEL_USED_FOR_USER_TRAFFIC;
+      }
+    }
+  }
 }
 
 /** Receive a relay cell:
@@ -189,9 +298,12 @@ circuit_receive_relay_cell(cell_t *cell, circuit_t *circ,
     return 0;
 
   if (relay_crypt(circ, cell, cell_direction, &layer_hint, &recognized) < 0) {
-    log_warn(LD_BUG,"relay crypt failed. Dropping connection.");
+    log_fn(LOG_PROTOCOL_WARN, LD_PROTOCOL,
+           "relay crypt failed. Dropping connection.");
     return -END_CIRC_REASON_INTERNAL;
   }
+
+  circuit_update_channel_usage(circ, cell);
 
   if (recognized) {
     edge_connection_t *conn = NULL;
@@ -221,8 +333,13 @@ circuit_receive_relay_cell(cell_t *cell, circuit_t *circ,
       log_debug(LD_OR,"Sending to origin.");
       if ((reason = connection_edge_process_relay_cell(cell, circ, conn,
                                                        layer_hint)) < 0) {
-        log_warn(LD_OR,
-                 "connection_edge_process_relay_cell (at origin) failed.");
+        /* If a client is trying to connect to unknown hidden service port,
+         * END_CIRC_AT_ORIGIN is sent back so we can then close the circuit.
+         * Do not log warn as this is an expected behavior for a service. */
+        if (reason != END_CIRC_AT_ORIGIN) {
+          log_warn(LD_OR,
+                   "connection_edge_process_relay_cell (at origin) failed.");
+        }
         return reason;
       }
     }
@@ -327,8 +444,8 @@ relay_crypt(circuit_t *circ, cell_t *cell, cell_direction_t cell_direction,
       do { /* Remember: cpath is in forward order, that is, first hop first. */
         tor_assert(thishop);
 
-        if (relay_crypt_one_payload(thishop->b_crypto, cell->payload, 0) < 0)
-          return -1;
+        /* decrypt one layer */
+        relay_crypt_one_payload(thishop->b_crypto, cell->payload);
 
         relay_header_unpack(&rh, cell->payload);
         if (rh.recognized == 0) {
@@ -345,19 +462,14 @@ relay_crypt(circuit_t *circ, cell_t *cell, cell_direction_t cell_direction,
       log_fn(LOG_PROTOCOL_WARN, LD_OR,
              "Incoming cell at client not recognized. Closing.");
       return -1;
-    } else { /* we're in the middle. Just one crypt. */
-      if (relay_crypt_one_payload(TO_OR_CIRCUIT(circ)->p_crypto,
-                                  cell->payload, 1) < 0)
-        return -1;
-//      log_fn(LOG_DEBUG,"Skipping recognized check, because we're not "
-//             "the client.");
+    } else {
+      /* We're in the middle. Encrypt one layer. */
+      relay_crypt_one_payload(TO_OR_CIRCUIT(circ)->p_crypto, cell->payload);
     }
   } else /* cell_direction == CELL_DIRECTION_OUT */ {
-    /* we're in the middle. Just one crypt. */
+    /* We're in the middle. Decrypt one layer. */
 
-    if (relay_crypt_one_payload(TO_OR_CIRCUIT(circ)->n_crypto,
-                                cell->payload, 0) < 0)
-      return -1;
+    relay_crypt_one_payload(TO_OR_CIRCUIT(circ)->n_crypto, cell->payload);
 
     relay_header_unpack(&rh, cell->payload);
     if (rh.recognized == 0) {
@@ -383,17 +495,32 @@ circuit_package_relay_cell(cell_t *cell, circuit_t *circ,
 {
   channel_t *chan; /* where to send the cell */
 
+  if (circ->marked_for_close) {
+    /* Circuit is marked; send nothing. */
+    return 0;
+  }
+
   if (cell_direction == CELL_DIRECTION_OUT) {
     crypt_path_t *thishop; /* counter for repeated crypts */
     chan = circ->n_chan;
     if (!chan) {
       log_warn(LD_BUG,"outgoing relay cell sent from %s:%d has n_chan==NULL."
-               " Dropping.", filename, lineno);
+               " Dropping. Circuit is in state %s (%d), and is "
+               "%smarked for close. (%s:%d, %d)", filename, lineno,
+               circuit_state_to_string(circ->state), circ->state,
+               circ->marked_for_close ? "" : "not ",
+               circ->marked_for_close_file?circ->marked_for_close_file:"",
+               circ->marked_for_close, circ->marked_for_close_reason);
+      if (CIRCUIT_IS_ORIGIN(circ)) {
+        circuit_log_path(LOG_WARN, LD_BUG, TO_ORIGIN_CIRCUIT(circ));
+      }
+      log_backtrace(LOG_WARN,LD_BUG,"");
       return 0; /* just drop it */
     }
     if (!CIRCUIT_IS_ORIGIN(circ)) {
       log_warn(LD_BUG,"outgoing relay cell sent from %s:%d on non-origin "
                "circ. Dropping.", filename, lineno);
+      log_backtrace(LOG_WARN,LD_BUG,"");
       return 0; /* just drop it */
     }
 
@@ -403,11 +530,8 @@ circuit_package_relay_cell(cell_t *cell, circuit_t *circ,
     /* moving from farthest to nearest hop */
     do {
       tor_assert(thishop);
-      /* XXXX RD This is a bug, right? */
-      log_debug(LD_OR,"crypting a layer of the relay cell.");
-      if (relay_crypt_one_payload(thishop->f_crypto, cell->payload, 1) < 0) {
-        return -1;
-      }
+      log_debug(LD_OR,"encrypting a layer of the relay cell.");
+      relay_crypt_one_payload(thishop->f_crypto, cell->payload);
 
       thishop = thishop->prev;
     } while (thishop != TO_ORIGIN_CIRCUIT(circ)->cpath->prev);
@@ -424,8 +548,8 @@ circuit_package_relay_cell(cell_t *cell, circuit_t *circ,
     or_circ = TO_OR_CIRCUIT(circ);
     chan = or_circ->p_chan;
     relay_set_digest(or_circ->p_digest, cell);
-    if (relay_crypt_one_payload(or_circ->p_crypto, cell->payload, 1) < 0)
-      return -1;
+    /* encrypt one layer */
+    relay_crypt_one_payload(or_circ->p_crypto, cell->payload);
   }
   ++stats_n_relay_cells_relayed;
 
@@ -559,11 +683,11 @@ relay_command_to_string(uint8_t command)
  * If you can't send the cell, mark the circuit for close and return -1. Else
  * return 0.
  */
-int
-relay_send_command_from_edge_(streamid_t stream_id, circuit_t *circ,
-                              uint8_t relay_command, const char *payload,
-                              size_t payload_len, crypt_path_t *cpath_layer,
-                              const char *filename, int lineno)
+MOCK_IMPL(int,
+relay_send_command_from_edge_,(streamid_t stream_id, circuit_t *circ,
+                               uint8_t relay_command, const char *payload,
+                               size_t payload_len, crypt_path_t *cpath_layer,
+                               const char *filename, int lineno))
 {
   cell_t cell;
   relay_header_t rh;
@@ -575,14 +699,14 @@ relay_send_command_from_edge_(streamid_t stream_id, circuit_t *circ,
 
   memset(&cell, 0, sizeof(cell_t));
   cell.command = CELL_RELAY;
-  if (cpath_layer) {
+  if (CIRCUIT_IS_ORIGIN(circ)) {
+    tor_assert(cpath_layer);
     cell.circ_id = circ->n_circ_id;
     cell_direction = CELL_DIRECTION_OUT;
-  } else if (! CIRCUIT_IS_ORIGIN(circ)) {
+  } else {
+    tor_assert(! cpath_layer);
     cell.circ_id = TO_OR_CIRCUIT(circ)->p_circ_id;
     cell_direction = CELL_DIRECTION_IN;
-  } else {
-    return -1;
   }
 
   memset(&rh, 0, sizeof(rh));
@@ -595,6 +719,9 @@ relay_send_command_from_edge_(streamid_t stream_id, circuit_t *circ,
 
   log_debug(LD_OR,"delivering %d cell %s.", relay_command,
             cell_direction == CELL_DIRECTION_OUT ? "forward" : "backward");
+
+  if (relay_command == RELAY_COMMAND_DROP)
+    rep_hist_padding_count_write(PADDING_TYPE_DROP);
 
   /* If we are sending an END cell and this circuit is used for a tunneled
    * directory request, advance its state. */
@@ -695,6 +822,22 @@ connection_edge_send_command(edge_connection_t *fromconn,
     }
     return -1;
   }
+
+  if (circ->marked_for_close) {
+    /* The circuit has been marked, but not freed yet. When it's freed, it
+     * will mark this connection for close. */
+    return -1;
+  }
+
+#ifdef MEASUREMENTS_21206
+  /* Keep track of the number of RELAY_DATA cells sent for directory
+   * connections. */
+  connection_t *linked_conn = TO_CONN(fromconn)->linked_conn;
+
+  if (linked_conn && linked_conn->type == CONN_TYPE_DIR) {
+    ++(TO_DIR_CONN(linked_conn)->data_cells_sent);
+  }
+#endif /* defined(MEASUREMENTS_21206) */
 
   return relay_send_command_from_edge(fromconn->stream_id, circ,
                                       relay_command, payload,
@@ -859,6 +1002,7 @@ connection_ap_process_end_not_open(
           break; /* break means it'll close, below */
         /* Else fall through: expire this circuit, clear the
          * chosen_exit_name field, and try again. */
+        /* Falls through. */
       case END_STREAM_REASON_RESOLVEFAILED:
       case END_STREAM_REASON_TIMEOUT:
       case END_STREAM_REASON_MISC:
@@ -1345,8 +1489,9 @@ connection_edge_process_relay_cell_not_open(
     circuit_log_path(LOG_INFO,LD_APP,TO_ORIGIN_CIRCUIT(circ));
     /* don't send a socks reply to transparent conns */
     tor_assert(entry_conn->socks_request != NULL);
-    if (!entry_conn->socks_request->has_finished)
+    if (!entry_conn->socks_request->has_finished) {
       connection_ap_handshake_socks_reply(entry_conn, NULL, 0, 0);
+    }
 
     /* Was it a linked dir conn? If so, a dir request just started to
      * fetch something; this could be a bootstrap status milestone. */
@@ -1477,6 +1622,7 @@ connection_edge_process_relay_cell(cell_t *cell, circuit_t *circ,
 
   switch (rh.command) {
     case RELAY_COMMAND_DROP:
+      rep_hist_padding_count_read(PADDING_TYPE_DROP);
 //      log_info(domain,"Got a relay-level padding cell. Dropping.");
       return 0;
     case RELAY_COMMAND_BEGIN:
@@ -1499,7 +1645,8 @@ connection_edge_process_relay_cell(cell_t *cell, circuit_t *circ,
                "Begin cell for known stream. Dropping.");
         return 0;
       }
-      if (rh.command == RELAY_COMMAND_BEGIN_DIR) {
+      if (rh.command == RELAY_COMMAND_BEGIN_DIR &&
+          circ->purpose != CIRCUIT_PURPOSE_S_REND_JOINED) {
         /* Assign this circuit and its app-ward OR connection a unique ID,
          * so that we can measure download times. The local edge and dir
          * connection will be assigned the same ID when they are created
@@ -1546,8 +1693,18 @@ connection_edge_process_relay_cell(cell_t *cell, circuit_t *circ,
       }
 
       stats_n_data_bytes_received += rh.length;
-      connection_write_to_buf((char*)(cell->payload + RELAY_HEADER_SIZE),
+      connection_buf_add((char*)(cell->payload + RELAY_HEADER_SIZE),
                               rh.length, TO_CONN(conn));
+
+#ifdef MEASUREMENTS_21206
+      /* Count number of RELAY_DATA cells received on a linked directory
+       * connection. */
+      connection_t *linked_conn = TO_CONN(conn)->linked_conn;
+
+      if (linked_conn && linked_conn->type == CONN_TYPE_DIR) {
+        ++(TO_DIR_CONN(linked_conn)->data_cells_received);
+      }
+#endif /* defined(MEASUREMENTS_21206) */
 
       if (!optimistic_data) {
         /* Only send a SENDME if we're not getting optimistic data; otherwise
@@ -1904,13 +2061,13 @@ connection_edge_package_raw_inbuf(edge_connection_t *conn, int package_partial,
     /* XXXX We could be more efficient here by sometimes packing
      * previously-sent optimistic data in the same cell with data
      * from the inbuf. */
-    fetch_from_buf(payload, length, entry_conn->sending_optimistic_data);
+    buf_get_bytes(entry_conn->sending_optimistic_data, payload, length);
     if (!buf_datalen(entry_conn->sending_optimistic_data)) {
         buf_free(entry_conn->sending_optimistic_data);
         entry_conn->sending_optimistic_data = NULL;
     }
   } else {
-    connection_fetch_from_buf(payload, length, TO_CONN(conn));
+    connection_buf_get_bytes(payload, length, TO_CONN(conn));
   }
 
   log_debug(domain,TOR_SOCKET_T_FORMAT": Packaging %d bytes (%d waiting).",
@@ -1922,7 +2079,7 @@ connection_edge_package_raw_inbuf(edge_connection_t *conn, int package_partial,
        retry */
     if (!entry_conn->pending_optimistic_data)
       entry_conn->pending_optimistic_data = buf_new();
-    write_to_buf(payload, length, entry_conn->pending_optimistic_data);
+    buf_add(entry_conn->pending_optimistic_data, payload, length);
   }
 
   if (connection_edge_send_command(conn, RELAY_COMMAND_DATA,
@@ -2245,7 +2402,7 @@ circuit_consider_sending_sendme(circuit_t *circ, crypt_path_t *layer_hint)
      assert_circuit_mux_okay(chan)
 #else
 #define assert_cmux_ok_paranoid(chan)
-#endif
+#endif /* defined(ACTIVE_CIRCUITS_PARANOIA) */
 
 /** The total number of cells we have allocated. */
 static size_t total_cells_allocated = 0;
@@ -2364,6 +2521,72 @@ cell_queue_pop(cell_queue_t *queue)
   return cell;
 }
 
+/** Initialize <b>queue</b> as an empty cell queue. */
+void
+destroy_cell_queue_init(destroy_cell_queue_t *queue)
+{
+  memset(queue, 0, sizeof(destroy_cell_queue_t));
+  TOR_SIMPLEQ_INIT(&queue->head);
+}
+
+/** Remove and free every cell in <b>queue</b>. */
+void
+destroy_cell_queue_clear(destroy_cell_queue_t *queue)
+{
+  destroy_cell_t *cell;
+  while ((cell = TOR_SIMPLEQ_FIRST(&queue->head))) {
+    TOR_SIMPLEQ_REMOVE_HEAD(&queue->head, next);
+    tor_free(cell);
+  }
+  TOR_SIMPLEQ_INIT(&queue->head);
+  queue->n = 0;
+}
+
+/** Extract and return the cell at the head of <b>queue</b>; return NULL if
+ * <b>queue</b> is empty. */
+STATIC destroy_cell_t *
+destroy_cell_queue_pop(destroy_cell_queue_t *queue)
+{
+  destroy_cell_t *cell = TOR_SIMPLEQ_FIRST(&queue->head);
+  if (!cell)
+    return NULL;
+  TOR_SIMPLEQ_REMOVE_HEAD(&queue->head, next);
+  --queue->n;
+  return cell;
+}
+
+/** Append a destroy cell for <b>circid</b> to <b>queue</b>. */
+void
+destroy_cell_queue_append(destroy_cell_queue_t *queue,
+                          circid_t circid,
+                          uint8_t reason)
+{
+  destroy_cell_t *cell = tor_malloc_zero(sizeof(destroy_cell_t));
+  cell->circid = circid;
+  cell->reason = reason;
+  /* Not yet used, but will be required for OOM handling. */
+  cell->inserted_time = (uint32_t) monotime_coarse_absolute_msec();
+
+  TOR_SIMPLEQ_INSERT_TAIL(&queue->head, cell, next);
+  ++queue->n;
+}
+
+/** Convert a destroy_cell_t to a newly allocated cell_t. Frees its input. */
+static packed_cell_t *
+destroy_cell_to_packed_cell(destroy_cell_t *inp, int wide_circ_ids)
+{
+  packed_cell_t *packed = packed_cell_new();
+  cell_t cell;
+  memset(&cell, 0, sizeof(cell));
+  cell.circ_id = inp->circid;
+  cell.command = CELL_DESTROY;
+  cell.payload[0] = inp->reason;
+  cell_pack(packed, &cell, wide_circ_ids);
+
+  tor_free(inp);
+  return packed;
+}
+
 /** Return the total number of bytes used for each packed_cell in a queue.
  * Approximate. */
 size_t
@@ -2390,23 +2613,31 @@ static time_t last_time_under_memory_pressure = 0;
 STATIC int
 cell_queues_check_size(void)
 {
+  time_t now = time(NULL);
   size_t alloc = cell_queues_get_total_allocation();
   alloc += buf_get_total_allocation();
-  alloc += tor_zlib_get_total_allocation();
+  alloc += tor_compress_get_total_allocation();
   const size_t rend_cache_total = rend_cache_get_total_allocation();
   alloc += rend_cache_total;
+  const size_t geoip_client_cache_total =
+    geoip_client_cache_total_allocation();
+  alloc += geoip_client_cache_total;
   if (alloc >= get_options()->MaxMemInQueues_low_threshold) {
     last_time_under_memory_pressure = approx_time();
     if (alloc >= get_options()->MaxMemInQueues) {
       /* If we're spending over 20% of the memory limit on hidden service
-       * descriptors, free them until we're down to 10%.
-       */
+       * descriptors, free them until we're down to 10%. Do the same for geoip
+       * client cache. */
       if (rend_cache_total > get_options()->MaxMemInQueues / 5) {
         const size_t bytes_to_remove =
           rend_cache_total - (size_t)(get_options()->MaxMemInQueues / 10);
-        rend_cache_clean_v2_descs_as_dir(time(NULL), bytes_to_remove);
-        alloc -= rend_cache_total;
-        alloc += rend_cache_get_total_allocation();
+        alloc -= hs_cache_handle_oom(time(NULL), bytes_to_remove);
+      }
+      if (geoip_client_cache_total > get_options()->MaxMemInQueues / 5) {
+        const size_t bytes_to_remove =
+          geoip_client_cache_total -
+          (size_t)(get_options()->MaxMemInQueues / 10);
+        alloc -= geoip_client_cache_handle_oom(now, bytes_to_remove);
       }
       circuits_handle_oom(alloc);
       return 1;
@@ -2573,7 +2804,8 @@ channel_flush_from_first_active_circuit, (channel_t *chan, int max))
 {
   circuitmux_t *cmux = NULL;
   int n_flushed = 0;
-  cell_queue_t *queue, *destroy_queue=NULL;
+  cell_queue_t *queue;
+  destroy_cell_queue_t *destroy_queue=NULL;
   circuit_t *circ;
   or_circuit_t *or_circ;
   int streams_blocked;
@@ -2588,9 +2820,17 @@ channel_flush_from_first_active_circuit, (channel_t *chan, int max))
   while (n_flushed < max) {
     circ = circuitmux_get_first_active_circuit(cmux, &destroy_queue);
     if (destroy_queue) {
+      destroy_cell_t *dcell;
       /* this code is duplicated from some of the logic below. Ugly! XXXX */
+      /* If we are given a destroy_queue here, then it is required to be
+       * nonempty... */
       tor_assert(destroy_queue->n > 0);
-      cell = cell_queue_pop(destroy_queue);
+      dcell = destroy_cell_queue_pop(destroy_queue);
+      /* ...and pop() will always yield a cell from a nonempty queue. */
+      tor_assert(dcell);
+      /* frees dcell */
+      cell = destroy_cell_to_packed_cell(dcell, chan->wide_circ_ids);
+      /* frees cell */
       channel_write_packed_cell(chan, cell);
       /* Update the cmux destroy counter */
       circuitmux_notify_xmit_destroy(cmux);
@@ -2715,7 +2955,7 @@ get_max_middle_cells(void)
 {
   return ORCIRC_MAX_MIDDLE_CELLS;
 }
-#endif
+#endif /* 0 */
 
 /** Add <b>cell</b> to the queue of <b>circ</b> writing to <b>chan</b>
  * transmitting in <b>direction</b>. */
@@ -2825,7 +3065,7 @@ append_cell_to_circuit_queue(circuit_t *circ, channel_t *chan,
       }
     }
   }
-#endif
+#endif /* 0 */
 
   cell_queue_append_packed_copy(circ, queue, exitward, cell,
                                 chan->wide_circ_ids, 1);

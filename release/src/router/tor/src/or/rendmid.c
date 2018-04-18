@@ -1,5 +1,5 @@
 /* Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -8,19 +8,24 @@
  **/
 
 #include "or.h"
+#include "channel.h"
 #include "circuitlist.h"
 #include "circuituse.h"
 #include "config.h"
+#include "crypto.h"
+#include "dos.h"
 #include "relay.h"
 #include "rendmid.h"
 #include "rephist.h"
+#include "hs_circuitmap.h"
+#include "hs_intropoint.h"
 
 /** Respond to an ESTABLISH_INTRO cell by checking the signed data and
  * setting the circuit's purpose and service pk digest.
  */
 int
-rend_mid_establish_intro(or_circuit_t *circ, const uint8_t *request,
-                         size_t request_len)
+rend_mid_establish_intro_legacy(or_circuit_t *circ, const uint8_t *request,
+                                size_t request_len)
 {
   crypto_pk_t *pk = NULL;
   char buf[DIGEST_LEN+9];
@@ -32,15 +37,14 @@ rend_mid_establish_intro(or_circuit_t *circ, const uint8_t *request,
   int reason = END_CIRC_REASON_INTERNAL;
 
   log_info(LD_REND,
-           "Received an ESTABLISH_INTRO request on circuit %u",
+           "Received a legacy ESTABLISH_INTRO request on circuit %u",
            (unsigned) circ->p_circ_id);
 
-  if (circ->base_.purpose != CIRCUIT_PURPOSE_OR || circ->base_.n_chan) {
-    log_fn(LOG_PROTOCOL_WARN, LD_PROTOCOL,
-         "Rejecting ESTABLISH_INTRO on non-OR or non-edge circuit.");
+  if (!hs_intro_circuit_is_suitable_for_establish_intro(circ)) {
     reason = END_CIRC_REASON_TORPROTOCOL;
     goto err;
   }
+
   if (request_len < 2+DIGEST_LEN)
     goto truncated;
   /* First 2 bytes: length of asn1-encoded key. */
@@ -69,7 +73,6 @@ rend_mid_establish_intro(or_circuit_t *circ, const uint8_t *request,
     goto err;
   }
   /* Rest of body: signature of previous data */
-  note_crypto_pk_op(REND_MID);
   if (crypto_pk_public_checksig_digest(pk,
                                        (char*)request, 2+asn1len+DIGEST_LEN,
                                        (char*)(request+2+DIGEST_LEN+asn1len),
@@ -94,7 +97,8 @@ rend_mid_establish_intro(or_circuit_t *circ, const uint8_t *request,
 
   /* Close any other intro circuits with the same pk. */
   c = NULL;
-  while ((c = circuit_get_intro_point((const uint8_t *)pk_digest))) {
+  while ((c = hs_circuitmap_get_intro_circ_v2_relay_side(
+                                                (const uint8_t *)pk_digest))) {
     log_info(LD_REND, "Replacing old circuit for service %s",
              safe_str(serviceid));
     circuit_mark_for_close(TO_CIRCUIT(c), END_CIRC_REASON_FINISHED);
@@ -102,16 +106,14 @@ rend_mid_establish_intro(or_circuit_t *circ, const uint8_t *request,
   }
 
   /* Acknowledge the request. */
-  if (relay_send_command_from_edge(0, TO_CIRCUIT(circ),
-                                   RELAY_COMMAND_INTRO_ESTABLISHED,
-                                   "", 0, NULL)<0) {
+  if (hs_intro_send_intro_established_cell(circ) < 0) {
     log_info(LD_GENERAL, "Couldn't send INTRO_ESTABLISHED cell.");
-    goto err;
+    goto err_no_close;
   }
 
   /* Now, set up this circuit. */
   circuit_change_purpose(TO_CIRCUIT(circ), CIRCUIT_PURPOSE_INTRO_POINT);
-  circuit_set_intro_point_digest(circ, (uint8_t *)pk_digest);
+  hs_circuitmap_register_intro_circ_v2_relay_side(circ, (uint8_t *)pk_digest);
 
   log_info(LD_REND,
            "Established introduction point on circuit %u for service %s",
@@ -122,8 +124,9 @@ rend_mid_establish_intro(or_circuit_t *circ, const uint8_t *request,
   log_warn(LD_PROTOCOL, "Rejecting truncated ESTABLISH_INTRO cell.");
   reason = END_CIRC_REASON_TORPROTOCOL;
  err:
-  if (pk) crypto_pk_free(pk);
   circuit_mark_for_close(TO_CIRCUIT(circ), reason);
+ err_no_close:
+  if (pk) crypto_pk_free(pk);
   return -1;
 }
 
@@ -132,8 +135,8 @@ rend_mid_establish_intro(or_circuit_t *circ, const uint8_t *request,
  * INTRODUCE2 cell.
  */
 int
-rend_mid_introduce(or_circuit_t *circ, const uint8_t *request,
-                   size_t request_len)
+rend_mid_introduce_legacy(or_circuit_t *circ, const uint8_t *request,
+                          size_t request_len)
 {
   or_circuit_t *intro_circ;
   char serviceid[REND_SERVICE_ID_LEN_BASE32+1];
@@ -142,26 +145,10 @@ rend_mid_introduce(or_circuit_t *circ, const uint8_t *request,
   log_info(LD_REND, "Received an INTRODUCE1 request on circuit %u",
            (unsigned)circ->p_circ_id);
 
-  if (circ->base_.purpose != CIRCUIT_PURPOSE_OR || circ->base_.n_chan) {
-    log_warn(LD_PROTOCOL,
-             "Rejecting INTRODUCE1 on non-OR or non-edge circuit %u.",
-             (unsigned)circ->p_circ_id);
-    goto err;
-  }
-
-  /* We have already done an introduction on this circuit but we just
-     received a request for another one. We block it since this might
-     be an attempt to DoS a hidden service (#15515). */
-  if (circ->already_received_introduce1) {
-    log_fn(LOG_PROTOCOL_WARN, LD_REND,
-           "Blocking multiple introductions on the same circuit. "
-           "Someone might be trying to attack a hidden service through "
-           "this relay.");
-    circuit_mark_for_close(TO_CIRCUIT(circ), END_CIRC_REASON_TORPROTOCOL);
-    return -1;
-  }
-
-  circ->already_received_introduce1 = 1;
+  /* At this point, we know that the circuit is valid for an INTRODUCE1
+   * because the validation has been made before calling this function. */
+  tor_assert(circ->base_.purpose == CIRCUIT_PURPOSE_OR);
+  tor_assert(!circ->base_.n_chan);
 
   /* We could change this to MAX_HEX_NICKNAME_LEN now that 0.0.9.x is
    * obsolete; however, there isn't much reason to do so, and we're going
@@ -180,7 +167,8 @@ rend_mid_introduce(or_circuit_t *circ, const uint8_t *request,
 
   /* The first 20 bytes are all we look at: they have a hash of the service's
    * PK. */
-  intro_circ = circuit_get_intro_point((const uint8_t*)request);
+  intro_circ = hs_circuitmap_get_intro_circ_v2_relay_side(
+                                                      (const uint8_t*)request);
   if (!intro_circ) {
     log_info(LD_REND,
              "No intro circ found for INTRODUCE1 cell (%s) from circuit %u; "
@@ -201,14 +189,15 @@ rend_mid_introduce(or_circuit_t *circ, const uint8_t *request,
                                    (char*)request, request_len, NULL)) {
     log_warn(LD_GENERAL,
              "Unable to send INTRODUCE2 cell to Tor client.");
-    goto err;
+    /* Stop right now, the circuit has been closed. */
+    return -1;
   }
   /* And send an ack down the client's circuit.  Empty body means succeeded. */
   if (relay_send_command_from_edge(0,TO_CIRCUIT(circ),
                                    RELAY_COMMAND_INTRODUCE_ACK,
                                    NULL,0,NULL)) {
     log_warn(LD_GENERAL, "Unable to send INTRODUCE_ACK cell to Tor client.");
-    circuit_mark_for_close(TO_CIRCUIT(circ), END_CIRC_REASON_INTERNAL);
+    /* Stop right now, the circuit has been closed. */
     return -1;
   }
 
@@ -220,8 +209,6 @@ rend_mid_introduce(or_circuit_t *circ, const uint8_t *request,
                                    RELAY_COMMAND_INTRODUCE_ACK,
                                    nak_body, 1, NULL)) {
     log_warn(LD_GENERAL, "Unable to send NAK to Tor client.");
-    /* Is this right? */
-    circuit_mark_for_close(TO_CIRCUIT(circ), END_CIRC_REASON_INTERNAL);
   }
   return -1;
 }
@@ -246,6 +233,16 @@ rend_mid_establish_rendezvous(or_circuit_t *circ, const uint8_t *request,
     goto err;
   }
 
+  /* Check if we are configured to accept established rendezvous cells from
+   * client or in other words tor2web clients. */
+  if (channel_is_client(circ->p_chan) &&
+      dos_should_refuse_single_hop_client()) {
+    /* Note it down for the heartbeat log purposes. */
+    dos_note_refuse_single_hop_client();
+    /* Silent drop so the client has to time out before moving on. */
+    return 0;
+  }
+
   if (circ->base_.n_chan) {
     log_warn(LD_PROTOCOL,
              "Tried to establish rendezvous on non-edge circuit");
@@ -258,7 +255,7 @@ rend_mid_establish_rendezvous(or_circuit_t *circ, const uint8_t *request,
     goto err;
   }
 
-  if (circuit_get_rendezvous(request)) {
+  if (hs_circuitmap_get_rend_circ_relay_side(request)) {
     log_warn(LD_PROTOCOL,
              "Duplicate rendezvous cookie in ESTABLISH_RENDEZVOUS.");
     goto err;
@@ -269,12 +266,12 @@ rend_mid_establish_rendezvous(or_circuit_t *circ, const uint8_t *request,
                                    RELAY_COMMAND_RENDEZVOUS_ESTABLISHED,
                                    "", 0, NULL)<0) {
     log_warn(LD_PROTOCOL, "Couldn't send RENDEZVOUS_ESTABLISHED cell.");
-    reason = END_CIRC_REASON_INTERNAL;
-    goto err;
+    /* Stop right now, the circuit has been closed. */
+    return -1;
   }
 
   circuit_change_purpose(TO_CIRCUIT(circ), CIRCUIT_PURPOSE_REND_POINT_WAITING);
-  circuit_set_rendezvous_cookie(circ, request);
+  hs_circuitmap_register_rend_circ_relay_side(circ, request);
 
   base16_encode(hexid,9,(char*)request,4);
 
@@ -323,7 +320,7 @@ rend_mid_rendezvous(or_circuit_t *circ, const uint8_t *request,
            "Got request for rendezvous from circuit %u to cookie %s.",
            (unsigned)circ->p_circ_id, hexid);
 
-  rend_circ = circuit_get_rendezvous(request);
+  rend_circ = hs_circuitmap_get_rend_circ_relay_side(request);
   if (!rend_circ) {
     log_fn(LOG_PROTOCOL_WARN, LD_PROTOCOL,
          "Rejecting RENDEZVOUS1 cell with unrecognized rendezvous cookie %s.",
@@ -346,7 +343,8 @@ rend_mid_rendezvous(or_circuit_t *circ, const uint8_t *request,
     log_warn(LD_GENERAL,
              "Unable to send RENDEZVOUS2 cell to client on circuit %u.",
              (unsigned)rend_circ->p_circ_id);
-    goto err;
+    /* Stop right now, the circuit has been closed. */
+    return -1;
   }
 
   /* Join the circuits. */
@@ -357,7 +355,7 @@ rend_mid_rendezvous(or_circuit_t *circ, const uint8_t *request,
   circuit_change_purpose(TO_CIRCUIT(circ), CIRCUIT_PURPOSE_REND_ESTABLISHED);
   circuit_change_purpose(TO_CIRCUIT(rend_circ),
                          CIRCUIT_PURPOSE_REND_ESTABLISHED);
-  circuit_set_rendezvous_cookie(circ, NULL);
+  hs_circuitmap_remove_circuit(TO_CIRCUIT(circ));
 
   rend_circ->rend_splice = circ;
   circ->rend_splice = rend_circ;

@@ -36,7 +36,7 @@ const char *s = NULL;
     sum += (unsigned char)buf[i];                                       \
   }
 
-#ifdef __OpenBSD__
+#ifdef OpenBSD
 /* Disable some of OpenBSD's malloc protections for this test. This helps
  * us do bad things, such as access freed buffers, without crashing. */
 const char *malloc_options="sufjj";
@@ -82,7 +82,7 @@ static unsigned
 check_a_buffer(void)
 {
   unsigned int i;
-  volatile char buf[1024];
+  volatile char buf[BUF_LEN];
   unsigned sum = 0;
 
   /* See if this buffer has the string in it.

@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2016, The Tor Project, Inc. */
+/* Copyright (c) 2011-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -91,13 +91,13 @@
 
 #define PT_PRIVATE
 #include "or.h"
+#include "bridges.h"
 #include "config.h"
 #include "circuitbuild.h"
 #include "transports.h"
 #include "util.h"
 #include "router.h"
 #include "statefile.h"
-#include "entrynodes.h"
 #include "connection_or.h"
 #include "ext_orport.h"
 #include "control.h"
@@ -430,7 +430,7 @@ add_transport_to_proxy(const char *transport, managed_proxy_t *mp)
 {
   tor_assert(mp->transports_to_launch);
   if (!smartlist_contains_string(mp->transports_to_launch, transport))
-    smartlist_add(mp->transports_to_launch, tor_strdup(transport));
+    smartlist_add_strdup(mp->transports_to_launch, transport);
 }
 
 /** Called when a SIGHUP occurs. Returns true if managed proxy
@@ -480,7 +480,6 @@ proxy_needs_restart(const managed_proxy_t *mp)
  *  preparations and then flag its state so that it will be relaunched
  *  in the next tick. */
 static void
-
 proxy_prepare_for_restart(managed_proxy_t *mp)
 {
   transport_t *t_tmp = NULL;
@@ -528,12 +527,12 @@ launch_managed_proxy(managed_proxy_t *mp)
                                 (const char **)mp->argv,
                                 env,
                                 &mp->process_handle);
-#else
+#else /* !(defined(_WIN32)) */
   retval = tor_spawn_background(mp->argv[0],
                                 (const char **)mp->argv,
                                 env,
                                 &mp->process_handle);
-#endif
+#endif /* defined(_WIN32) */
 
   process_environment_free(env);
 
@@ -1095,8 +1094,6 @@ parse_smethod_line(const char *line, managed_proxy_t *mp)
 
   transport = transport_new(&tor_addr, port, method_name,
                             PROXY_NONE, args_string);
-  if (!transport)
-    goto err;
 
   smartlist_add(mp->transports, transport);
 
@@ -1187,8 +1184,6 @@ parse_cmethod_line(const char *line, managed_proxy_t *mp)
   }
 
   transport = transport_new(&tor_addr, port, method_name, socks_ver, NULL);
-  if (!transport)
-    goto err;
 
   smartlist_add(mp->transports, transport);
 
@@ -1322,7 +1317,7 @@ create_managed_proxy_environment(const managed_proxy_t *mp)
     tor_free(state_tmp);
   }
 
-  smartlist_add(envs, tor_strdup("TOR_PT_MANAGED_TRANSPORT_VER=1"));
+  smartlist_add_strdup(envs, "TOR_PT_MANAGED_TRANSPORT_VER=1");
 
   {
     char *transports_to_launch =

@@ -1,7 +1,7 @@
 /* Copyright (c) 2001, Matej Pfajfar.
  * Copyright (c) 2001-2004, Roger Dingledine.
  * Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -444,11 +444,11 @@ logfile_deliver(logfile_t *lf, const char *buf, size_t msg_len,
     if (m != msg_after_prefix) {
       tor_free(m);
     }
-#else
+#else /* !(defined(MAXLINE)) */
     /* We have syslog but not MAXLINE.  That's promising! */
     syslog(severity, "%s", msg_after_prefix);
-#endif
-#endif
+#endif /* defined(MAXLINE) */
+#endif /* defined(HAVE_SYSLOG_H) */
   } else if (lf->callback) {
     if (domain & LD_NOCB) {
       if (!*callbacks_deferred && pending_cb_messages) {
@@ -682,7 +682,7 @@ tor_log_get_logfile_names(smartlist_t *out)
       continue;
     if (lf->filename == NULL)
       continue;
-    smartlist_add(out, tor_strdup(lf->filename));
+    smartlist_add_strdup(out, lf->filename);
   }
 
   UNLOCK_LOGS();
@@ -807,7 +807,7 @@ close_log(logfile_t *victim)
       /* There are no other syslogs; close the logging facility. */
       closelog();
     }
-#endif
+#endif /* defined(HAVE_SYSLOG_H) */
   }
 }
 
@@ -1086,7 +1086,7 @@ add_file_log(const log_severity_list_t *severity, const char *filename,
   int open_flags = O_WRONLY|O_CREAT;
   open_flags |= truncate_log ? O_TRUNC : O_APPEND;
 
-  fd = tor_open_cloexec(filename, open_flags, 0644);
+  fd = tor_open_cloexec(filename, open_flags, 0640);
   if (fd<0)
     return -1;
   if (tor_fd_seekend(fd)<0) {
@@ -1144,7 +1144,7 @@ add_syslog_log(const log_severity_list_t *severity,
   UNLOCK_LOGS();
   return 0;
 }
-#endif
+#endif /* defined(HAVE_SYSLOG_H) */
 
 /** If <b>level</b> is a valid log severity, return the corresponding
  * numeric value.  Otherwise, return -1. */
@@ -1177,7 +1177,7 @@ static const char *domain_list[] = {
   "GENERAL", "CRYPTO", "NET", "CONFIG", "FS", "PROTOCOL", "MM",
   "HTTP", "APP", "CONTROL", "CIRC", "REND", "BUG", "DIR", "DIRSERV",
   "OR", "EDGE", "ACCT", "HIST", "HANDSHAKE", "HEARTBEAT", "CHANNEL",
-  "SCHED", NULL
+  "SCHED", "GUARD", "CONSDIFF", "DOS", NULL
 };
 
 /** Return a bitmask for the log domain for which <b>domain</b> is the name,
@@ -1319,10 +1319,8 @@ parse_log_severity_config(const char **cfg_ptr,
     if (got_an_unqualified_range > 1)
       return -1;
 
-    space = strchr(cfg, ' ');
+    space = find_whitespace(cfg);
     dash = strchr(cfg, '-');
-    if (!space)
-      space = strchr(cfg, '\0');
     if (dash && dash < space) {
       sev_lo = tor_strndup(cfg, dash-cfg);
       sev_hi = tor_strndup(dash+1, space-(dash+1));

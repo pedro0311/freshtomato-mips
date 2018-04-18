@@ -1,7 +1,7 @@
 /* Copyright (c) 2001 Matej Pfajfar.
  * Copyright (c) 2001-2004, Roger Dingledine.
  * Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -60,6 +60,7 @@
 #include "circuitstats.h"
 #include "dirserv.h"
 #include "dirvote.h"
+#include "parsecommon.h"
 #include "policies.h"
 #include "protover.h"
 #include "rendcommon.h"
@@ -80,267 +81,6 @@
 #include <math.h>
 
 /****************************************************************************/
-
-/** Enumeration of possible token types.  The ones starting with K_ correspond
- * to directory 'keywords'. A_ is for an annotation, R or C is related to
- * hidden services, ERR_ is an error in the tokenizing process, EOF_ is an
- * end-of-file marker, and NIL_ is used to encode not-a-token.
- */
-typedef enum {
-  K_ACCEPT = 0,
-  K_ACCEPT6,
-  K_DIRECTORY_SIGNATURE,
-  K_RECOMMENDED_SOFTWARE,
-  K_REJECT,
-  K_REJECT6,
-  K_ROUTER,
-  K_SIGNED_DIRECTORY,
-  K_SIGNING_KEY,
-  K_ONION_KEY,
-  K_ONION_KEY_NTOR,
-  K_ROUTER_SIGNATURE,
-  K_PUBLISHED,
-  K_RUNNING_ROUTERS,
-  K_ROUTER_STATUS,
-  K_PLATFORM,
-  K_PROTO,
-  K_OPT,
-  K_BANDWIDTH,
-  K_CONTACT,
-  K_NETWORK_STATUS,
-  K_UPTIME,
-  K_DIR_SIGNING_KEY,
-  K_FAMILY,
-  K_FINGERPRINT,
-  K_HIBERNATING,
-  K_READ_HISTORY,
-  K_WRITE_HISTORY,
-  K_NETWORK_STATUS_VERSION,
-  K_DIR_SOURCE,
-  K_DIR_OPTIONS,
-  K_CLIENT_VERSIONS,
-  K_SERVER_VERSIONS,
-  K_RECOMMENDED_CLIENT_PROTOCOLS,
-  K_RECOMMENDED_RELAY_PROTOCOLS,
-  K_REQUIRED_CLIENT_PROTOCOLS,
-  K_REQUIRED_RELAY_PROTOCOLS,
-  K_OR_ADDRESS,
-  K_ID,
-  K_P,
-  K_P6,
-  K_R,
-  K_A,
-  K_S,
-  K_V,
-  K_W,
-  K_M,
-  K_EXTRA_INFO,
-  K_EXTRA_INFO_DIGEST,
-  K_CACHES_EXTRA_INFO,
-  K_HIDDEN_SERVICE_DIR,
-  K_ALLOW_SINGLE_HOP_EXITS,
-  K_IPV6_POLICY,
-  K_ROUTER_SIG_ED25519,
-  K_IDENTITY_ED25519,
-  K_MASTER_KEY_ED25519,
-  K_ONION_KEY_CROSSCERT,
-  K_NTOR_ONION_KEY_CROSSCERT,
-
-  K_DIRREQ_END,
-  K_DIRREQ_V2_IPS,
-  K_DIRREQ_V3_IPS,
-  K_DIRREQ_V2_REQS,
-  K_DIRREQ_V3_REQS,
-  K_DIRREQ_V2_SHARE,
-  K_DIRREQ_V3_SHARE,
-  K_DIRREQ_V2_RESP,
-  K_DIRREQ_V3_RESP,
-  K_DIRREQ_V2_DIR,
-  K_DIRREQ_V3_DIR,
-  K_DIRREQ_V2_TUN,
-  K_DIRREQ_V3_TUN,
-  K_ENTRY_END,
-  K_ENTRY_IPS,
-  K_CELL_END,
-  K_CELL_PROCESSED,
-  K_CELL_QUEUED,
-  K_CELL_TIME,
-  K_CELL_CIRCS,
-  K_EXIT_END,
-  K_EXIT_WRITTEN,
-  K_EXIT_READ,
-  K_EXIT_OPENED,
-
-  K_DIR_KEY_CERTIFICATE_VERSION,
-  K_DIR_IDENTITY_KEY,
-  K_DIR_KEY_PUBLISHED,
-  K_DIR_KEY_EXPIRES,
-  K_DIR_KEY_CERTIFICATION,
-  K_DIR_KEY_CROSSCERT,
-  K_DIR_ADDRESS,
-  K_DIR_TUNNELLED,
-
-  K_VOTE_STATUS,
-  K_VALID_AFTER,
-  K_FRESH_UNTIL,
-  K_VALID_UNTIL,
-  K_VOTING_DELAY,
-
-  K_KNOWN_FLAGS,
-  K_PARAMS,
-  K_BW_WEIGHTS,
-  K_VOTE_DIGEST,
-  K_CONSENSUS_DIGEST,
-  K_ADDITIONAL_DIGEST,
-  K_ADDITIONAL_SIGNATURE,
-  K_CONSENSUS_METHODS,
-  K_CONSENSUS_METHOD,
-  K_LEGACY_DIR_KEY,
-  K_DIRECTORY_FOOTER,
-  K_SIGNING_CERT_ED,
-  K_SR_FLAG,
-  K_COMMIT,
-  K_PREVIOUS_SRV,
-  K_CURRENT_SRV,
-  K_PACKAGE,
-
-  A_PURPOSE,
-  A_LAST_LISTED,
-  A_UNKNOWN_,
-
-  R_RENDEZVOUS_SERVICE_DESCRIPTOR,
-  R_VERSION,
-  R_PERMANENT_KEY,
-  R_SECRET_ID_PART,
-  R_PUBLICATION_TIME,
-  R_PROTOCOL_VERSIONS,
-  R_INTRODUCTION_POINTS,
-  R_SIGNATURE,
-
-  R_IPO_IDENTIFIER,
-  R_IPO_IP_ADDRESS,
-  R_IPO_ONION_PORT,
-  R_IPO_ONION_KEY,
-  R_IPO_SERVICE_KEY,
-
-  C_CLIENT_NAME,
-  C_DESCRIPTOR_COOKIE,
-  C_CLIENT_KEY,
-
-  ERR_,
-  EOF_,
-  NIL_
-} directory_keyword;
-
-#define MIN_ANNOTATION A_PURPOSE
-#define MAX_ANNOTATION A_UNKNOWN_
-
-/** Structure to hold a single directory token.
- *
- * We parse a directory by breaking it into "tokens", each consisting
- * of a keyword, a line full of arguments, and a binary object.  The
- * arguments and object are both optional, depending on the keyword
- * type.
- *
- * This structure is only allocated in memareas; do not allocate it on
- * the heap, or token_clear() won't work.
- */
-typedef struct directory_token_t {
-  directory_keyword tp;        /**< Type of the token. */
-  int n_args:30;               /**< Number of elements in args */
-  char **args;                 /**< Array of arguments from keyword line. */
-
-  char *object_type;           /**< -----BEGIN [object_type]-----*/
-  size_t object_size;          /**< Bytes in object_body */
-  char *object_body;           /**< Contents of object, base64-decoded. */
-
-  crypto_pk_t *key;        /**< For public keys only.  Heap-allocated. */
-
-  char *error;                 /**< For ERR_ tokens only. */
-} directory_token_t;
-
-/* ********************************************************************** */
-
-/** We use a table of rules to decide how to parse each token type. */
-
-/** Rules for whether the keyword needs an object. */
-typedef enum {
-  NO_OBJ,        /**< No object, ever. */
-  NEED_OBJ,      /**< Object is required. */
-  NEED_SKEY_1024,/**< Object is required, and must be a 1024 bit private key */
-  NEED_KEY_1024, /**< Object is required, and must be a 1024 bit public key */
-  NEED_KEY,      /**< Object is required, and must be a public key. */
-  OBJ_OK,        /**< Object is optional. */
-} obj_syntax;
-
-#define AT_START 1
-#define AT_END 2
-
-/** Determines the parsing rules for a single token type. */
-typedef struct token_rule_t {
-  /** The string value of the keyword identifying the type of item. */
-  const char *t;
-  /** The corresponding directory_keyword enum. */
-  directory_keyword v;
-  /** Minimum number of arguments for this item */
-  int min_args;
-  /** Maximum number of arguments for this item */
-  int max_args;
-  /** If true, we concatenate all arguments for this item into a single
-   * string. */
-  int concat_args;
-  /** Requirements on object syntax for this item. */
-  obj_syntax os;
-  /** Lowest number of times this item may appear in a document. */
-  int min_cnt;
-  /** Highest number of times this item may appear in a document. */
-  int max_cnt;
-  /** One or more of AT_START/AT_END to limit where the item may appear in a
-   * document. */
-  int pos;
-  /** True iff this token is an annotation. */
-  int is_annotation;
-} token_rule_t;
-
-/**
- * @name macros for defining token rules
- *
- * Helper macros to define token tables.  's' is a string, 't' is a
- * directory_keyword, 'a' is a trio of argument multiplicities, and 'o' is an
- * object syntax.
- */
-/**@{*/
-
-/** Appears to indicate the end of a table. */
-#define END_OF_TABLE { NULL, NIL_, 0,0,0, NO_OBJ, 0, INT_MAX, 0, 0 }
-/** An item with no restrictions: used for obsolete document types */
-#define T(s,t,a,o)    { s, t, a, o, 0, INT_MAX, 0, 0 }
-/** An item with no restrictions on multiplicity or location. */
-#define T0N(s,t,a,o)  { s, t, a, o, 0, INT_MAX, 0, 0 }
-/** An item that must appear exactly once */
-#define T1(s,t,a,o)   { s, t, a, o, 1, 1, 0, 0 }
-/** An item that must appear exactly once, at the start of the document */
-#define T1_START(s,t,a,o)   { s, t, a, o, 1, 1, AT_START, 0 }
-/** An item that must appear exactly once, at the end of the document */
-#define T1_END(s,t,a,o)   { s, t, a, o, 1, 1, AT_END, 0 }
-/** An item that must appear one or more times */
-#define T1N(s,t,a,o)  { s, t, a, o, 1, INT_MAX, 0, 0 }
-/** An item that must appear no more than once */
-#define T01(s,t,a,o)  { s, t, a, o, 0, 1, 0, 0 }
-/** An annotation that must appear no more than once */
-#define A01(s,t,a,o)  { s, t, a, o, 0, 1, 0, 1 }
-
-/** Argument multiplicity: any number of arguments. */
-#define ARGS        0,INT_MAX,0
-/** Argument multiplicity: no arguments. */
-#define NO_ARGS     0,0,0
-/** Argument multiplicity: concatenate all arguments. */
-#define CONCAT_ARGS 1,1,1
-/** Argument multiplicity: at least <b>n</b> arguments. */
-#define GE(n)       n,INT_MAX,0
-/** Argument multiplicity: exactly <b>n</b> arguments. */
-#define EQ(n)       n,n,0
-/**@}*/
 
 /** List of tokens recognized in router descriptors */
 static token_rule_t routerdesc_token_table[] = {
@@ -619,6 +359,7 @@ static addr_policy_t *router_parse_addr_policy_private(directory_token_t *tok);
 static int router_get_hash_impl_helper(const char *s, size_t s_len,
                             const char *start_str,
                             const char *end_str, char end_c,
+                            int log_severity,
                             const char **start_out, const char **end_out);
 static int router_get_hash_impl(const char *s, size_t s_len, char *digest,
                                 const char *start_str, const char *end_str,
@@ -628,30 +369,9 @@ static int router_get_hashes_impl(const char *s, size_t s_len,
                                   common_digests_t *digests,
                                   const char *start_str, const char *end_str,
                                   char end_char);
-static void token_clear(directory_token_t *tok);
-static smartlist_t *find_all_by_keyword(smartlist_t *s, directory_keyword k);
 static smartlist_t *find_all_exitpolicy(smartlist_t *s);
-static directory_token_t *find_by_keyword_(smartlist_t *s,
-                                           directory_keyword keyword,
-                                           const char *keyword_str);
-#define find_by_keyword(s, keyword) find_by_keyword_((s), (keyword), #keyword)
-static directory_token_t *find_opt_by_keyword(smartlist_t *s,
-                                              directory_keyword keyword);
 
-#define TS_ANNOTATIONS_OK 1
-#define TS_NOCHECK 2
-#define TS_NO_NEW_ANNOTATIONS 4
-static int tokenize_string(memarea_t *area,
-                           const char *start, const char *end,
-                           smartlist_t *out,
-                           token_rule_t *table,
-                           int flags);
-static directory_token_t *get_next_token(memarea_t *area,
-                                         const char **s,
-                                         const char *eos,
-                                         token_rule_t *table);
-#define CST_CHECK_AUTHORITY   (1<<0)
-#define CST_NO_CHECK_OBJTYPE  (1<<1)
+#define CST_NO_CHECK_OBJTYPE  (1<<0)
 static int check_signature_token(const char *digest,
                                  ssize_t digest_len,
                                  directory_token_t *tok,
@@ -668,9 +388,9 @@ static int check_signature_token(const char *digest,
   log_debug(LD_MM, "Area for %s has %lu allocated; using %lu.",   \
             name, (unsigned long)alloc, (unsigned long)used);     \
   STMT_END
-#else
+#else /* !(defined(DEBUG_AREA_ALLOC)) */
 #define DUMP_AREA(a,name) STMT_NIL
-#endif
+#endif /* defined(DEBUG_AREA_ALLOC) */
 
 /* Dump mechanism for unparseable descriptors */
 
@@ -981,7 +701,7 @@ dump_desc_populate_one_file, (const char *dirname, const char *f))
     goto done;
     /* LCOV_EXCL_STOP */
   }
-#endif
+#endif /* SIZE_MAX > UINT64_MAX */
   if (BUG(st.st_size < 0)) {
     /* LCOV_EXCL_START
      * Should be impossible, since the OS isn't supposed to be b0rken. */
@@ -995,7 +715,7 @@ dump_desc_populate_one_file, (const char *dirname, const char *f))
    * filename.
    */
   if (crypto_digest256((char *)content_digest, desc, (size_t) st.st_size,
-                       DIGEST_SHA256) != 0) {
+                       DIGEST_SHA256) < 0) {
     /* Weird, but okay */
     log_info(LD_DIR,
              "Unable to hash content of %s from unparseable descriptors "
@@ -1144,8 +864,8 @@ dump_desc_populate_fifo_from_directory(const char *dirname)
  * type *<b>type</b> to file $DATADIR/unparseable-desc. Do not write more
  * than one descriptor to disk per minute. If there is already such a
  * file in the data directory, overwrite it. */
-STATIC void
-dump_desc(const char *desc, const char *type)
+MOCK_IMPL(STATIC void,
+dump_desc,(const char *desc, const char *type))
 {
   tor_assert(desc);
   tor_assert(type);
@@ -1159,7 +879,7 @@ dump_desc(const char *desc, const char *type)
   /* Get the hash for logging purposes anyway */
   len = strlen(desc);
   if (crypto_digest256((char *)digest_sha256, desc, len,
-                       DIGEST_SHA256) != 0) {
+                       DIGEST_SHA256) < 0) {
     log_info(LD_DIR,
              "Unable to parse descriptor of type %s, and unable to even hash"
              " it!", type);
@@ -1267,6 +987,41 @@ router_get_router_hash(const char *s, size_t s_len, char *digest)
   return router_get_hash_impl(s, s_len, digest,
                               "router ","\nrouter-signature", '\n',
                               DIGEST_SHA1);
+}
+
+/** Try to find the start and end of the signed portion of a networkstatus
+ * document in <b>s</b>. On success, set <b>start_out</b> to the first
+ * character of the document, and <b>end_out</b> to a position one after the
+ * final character of the signed document, and return 0.  On failure, return
+ * -1. */
+int
+router_get_networkstatus_v3_signed_boundaries(const char *s,
+                                              const char **start_out,
+                                              const char **end_out)
+{
+  return router_get_hash_impl_helper(s, strlen(s),
+                                     "network-status-version",
+                                     "\ndirectory-signature",
+                                     ' ', LOG_INFO,
+                                     start_out, end_out);
+}
+
+/** Set <b>digest_out</b> to the SHA3-256 digest of the signed portion of the
+ * networkstatus vote in <b>s</b> -- or of the entirety of <b>s</b> if no
+ * signed portion can be identified.  Return 0 on success, -1 on failure. */
+int
+router_get_networkstatus_v3_sha3_as_signed(uint8_t *digest_out,
+                                           const char *s)
+{
+  const char *start, *end;
+  if (router_get_networkstatus_v3_signed_boundaries(s, &start, &end) < 0) {
+    start = s;
+    end = s + strlen(s);
+  }
+  tor_assert(start);
+  tor_assert(end);
+  return crypto_digest256((char*)digest_out, start, end-start,
+                          DIGEST_SHA3_256);
 }
 
 /** Set <b>digests</b> to all the digests of the consensus document in
@@ -1453,28 +1208,15 @@ tor_version_is_obsolete(const char *myversion, const char *versionlist)
   return ret;
 }
 
-/** Return true iff <b>key</b> is allowed to sign directories.
- */
-static int
-dir_signing_key_is_trusted(crypto_pk_t *key)
+MOCK_IMPL(STATIC int,
+signed_digest_equals, (const uint8_t *d1, const uint8_t *d2, size_t len))
 {
-  char digest[DIGEST_LEN];
-  if (!key) return 0;
-  if (crypto_pk_get_digest(key, digest) < 0) {
-    log_warn(LD_DIR, "Error computing dir-signing-key digest");
-    return 0;
-  }
-  if (!router_digest_is_trusted_dir(digest)) {
-    log_warn(LD_DIR, "Listed dir-signing-key is not trusted");
-    return 0;
-  }
-  return 1;
+  return tor_memeq(d1, d2, len);
 }
 
 /** Check whether the object body of the token in <b>tok</b> has a good
- * signature for <b>digest</b> using key <b>pkey</b>.  If
- * <b>CST_CHECK_AUTHORITY</b> is set, make sure that <b>pkey</b> is the key of
- * a directory authority.  If <b>CST_NO_CHECK_OBJTYPE</b> is set, do not check
+ * signature for <b>digest</b> using key <b>pkey</b>.
+ * If <b>CST_NO_CHECK_OBJTYPE</b> is set, do not check
  * the object type of the signature object. Use <b>doctype</b> as the type of
  * the document when generating log messages.  Return 0 on success, negative
  * on failure.
@@ -1489,19 +1231,12 @@ check_signature_token(const char *digest,
 {
   char *signed_digest;
   size_t keysize;
-  const int check_authority = (flags & CST_CHECK_AUTHORITY);
   const int check_objtype = ! (flags & CST_NO_CHECK_OBJTYPE);
 
   tor_assert(pkey);
   tor_assert(tok);
   tor_assert(digest);
   tor_assert(doctype);
-
-  if (check_authority && !dir_signing_key_is_trusted(pkey)) {
-    log_warn(LD_DIR, "Key on %s did not come from an authority; rejecting",
-             doctype);
-    return -1;
-  }
 
   if (check_objtype) {
     if (strcmp(tok->object_type, "SIGNATURE")) {
@@ -1521,7 +1256,8 @@ check_signature_token(const char *digest,
   }
   //  log_debug(LD_DIR,"Signed %s hash starts %s", doctype,
   //            hex_str(signed_digest,4));
-  if (tor_memneq(digest, signed_digest, digest_len)) {
+  if (! signed_digest_equals((const uint8_t *)digest,
+                             (const uint8_t *)signed_digest, digest_len)) {
     log_warn(LD_DIR, "Error reading %s: signature does not match.", doctype);
     tor_free(signed_digest);
     return -1;
@@ -1689,9 +1425,9 @@ dump_distinct_digest_count(int severity)
     verified_digests = digestmap_new();
   tor_log(severity, LD_GENERAL, "%d *distinct* router digests verified",
       digestmap_size(verified_digests));
-#else
+#else /* !(defined(COUNT_DISTINCT_DIGESTS)) */
   (void)severity; /* suppress "unused parameter" warning */
-#endif
+#endif /* defined(COUNT_DISTINCT_DIGESTS) */
 }
 
 /** Try to find an IPv6 OR port in <b>list</b> of directory_token_t's
@@ -2087,7 +1823,8 @@ router_parse_entry_from_string(const char *s, const char *end,
 
       if (router_get_hash_impl_helper(s, end-s, "router ",
                                       "\nrouter-sig-ed25519",
-                                      ' ', &signed_start, &signed_end) < 0) {
+                                      ' ', LOG_WARN,
+                                      &signed_start, &signed_end) < 0) {
         log_warn(LD_DIR, "Can't find ed25519-signed portion of descriptor");
         goto err;
       }
@@ -2100,12 +1837,13 @@ router_parse_entry_from_string(const char *s, const char *end,
 
       ed25519_checkable_t check[3];
       int check_ok[3];
-      if (tor_cert_get_checkable_sig(&check[0], cert, NULL) < 0) {
+      time_t expires = TIME_MAX;
+      if (tor_cert_get_checkable_sig(&check[0], cert, NULL, &expires) < 0) {
         log_err(LD_BUG, "Couldn't create 'checkable' for cert.");
         goto err;
       }
       if (tor_cert_get_checkable_sig(&check[1],
-                                     ntor_cc_cert, &ntor_cc_pk) < 0) {
+                               ntor_cc_cert, &ntor_cc_pk, &expires) < 0) {
         log_err(LD_BUG, "Couldn't create 'checkable' for ntor_cc_cert.");
         goto err;
       }
@@ -2135,10 +1873,7 @@ router_parse_entry_from_string(const char *s, const char *end,
       }
 
       /* We check this before adding it to the routerlist. */
-      if (cert->valid_until < ntor_cc_cert->valid_until)
-        router->cert_expiration_time = cert->valid_until;
-      else
-        router->cert_expiration_time = ntor_cc_cert->valid_until;
+      router->cert_expiration_time = expires;
     }
   }
 
@@ -2220,7 +1955,7 @@ router_parse_entry_from_string(const char *s, const char *end,
                  escaped(tok->args[i]));
         goto err;
       }
-      smartlist_add(router->declared_family, tor_strdup(tok->args[i]));
+      smartlist_add_strdup(router->declared_family, tok->args[i]);
     }
   }
 
@@ -2261,7 +1996,6 @@ router_parse_entry_from_string(const char *s, const char *end,
   }
 
   tok = find_by_keyword(tokens, K_ROUTER_SIGNATURE);
-  note_crypto_pk_op(VERIFY_RTR);
 #ifdef COUNT_DISTINCT_DIGESTS
   if (!verified_digests)
     verified_digests = digestmap_new();
@@ -2331,6 +2065,9 @@ extrainfo_parse_entry_from_string(const char *s, const char *end,
   /* Do not set this to '1' until we have parsed everything that we intend to
    * parse that's covered by the hash. */
   int can_dl_again = 0;
+
+  if (BUG(s == NULL))
+    return NULL;
 
   if (!end) {
     end = s + strlen(s);
@@ -2439,7 +2176,8 @@ extrainfo_parse_entry_from_string(const char *s, const char *end,
 
       if (router_get_hash_impl_helper(s, end-s, "extra-info ",
                                       "\nrouter-sig-ed25519",
-                                      ' ', &signed_start, &signed_end) < 0) {
+                                      ' ', LOG_WARN,
+                                      &signed_start, &signed_end) < 0) {
         log_warn(LD_DIR, "Can't find ed25519-signed portion of extrainfo");
         goto err;
       }
@@ -2452,7 +2190,7 @@ extrainfo_parse_entry_from_string(const char *s, const char *end,
 
       ed25519_checkable_t check[2];
       int check_ok[2];
-      if (tor_cert_get_checkable_sig(&check[0], cert, NULL) < 0) {
+      if (tor_cert_get_checkable_sig(&check[0], cert, NULL, NULL) < 0) {
         log_err(LD_BUG, "Couldn't create 'checkable' for cert.");
         goto err;
       }
@@ -2492,7 +2230,6 @@ extrainfo_parse_entry_from_string(const char *s, const char *end,
   }
 
   if (key) {
-    note_crypto_pk_op(VERIFY_RTR);
     if (check_signature_token(digest, DIGEST_LEN, tok, key, 0,
                               "extra-info") < 0)
       goto err;
@@ -2846,7 +2583,7 @@ routerstatus_parse_entry_from_string(memarea_t *area,
       goto err;
     }
   } else if (flav == FLAV_MICRODESC) {
-    offset = -1; /* There is no identity digest */
+    offset = -1; /* There is no descriptor digest in an md consensus r line */
   }
 
   if (vote_rs) {
@@ -2964,6 +2701,16 @@ routerstatus_parse_entry_from_string(memarea_t *area,
     rs->protocols_known = 1;
     rs->supports_extend2_cells =
       protocol_list_supports_protocol(tok->args[0], PRT_RELAY, 2);
+    rs->supports_ed25519_link_handshake =
+      protocol_list_supports_protocol(tok->args[0], PRT_LINKAUTH, 3);
+    rs->supports_ed25519_hs_intro =
+      protocol_list_supports_protocol(tok->args[0], PRT_HSINTRO, 4);
+    rs->supports_v3_hsdir =
+      protocol_list_supports_protocol(tok->args[0], PRT_HSDIR,
+                                      PROTOVER_HSDIR_V3);
+    rs->supports_v3_rendezvous_point =
+      protocol_list_supports_protocol(tok->args[0], PRT_HSREND,
+                                      PROTOVER_HS_RENDEZVOUS_POINT_V3);
   }
   if ((tok = find_opt_by_keyword(tokens, K_V))) {
     tor_assert(tok->n_args == 1);
@@ -2974,6 +2721,12 @@ routerstatus_parse_entry_from_string(memarea_t *area,
       rs->supports_extend2_cells =
         tor_version_as_new_as(tok->args[0], "0.2.4.8-alpha");
       rs->protocols_known = 1;
+    }
+    if (!strcmpstart(tok->args[0], "Tor ") && found_protocol_list) {
+      /* Bug #22447 forces us to filter on this version. */
+      if (!tor_version_as_new_as(tok->args[0], "0.3.0.8")) {
+        rs->supports_v3_hsdir = 0;
+      }
     }
     if (vote_rs) {
       vote_rs->version = tor_strdup(tok->args[0]);
@@ -3111,7 +2864,6 @@ compare_vote_routerstatus_entries(const void **_a, const void **_b)
 int
 networkstatus_verify_bw_weights(networkstatus_t *ns, int consensus_method)
 {
-  int64_t weight_scale;
   int64_t G=0, M=0, E=0, D=0, T=0;
   double Wgg, Wgm, Wgd, Wmg, Wmm, Wme, Wmd, Weg, Wem, Wee, Wed;
   double Gtotal=0, Mtotal=0, Etotal=0;
@@ -3119,7 +2871,8 @@ networkstatus_verify_bw_weights(networkstatus_t *ns, int consensus_method)
   int valid = 1;
   (void) consensus_method;
 
-  weight_scale = networkstatus_get_weight_scale_param(ns);
+  const int64_t weight_scale = networkstatus_get_weight_scale_param(ns);
+  tor_assert(weight_scale >= 1);
   Wgg = networkstatus_get_bw_weight(ns, "Wgg", -1);
   Wgm = networkstatus_get_bw_weight(ns, "Wgm", -1);
   Wgd = networkstatus_get_bw_weight(ns, "Wgd", -1);
@@ -3181,7 +2934,7 @@ networkstatus_verify_bw_weights(networkstatus_t *ns, int consensus_method)
   }
 
   Wgg /= weight_scale;
-  Wgm /= weight_scale;
+  Wgm /= weight_scale; (void) Wgm; // unused from here on.
   Wgd /= weight_scale;
 
   Wmg /= weight_scale;
@@ -3189,8 +2942,8 @@ networkstatus_verify_bw_weights(networkstatus_t *ns, int consensus_method)
   Wme /= weight_scale;
   Wmd /= weight_scale;
 
-  Weg /= weight_scale;
-  Wem /= weight_scale;
+  Weg /= weight_scale; (void) Weg; // unused from here on.
+  Wem /= weight_scale; (void) Wem; // unused from here on.
   Wee /= weight_scale;
   Wed /= weight_scale;
 
@@ -3615,8 +3368,8 @@ extract_shared_random_srvs(networkstatus_t *ns, smartlist_t *tokens)
     voter_identity = "consensus";
   }
 
-  /* We extract both and on error, everything is stopped because it means
-   * the votes is malformed for the shared random value(s). */
+  /* We extract both, and on error everything is stopped because it means
+   * the vote is malformed for the shared random value(s). */
   if (extract_one_srv(tokens, K_PREVIOUS_SRV, &ns->sr_info.previous_srv) < 0) {
     log_warn(LD_DIR, "SR: Unable to parse previous SRV from %s",
              voter_identity);
@@ -3639,6 +3392,7 @@ networkstatus_parse_vote_from_string(const char *s, const char **eos_out,
   networkstatus_voter_info_t *voter = NULL;
   networkstatus_t *ns = NULL;
   common_digests_t ns_digests;
+  uint8_t sha3_as_signed[DIGEST256_LEN];
   const char *cert, *end_of_header, *end_of_footer, *s_dup = s;
   directory_token_t *tok;
   struct in_addr in;
@@ -3652,7 +3406,8 @@ networkstatus_parse_vote_from_string(const char *s, const char **eos_out,
   if (eos_out)
     *eos_out = NULL;
 
-  if (router_get_networkstatus_v3_hashes(s, &ns_digests)) {
+  if (router_get_networkstatus_v3_hashes(s, &ns_digests) ||
+      router_get_networkstatus_v3_sha3_as_signed(sha3_as_signed, s)<0) {
     log_warn(LD_DIR, "Unable to compute digest of network-status");
     goto err;
   }
@@ -3669,6 +3424,7 @@ networkstatus_parse_vote_from_string(const char *s, const char **eos_out,
 
   ns = tor_malloc_zero(sizeof(networkstatus_t));
   memcpy(&ns->digests, &ns_digests, sizeof(ns_digests));
+  memcpy(&ns->digest_sha3_as_signed, sha3_as_signed, sizeof(sha3_as_signed));
 
   tok = find_by_keyword(tokens, K_NETWORK_STATUS_VERSION);
   tor_assert(tok);
@@ -3723,9 +3479,9 @@ networkstatus_parse_vote_from_string(const char *s, const char **eos_out,
     tok = find_opt_by_keyword(tokens, K_CONSENSUS_METHODS);
     if (tok) {
       for (i=0; i < tok->n_args; ++i)
-        smartlist_add(ns->supported_methods, tor_strdup(tok->args[i]));
+        smartlist_add_strdup(ns->supported_methods, tok->args[i]);
     } else {
-      smartlist_add(ns->supported_methods, tor_strdup("1"));
+      smartlist_add_strdup(ns->supported_methods, "1");
     }
   } else {
     tok = find_opt_by_keyword(tokens, K_CONSENSUS_METHOD);
@@ -3807,7 +3563,7 @@ networkstatus_parse_vote_from_string(const char *s, const char **eos_out,
     ns->package_lines = smartlist_new();
     if (package_lst) {
       SMARTLIST_FOREACH(package_lst, directory_token_t *, t,
-                    smartlist_add(ns->package_lines, tor_strdup(t->args[0])));
+                    smartlist_add_strdup(ns->package_lines, t->args[0]));
     }
     smartlist_free(package_lst);
   }
@@ -3816,7 +3572,7 @@ networkstatus_parse_vote_from_string(const char *s, const char **eos_out,
   ns->known_flags = smartlist_new();
   inorder = 1;
   for (i = 0; i < tok->n_args; ++i) {
-    smartlist_add(ns->known_flags, tor_strdup(tok->args[i]));
+    smartlist_add_strdup(ns->known_flags, tok->args[i]);
     if (i>0 && strcmp(tok->args[i-1], tok->args[i])>= 0) {
       log_warn(LD_DIR, "%s >= %s", tok->args[i-1], tok->args[i]);
       inorder = 0;
@@ -3868,7 +3624,7 @@ networkstatus_parse_vote_from_string(const char *s, const char **eos_out,
       }
       tor_free(last_kwd);
       last_kwd = tor_strndup(tok->args[i], eq_pos);
-      smartlist_add(ns->net_params, tor_strdup(tok->args[i]));
+      smartlist_add_strdup(ns->net_params, tok->args[i]);
     }
     if (!inorder) {
       log_warn(LD_DIR, "params not in order");
@@ -4011,11 +3767,10 @@ networkstatus_parse_vote_from_string(const char *s, const char **eos_out,
     if (ns->type != NS_TYPE_CONSENSUS) {
       vote_routerstatus_t *rs = tor_malloc_zero(sizeof(vote_routerstatus_t));
       if (routerstatus_parse_entry_from_string(rs_area, &s, rs_tokens, ns,
-                                               rs, 0, 0))
+                                               rs, 0, 0)) {
         smartlist_add(ns->routerstatus_list, rs);
-      else {
-        tor_free(rs->version);
-        tor_free(rs);
+      } else {
+        vote_routerstatus_free(rs);
       }
     } else {
       routerstatus_t *rs;
@@ -4111,7 +3866,7 @@ networkstatus_parse_vote_from_string(const char *s, const char **eos_out,
         log_warn(LD_DIR, "Bad element '%s' in params", escaped(tok->args[i]));
         goto err;
       }
-      smartlist_add(ns->weight_params, tor_strdup(tok->args[i]));
+      smartlist_add_strdup(ns->weight_params, tok->args[i]);
     }
   }
 
@@ -4740,445 +4495,6 @@ assert_addr_policy_ok(smartlist_t *lst)
   });
 }
 
-/*
- * Low-level tokenizer for router descriptors and directories.
- */
-
-/** Free all resources allocated for <b>tok</b> */
-static void
-token_clear(directory_token_t *tok)
-{
-  if (tok->key)
-    crypto_pk_free(tok->key);
-}
-
-#define ALLOC_ZERO(sz) memarea_alloc_zero(area,sz)
-#define ALLOC(sz) memarea_alloc(area,sz)
-#define STRDUP(str) memarea_strdup(area,str)
-#define STRNDUP(str,n) memarea_strndup(area,(str),(n))
-
-#define RET_ERR(msg)                                               \
-  STMT_BEGIN                                                       \
-    if (tok) token_clear(tok);                                      \
-    tok = ALLOC_ZERO(sizeof(directory_token_t));                   \
-    tok->tp = ERR_;                                                \
-    tok->error = STRDUP(msg);                                      \
-    goto done_tokenizing;                                          \
-  STMT_END
-
-/** Helper: make sure that the token <b>tok</b> with keyword <b>kwd</b> obeys
- * the object syntax of <b>o_syn</b>.  Allocate all storage in <b>area</b>.
- * Return <b>tok</b> on success, or a new ERR_ token if the token didn't
- * conform to the syntax we wanted.
- **/
-static inline directory_token_t *
-token_check_object(memarea_t *area, const char *kwd,
-                   directory_token_t *tok, obj_syntax o_syn)
-{
-  char ebuf[128];
-  switch (o_syn) {
-    case NO_OBJ:
-      /* No object is allowed for this token. */
-      if (tok->object_body) {
-        tor_snprintf(ebuf, sizeof(ebuf), "Unexpected object for %s", kwd);
-        RET_ERR(ebuf);
-      }
-      if (tok->key) {
-        tor_snprintf(ebuf, sizeof(ebuf), "Unexpected public key for %s", kwd);
-        RET_ERR(ebuf);
-      }
-      break;
-    case NEED_OBJ:
-      /* There must be a (non-key) object. */
-      if (!tok->object_body) {
-        tor_snprintf(ebuf, sizeof(ebuf), "Missing object for %s", kwd);
-        RET_ERR(ebuf);
-      }
-      break;
-    case NEED_KEY_1024: /* There must be a 1024-bit public key. */
-    case NEED_SKEY_1024: /* There must be a 1024-bit private key. */
-      if (tok->key && crypto_pk_num_bits(tok->key) != PK_BYTES*8) {
-        tor_snprintf(ebuf, sizeof(ebuf), "Wrong size on key for %s: %d bits",
-                     kwd, crypto_pk_num_bits(tok->key));
-        RET_ERR(ebuf);
-      }
-      /* fall through */
-    case NEED_KEY: /* There must be some kind of key. */
-      if (!tok->key) {
-        tor_snprintf(ebuf, sizeof(ebuf), "Missing public key for %s", kwd);
-        RET_ERR(ebuf);
-      }
-      if (o_syn != NEED_SKEY_1024) {
-        if (crypto_pk_key_is_private(tok->key)) {
-          tor_snprintf(ebuf, sizeof(ebuf),
-               "Private key given for %s, which wants a public key", kwd);
-          RET_ERR(ebuf);
-        }
-      } else { /* o_syn == NEED_SKEY_1024 */
-        if (!crypto_pk_key_is_private(tok->key)) {
-          tor_snprintf(ebuf, sizeof(ebuf),
-               "Public key given for %s, which wants a private key", kwd);
-          RET_ERR(ebuf);
-        }
-      }
-      break;
-    case OBJ_OK:
-      /* Anything goes with this token. */
-      break;
-  }
-
- done_tokenizing:
-  return tok;
-}
-
-/** Helper: parse space-separated arguments from the string <b>s</b> ending at
- * <b>eol</b>, and store them in the args field of <b>tok</b>.  Store the
- * number of parsed elements into the n_args field of <b>tok</b>.  Allocate
- * all storage in <b>area</b>.  Return the number of arguments parsed, or
- * return -1 if there was an insanely high number of arguments. */
-static inline int
-get_token_arguments(memarea_t *area, directory_token_t *tok,
-                    const char *s, const char *eol)
-{
-/** Largest number of arguments we'll accept to any token, ever. */
-#define MAX_ARGS 512
-  char *mem = memarea_strndup(area, s, eol-s);
-  char *cp = mem;
-  int j = 0;
-  char *args[MAX_ARGS];
-  while (*cp) {
-    if (j == MAX_ARGS)
-      return -1;
-    args[j++] = cp;
-    cp = (char*)find_whitespace(cp);
-    if (!cp || !*cp)
-      break; /* End of the line. */
-    *cp++ = '\0';
-    cp = (char*)eat_whitespace(cp);
-  }
-  tok->n_args = j;
-  tok->args = memarea_memdup(area, args, j*sizeof(char*));
-  return j;
-#undef MAX_ARGS
-}
-
-/** Helper function: read the next token from *s, advance *s to the end of the
- * token, and return the parsed token.  Parse *<b>s</b> according to the list
- * of tokens in <b>table</b>.
- */
-static directory_token_t *
-get_next_token(memarea_t *area,
-               const char **s, const char *eos, token_rule_t *table)
-{
-  /** Reject any object at least this big; it is probably an overflow, an
-   * attack, a bug, or some other nonsense. */
-#define MAX_UNPARSED_OBJECT_SIZE (128*1024)
-  /** Reject any line at least this big; it is probably an overflow, an
-   * attack, a bug, or some other nonsense. */
-#define MAX_LINE_LENGTH (128*1024)
-
-  const char *next, *eol, *obstart;
-  size_t obname_len;
-  int i;
-  directory_token_t *tok;
-  obj_syntax o_syn = NO_OBJ;
-  char ebuf[128];
-  const char *kwd = "";
-
-  tor_assert(area);
-  tok = ALLOC_ZERO(sizeof(directory_token_t));
-  tok->tp = ERR_;
-
-  /* Set *s to first token, eol to end-of-line, next to after first token */
-  *s = eat_whitespace_eos(*s, eos); /* eat multi-line whitespace */
-  tor_assert(eos >= *s);
-  eol = memchr(*s, '\n', eos-*s);
-  if (!eol)
-    eol = eos;
-  if (eol - *s > MAX_LINE_LENGTH) {
-    RET_ERR("Line far too long");
-  }
-
-  next = find_whitespace_eos(*s, eol);
-
-  if (!strcmp_len(*s, "opt", next-*s)) {
-    /* Skip past an "opt" at the start of the line. */
-    *s = eat_whitespace_eos_no_nl(next, eol);
-    next = find_whitespace_eos(*s, eol);
-  } else if (*s == eos) {  /* If no "opt", and end-of-line, line is invalid */
-    RET_ERR("Unexpected EOF");
-  }
-
-  /* Search the table for the appropriate entry.  (I tried a binary search
-   * instead, but it wasn't any faster.) */
-  for (i = 0; table[i].t ; ++i) {
-    if (!strcmp_len(*s, table[i].t, next-*s)) {
-      /* We've found the keyword. */
-      kwd = table[i].t;
-      tok->tp = table[i].v;
-      o_syn = table[i].os;
-      *s = eat_whitespace_eos_no_nl(next, eol);
-      /* We go ahead whether there are arguments or not, so that tok->args is
-       * always set if we want arguments. */
-      if (table[i].concat_args) {
-        /* The keyword takes the line as a single argument */
-        tok->args = ALLOC(sizeof(char*));
-        tok->args[0] = STRNDUP(*s,eol-*s); /* Grab everything on line */
-        tok->n_args = 1;
-      } else {
-        /* This keyword takes multiple arguments. */
-        if (get_token_arguments(area, tok, *s, eol)<0) {
-          tor_snprintf(ebuf, sizeof(ebuf),"Far too many arguments to %s", kwd);
-          RET_ERR(ebuf);
-        }
-        *s = eol;
-      }
-      if (tok->n_args < table[i].min_args) {
-        tor_snprintf(ebuf, sizeof(ebuf), "Too few arguments to %s", kwd);
-        RET_ERR(ebuf);
-      } else if (tok->n_args > table[i].max_args) {
-        tor_snprintf(ebuf, sizeof(ebuf), "Too many arguments to %s", kwd);
-        RET_ERR(ebuf);
-      }
-      break;
-    }
-  }
-
-  if (tok->tp == ERR_) {
-    /* No keyword matched; call it an "K_opt" or "A_unrecognized" */
-    if (*s < eol && **s == '@')
-      tok->tp = A_UNKNOWN_;
-    else
-      tok->tp = K_OPT;
-    tok->args = ALLOC(sizeof(char*));
-    tok->args[0] = STRNDUP(*s, eol-*s);
-    tok->n_args = 1;
-    o_syn = OBJ_OK;
-  }
-
-  /* Check whether there's an object present */
-  *s = eat_whitespace_eos(eol, eos);  /* Scan from end of first line */
-  tor_assert(eos >= *s);
-  eol = memchr(*s, '\n', eos-*s);
-  if (!eol || eol-*s<11 || strcmpstart(*s, "-----BEGIN ")) /* No object. */
-    goto check_object;
-
-  obstart = *s; /* Set obstart to start of object spec */
-  if (*s+16 >= eol || memchr(*s+11,'\0',eol-*s-16) || /* no short lines, */
-      strcmp_len(eol-5, "-----", 5) ||           /* nuls or invalid endings */
-      (eol-*s) > MAX_UNPARSED_OBJECT_SIZE) {     /* name too long */
-    RET_ERR("Malformed object: bad begin line");
-  }
-  tok->object_type = STRNDUP(*s+11, eol-*s-16);
-  obname_len = eol-*s-16; /* store objname length here to avoid a strlen() */
-  *s = eol+1;    /* Set *s to possible start of object data (could be eos) */
-
-  /* Go to the end of the object */
-  next = tor_memstr(*s, eos-*s, "-----END ");
-  if (!next) {
-    RET_ERR("Malformed object: missing object end line");
-  }
-  tor_assert(eos >= next);
-  eol = memchr(next, '\n', eos-next);
-  if (!eol)  /* end-of-line marker, or eos if there's no '\n' */
-    eol = eos;
-  /* Validate the ending tag, which should be 9 + NAME + 5 + eol */
-  if ((size_t)(eol-next) != 9+obname_len+5 ||
-      strcmp_len(next+9, tok->object_type, obname_len) ||
-      strcmp_len(eol-5, "-----", 5)) {
-    tor_snprintf(ebuf, sizeof(ebuf), "Malformed object: mismatched end tag %s",
-             tok->object_type);
-    ebuf[sizeof(ebuf)-1] = '\0';
-    RET_ERR(ebuf);
-  }
-  if (next - *s > MAX_UNPARSED_OBJECT_SIZE)
-    RET_ERR("Couldn't parse object: missing footer or object much too big.");
-
-  if (!strcmp(tok->object_type, "RSA PUBLIC KEY")) { /* If it's a public key */
-    tok->key = crypto_pk_new();
-    if (crypto_pk_read_public_key_from_string(tok->key, obstart, eol-obstart))
-      RET_ERR("Couldn't parse public key.");
-  } else if (!strcmp(tok->object_type, "RSA PRIVATE KEY")) { /* private key */
-    tok->key = crypto_pk_new();
-    if (crypto_pk_read_private_key_from_string(tok->key, obstart, eol-obstart))
-      RET_ERR("Couldn't parse private key.");
-  } else { /* If it's something else, try to base64-decode it */
-    int r;
-    tok->object_body = ALLOC(next-*s); /* really, this is too much RAM. */
-    r = base64_decode(tok->object_body, next-*s, *s, next-*s);
-    if (r<0)
-      RET_ERR("Malformed object: bad base64-encoded data");
-    tok->object_size = r;
-  }
-  *s = eol;
-
- check_object:
-  tok = token_check_object(area, kwd, tok, o_syn);
-
- done_tokenizing:
-  return tok;
-
-#undef RET_ERR
-#undef ALLOC
-#undef ALLOC_ZERO
-#undef STRDUP
-#undef STRNDUP
-}
-
-/** Read all tokens from a string between <b>start</b> and <b>end</b>, and add
- * them to <b>out</b>.  Parse according to the token rules in <b>table</b>.
- * Caller must free tokens in <b>out</b>.  If <b>end</b> is NULL, use the
- * entire string.
- */
-static int
-tokenize_string(memarea_t *area,
-                const char *start, const char *end, smartlist_t *out,
-                token_rule_t *table, int flags)
-{
-  const char **s;
-  directory_token_t *tok = NULL;
-  int counts[NIL_];
-  int i;
-  int first_nonannotation;
-  int prev_len = smartlist_len(out);
-  tor_assert(area);
-
-  s = &start;
-  if (!end) {
-    end = start+strlen(start);
-  } else {
-    /* it's only meaningful to check for nuls if we got an end-of-string ptr */
-    if (memchr(start, '\0', end-start)) {
-      log_warn(LD_DIR, "parse error: internal NUL character.");
-      return -1;
-    }
-  }
-  for (i = 0; i < NIL_; ++i)
-    counts[i] = 0;
-
-  SMARTLIST_FOREACH(out, const directory_token_t *, t, ++counts[t->tp]);
-
-  while (*s < end && (!tok || tok->tp != EOF_)) {
-    tok = get_next_token(area, s, end, table);
-    if (tok->tp == ERR_) {
-      log_warn(LD_DIR, "parse error: %s", tok->error);
-      token_clear(tok);
-      return -1;
-    }
-    ++counts[tok->tp];
-    smartlist_add(out, tok);
-    *s = eat_whitespace_eos(*s, end);
-  }
-
-  if (flags & TS_NOCHECK)
-    return 0;
-
-  if ((flags & TS_ANNOTATIONS_OK)) {
-    first_nonannotation = -1;
-    for (i = 0; i < smartlist_len(out); ++i) {
-      tok = smartlist_get(out, i);
-      if (tok->tp < MIN_ANNOTATION || tok->tp > MAX_ANNOTATION) {
-        first_nonannotation = i;
-        break;
-      }
-    }
-    if (first_nonannotation < 0) {
-      log_warn(LD_DIR, "parse error: item contains only annotations");
-      return -1;
-    }
-    for (i=first_nonannotation;  i < smartlist_len(out); ++i) {
-      tok = smartlist_get(out, i);
-      if (tok->tp >= MIN_ANNOTATION && tok->tp <= MAX_ANNOTATION) {
-        log_warn(LD_DIR, "parse error: Annotations mixed with keywords");
-        return -1;
-      }
-    }
-    if ((flags & TS_NO_NEW_ANNOTATIONS)) {
-      if (first_nonannotation != prev_len) {
-        log_warn(LD_DIR, "parse error: Unexpected annotations.");
-        return -1;
-      }
-    }
-  } else {
-    for (i=0;  i < smartlist_len(out); ++i) {
-      tok = smartlist_get(out, i);
-      if (tok->tp >= MIN_ANNOTATION && tok->tp <= MAX_ANNOTATION) {
-        log_warn(LD_DIR, "parse error: no annotations allowed.");
-        return -1;
-      }
-    }
-    first_nonannotation = 0;
-  }
-  for (i = 0; table[i].t; ++i) {
-    if (counts[table[i].v] < table[i].min_cnt) {
-      log_warn(LD_DIR, "Parse error: missing %s element.", table[i].t);
-      return -1;
-    }
-    if (counts[table[i].v] > table[i].max_cnt) {
-      log_warn(LD_DIR, "Parse error: too many %s elements.", table[i].t);
-      return -1;
-    }
-    if (table[i].pos & AT_START) {
-      if (smartlist_len(out) < 1 ||
-          (tok = smartlist_get(out, first_nonannotation))->tp != table[i].v) {
-        log_warn(LD_DIR, "Parse error: first item is not %s.", table[i].t);
-        return -1;
-      }
-    }
-    if (table[i].pos & AT_END) {
-      if (smartlist_len(out) < 1 ||
-          (tok = smartlist_get(out, smartlist_len(out)-1))->tp != table[i].v) {
-        log_warn(LD_DIR, "Parse error: last item is not %s.", table[i].t);
-        return -1;
-      }
-    }
-  }
-  return 0;
-}
-
-/** Find the first token in <b>s</b> whose keyword is <b>keyword</b>; return
- * NULL if no such keyword is found.
- */
-static directory_token_t *
-find_opt_by_keyword(smartlist_t *s, directory_keyword keyword)
-{
-  SMARTLIST_FOREACH(s, directory_token_t *, t, if (t->tp == keyword) return t);
-  return NULL;
-}
-
-/** Find the first token in <b>s</b> whose keyword is <b>keyword</b>; fail
- * with an assert if no such keyword is found.
- */
-static directory_token_t *
-find_by_keyword_(smartlist_t *s, directory_keyword keyword,
-                 const char *keyword_as_string)
-{
-  directory_token_t *tok = find_opt_by_keyword(s, keyword);
-  if (PREDICT_UNLIKELY(!tok)) {
-    log_err(LD_BUG, "Missing %s [%d] in directory object that should have "
-         "been validated. Internal error.", keyword_as_string, (int)keyword);
-    tor_assert(tok);
-  }
-  return tok;
-}
-
-/** If there are any directory_token_t entries in <b>s</b> whose keyword is
- * <b>k</b>, return a newly allocated smartlist_t containing all such entries,
- * in the same order in which they occur in <b>s</b>.  Otherwise return
- * NULL. */
-static smartlist_t *
-find_all_by_keyword(smartlist_t *s, directory_keyword k)
-{
-  smartlist_t *out = NULL;
-  SMARTLIST_FOREACH(s, directory_token_t *, t,
-                    if (t->tp == k) {
-                      if (!out)
-                        out = smartlist_new();
-                      smartlist_add(out, t);
-                    });
-  return out;
-}
-
 /** Return a newly allocated smartlist of all accept or reject tokens in
  * <b>s</b>.
  */
@@ -5204,16 +4520,18 @@ static int
 router_get_hash_impl_helper(const char *s, size_t s_len,
                             const char *start_str,
                             const char *end_str, char end_c,
+                            int log_severity,
                             const char **start_out, const char **end_out)
 {
   const char *start, *end;
   start = tor_memstr(s, s_len, start_str);
   if (!start) {
-    log_warn(LD_DIR,"couldn't find start of hashed material \"%s\"",start_str);
+    log_fn(log_severity,LD_DIR,
+           "couldn't find start of hashed material \"%s\"",start_str);
     return -1;
   }
   if (start != s && *(start-1) != '\n') {
-    log_warn(LD_DIR,
+    log_fn(log_severity,LD_DIR,
              "first occurrence of \"%s\" is not at the start of a line",
              start_str);
     return -1;
@@ -5221,12 +4539,14 @@ router_get_hash_impl_helper(const char *s, size_t s_len,
   end = tor_memstr(start+strlen(start_str),
                    s_len - (start-s) - strlen(start_str), end_str);
   if (!end) {
-    log_warn(LD_DIR,"couldn't find end of hashed material \"%s\"",end_str);
+    log_fn(log_severity,LD_DIR,
+           "couldn't find end of hashed material \"%s\"",end_str);
     return -1;
   }
   end = memchr(end+strlen(end_str), end_c, s_len - (end-s) - strlen(end_str));
   if (!end) {
-    log_warn(LD_DIR,"couldn't find EOL");
+    log_fn(log_severity,LD_DIR,
+           "couldn't find EOL");
     return -1;
   }
   ++end;
@@ -5250,17 +4570,28 @@ router_get_hash_impl(const char *s, size_t s_len, char *digest,
                      digest_algorithm_t alg)
 {
   const char *start=NULL, *end=NULL;
-  if (router_get_hash_impl_helper(s,s_len,start_str,end_str,end_c,
+  if (router_get_hash_impl_helper(s,s_len,start_str,end_str,end_c,LOG_WARN,
                                   &start,&end)<0)
     return -1;
 
+  return router_compute_hash_final(digest, start, end-start, alg);
+}
+
+/** Compute the digest of the <b>len</b>-byte directory object at
+ * <b>start</b>, using <b>alg</b>. Store the result in <b>digest</b>, which
+ * must be long enough to hold it. */
+MOCK_IMPL(STATIC int,
+router_compute_hash_final,(char *digest,
+                           const char *start, size_t len,
+                           digest_algorithm_t alg))
+{
   if (alg == DIGEST_SHA1) {
-    if (crypto_digest(digest, start, end-start)) {
+    if (crypto_digest(digest, start, len) < 0) {
       log_warn(LD_BUG,"couldn't compute digest");
       return -1;
     }
   } else {
-    if (crypto_digest256(digest, start, end-start, alg)) {
+    if (crypto_digest256(digest, start, len, alg) < 0) {
       log_warn(LD_BUG,"couldn't compute digest");
       return -1;
     }
@@ -5276,7 +4607,7 @@ router_get_hashes_impl(const char *s, size_t s_len, common_digests_t *digests,
                        const char *end_str, char end_c)
 {
   const char *start=NULL, *end=NULL;
-  if (router_get_hash_impl_helper(s,s_len,start_str,end_str,end_c,
+  if (router_get_hash_impl_helper(s,s_len,start_str,end_str,end_c,LOG_WARN,
                                   &start,&end)<0)
     return -1;
 
@@ -5446,11 +4777,13 @@ microdescs_parse_from_string(const char *s, const char *eos,
         if (!strcmp(t->args[0], "ed25519")) {
           if (md->ed25519_identity_pkey) {
             log_warn(LD_DIR, "Extra ed25519 key in microdesc");
+            smartlist_free(id_lines);
             goto next;
           }
           ed25519_public_key_t k;
           if (ed25519_public_from_base64(&k, t->args[1])<0) {
             log_warn(LD_DIR, "Bogus ed25519 key in microdesc");
+            smartlist_free(id_lines);
             goto next;
           }
           md->ed25519_identity_pkey = tor_memdup(&k, sizeof(k));
@@ -5476,7 +4809,7 @@ microdescs_parse_from_string(const char *s, const char *eos,
                    escaped(tok->args[i]));
           goto next;
         }
-        smartlist_add(md->family, tor_strdup(tok->args[i]));
+        smartlist_add_strdup(md->family, tok->args[i]);
       }
     }
 
@@ -5621,6 +4954,8 @@ tor_version_parse(const char *s, tor_version_t *out)
 
 #define NUMBER(m)                               \
   do {                                          \
+    if (!cp || *cp < '0' || *cp > '9')          \
+      return -1;                                \
     out->m = (int)tor_parse_uint64(cp, 10, 0, INT32_MAX, &ok, &eos);    \
     if (!ok)                                    \
       return -1;                                \
@@ -5921,7 +5256,8 @@ rend_parse_v2_service_descriptor(rend_service_descriptor_t **parsed_out,
    * descriptor. */
   tok = find_by_keyword(tokens, R_PUBLICATION_TIME);
   tor_assert(tok->n_args == 1);
-  if (parse_iso_time_(tok->args[0], &result->timestamp, strict_time_fmt) < 0) {
+  if (parse_iso_time_(tok->args[0], &result->timestamp,
+                      strict_time_fmt, 0) < 0) {
     log_warn(LD_REND, "Invalid publication time: '%s'", tok->args[0]);
     goto err;
   }
@@ -5960,12 +5296,14 @@ rend_parse_v2_service_descriptor(rend_service_descriptor_t **parsed_out,
   }
   /* Parse and verify signature. */
   tok = find_by_keyword(tokens, R_SIGNATURE);
-  note_crypto_pk_op(VERIFY_RTR);
   if (check_signature_token(desc_hash, DIGEST_LEN, tok, result->pk, 0,
                             "v2 rendezvous service descriptor") < 0)
     goto err;
   /* Verify that descriptor ID belongs to public key and secret ID part. */
-  crypto_pk_get_digest(result->pk, public_key_hash);
+  if (crypto_pk_get_digest(result->pk, public_key_hash) < 0) {
+    log_warn(LD_REND, "Unable to compute rend descriptor public key digest");
+    goto err;
+  }
   rend_get_descriptor_id_bytes(test_desc_id, public_key_hash,
                                secret_id_part);
   if (tor_memneq(desc_id_out, test_desc_id, DIGEST_LEN)) {

@@ -1,6 +1,6 @@
 /* Copyright (c) 2003-2004, Roger Dingledine
  * Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -44,7 +44,7 @@
 #endif
 
 // TODO win32 specific includes
-#endif // ADDRESS_PRIVATE
+#endif /* defined(ADDRESS_PRIVATE) */
 
 /** The number of bits from an address to consider while doing a masked
  * comparison. */
@@ -190,7 +190,8 @@ tor_addr_eq_ipv4h(const tor_addr_t *a, uint32_t u)
  */
 #define TOR_ADDR_BUF_LEN 48
 
-int tor_addr_lookup(const char *name, uint16_t family, tor_addr_t *addr_out);
+MOCK_DECL(int, tor_addr_lookup,(const char *name, uint16_t family,
+                                tor_addr_t *addr_out));
 char *tor_addr_to_str_dup(const tor_addr_t *addr) ATTR_MALLOC;
 
 /** Wrapper function of fmt_addr_impl(). It does not decorate IPv6
@@ -228,6 +229,8 @@ int tor_addr_compare_masked(const tor_addr_t *addr1, const tor_addr_t *addr2,
 #define tor_addr_eq(a,b) (0==tor_addr_compare((a),(b),CMP_EXACT))
 
 uint64_t tor_addr_hash(const tor_addr_t *addr);
+struct sipkey;
+uint64_t tor_addr_keyed_hash(const struct sipkey *key, const tor_addr_t *addr);
 int tor_addr_is_v4(const tor_addr_t *addr);
 int tor_addr_is_internal_(const tor_addr_t *ip, int for_listening,
                           const char *filename, int lineno);
@@ -342,6 +345,8 @@ get_interface_address_list(int severity, int include_internal)
 }
 
 tor_addr_port_t *tor_addr_port_new(const tor_addr_t *addr, uint16_t port);
+int tor_addr_port_eq(const tor_addr_port_t *a,
+                     const tor_addr_port_t *b);
 
 #ifdef ADDRESS_PRIVATE
 MOCK_DECL(smartlist_t *,get_interface_addresses_raw,(int severity,
@@ -355,23 +360,23 @@ STATIC smartlist_t *ifaddrs_to_smartlist(const struct ifaddrs *ifa,
                                          sa_family_t family);
 STATIC smartlist_t *get_interface_addresses_ifaddrs(int severity,
                                                     sa_family_t family);
-#endif
+#endif /* defined(HAVE_IFADDRS_TO_SMARTLIST) */
 
 #ifdef HAVE_IP_ADAPTER_TO_SMARTLIST
 STATIC smartlist_t *ip_adapter_addresses_to_smartlist(
                                         const IP_ADAPTER_ADDRESSES *addresses);
 STATIC smartlist_t *get_interface_addresses_win32(int severity,
                                                   sa_family_t family);
-#endif
+#endif /* defined(HAVE_IP_ADAPTER_TO_SMARTLIST) */
 
 #ifdef HAVE_IFCONF_TO_SMARTLIST
 STATIC smartlist_t *ifreq_to_smartlist(char *ifr,
                                        size_t buflen);
 STATIC smartlist_t *get_interface_addresses_ioctl(int severity,
                                                   sa_family_t family);
-#endif
+#endif /* defined(HAVE_IFCONF_TO_SMARTLIST) */
 
-#endif // ADDRESS_PRIVATE
+#endif /* defined(ADDRESS_PRIVATE) */
 
-#endif
+#endif /* !defined(TOR_ADDRESS_H) */
 

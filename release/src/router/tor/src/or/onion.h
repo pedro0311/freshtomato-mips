@@ -1,7 +1,7 @@
 /* Copyright (c) 2001 Matej Pfajfar.
  * Copyright (c) 2001-2004, Roger Dingledine.
  * Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -85,6 +85,8 @@ typedef struct extend_cell_t {
   tor_addr_port_t orport_ipv6;
   /** Identity fingerprint of the node we're conecting to.*/
   uint8_t node_id[DIGEST_LEN];
+  /** Ed25519 public identity key. Zero if not set. */
+  ed25519_public_key_t ed_pubkey;
   /** The "create cell" embedded in this extend cell. Note that unlike the
    * create cells we generate ourself, this once can have a handshake type we
    * don't recognize. */
@@ -117,5 +119,5 @@ int extend_cell_format(uint8_t *command_out, uint16_t *len_out,
 int extended_cell_format(uint8_t *command_out, uint16_t *len_out,
                          uint8_t *payload_out, const extended_cell_t *cell_in);
 
-#endif
+#endif /* !defined(TOR_ONION_H) */
 

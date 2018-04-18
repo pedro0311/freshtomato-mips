@@ -1,4 +1,4 @@
-/* Copyright (c) 2016, The Tor Project, Inc. */
+/* Copyright (c) 2016-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -103,6 +103,9 @@ proto_entry_free(proto_entry_t *entry)
   tor_free(entry);
 }
 
+/** The largest possible protocol version. */
+#define MAX_PROTOCOL_VERSION (UINT32_MAX-1)
+
 /**
  * Given a string <b>s</b> and optional end-of-string pointer
  * <b>end_of_range</b>, parse the protocol range and store it in
@@ -123,9 +126,14 @@ parse_version_range(const char *s, const char *end_of_range,
   if (BUG(!end_of_range))
     end_of_range = s + strlen(s); // LCOV_EXCL_LINE
 
+  /* A range must start with a digit. */
+  if (!TOR_ISDIGIT(*s)) {
+    goto error;
+  }
+
   /* Note that this wouldn't be safe if we didn't know that eventually,
    * we'd hit a NUL */
-  low = (uint32_t) tor_parse_ulong(s, 10, 0, UINT32_MAX, &ok, &next);
+  low = (uint32_t) tor_parse_ulong(s, 10, 0, MAX_PROTOCOL_VERSION, &ok, &next);
   if (!ok)
     goto error;
   if (next > end_of_range)
@@ -138,11 +146,19 @@ parse_version_range(const char *s, const char *end_of_range,
   if (*next != '-')
     goto error;
   s = next+1;
+
   /* ibid */
-  high = (uint32_t) tor_parse_ulong(s, 10, 0, UINT32_MAX, &ok, &next);
+  if (!TOR_ISDIGIT(*s)) {
+    goto error;
+  }
+  high = (uint32_t) tor_parse_ulong(s, 10, 0,
+                                    MAX_PROTOCOL_VERSION, &ok, &next);
   if (!ok)
     goto error;
   if (next != end_of_range)
+    goto error;
+
+  if (low > high)
     goto error;
 
  done:
@@ -192,10 +208,6 @@ parse_single_entry(const char *s, const char *end_of_entry)
 
     smartlist_add(out->ranges, range);
     if (parse_version_range(s, comma, &range->low, &range->high) < 0) {
-      goto error;
-    }
-
-    if (range->low > range->high) {
       goto error;
     }
 
@@ -288,12 +300,12 @@ protover_get_supported_protocols(void)
   return
     "Cons=1-2 "
     "Desc=1-2 "
-    "DirCache=1 "
-    "HSDir=1 "
-    "HSIntro=3 "
+    "DirCache=1-2 "
+    "HSDir=1-2 "
+    "HSIntro=3-4 "
     "HSRend=1-2 "
-    "Link=1-4 "
-    "LinkAuth=1 "
+    "Link=1-5 "
+    "LinkAuth=1,3 "
     "Microdesc=1-2 "
     "Relay=1-2";
 }
@@ -348,7 +360,7 @@ encode_protocol_list(const smartlist_t *sl)
   const char *separator = "";
   smartlist_t *chunks = smartlist_new();
   SMARTLIST_FOREACH_BEGIN(sl, const proto_entry_t *, ent) {
-    smartlist_add(chunks, tor_strdup(separator));
+    smartlist_add_strdup(chunks, separator);
 
     proto_entry_encode_into(chunks, ent);
 
@@ -477,7 +489,7 @@ contract_protocol_list(const smartlist_t *proto_strings)
     smartlist_sort(lst, cmp_single_ent_by_version);
 
     if (! first_entry)
-      smartlist_add(chunks, tor_strdup(" "));
+      smartlist_add_strdup(chunks, " ");
 
     /* We're going to construct this entry from the ranges. */
     proto_entry_t *entry = tor_malloc_zero(sizeof(proto_entry_t));
@@ -554,6 +566,12 @@ protover_compute_vote(const smartlist_t *list_of_proto_strings,
   // First, parse the inputs and break them into singleton entries.
   SMARTLIST_FOREACH_BEGIN(list_of_proto_strings, const char *, vote) {
     smartlist_t *unexpanded = parse_protocol_list(vote);
+    if (! unexpanded) {
+      log_warn(LD_NET, "I failed with parsing a protocol list from "
+               "an authority. The offending string was: %s",
+               escaped(vote));
+      continue;
+    }
     smartlist_t *this_vote = expand_protocol_list(unexpanded);
     if (this_vote == NULL) {
       log_warn(LD_NET, "When expanding a protocol list from an authority, I "
@@ -618,6 +636,11 @@ protover_all_supported(const char *s, char **missing_out)
   }
 
   smartlist_t *entries = parse_protocol_list(s);
+  if (BUG(entries == NULL)) {
+    log_warn(LD_NET, "Received an unparseable protocol list %s"
+             " from the consensus", escaped(s));
+    return 1;
+  }
 
   missing = smartlist_new();
 
@@ -694,6 +717,11 @@ protocol_list_contains(const smartlist_t *protos,
 const char *
 protover_compute_for_old_tor(const char *version)
 {
+  if (version == NULL) {
+    /* No known version; guess the oldest series that is still supported. */
+    version = "0.2.5.15";
+  }
+
   if (tor_version_as_new_as(version,
                             FIRST_TOR_VERSION_TO_ADVERTISE_PROTOCOLS)) {
     return "";

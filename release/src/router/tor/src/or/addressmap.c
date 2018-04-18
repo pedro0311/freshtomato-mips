@@ -1,7 +1,7 @@
 /* Copyright (c) 2001 Matej Pfajfar.
  * Copyright (c) 2001-2004, Roger Dingledine.
  * Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -213,8 +213,8 @@ addressmap_clear_excluded_trackexithosts(const or_options_t *options)
     while (dot > target && *dot != '.')
       dot--;
     if (*dot == '.') dot++;
-    nodename = tor_strndup(dot, len-5-(dot-target));;
-    node = node_get_by_nickname(nodename, 0);
+    nodename = tor_strndup(dot, len-5-(dot-target));
+    node = node_get_by_nickname(nodename, NNF_NO_WARN_UNNAMED);
     tor_free(nodename);
     if (!node ||
         (allow_nodes && !routerset_contains_node(allow_nodes, node)) ||
@@ -376,29 +376,38 @@ addressmap_rewrite(char *address, size_t maxlen,
   char *addr_orig = tor_strdup(address);
   char *log_addr_orig = NULL;
 
+  /* We use a loop here to limit the total number of rewrites we do,
+   * so that we can't hit an infinite loop. */
   for (rewrites = 0; rewrites < 16; rewrites++) {
     int exact_match = 0;
     log_addr_orig = tor_strdup(escaped_safe_str_client(address));
 
+    /* First check to see if there's an exact match for this address */
     ent = strmap_get(addressmap, address);
 
     if (!ent || !ent->new_address) {
+      /* And if we don't have an exact match, try to check whether
+       * we have a pattern-based match.
+       */
       ent = addressmap_match_superdomains(address);
     } else {
       if (ent->src_wildcard && !ent->dst_wildcard &&
           !strcasecmp(address, ent->new_address)) {
-        /* This is a rule like *.example.com example.com, and we just got
-         * "example.com" */
+        /* This is a rule like "rewrite *.example.com to example.com", and we
+         * just got "example.com". Instead of calling it an infinite loop,
+         * call it complete. */
         goto done;
       }
-
       exact_match = 1;
     }
 
     if (!ent || !ent->new_address) {
+      /* We still have no match at all.  We're done! */
       goto done;
     }
 
+    /* Check wither the flags we were passed tell us not to use this
+     * mapping. */
     switch (ent->source) {
       case ADDRMAPSRC_DNS:
         {
@@ -431,6 +440,8 @@ addressmap_rewrite(char *address, size_t maxlen,
         goto done;
     }
 
+    /* Now fill in the address with the new address. That might be via
+     * appending some new stuff to the end, or via just replacing it. */
     if (ent->dst_wildcard && !exact_match) {
       strlcat(address, ".", maxlen);
       strlcat(address, ent->new_address, maxlen);
@@ -438,6 +449,7 @@ addressmap_rewrite(char *address, size_t maxlen,
       strlcpy(address, ent->new_address, maxlen);
     }
 
+    /* Is this now a .exit address?  If so, remember where we got it.*/
     if (!strcmpend(address, ".exit") &&
         strcmpend(addr_orig, ".exit") &&
         exit_source == ADDRMAPSRC_NONE) {
@@ -802,7 +814,7 @@ parse_virtual_addr_network(const char *val, sa_family_t family,
                    ipv6?"IPv6":"");
     return -1;
   }
-#endif
+#endif /* 0 */
 
   if (bits > max_prefix_bits) {
     if (msg)
@@ -1032,7 +1044,7 @@ addressmap_register_virtual_address(int type, char *new_address)
              safe_str_client(*addrp),
              safe_str_client(new_address));
   }
-#endif
+#endif /* 0 */
 
   return *addrp;
 }

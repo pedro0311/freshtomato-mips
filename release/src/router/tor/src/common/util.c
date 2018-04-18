@@ -1,6 +1,6 @@
 /* Copyright (c) 2003, Roger Dingledine
  * Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -31,11 +31,11 @@
 #include <process.h>
 #include <tchar.h>
 #include <winbase.h>
-#else
+#else /* !(defined(_WIN32)) */
 #include <dirent.h>
 #include <pwd.h>
 #include <grp.h>
-#endif
+#endif /* defined(_WIN32) */
 
 /* math.h needs this on Linux */
 #ifndef _USE_ISOC99_
@@ -79,13 +79,13 @@
 #include <malloc/malloc.h>
 #endif
 #ifdef HAVE_MALLOC_H
-#if !defined(OPENBSD) && !defined(__FreeBSD__)
+#if !defined(OpenBSD) && !defined(__FreeBSD__)
 /* OpenBSD has a malloc.h, but for our purposes, it only exists in order to
  * scold us for being so stupid as to autodetect its presence.  To be fair,
  * they've done this since 1996, when autoconf was only 5 years old. */
 #include <malloc.h>
-#endif
-#endif
+#endif /* !defined(OpenBSD) && !defined(__FreeBSD__) */
+#endif /* defined(HAVE_MALLOC_H) */
 #ifdef HAVE_MALLOC_NP_H
 #include <malloc_np.h>
 #endif
@@ -116,12 +116,12 @@
          dmalloc_strndup(file, line, (string), -1, xalloc_b)
  #else
  #error "No dmalloc_strdup or equivalent"
- #endif
+#endif /* defined(HAVE_DMALLOC_STRDUP) || ... */
 
-#else /* not using dmalloc */
+#else /* !(defined(USE_DMALLOC)) */
 
  #define DMALLOC_FN_ARGS
-#endif
+#endif /* defined(USE_DMALLOC) */
 
 /** Allocate a chunk of <b>size</b> bytes of memory, and return a pointer to
  * result.  On error, log and terminate the process.  (Same as malloc(size),
@@ -142,7 +142,7 @@ tor_malloc_(size_t size DMALLOC_PARAMS)
   if (size==0) {
     size=1;
   }
-#endif
+#endif /* !defined(MALLOC_ZERO_WORKS) */
 
 #ifdef USE_DMALLOC
   result = dmalloc_malloc(file, line, size, DMALLOC_FUNC_MALLOC, 0, 0);
@@ -187,8 +187,9 @@ tor_malloc_zero_(size_t size DMALLOC_PARAMS)
  * 0xfffe0001. */
 #define SQRT_SIZE_MAX_P1 (((size_t)1) << (sizeof(size_t)*4))
 
-/** Return non-zero if and only if the product of the arguments is exact. */
-static inline int
+/** Return non-zero if and only if the product of the arguments is exact,
+ * and cannot overflow. */
+int
 size_mul_check(const size_t x, const size_t y)
 {
   /* This first check is equivalent to
@@ -201,15 +202,6 @@ size_mul_check(const size_t x, const size_t y)
           y == 0 ||
           x <= SIZE_MAX / y);
 }
-
-#ifdef TOR_UNIT_TESTS
-/** Exposed for unit tests only */
-int
-size_mul_check__(const size_t x, const size_t y)
-{
-  return size_mul_check(x,y);
-}
-#endif
 
 /** Allocate a chunk of <b>nmemb</b>*<b>size</b> bytes of memory, fill
  * the memory with zero bytes, and return a pointer to the result.
@@ -241,7 +233,7 @@ tor_realloc_(void *ptr, size_t size DMALLOC_PARAMS)
   if (size==0) {
     size=1;
   }
-#endif
+#endif /* !defined(MALLOC_ZERO_WORKS) */
 
 #ifdef USE_DMALLOC
   result = dmalloc_realloc(file, line, ptr, size, DMALLOC_FUNC_REALLOC, 0);
@@ -370,16 +362,16 @@ tor_log_mallinfo(int severity)
       mi.arena, mi.ordblks, mi.smblks, mi.hblks,
       mi.hblkhd, mi.usmblks, mi.fsmblks, mi.uordblks, mi.fordblks,
       mi.keepcost);
-#else
+#else /* !(defined(HAVE_MALLINFO)) */
   (void)severity;
-#endif
+#endif /* defined(HAVE_MALLINFO) */
 #ifdef USE_DMALLOC
   dmalloc_log_changed(0, /* Since the program started. */
                       1, /* Log info about non-freed pointers. */
                       0, /* Do not log info about freed pointers. */
                       0  /* Do not log individual pointers. */
                       );
-#endif
+#endif /* defined(USE_DMALLOC) */
 }
 ENABLE_GCC_WARNING(aggregate-return)
 
@@ -409,7 +401,7 @@ tor_lround(double d)
   return (long)rint(d);
 #else
   return (long)(d > 0 ? d + 0.5 : ceil(d - 0.5));
-#endif
+#endif /* defined(HAVE_LROUND) || ... */
 }
 
 /** Return the 64-bit integer closest to d.  We define this wrapper here so
@@ -424,7 +416,7 @@ tor_llround(double d)
   return (int64_t)rint(d);
 #else
   return (int64_t)(d > 0 ? d + 0.5 : ceil(d - 0.5));
-#endif
+#endif /* defined(HAVE_LLROUND) || ... */
 }
 
 /** Returns floor(log2(u64)).  If u64 is 0, (incorrectly) returns 0. */
@@ -453,7 +445,7 @@ tor_log2(uint64_t u64)
     r += 2;
   }
   if (u64 >= (U64_LITERAL(1)<<1)) {
-    u64 >>= 1;
+    // u64 >>= 1; // not using this any more.
     r += 1;
   }
   return r;
@@ -485,7 +477,7 @@ round_to_power_of_2(uint64_t u64)
 
 /** Return the lowest x such that x is at least <b>number</b>, and x modulo
  * <b>divisor</b> == 0.  If no such x can be expressed as an unsigned, return
- * UINT_MAX */
+ * UINT_MAX. Asserts if divisor is zero. */
 unsigned
 round_to_next_multiple_of(unsigned number, unsigned divisor)
 {
@@ -499,7 +491,7 @@ round_to_next_multiple_of(unsigned number, unsigned divisor)
 
 /** Return the lowest x such that x is at least <b>number</b>, and x modulo
  * <b>divisor</b> == 0. If no such x can be expressed as a uint32_t, return
- * UINT32_MAX */
+ * UINT32_MAX. Asserts if divisor is zero. */
 uint32_t
 round_uint32_to_next_multiple_of(uint32_t number, uint32_t divisor)
 {
@@ -514,7 +506,7 @@ round_uint32_to_next_multiple_of(uint32_t number, uint32_t divisor)
 
 /** Return the lowest x such that x is at least <b>number</b>, and x modulo
  * <b>divisor</b> == 0. If no such x can be expressed as a uint64_t, return
- * UINT64_MAX */
+ * UINT64_MAX. Asserts if divisor is zero. */
 uint64_t
 round_uint64_to_next_multiple_of(uint64_t number, uint64_t divisor)
 {
@@ -706,6 +698,19 @@ tor_strisnonupper(const char *s)
 {
   while (*s) {
     if (TOR_ISUPPER(*s))
+      return 0;
+    s++;
+  }
+  return 1;
+}
+
+/** Return true iff every character in <b>s</b> is whitespace space; else
+ * return false. */
+int
+tor_strisspace(const char *s)
+{
+  while (*s) {
+    if (!TOR_ISSPACE(*s))
       return 0;
     s++;
   }
@@ -1167,7 +1172,7 @@ tor_parse_long(const char *s, int base, long min, long max,
   char *endptr;
   long r;
 
-  if (base < 0) {
+  if (BUG(base < 0)) {
     if (ok)
       *ok = 0;
     return 0;
@@ -1186,7 +1191,7 @@ tor_parse_ulong(const char *s, int base, unsigned long min,
   char *endptr;
   unsigned long r;
 
-  if (base < 0) {
+  if (BUG(base < 0)) {
     if (ok)
       *ok = 0;
     return 0;
@@ -1218,7 +1223,7 @@ tor_parse_uint64(const char *s, int base, uint64_t min,
   char *endptr;
   uint64_t r;
 
-  if (base < 0) {
+  if (BUG(base < 0)) {
     if (ok)
       *ok = 0;
     return 0;
@@ -1228,20 +1233,12 @@ tor_parse_uint64(const char *s, int base, uint64_t min,
 #ifdef HAVE_STRTOULL
   r = (uint64_t)strtoull(s, &endptr, base);
 #elif defined(_WIN32)
-#if defined(_MSC_VER) && _MSC_VER < 1300
-  tor_assert(base <= 10);
-  r = (uint64_t)_atoi64(s);
-  endptr = (char*)s;
-  while (TOR_ISSPACE(*endptr)) endptr++;
-  while (TOR_ISDIGIT(*endptr)) endptr++;
-#else
   r = (uint64_t)_strtoui64(s, &endptr, base);
-#endif
 #elif SIZEOF_LONG == 8
   r = (uint64_t)strtoul(s, &endptr, base);
 #else
 #error "I don't know how to parse 64-bit numbers."
-#endif
+#endif /* defined(HAVE_STRTOULL) || ... */
 
   CHECK_STRTOX_RESULT();
 }
@@ -1639,7 +1636,7 @@ tor_timegm(const struct tm *tm, time_t *time_out)
     log_warn(LD_BUG, "Result does not fit in tor_timegm");
     return -1;
   }
-#endif
+#endif /* SIZEOF_TIME_T < 8 */
   *time_out = (time_t)seconds;
   return 0;
 }
@@ -1803,17 +1800,26 @@ format_iso_time_nospace_usec(char *buf, const struct timeval *tv)
 /** Given an ISO-formatted UTC time value (after the epoch) in <b>cp</b>,
  * parse it and store its value in *<b>t</b>.  Return 0 on success, -1 on
  * failure.  Ignore extraneous stuff in <b>cp</b> after the end of the time
- * string, unless <b>strict</b> is set. */
+ * string, unless <b>strict</b> is set. If <b>nospace</b> is set,
+ * expect the YYYY-MM-DDTHH:MM:SS format. */
 int
-parse_iso_time_(const char *cp, time_t *t, int strict)
+parse_iso_time_(const char *cp, time_t *t, int strict, int nospace)
 {
   struct tm st_tm;
   unsigned int year=0, month=0, day=0, hour=0, minute=0, second=0;
   int n_fields;
-  char extra_char;
-  n_fields = tor_sscanf(cp, "%u-%2u-%2u %2u:%2u:%2u%c", &year, &month,
-                        &day, &hour, &minute, &second, &extra_char);
-  if (strict ? (n_fields != 6) : (n_fields < 6)) {
+  char extra_char, separator_char;
+  n_fields = tor_sscanf(cp, "%u-%2u-%2u%c%2u:%2u:%2u%c",
+                        &year, &month, &day,
+                        &separator_char,
+                        &hour, &minute, &second, &extra_char);
+  if (strict ? (n_fields != 7) : (n_fields < 7)) {
+    char *esc = esc_for_log(cp);
+    log_warn(LD_GENERAL, "ISO time %s was unparseable", esc);
+    tor_free(esc);
+    return -1;
+  }
+  if (separator_char != (nospace ? 'T' : ' ')) {
     char *esc = esc_for_log(cp);
     log_warn(LD_GENERAL, "ISO time %s was unparseable", esc);
     tor_free(esc);
@@ -1855,7 +1861,16 @@ parse_iso_time_(const char *cp, time_t *t, int strict)
 int
 parse_iso_time(const char *cp, time_t *t)
 {
-  return parse_iso_time_(cp, t, 1);
+  return parse_iso_time_(cp, t, 1, 0);
+}
+
+/**
+ * As parse_iso_time, but parses a time encoded by format_iso_time_nospace().
+ */
+int
+parse_iso_time_nospace(const char *cp, time_t *t)
+{
+  return parse_iso_time_(cp, t, 1, 1);
 }
 
 /** Given a <b>date</b> in one of the three formats allowed by HTTP (ugh),
@@ -1930,7 +1945,7 @@ parse_http_time(const char *date, struct tm *tm)
 
 /** Given an <b>interval</b> in seconds, try to write it to the
  * <b>out_len</b>-byte buffer in <b>out</b> in a human-readable form.
- * Return 0 on success, -1 on failure.
+ * Returns a non-negative integer on success, -1 on failure.
  */
 int
 format_time_interval(char *out, size_t out_len, long interval)
@@ -1999,7 +2014,7 @@ update_approx_time(time_t now)
 {
   cached_approx_time = now;
 }
-#endif
+#endif /* !defined(TIME_IS_FAST) */
 
 /* =====
  * Rate limiting
@@ -2095,7 +2110,7 @@ read_all(tor_socket_t fd, char *buf, size_t count, int isSocket)
     return -1;
   }
 
-  while (numread != count) {
+  while (numread < count) {
     if (isSocket)
       result = tor_socket_recv(fd, buf+numread, count-numread, 0);
     else
@@ -2128,9 +2143,9 @@ clean_name_for_stat(char *name)
       return;
     name[len-1]='\0';
   }
-#else
+#else /* !(defined(_WIN32)) */
   (void)name;
-#endif
+#endif /* defined(_WIN32) */
 }
 
 /** Wrapper for unlink() to make it mockable for the test suite; returns 0
@@ -2270,10 +2285,14 @@ check_private_dir,(const char *dirname, cpd_check_t check,
        * permissions on the directory will be checked again below.*/
       fd = open(sandbox_intern_string(dirname), O_NOFOLLOW);
 
-      if (fd == -1)
+      if (fd == -1) {
+        log_warn(LD_FS, "Could not reopen recently created directory %s: %s",
+                 dirname,
+                 strerror(errno));
         return -1;
-      else
+      } else {
         close(fd);
+      }
 
     } else if (!(check & CPD_CHECK)) {
       log_warn(LD_FS, "Directory %s does not exist.", dirname);
@@ -2323,21 +2342,27 @@ check_private_dir,(const char *dirname, cpd_check_t check,
     running_gid = getgid();
   }
   if (st.st_uid != running_uid) {
-    const struct passwd *pw_uid = NULL;
-    char *process_ownername = NULL;
+    char *process_ownername = NULL, *file_ownername = NULL;
 
-    pw_uid = tor_getpwuid(running_uid);
-    process_ownername = pw_uid ? tor_strdup(pw_uid->pw_name) :
-      tor_strdup("<unknown>");
+    {
+      const struct passwd *pw_running = tor_getpwuid(running_uid);
+      process_ownername = pw_running ? tor_strdup(pw_running->pw_name) :
+        tor_strdup("<unknown>");
+    }
 
-    pw_uid = tor_getpwuid(st.st_uid);
+    {
+      const struct passwd *pw_stat = tor_getpwuid(st.st_uid);
+      file_ownername = pw_stat ? tor_strdup(pw_stat->pw_name) :
+        tor_strdup("<unknown>");
+    }
 
     log_warn(LD_FS, "%s is not owned by this user (%s, %d) but by "
         "%s (%d). Perhaps you are running Tor as the wrong user?",
-                         dirname, process_ownername, (int)running_uid,
-                         pw ? pw->pw_name : "<unknown>", (int)st.st_uid);
+             dirname, process_ownername, (int)running_uid,
+             file_ownername, (int)st.st_uid);
 
     tor_free(process_ownername);
+    tor_free(file_ownername);
     close(fd);
     return -1;
   }
@@ -2394,7 +2419,7 @@ check_private_dir,(const char *dirname, cpd_check_t check,
     }
   }
   close(fd);
-#else
+#else /* !(!defined(_WIN32)) */
   /* Win32 case: we can't open() a directory. */
   (void)effective_user;
 
@@ -2428,7 +2453,7 @@ check_private_dir,(const char *dirname, cpd_check_t check,
     return -1;
   }
 
-#endif
+#endif /* !defined(_WIN32) */
   return 0;
 }
 
@@ -2448,7 +2473,7 @@ write_str_to_file,(const char *fname, const char *str, int bin))
              "We're writing a text string that already contains a CR to %s",
              escaped(fname));
   }
-#endif
+#endif /* defined(_WIN32) */
   return write_bytes_to_file(fname, str, strlen(str), bin);
 }
 
@@ -2601,19 +2626,20 @@ finish_writing_to_file_impl(open_file_t *file_data, int abort_write)
 
   if (file_data->rename_on_close) {
     tor_assert(file_data->tempname && file_data->filename);
+    if (!abort_write) {
+      tor_assert(strcmp(file_data->filename, file_data->tempname));
+      if (replace_file(file_data->tempname, file_data->filename)) {
+        log_warn(LD_FS, "Error replacing \"%s\": %s", file_data->filename,
+                 strerror(errno));
+        abort_write = r = -1;
+      }
+    }
     if (abort_write) {
       int res = unlink(file_data->tempname);
       if (res != 0) {
         /* We couldn't unlink and we'll leave a mess behind */
         log_warn(LD_FS, "Failed to unlink %s: %s",
                  file_data->tempname, strerror(errno));
-        r = -1;
-      }
-    } else {
-      tor_assert(strcmp(file_data->filename, file_data->tempname));
-      if (replace_file(file_data->tempname, file_data->filename)) {
-        log_warn(LD_FS, "Error replacing \"%s\": %s", file_data->filename,
-                 strerror(errno));
         r = -1;
       }
     }
@@ -2847,7 +2873,7 @@ read_file_to_str, (const char *filename, int flags, struct stat *stat_out))
       errno = save_errno;
     return string;
   }
-#endif
+#endif /* !defined(_WIN32) */
 
   if ((uint64_t)(statbuf.st_size)+1 >= SIZE_T_CEILING) {
     close(fd);
@@ -2880,7 +2906,7 @@ read_file_to_str, (const char *filename, int flags, struct stat *stat_out))
   if (!bin) {
     statbuf.st_size = (size_t) r;
   } else
-#endif
+#endif /* defined(_WIN32) || defined(__CYGWIN__) */
     if (r != statbuf.st_size) {
       /* Unless we're using text mode on win32, we'd better have an exact
        * match for size. */
@@ -2954,8 +2980,9 @@ unescape_string(const char *s, char **result, size_t *size_out)
         *out = '\0';
         if (size_out) *size_out = out - *result;
         return cp+1;
-      case '\0':
+
         /* LCOV_EXCL_START -- we caught this in parse_config_from_line. */
+      case '\0':
         tor_fragile_assert();
         tor_free(*result);
         return NULL;
@@ -3003,8 +3030,9 @@ unescape_string(const char *s, char **result, size_t *size_out)
             *out++ = cp[1];
             cp += 2;
             break;
-          default:
+
             /* LCOV_EXCL_START */
+          default:
             /* we caught this above in the initial loop. */
             tor_assert_nonfatal_unreached();
             tor_free(*result); return NULL;
@@ -3017,135 +3045,39 @@ unescape_string(const char *s, char **result, size_t *size_out)
   }
 }
 
-/** Given a string containing part of a configuration file or similar format,
- * advance past comments and whitespace and try to parse a single line.  If we
- * parse a line successfully, set *<b>key_out</b> to a new string holding the
- * key portion and *<b>value_out</b> to a new string holding the value portion
- * of the line, and return a pointer to the start of the next line.  If we run
- * out of data, return a pointer to the end of the string.  If we encounter an
- * error, return NULL and set *<b>err_out</b> (if provided) to an error
- * message.
- */
-const char *
-parse_config_line_from_str_verbose(const char *line, char **key_out,
-                                   char **value_out,
-                                   const char **err_out)
+/** Removes enclosing quotes from <b>path</b> and unescapes quotes between the
+ * enclosing quotes. Backslashes are not unescaped. Return the unquoted
+ * <b>path</b> on sucess or 0 if <b>path</b> is not quoted correctly. */
+char *
+get_unquoted_path(const char *path)
 {
-  /*
-    See torrc_format.txt for a description of the (silly) format this parses.
-   */
-  const char *key, *val, *cp;
-  int continuation = 0;
+  size_t len = strlen(path);
 
-  tor_assert(key_out);
-  tor_assert(value_out);
-
-  *key_out = *value_out = NULL;
-  key = val = NULL;
-  /* Skip until the first keyword. */
-  while (1) {
-    while (TOR_ISSPACE(*line))
-      ++line;
-    if (*line == '#') {
-      while (*line && *line != '\n')
-        ++line;
-    } else {
-      break;
-    }
+  if (len == 0) {
+    return tor_strdup("");
   }
 
-  if (!*line) { /* End of string? */
-    *key_out = *value_out = NULL;
-    return line;
+  int has_start_quote = (path[0] == '\"');
+  int has_end_quote = (len > 0 && path[len-1] == '\"');
+  if (has_start_quote != has_end_quote || (len == 1 && has_start_quote)) {
+    return NULL;
   }
 
-  /* Skip until the next space or \ followed by newline. */
-  key = line;
-  while (*line && !TOR_ISSPACE(*line) && *line != '#' &&
-         ! (line[0] == '\\' && line[1] == '\n'))
-    ++line;
-  *key_out = tor_strndup(key, line-key);
-
-  /* Skip until the value. */
-  while (*line == ' ' || *line == '\t')
-    ++line;
-
-  val = line;
-
-  /* Find the end of the line. */
-  if (*line == '\"') { // XXX No continuation handling is done here
-    if (!(line = unescape_string(line, value_out, NULL))) {
-      if (err_out)
-        *err_out = "Invalid escape sequence in quoted string";
+  char *unquoted_path = tor_malloc(len - has_start_quote - has_end_quote + 1);
+  char *s = unquoted_path;
+  size_t i;
+  for (i = has_start_quote; i < len - has_end_quote; i++) {
+    if (path[i] == '\"' && (i > 0 && path[i-1] == '\\')) {
+      *(s-1) = path[i];
+    } else if (path[i] != '\"') {
+      *s++ = path[i];
+    } else {  /* unescaped quote */
+      tor_free(unquoted_path);
       return NULL;
     }
-    while (*line == ' ' || *line == '\t')
-      ++line;
-    if (*line == '\r' && *(++line) == '\n')
-      ++line;
-    if (*line && *line != '#' && *line != '\n') {
-      if (err_out)
-        *err_out = "Excess data after quoted string";
-      return NULL;
-    }
-  } else {
-    /* Look for the end of the line. */
-    while (*line && *line != '\n' && (*line != '#' || continuation)) {
-      if (*line == '\\' && line[1] == '\n') {
-        continuation = 1;
-        line += 2;
-      } else if (*line == '#') {
-        do {
-          ++line;
-        } while (*line && *line != '\n');
-        if (*line == '\n')
-          ++line;
-      } else {
-        ++line;
-      }
-    }
-
-    if (*line == '\n') {
-      cp = line++;
-    } else {
-      cp = line;
-    }
-    /* Now back cp up to be the last nonspace character */
-    while (cp>val && TOR_ISSPACE(*(cp-1)))
-      --cp;
-
-    tor_assert(cp >= val);
-
-    /* Now copy out and decode the value. */
-    *value_out = tor_strndup(val, cp-val);
-    if (continuation) {
-      char *v_out, *v_in;
-      v_out = v_in = *value_out;
-      while (*v_in) {
-        if (*v_in == '#') {
-          do {
-            ++v_in;
-          } while (*v_in && *v_in != '\n');
-          if (*v_in == '\n')
-            ++v_in;
-        } else if (v_in[0] == '\\' && v_in[1] == '\n') {
-          v_in += 2;
-        } else {
-          *v_out++ = *v_in++;
-        }
-      }
-      *v_out = '\0';
-    }
   }
-
-  if (*line == '#') {
-    do {
-      ++line;
-    } while (*line && *line != '\n');
-  }
-  while (TOR_ISSPACE(*line)) ++line;
-
-  return line;
+  *s = '\0';
+  return unquoted_path;
 }
 
 /** Expand any homedir prefix on <b>filename</b>; return a newly allocated
@@ -3160,7 +3092,7 @@ expand_filename(const char *filename)
    *     Chapter+3.+Input+Validation/3.7+Validating+Filenames+and+Paths/
    */
   return tor_strdup(filename);
-#else
+#else /* !(defined(_WIN32)) */
   if (*filename == '~') {
     char *home, *result=NULL;
     const char *rest;
@@ -3190,10 +3122,10 @@ expand_filename(const char *filename)
       }
       tor_free(username);
       rest = slash ? (slash+1) : "";
-#else
+#else /* !(defined(HAVE_PWD_H)) */
       log_warn(LD_CONFIG, "Couldn't expand homedir on system without pwd.h");
       return tor_strdup(filename);
-#endif
+#endif /* defined(HAVE_PWD_H) */
     }
     tor_assert(home);
     /* Remove trailing slash. */
@@ -3206,7 +3138,7 @@ expand_filename(const char *filename)
   } else {
     return tor_strdup(filename);
   }
-#endif
+#endif /* defined(_WIN32) */
 }
 
 #define MAX_SCANF_WIDTH 9999
@@ -3534,6 +3466,17 @@ smartlist_add_vasprintf(struct smartlist_t *sl, const char *pattern,
   smartlist_add(sl, str);
 }
 
+/** Append a copy of string to sl */
+void
+smartlist_add_strdup(struct smartlist_t *sl, const char *string)
+{
+  char *copy;
+
+  copy = tor_strdup(string);
+
+  smartlist_add(sl, copy);
+}
+
 /** Return a new list containing the filenames in the directory <b>dirname</b>.
  * Return NULL on error or if <b>dirname</b> is not a directory.
  */
@@ -3564,10 +3507,10 @@ tor_listdir, (const char *dirname))
     name[sizeof(name)-1] = '\0';
 #else
     strlcpy(name,findData.cFileName,sizeof(name));
-#endif
+#endif /* defined(UNICODE) */
     if (strcmp(name, ".") &&
         strcmp(name, "..")) {
-      smartlist_add(result, tor_strdup(name));
+      smartlist_add_strdup(result, name);
     }
     if (!FindNextFile(handle, &findData)) {
       DWORD err;
@@ -3581,7 +3524,7 @@ tor_listdir, (const char *dirname))
   }
   FindClose(handle);
   tor_free(pattern);
-#else
+#else /* !(defined(_WIN32)) */
   const char *prot_dname = sandbox_intern_string(dirname);
   DIR *d;
   struct dirent *de;
@@ -3593,10 +3536,10 @@ tor_listdir, (const char *dirname))
     if (!strcmp(de->d_name, ".") ||
         !strcmp(de->d_name, ".."))
       continue;
-    smartlist_add(result, tor_strdup(de->d_name));
+    smartlist_add_strdup(result, de->d_name);
   }
   closedir(d);
-#endif
+#endif /* defined(_WIN32) */
   return result;
 }
 
@@ -3612,7 +3555,7 @@ path_is_relative(const char *filename)
   else if (filename && strlen(filename)>3 && TOR_ISALPHA(filename[0]) &&
            filename[1] == ':' && filename[2] == '\\')
     return 0;
-#endif
+#endif /* defined(_WIN32) */
   else
     return 1;
 }
@@ -3675,7 +3618,7 @@ start_daemon(void)
   } else { /* Child */
     close(daemon_filedes[0]); /* we only write */
 
-    pid = setsid(); /* Detach from controlling terminal */
+    (void) setsid(); /* Detach from controlling terminal */
     /*
      * Fork one more time, so the parent (the session group leader) can exit.
      * This means that we, as a non-session group leader, can never regain a
@@ -3742,7 +3685,7 @@ finish_daemon(const char *desired_cwd)
   }
   close(daemon_filedes[1]);
 }
-#else
+#else /* !(!defined(_WIN32)) */
 /* defined(_WIN32) */
 void
 start_daemon(void)
@@ -3753,11 +3696,12 @@ finish_daemon(const char *cp)
 {
   (void)cp;
 }
-#endif
+#endif /* !defined(_WIN32) */
 
 /** Write the current process ID, followed by NL, into <b>filename</b>.
+ * Return 0 on success, -1 on failure.
  */
-void
+int
 write_pidfile(const char *filename)
 {
   FILE *pidfile;
@@ -3765,13 +3709,19 @@ write_pidfile(const char *filename)
   if ((pidfile = fopen(filename, "w")) == NULL) {
     log_warn(LD_FS, "Unable to open \"%s\" for writing: %s", filename,
              strerror(errno));
+    return -1;
   } else {
 #ifdef _WIN32
-    fprintf(pidfile, "%d\n", (int)_getpid());
+    int pid = (int)_getpid();
 #else
-    fprintf(pidfile, "%d\n", (int)getpid());
+    int pid = (int)getpid();
 #endif
-    fclose(pidfile);
+    int rv = 0;
+    if (fprintf(pidfile, "%d\n", pid) < 0)
+      rv = -1;
+    if (fclose(pidfile) < 0)
+      rv = -1;
+    return rv;
   }
 }
 
@@ -3788,7 +3738,7 @@ load_windows_system_library(const TCHAR *library_name)
   _tcscat(path, library_name);
   return LoadLibrary(path);
 }
-#endif
+#endif /* defined(_WIN32) */
 
 /** Format a single argument for being put on a Windows command line.
  * Returns a newly allocated string */
@@ -4083,7 +4033,7 @@ format_helper_exit_status(unsigned char child_state, int saved_errno,
  done:
   return res;
 }
-#endif
+#endif /* !defined(_WIN32) */
 
 /* Maximum number of file descriptors, if we cannot get it via sysconf() */
 #define DEFAULT_MAX_FD 256
@@ -4107,12 +4057,12 @@ tor_terminate_process(process_handle_t *process_handle)
     else
       return 0;
   }
-#else /* Unix */
+#else /* !(defined(_WIN32)) */
   if (process_handle->waitpid_cb) {
     /* We haven't got a waitpid yet, so we can just kill off the process. */
     return kill(process_handle->pid, SIGTERM);
   }
-#endif
+#endif /* defined(_WIN32) */
 
   return 0; /* We didn't need to kill the process, so report success */
 }
@@ -4134,14 +4084,14 @@ tor_process_get_stdout_pipe(process_handle_t *process_handle)
 {
   return process_handle->stdout_pipe;
 }
-#else
+#else /* !(defined(_WIN32)) */
 /* DOCDOC tor_process_get_stdout_pipe */
-FILE *
+int
 tor_process_get_stdout_pipe(process_handle_t *process_handle)
 {
-  return process_handle->stdout_handle;
+  return process_handle->stdout_pipe;
 }
-#endif
+#endif /* defined(_WIN32) */
 
 /* DOCDOC process_handle_new */
 static process_handle_t *
@@ -4157,7 +4107,7 @@ process_handle_new(void)
   out->stdin_pipe = -1;
   out->stdout_pipe = -1;
   out->stderr_pipe = -1;
-#endif
+#endif /* defined(_WIN32) */
 
   return out;
 }
@@ -4177,7 +4127,7 @@ process_handle_waitpid_cb(int status, void *arg)
     process_handle->status = PROCESS_STATUS_NOTRUNNING;
   process_handle->waitpid_cb = 0;
 }
-#endif
+#endif /* !defined(_WIN32) */
 
 /**
  * @name child-process states
@@ -4199,6 +4149,20 @@ process_handle_waitpid_cb(int status, void *arg)
 #define CHILD_STATE_EXEC 8
 #define CHILD_STATE_FAILEXEC 9
 /** @} */
+/**
+ * Boolean.  If true, then Tor may call execve or CreateProcess via
+ * tor_spawn_background.
+ **/
+static int may_spawn_background_process = 1;
+/**
+ * Turn off may_spawn_background_process, so that all future calls to
+ * tor_spawn_background are guaranteed to fail.
+ **/
+void
+tor_disable_spawning_background_processes(void)
+{
+  may_spawn_background_process = 0;
+}
 /** Start a program in the background. If <b>filename</b> contains a '/', then
  * it will be treated as an absolute or relative path.  Otherwise, on
  * non-Windows systems, the system path will be searched for <b>filename</b>.
@@ -4223,6 +4187,12 @@ tor_spawn_background(const char *const filename, const char **argv,
                      process_environment_t *env,
                      process_handle_t **process_handle_out)
 {
+  if (BUG(may_spawn_background_process == 0)) {
+    /* We should never reach this point if we're forbidden to spawn
+     * processes. Instead we should have caught the attempt earlier. */
+    return PROCESS_STATUS_ERROR;
+  }
+
 #ifdef _WIN32
   HANDLE stdout_pipe_read = NULL;
   HANDLE stdout_pipe_write = NULL;
@@ -4340,13 +4310,12 @@ tor_spawn_background(const char *const filename, const char **argv,
   /* TODO: Close pipes on exit */
   *process_handle_out = process_handle;
   return status;
-#else // _WIN32
+#else /* !(defined(_WIN32)) */
   pid_t pid;
   int stdout_pipe[2];
   int stderr_pipe[2];
   int stdin_pipe[2];
   int fd, retval;
-  ssize_t nbytes;
   process_handle_t *process_handle;
   int status;
 
@@ -4367,7 +4336,7 @@ tor_spawn_background(const char *const filename, const char **argv,
      and we are not allowed to use unsafe functions between fork and exec */
   error_message_length = strlen(error_message);
 
-  child_state = CHILD_STATE_PIPE;
+  // child_state = CHILD_STATE_PIPE;
 
   /* Set up pipe for redirecting stdout, stderr, and stdin of child */
   retval = pipe(stdout_pipe);
@@ -4404,7 +4373,7 @@ tor_spawn_background(const char *const filename, const char **argv,
     return status;
   }
 
-  child_state = CHILD_STATE_MAXFD;
+  // child_state = CHILD_STATE_MAXFD;
 
 #ifdef _SC_OPEN_MAX
   if (-1 == max_fd) {
@@ -4415,11 +4384,11 @@ tor_spawn_background(const char *const filename, const char **argv,
                "Cannot find maximum file descriptor, assuming %d", max_fd);
     }
   }
-#else
+#else /* !(defined(_SC_OPEN_MAX)) */
   max_fd = DEFAULT_MAX_FD;
-#endif
+#endif /* defined(_SC_OPEN_MAX) */
 
-  child_state = CHILD_STATE_FORK;
+  // child_state = CHILD_STATE_FORK;
 
   pid = fork();
   if (0 == pid) {
@@ -4432,7 +4401,7 @@ tor_spawn_background(const char *const filename, const char **argv,
      * than nothing.
      */
     prctl(PR_SET_PDEATHSIG, SIGTERM);
-#endif
+#endif /* defined(HAVE_SYS_PRCTL_H) && defined(__linux__) */
 
     child_state = CHILD_STATE_DUPOUT;
 
@@ -4455,7 +4424,7 @@ tor_spawn_background(const char *const filename, const char **argv,
     if (-1 == retval)
       goto error;
 
-    child_state = CHILD_STATE_CLOSEFD;
+    // child_state = CHILD_STATE_CLOSEFD;
 
     close(stderr_pipe[0]);
     close(stderr_pipe[1]);
@@ -4471,7 +4440,7 @@ tor_spawn_background(const char *const filename, const char **argv,
       close(fd);
     }
 
-    child_state = CHILD_STATE_EXEC;
+    // child_state = CHILD_STATE_EXEC;
 
     /* Call the requested program. We need the cast because
        execvp doesn't define argv as const, even though it
@@ -4490,7 +4459,8 @@ tor_spawn_background(const char *const filename, const char **argv,
   error:
     {
       /* XXX: are we leaking fds from the pipe? */
-      int n;
+      int n, err=0;
+      ssize_t nbytes;
 
       n = format_helper_exit_status(child_state, errno, hex_errno);
 
@@ -4499,13 +4469,14 @@ tor_spawn_background(const char *const filename, const char **argv,
            value, but there is nothing we can do if it fails */
         /* TODO: Don't use STDOUT, use a pipe set up just for this purpose */
         nbytes = write(STDOUT_FILENO, error_message, error_message_length);
+        err = (nbytes < 0);
         nbytes = write(STDOUT_FILENO, hex_errno, n);
+        err += (nbytes < 0);
       }
+
+      _exit(err?254:255);
     }
 
-    (void) nbytes;
-
-    _exit(255);
     /* Never reached, but avoids compiler warning */
     return status; // LCOV_EXCL_LINE
   }
@@ -4570,14 +4541,10 @@ tor_spawn_background(const char *const filename, const char **argv,
     log_warn(LD_GENERAL, "Failed to set stderror/stdout/stdin pipes "
              "nonblocking in parent process: %s", strerror(errno));
   }
-  /* Open the buffered IO streams */
-  process_handle->stdout_handle = fdopen(process_handle->stdout_pipe, "r");
-  process_handle->stderr_handle = fdopen(process_handle->stderr_pipe, "r");
-  process_handle->stdin_handle = fdopen(process_handle->stdin_pipe, "r");
 
   *process_handle_out = process_handle;
-  return process_handle->status;
-#endif // _WIN32
+  return status;
+#endif /* defined(_WIN32) */
 }
 
 /** Destroy all resources allocated by the process handle in
@@ -4619,18 +4586,13 @@ tor_process_handle_destroy,(process_handle_t *process_handle,
 
   if (process_handle->stdin_pipe)
     CloseHandle(process_handle->stdin_pipe);
-#else
-  if (process_handle->stdout_handle)
-    fclose(process_handle->stdout_handle);
-
-  if (process_handle->stderr_handle)
-    fclose(process_handle->stderr_handle);
-
-  if (process_handle->stdin_handle)
-    fclose(process_handle->stdin_handle);
+#else /* !(defined(_WIN32)) */
+  close(process_handle->stdout_pipe);
+  close(process_handle->stderr_pipe);
+  close(process_handle->stdin_pipe);
 
   clear_waitpid_callback(process_handle->waitpid_cb);
-#endif
+#endif /* defined(_WIN32) */
 
   memset(process_handle, 0x0f, sizeof(process_handle_t));
   tor_free(process_handle);
@@ -4683,7 +4645,7 @@ tor_get_exit_code(process_handle_t *process_handle,
       return PROCESS_EXIT_ERROR;
     }
   }
-#else
+#else /* !(defined(_WIN32)) */
   int stat_loc;
   int retval;
 
@@ -4718,7 +4680,7 @@ tor_get_exit_code(process_handle_t *process_handle,
 
   if (exit_code != NULL)
     *exit_code = WEXITSTATUS(stat_loc);
-#endif // _WIN32
+#endif /* defined(_WIN32) */
 
   return PROCESS_EXIT_EXITED;
 }
@@ -4864,7 +4826,7 @@ get_current_process_environment_variables(void)
 
   char **environ_tmp; /* Not const char ** ? Really? */
   for (environ_tmp = get_environment(); *environ_tmp; ++environ_tmp) {
-    smartlist_add(sl, tor_strdup(*environ_tmp));
+    smartlist_add_strdup(sl, *environ_tmp);
   }
 
   return sl;
@@ -4913,7 +4875,7 @@ tor_read_all_handle(HANDLE h, char *buf, size_t count,
   if (count > SIZE_T_CEILING || count > SSIZE_MAX)
     return -1;
 
-  while (numread != count) {
+  while (numread < count) {
     /* Check if there is anything to read */
     retval = PeekNamedPipe(h, NULL, 0, NULL, &byte_count, NULL);
     if (!retval) {
@@ -4958,20 +4920,20 @@ tor_read_all_handle(HANDLE h, char *buf, size_t count,
   }
   return (ssize_t)numread;
 }
-#else
-/** Read from a handle <b>h</b> into <b>buf</b>, up to <b>count</b> bytes.  If
+#else /* !(defined(_WIN32)) */
+/** Read from a handle <b>fd</b> into <b>buf</b>, up to <b>count</b> bytes.  If
  * <b>process</b> is NULL, the function will return immediately if there is
  * nothing more to read. Otherwise data will be read until end of file, or
  * <b>count</b> bytes are read.  Returns the number of bytes read, or -1 on
  * error. Sets <b>eof</b> to true if <b>eof</b> is not NULL and the end of the
  * file has been reached. */
 ssize_t
-tor_read_all_handle(FILE *h, char *buf, size_t count,
+tor_read_all_handle(int fd, char *buf, size_t count,
                     const process_handle_t *process,
                     int *eof)
 {
   size_t numread = 0;
-  char *retval;
+  ssize_t result;
 
   if (eof)
     *eof = 0;
@@ -4979,37 +4941,31 @@ tor_read_all_handle(FILE *h, char *buf, size_t count,
   if (count > SIZE_T_CEILING || count > SSIZE_MAX)
     return -1;
 
-  while (numread != count) {
-    /* Use fgets because that is what we use in log_from_pipe() */
-    retval = fgets(buf+numread, (int)(count-numread), h);
-    if (NULL == retval) {
-      if (feof(h)) {
-        log_debug(LD_GENERAL, "fgets() reached end of file");
-        if (eof)
-          *eof = 1;
+  while (numread < count) {
+    result = read(fd, buf+numread, count-numread);
+
+    if (result == 0) {
+      log_debug(LD_GENERAL, "read() reached end of file");
+      if (eof)
+        *eof = 1;
+      break;
+    } else if (result < 0 && errno == EAGAIN) {
+      if (process)
+        continue;
+      else
         break;
-      } else {
-        if (EAGAIN == errno) {
-          if (process)
-            continue;
-          else
-            break;
-        } else {
-          log_warn(LD_GENERAL, "fgets() from handle failed: %s",
-                   strerror(errno));
-          return -1;
-        }
-      }
+    } else if (result < 0) {
+      log_warn(LD_GENERAL, "read() failed: %s", strerror(errno));
+      return -1;
     }
-    tor_assert(retval != NULL);
-    tor_assert(strlen(retval) + numread <= count);
-    numread += strlen(retval);
+
+    numread += result;
   }
 
-  log_debug(LD_GENERAL, "fgets() read %d bytes from handle", (int)numread);
+  log_debug(LD_GENERAL, "read() read %d bytes from handle", (int)numread);
   return (ssize_t)numread;
 }
-#endif
+#endif /* defined(_WIN32) */
 
 /** Read from stdout of a process until the process exits. */
 ssize_t
@@ -5020,9 +4976,9 @@ tor_read_all_from_process_stdout(const process_handle_t *process_handle,
   return tor_read_all_handle(process_handle->stdout_pipe, buf, count,
                              process_handle);
 #else
-  return tor_read_all_handle(process_handle->stdout_handle, buf, count,
+  return tor_read_all_handle(process_handle->stdout_pipe, buf, count,
                              process_handle, NULL);
-#endif
+#endif /* defined(_WIN32) */
 }
 
 /** Read from stdout of a process until the process exits. */
@@ -5034,9 +4990,9 @@ tor_read_all_from_process_stderr(const process_handle_t *process_handle,
   return tor_read_all_handle(process_handle->stderr_pipe, buf, count,
                              process_handle);
 #else
-  return tor_read_all_handle(process_handle->stderr_handle, buf, count,
+  return tor_read_all_handle(process_handle->stderr_pipe, buf, count,
                              process_handle, NULL);
-#endif
+#endif /* defined(_WIN32) */
 }
 
 /** Split buf into lines, and add to smartlist. The buffer <b>buf</b> will be
@@ -5225,14 +5181,13 @@ log_from_handle(HANDLE *pipe, int severity)
   return 0;
 }
 
-#else
+#else /* !(defined(_WIN32)) */
 
 /** Return a smartlist containing lines outputted from
- *  <b>handle</b>. Return NULL on error, and set
+ *  <b>fd</b>. Return NULL on error, and set
  *  <b>stream_status_out</b> appropriately. */
 MOCK_IMPL(smartlist_t *,
-tor_get_lines_from_handle, (FILE *handle,
-                            enum stream_status *stream_status_out))
+tor_get_lines_from_handle, (int fd, enum stream_status *stream_status_out))
 {
   enum stream_status stream_status;
   char stdout_buf[400];
@@ -5241,13 +5196,13 @@ tor_get_lines_from_handle, (FILE *handle,
   while (1) {
     memset(stdout_buf, 0, sizeof(stdout_buf));
 
-    stream_status = get_string_from_pipe(handle,
+    stream_status = get_string_from_pipe(fd,
                                          stdout_buf, sizeof(stdout_buf) - 1);
     if (stream_status != IO_STREAM_OKAY)
       goto done;
 
     if (!lines) lines = smartlist_new();
-    smartlist_add(lines, tor_strdup(stdout_buf));
+    smartlist_split_string(lines, stdout_buf, "\n", 0, 0);
   }
 
  done:
@@ -5255,20 +5210,20 @@ tor_get_lines_from_handle, (FILE *handle,
   return lines;
 }
 
-/** Read from stream, and send lines to log at the specified log level.
+/** Read from fd, and send lines to log at the specified log level.
  * Returns 1 if stream is closed normally, -1 if there is a error reading, and
  * 0 otherwise. Handles lines from tor-fw-helper and
  * tor_spawn_background() specially.
  */
 static int
-log_from_pipe(FILE *stream, int severity, const char *executable,
+log_from_pipe(int fd, int severity, const char *executable,
               int *child_status)
 {
   char buf[256];
   enum stream_status r;
 
   for (;;) {
-    r = get_string_from_pipe(stream, buf, sizeof(buf) - 1);
+    r = get_string_from_pipe(fd, buf, sizeof(buf) - 1);
 
     if (r == IO_STREAM_CLOSED) {
       return 1;
@@ -5291,9 +5246,9 @@ log_from_pipe(FILE *stream, int severity, const char *executable,
   /* We should never get here */
   return -1;
 }
-#endif
+#endif /* defined(_WIN32) */
 
-/** Reads from <b>stream</b> and stores input in <b>buf_out</b> making
+/** Reads from <b>fd</b> and stores input in <b>buf_out</b> making
  *  sure it's below <b>count</b> bytes.
  *  If the string has a trailing newline, we strip it off.
  *
@@ -5309,52 +5264,28 @@ log_from_pipe(FILE *stream, int severity, const char *executable,
  * IO_STREAM_OKAY: If everything went okay and we got a string
  *  in <b>buf_out</b>. */
 enum stream_status
-get_string_from_pipe(FILE *stream, char *buf_out, size_t count)
+get_string_from_pipe(int fd, char *buf_out, size_t count)
 {
-  char *retval;
-  size_t len;
+  ssize_t ret;
 
   tor_assert(count <= INT_MAX);
 
-  retval = fgets(buf_out, (int)count, stream);
+  ret = read(fd, buf_out, count);
 
-  if (!retval) {
-    if (feof(stream)) {
-      /* Program has closed stream (probably it exited) */
-      /* TODO: check error */
-      return IO_STREAM_CLOSED;
-    } else {
-      if (EAGAIN == errno) {
-        /* Nothing more to read, try again next time */
-        return IO_STREAM_EAGAIN;
-      } else {
-        /* There was a problem, abandon this child process */
-        return IO_STREAM_TERM;
-      }
-    }
-  } else {
-    len = strlen(buf_out);
-    if (len == 0) {
-      /* this probably means we got a NUL at the start of the string. */
-      return IO_STREAM_EAGAIN;
-    }
+  if (ret == 0)
+    return IO_STREAM_CLOSED;
+  else if (ret < 0 && errno == EAGAIN)
+    return IO_STREAM_EAGAIN;
+  else if (ret < 0)
+    return IO_STREAM_TERM;
 
-    if (buf_out[len - 1] == '\n') {
-      /* Remove the trailing newline */
-      buf_out[len - 1] = '\0';
-    } else {
-      /* No newline; check whether we overflowed the buffer */
-      if (!feof(stream))
-        log_info(LD_GENERAL,
-                 "Line from stream was truncated: %s", buf_out);
-      /* TODO: What to do with this error? */
-    }
+  if (buf_out[ret - 1] == '\n') {
+    /* Remove the trailing newline */
+    buf_out[ret - 1] = '\0';
+  } else
+    buf_out[ret] = '\0';
 
-    return IO_STREAM_OKAY;
-  }
-
-  /* We should never get here */
-  return IO_STREAM_TERM;
+  return IO_STREAM_OKAY;
 }
 
 /** Parse a <b>line</b> from tor-fw-helper and issue an appropriate
@@ -5567,7 +5498,7 @@ tor_check_port_forwarding(const char *filename,
     status = tor_spawn_background(NULL, argv, NULL, &child_handle);
 #else
     status = tor_spawn_background(filename, argv, NULL, &child_handle);
-#endif
+#endif /* defined(_WIN32) */
 
     tor_free_((void*)argv);
     argv=NULL;
@@ -5591,9 +5522,9 @@ tor_check_port_forwarding(const char *filename,
 #ifdef _WIN32
     stderr_status = log_from_handle(child_handle->stderr_pipe, LOG_INFO);
 #else
-    stderr_status = log_from_pipe(child_handle->stderr_handle,
+    stderr_status = log_from_pipe(child_handle->stderr_pipe,
                                   LOG_INFO, filename, &retval);
-#endif
+#endif /* defined(_WIN32) */
     if (handle_fw_helper_output(filename, child_handle) < 0) {
       log_warn(LD_GENERAL, "Failed to handle fw helper output.");
       stdout_status = -1;
@@ -5618,13 +5549,13 @@ tor_check_port_forwarding(const char *filename,
        * between log_from_handle and tor_get_exit_code? */
       retval = 1;
     }
-#else
+#else /* !(defined(_WIN32)) */
     else if (1 == stdout_status || 1 == stderr_status)
       /* stdout or stderr was closed, the process probably
        * exited. It will be reaped by waitpid() in main.c */
       /* TODO: Do something with the process return value */
       retval = 1;
-#endif
+#endif /* defined(_WIN32) */
     else
       /* Both are fine */
       retval = 0;
@@ -5695,6 +5626,28 @@ clamp_double_to_int64(double number)
 {
   int exponent;
 
+#if defined(MINGW_ANY) && GCC_VERSION >= 409
+/*
+  Mingw's math.h uses gcc's __builtin_choose_expr() facility to declare
+  isnan, isfinite, and signbit.  But as implemented in at least some
+  versions of gcc, __builtin_choose_expr() can generate type warnings
+  even from branches that are not taken.  So, suppress those warnings.
+*/
+#define PROBLEMATIC_FLOAT_CONVERSION_WARNING
+DISABLE_GCC_WARNING(float-conversion)
+#endif /* defined(MINGW_ANY) && GCC_VERSION >= 409 */
+
+/*
+  With clang 4.0 we apparently run into "double promotion" warnings here,
+  since clang thinks we're promoting a double to a long double.
+ */
+#if defined(__clang__)
+#if __has_warning("-Wdouble-promotion")
+#define PROBLEMATIC_DOUBLE_PROMOTION_WARNING
+DISABLE_GCC_WARNING(double-promotion)
+#endif
+#endif /* defined(__clang__) */
+
   /* NaN is a special case that can't be used with the logic below. */
   if (isnan(number)) {
     return 0;
@@ -5720,6 +5673,13 @@ clamp_double_to_int64(double number)
 
   /* Handle infinities and finite numbers with magnitude >= 2^63. */
   return signbit(number) ? INT64_MIN : INT64_MAX;
+
+#ifdef PROBLEMATIC_DOUBLE_PROMOTION_WARNING
+ENABLE_GCC_WARNING(double-promotion)
+#endif
+#ifdef PROBLEMATIC_FLOAT_CONVERSION_WARNING
+ENABLE_GCC_WARNING(float-conversion)
+#endif
 }
 
 /** Return a uint64_t value from <b>a</b> in network byte order. */
@@ -5733,7 +5693,7 @@ tor_htonll(uint64_t a)
   /* Little endian. The worst... */
   return htonl((uint32_t)(a>>32)) |
     (((uint64_t)htonl((uint32_t)a))<<32);
-#endif /* WORDS_BIGENDIAN */
+#endif /* defined(WORDS_BIGENDIAN) */
 }
 
 /** Return a uint64_t value from <b>a</b> in host byte order. */

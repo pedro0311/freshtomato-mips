@@ -1,4 +1,4 @@
-/* Copyright (c) 2016, The Tor Project, Inc. */
+/* Copyright (c) 2016-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -192,7 +192,7 @@ verify_commit_and_reveal(const sr_commit_t *commit)
     /* Use the invariant length since the encoded reveal variable has an
      * extra byte for the NUL terminated byte. */
     if (crypto_digest256(received_hashed_reveal, commit->encoded_reveal,
-                         SR_REVEAL_BASE64_LEN, commit->alg)) {
+                         SR_REVEAL_BASE64_LEN, commit->alg) < 0) {
       /* Unable to digest the reveal blob, this is unlikely. */
       goto invalid;
     }
@@ -230,9 +230,7 @@ commit_decode(const char *encoded, sr_commit_t *commit)
 {
   int decoded_len = 0;
   size_t offset = 0;
-  /* XXX: Needs two extra bytes for the base64 decode calculation matches
-   * the binary length once decoded. #17868. */
-  char b64_decoded[SR_COMMIT_LEN + 2];
+  char b64_decoded[SR_COMMIT_LEN];
 
   tor_assert(encoded);
   tor_assert(commit);
@@ -284,9 +282,7 @@ STATIC int
 reveal_decode(const char *encoded, sr_commit_t *commit)
 {
   int decoded_len = 0;
-  /* XXX: Needs two extra bytes for the base64 decode calculation matches
-   * the binary length once decoded. #17868. */
-  char b64_decoded[SR_REVEAL_LEN + 2];
+  char b64_decoded[SR_REVEAL_LEN];
 
   tor_assert(encoded);
   tor_assert(commit);
@@ -500,6 +496,20 @@ get_vote_line_from_commit(const sr_commit_t *commit, sr_phase_t phase)
 
   log_debug(LD_DIR, "SR: Commit vote line: %s", vote_line);
   return vote_line;
+}
+
+/* Convert a given srv object to a string for the control port. This doesn't
+ * fail and the srv object MUST be valid. */
+static char *
+srv_to_control_string(const sr_srv_t *srv)
+{
+  char *srv_str;
+  char srv_hash_encoded[SR_SRV_VALUE_BASE64_LEN + 1];
+  tor_assert(srv);
+
+  sr_srv_encode(srv_hash_encoded, sizeof(srv_hash_encoded), srv);
+  tor_asprintf(&srv_str, "%s", srv_hash_encoded);
+  return srv_str;
 }
 
 /* Return a heap allocated string that contains the given <b>srv</b> string
@@ -932,7 +942,7 @@ sr_generate_our_commit(time_t timestamp, const authority_cert_t *my_rsa_cert)
   /* The invariant length is used here since the encoded reveal variable
    * has an extra byte added for the NULL terminated byte. */
   if (crypto_digest256(commit->hashed_reveal, commit->encoded_reveal,
-                       SR_REVEAL_BASE64_LEN, commit->alg)) {
+                       SR_REVEAL_BASE64_LEN, commit->alg) < 0) {
     goto error;
   }
 
@@ -1012,7 +1022,7 @@ sr_compute_srv(void)
     SMARTLIST_FOREACH(chunks, char *, s, tor_free(s));
     smartlist_free(chunks);
     if (crypto_digest256(hashed_reveals, reveals, strlen(reveals),
-                         SR_DIGEST_ALG)) {
+                         SR_DIGEST_ALG) < 0) {
       goto end;
     }
     current_srv = generate_srv(hashed_reveals, reveal_num,
@@ -1323,13 +1333,7 @@ sr_act_post_consensus(const networkstatus_t *consensus)
   }
 
   /* Prepare our state so that it's ready for the next voting period. */
-  {
-    voting_schedule_t *voting_schedule =
-      get_voting_schedule(options,time(NULL), LOG_NOTICE);
-    time_t interval_starts = voting_schedule->interval_starts;
-    sr_state_update(interval_starts);
-    voting_schedule_free(voting_schedule);
-  }
+  sr_state_update(dirvote_get_next_valid_after_time());
 }
 
 /* Initialize shared random subsystem. This MUST be called early in the boot
@@ -1348,6 +1352,84 @@ sr_save_and_cleanup(void)
   sr_cleanup();
 }
 
+/* Return the current SRV string representation for the control port. Return a
+ * newly allocated string on success containing the value else "" if not found
+ * or if we don't have a valid consensus yet. */
+char *
+sr_get_current_for_control(void)
+{
+  char *srv_str;
+  const networkstatus_t *c = networkstatus_get_latest_consensus();
+  if (c && c->sr_info.current_srv) {
+    srv_str = srv_to_control_string(c->sr_info.current_srv);
+  } else {
+    srv_str = tor_strdup("");
+  }
+  return srv_str;
+}
+
+/* Return the previous SRV string representation for the control port. Return
+ * a newly allocated string on success containing the value else "" if not
+ * found or if we don't have a valid consensus yet. */
+char *
+sr_get_previous_for_control(void)
+{
+  char *srv_str;
+  const networkstatus_t *c = networkstatus_get_latest_consensus();
+  if (c && c->sr_info.previous_srv) {
+    srv_str = srv_to_control_string(c->sr_info.previous_srv);
+  } else {
+    srv_str = tor_strdup("");
+  }
+  return srv_str;
+}
+
+/* Return current shared random value from the latest consensus. Caller can
+ * NOT keep a reference to the returned pointer. Return NULL if none. */
+const sr_srv_t *
+sr_get_current(const networkstatus_t *ns)
+{
+  const networkstatus_t *consensus;
+
+  /* Use provided ns else get a live one */
+  if (ns) {
+    consensus = ns;
+  } else {
+    consensus = networkstatus_get_live_consensus(approx_time());
+  }
+  /* Ideally we would never be asked for an SRV without a live consensus. Make
+   * sure this assumption is correct. */
+  tor_assert_nonfatal(consensus);
+
+  if (consensus) {
+    return consensus->sr_info.current_srv;
+  }
+  return NULL;
+}
+
+/* Return previous shared random value from the latest consensus. Caller can
+ * NOT keep a reference to the returned pointer. Return NULL if none. */
+const sr_srv_t *
+sr_get_previous(const networkstatus_t *ns)
+{
+  const networkstatus_t *consensus;
+
+  /* Use provided ns else get a live one */
+  if (ns) {
+    consensus = ns;
+  } else {
+    consensus = networkstatus_get_live_consensus(approx_time());
+  }
+  /* Ideally we would never be asked for an SRV without a live consensus. Make
+   * sure this assumption is correct. */
+  tor_assert_nonfatal(consensus);
+
+  if (consensus) {
+    return consensus->sr_info.previous_srv;
+  }
+  return NULL;
+}
+
 #ifdef TOR_UNIT_TESTS
 
 /* Set the global value of number of SRV agreements so the test can play
@@ -1359,5 +1441,5 @@ set_num_srv_agreements(int32_t value)
   num_srv_agreements_from_vote = value;
 }
 
-#endif /* TOR_UNIT_TESTS */
+#endif /* defined(TOR_UNIT_TESTS) */
 

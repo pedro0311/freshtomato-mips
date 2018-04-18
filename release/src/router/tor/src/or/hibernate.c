@@ -1,5 +1,5 @@
 /* Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -331,7 +331,7 @@ edge_of_accounting_period_containing(time_t now, int get_end)
     case UNIT_MONTH: {
       /* If this is before the Nth, we want the Nth of last month. */
       if (tm.tm_mday < cfg_start_day ||
-          (tm.tm_mday < cfg_start_day && before)) {
+          (tm.tm_mday == cfg_start_day && before)) {
         --tm.tm_mon;
       }
       /* Otherwise, the month is correct. */
@@ -424,8 +424,8 @@ configure_accounting(time_t now)
     if (-0.50 <= delta && delta <= 0.50) {
       /* The start of the period is now a little later or earlier than we
        * remembered.  That's fine; we might lose some bytes we could otherwise
-       * have written, but better to err on the side of obeying people's
-       * accounting settings. */
+       * have written, but better to err on the side of obeying accounting
+       * settings. */
       log_info(LD_ACCT, "Accounting interval moved by %.02f%%; "
                "that's fine.", delta*100);
       interval_end_time = start_of_accounting_period_after(now);
@@ -587,7 +587,10 @@ accounting_set_wakeup_time(void)
     char buf[ISO_TIME_LEN+1];
     format_iso_time(buf, interval_start_time);
 
-    crypto_pk_get_digest(get_server_identity_key(), digest);
+    if (crypto_pk_get_digest(get_server_identity_key(), digest) < 0) {
+      log_err(LD_BUG, "Error getting our key's digest.");
+      tor_assert(0);
+    }
 
     d_env = crypto_digest_new();
     crypto_digest_add_bytes(d_env, buf, ISO_TIME_LEN);
@@ -896,7 +899,7 @@ hibernate_go_dormant(time_t now)
   log_notice(LD_ACCT,"Going dormant. Blowing away remaining connections.");
 
   /* Close all OR/AP/exit conns. Leave dir conns because we still want
-   * to be able to upload server descriptors so people know we're still
+   * to be able to upload server descriptors so clients know we're still
    * running, and download directories so we can detect if we're obsolete.
    * Leave control conns because we still want to be controllable.
    */
@@ -1121,5 +1124,5 @@ hibernate_set_state_for_testing_(hibernate_state_t newstate)
 {
   hibernate_state = newstate;
 }
-#endif
+#endif /* defined(TOR_UNIT_TESTS) */
 

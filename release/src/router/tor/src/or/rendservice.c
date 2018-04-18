@@ -1,5 +1,5 @@
 /* Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -17,6 +17,8 @@
 #include "config.h"
 #include "control.h"
 #include "directory.h"
+#include "hs_common.h"
+#include "hs_config.h"
 #include "main.h"
 #include "networkstatus.h"
 #include "nodelist.h"
@@ -75,45 +77,11 @@ static ssize_t rend_service_parse_intro_for_v3(
 static int rend_service_check_private_dir(const or_options_t *options,
                                           const rend_service_t *s,
                                           int create);
-static int rend_service_check_private_dir_impl(const or_options_t *options,
-                                               const rend_service_t *s,
-                                               int create);
-
-/** Represents the mapping from a virtual port of a rendezvous service to
- * a real port on some IP.
- */
-struct rend_service_port_config_s {
-  /* The incoming HS virtual port we're mapping */
-  uint16_t virtual_port;
-  /* Is this an AF_UNIX port? */
-  unsigned int is_unix_addr:1;
-  /* The outgoing TCP port to use, if !is_unix_addr */
-  uint16_t real_port;
-  /* The outgoing IPv4 or IPv6 address to use, if !is_unix_addr */
-  tor_addr_t real_addr;
-  /* The socket path to connect to, if is_unix_addr */
-  char unix_addr[FLEXIBLE_ARRAY_MEMBER];
-};
-
-/** Try to maintain this many intro points per service by default. */
-#define NUM_INTRO_POINTS_DEFAULT 3
-/** Maximum number of intro points per service. */
-#define NUM_INTRO_POINTS_MAX 10
-/** Number of extra intro points we launch if our set of intro nodes is
- * empty. See proposal 155, section 4. */
-#define NUM_INTRO_POINTS_EXTRA 2
-
-/** If we can't build our intro circuits, don't retry for this long. */
-#define INTRO_CIRC_RETRY_PERIOD (60*5)
-/** Don't try to build more than this many circuits before giving up
- * for a while.*/
-#define MAX_INTRO_CIRCS_PER_PERIOD 10
-/** How many times will a hidden service operator attempt to connect to
- * a requested rendezvous point before giving up? */
-#define MAX_REND_FAILURES 1
-/** How many seconds should we spend trying to connect to a requested
- * rendezvous point before giving up? */
-#define MAX_REND_TIMEOUT 30
+static const smartlist_t* rend_get_service_list(
+                                  const smartlist_t* substitute_service_list);
+static smartlist_t* rend_get_service_list_mutable(
+                                  smartlist_t* substitute_service_list);
+static int rend_max_intro_circs_per_period(unsigned int n_intro_points_wanted);
 
 /* Hidden service directory file names:
  * new file names should be added to rend_service_add_filenames_to_list()
@@ -123,21 +91,64 @@ static const char *hostname_fname = "hostname";
 static const char *client_keys_fname = "client_keys";
 static const char *sos_poison_fname = "onion_service_non_anonymous";
 
+/** A list of rend_service_t's for services run on this OP. */
+static smartlist_t *rend_service_list = NULL;
+/** A list of rend_service_t's for services run on this OP which is used as a
+ * staging area before they are put in the main list in order to prune dying
+ * service on config reload. */
+static smartlist_t *rend_service_staging_list = NULL;
+
+/* Like rend_get_service_list_mutable, but returns a read-only list. */
+static const smartlist_t*
+rend_get_service_list(const smartlist_t* substitute_service_list)
+{
+  /* It is safe to cast away the const here, because
+   * rend_get_service_list_mutable does not actually modify the list */
+  return rend_get_service_list_mutable((smartlist_t*)substitute_service_list);
+}
+
+/* Return a mutable list of hidden services.
+ * If substitute_service_list is not NULL, return it.
+ * Otherwise, check if the global rend_service_list is non-NULL, and if so,
+ * return it.
+ * Otherwise, log a BUG message and return NULL.
+ * */
+static smartlist_t*
+rend_get_service_list_mutable(smartlist_t* substitute_service_list)
+{
+  if (substitute_service_list) {
+    return substitute_service_list;
+  }
+
+  /* If no special service list is provided, then just use the global one. */
+
+  if (BUG(!rend_service_list)) {
+    /* No global HS list, which is a programmer error. */
+    return NULL;
+  }
+
+  return rend_service_list;
+}
+
+/** Tells if onion service <b>s</b> is ephemeral.
+ */
+static unsigned int
+rend_service_is_ephemeral(const struct rend_service_t *s)
+{
+  return (s->directory == NULL);
+}
+
 /** Returns a escaped string representation of the service, <b>s</b>.
  */
 static const char *
 rend_service_escaped_dir(const struct rend_service_t *s)
 {
-  return (s->directory) ? escaped(s->directory) : "[EPHEMERAL]";
+  return rend_service_is_ephemeral(s) ? "[EPHEMERAL]" : escaped(s->directory);
 }
-
-/** A list of rend_service_t's for services run on this OP.
- */
-static smartlist_t *rend_service_list = NULL;
 
 /** Return the number of rendezvous services we have configured. */
 int
-num_rend_services(void)
+rend_num_services(void)
 {
   if (!rend_service_list)
     return 0;
@@ -205,137 +216,139 @@ rend_service_free(rend_service_t *service)
   tor_free(service);
 }
 
-/** Release all the storage held in rend_service_list.
- */
+/* Release all the storage held in rend_service_staging_list. */
+void
+rend_service_free_staging_list(void)
+{
+  if (rend_service_staging_list) {
+    SMARTLIST_FOREACH(rend_service_staging_list, rend_service_t*, ptr,
+                      rend_service_free(ptr));
+    smartlist_free(rend_service_staging_list);
+    rend_service_staging_list = NULL;
+  }
+}
+
+/** Release all the storage held in both rend_service_list and
+ * rend_service_staging_list. */
 void
 rend_service_free_all(void)
 {
-  if (!rend_service_list)
-    return;
-
-  SMARTLIST_FOREACH(rend_service_list, rend_service_t*, ptr,
-                    rend_service_free(ptr));
-  smartlist_free(rend_service_list);
-  rend_service_list = NULL;
+  if (rend_service_list) {
+    SMARTLIST_FOREACH(rend_service_list, rend_service_t*, ptr,
+                      rend_service_free(ptr));
+    smartlist_free(rend_service_list);
+    rend_service_list = NULL;
+  }
+  rend_service_free_staging_list();
 }
 
-/** Validate <b>service</b> and add it to <b>service_list</b>, or to
- * the global rend_service_list if <b>service_list</b> is NULL.
- * Return 0 on success.  On failure, free <b>service</b> and return -1.
- * Takes ownership of <b>service</b>.
- */
+/* Initialize the subsystem. */
+void
+rend_service_init(void)
+{
+  tor_assert(!rend_service_list);
+  tor_assert(!rend_service_staging_list);
+
+  rend_service_list = smartlist_new();
+  rend_service_staging_list = smartlist_new();
+}
+
+/* Validate a <b>service</b>. Use the <b>service_list</b> to make sure there
+ * is no duplicate entry for the given service object. Return 0 if valid else
+ * -1 if not.*/
+static int
+rend_validate_service(const smartlist_t *service_list,
+                      const rend_service_t *service)
+{
+  tor_assert(service_list);
+  tor_assert(service);
+
+  if (service->max_streams_per_circuit < 0) {
+    log_warn(LD_CONFIG, "Hidden service (%s) configured with negative max "
+                        "streams per circuit.",
+             rend_service_escaped_dir(service));
+    goto invalid;
+  }
+
+  if (service->max_streams_close_circuit < 0 ||
+      service->max_streams_close_circuit > 1) {
+    log_warn(LD_CONFIG, "Hidden service (%s) configured with invalid "
+                        "max streams handling.",
+             rend_service_escaped_dir(service));
+    goto invalid;
+  }
+
+  if (service->auth_type != REND_NO_AUTH &&
+      (!service->clients || smartlist_len(service->clients) == 0)) {
+    log_warn(LD_CONFIG, "Hidden service (%s) with client authorization but "
+                        "no clients.",
+             rend_service_escaped_dir(service));
+    goto invalid;
+  }
+
+  if (!service->ports || !smartlist_len(service->ports)) {
+    log_warn(LD_CONFIG, "Hidden service (%s) with no ports configured.",
+             rend_service_escaped_dir(service));
+    goto invalid;
+  }
+
+  /* Valid. */
+  return 0;
+ invalid:
+  return -1;
+}
+
+/** Add it to <b>service_list</b>, or to the global rend_service_list if
+ * <b>service_list</b> is NULL.  Return 0 on success.  On failure, free
+ * <b>service</b> and return -1. Takes ownership of <b>service</b>. */
 static int
 rend_add_service(smartlist_t *service_list, rend_service_t *service)
 {
   int i;
   rend_service_port_config_t *p;
 
-  smartlist_t *s_list;
-  /* If no special service list is provided, then just use the global one. */
-  if (!service_list) {
-    if (BUG(!rend_service_list)) {
-      /* No global HS list, which is a failure. */
-      return -1;
-    }
+  tor_assert(service);
 
-    s_list = rend_service_list;
-  } else {
-    s_list = service_list;
+  smartlist_t *s_list = rend_get_service_list_mutable(service_list);
+  /* We must have a service list, even if it's a temporary one, so we can
+   * check for duplicate services */
+  if (BUG(!s_list)) {
+    rend_service_free(service);
+    return -1;
   }
 
   service->intro_nodes = smartlist_new();
   service->expiring_nodes = smartlist_new();
 
-  if (service->max_streams_per_circuit < 0) {
-    log_warn(LD_CONFIG, "Hidden service (%s) configured with negative max "
-                        "streams per circuit; ignoring.",
-             rend_service_escaped_dir(service));
-    rend_service_free(service);
-    return -1;
-  }
-
-  if (service->max_streams_close_circuit < 0 ||
-      service->max_streams_close_circuit > 1) {
-    log_warn(LD_CONFIG, "Hidden service (%s) configured with invalid "
-                        "max streams handling; ignoring.",
-             rend_service_escaped_dir(service));
-    rend_service_free(service);
-    return -1;
-  }
-
-  if (service->auth_type != REND_NO_AUTH &&
-      (!service->clients ||
-       smartlist_len(service->clients) == 0)) {
-    log_warn(LD_CONFIG, "Hidden service (%s) with client authorization but no "
-                        "clients; ignoring.",
-             rend_service_escaped_dir(service));
-    rend_service_free(service);
-    return -1;
-  }
-
-  if (!service->ports || !smartlist_len(service->ports)) {
-    log_warn(LD_CONFIG, "Hidden service (%s) with no ports configured; "
-             "ignoring.",
-             rend_service_escaped_dir(service));
-    rend_service_free(service);
-    return -1;
-  } else {
-    int dupe = 0;
-    /* XXX This duplicate check has two problems:
-     *
-     * a) It's O(n^2), but the same comment from the bottom of
-     *    rend_config_services() should apply.
-     *
-     * b) We only compare directory paths as strings, so we can't
-     *    detect two distinct paths that specify the same directory
-     *    (which can arise from symlinks, case-insensitivity, bind
-     *    mounts, etc.).
-     *
-     * It also can't detect that two separate Tor instances are trying
-     * to use the same HiddenServiceDir; for that, we would need a
-     * lock file.  But this is enough to detect a simple mistake that
-     * at least one person has actually made.
-     */
-    if (service->directory != NULL) {
-      /* Skip dupe for ephemeral services. */
-      SMARTLIST_FOREACH(s_list, rend_service_t*, ptr,
-                        dupe = dupe ||
-                               !strcmp(ptr->directory, service->directory));
-      if (dupe) {
-        log_warn(LD_REND, "Another hidden service is already configured for "
-                 "directory %s, ignoring.",
-                 rend_service_escaped_dir(service));
-        rend_service_free(service);
-        return -1;
-      }
-    }
-    smartlist_add(s_list, service);
-    log_debug(LD_REND,"Configuring service with directory \"%s\"",
-              service->directory);
-    for (i = 0; i < smartlist_len(service->ports); ++i) {
-      p = smartlist_get(service->ports, i);
-      if (!(p->is_unix_addr)) {
-        log_debug(LD_REND,
-                  "Service maps port %d to %s",
-                  p->virtual_port,
-                  fmt_addrport(&p->real_addr, p->real_port));
-      } else {
+  log_debug(LD_REND,"Configuring service with directory %s",
+            rend_service_escaped_dir(service));
+  for (i = 0; i < smartlist_len(service->ports); ++i) {
+    p = smartlist_get(service->ports, i);
+    if (!(p->is_unix_addr)) {
+      log_debug(LD_REND,
+                "Service maps port %d to %s",
+                p->virtual_port,
+                fmt_addrport(&p->real_addr, p->real_port));
+    } else {
 #ifdef HAVE_SYS_UN_H
-        log_debug(LD_REND,
-                  "Service maps port %d to socket at \"%s\"",
-                  p->virtual_port, p->unix_addr);
+      log_debug(LD_REND,
+                "Service maps port %d to socket at \"%s\"",
+                p->virtual_port, p->unix_addr);
 #else
-        log_debug(LD_REND,
-                  "Service maps port %d to an AF_UNIX socket, but we "
-                  "have no AF_UNIX support on this platform.  This is "
-                  "probably a bug.",
-                  p->virtual_port);
+      log_warn(LD_BUG,
+               "Service maps port %d to an AF_UNIX socket, but we "
+               "have no AF_UNIX support on this platform.  This is "
+               "probably a bug.",
+               p->virtual_port);
+      rend_service_free(service);
+      return -1;
 #endif /* defined(HAVE_SYS_UN_H) */
-      }
     }
-    return 0;
   }
-  /* NOTREACHED */
+  /* The service passed all the checks */
+  tor_assert(s_list);
+  smartlist_add(s_list, service);
+  return 0;
 }
 
 /** Return a new rend_service_port_config_t with its path set to
@@ -354,9 +367,9 @@ rend_service_port_config_new(const char *socket_path)
   return conf;
 }
 
-/** Parses a real-port to virtual-port mapping separated by the provided
- * separator and returns a new rend_service_port_config_t, or NULL and an
- * optional error string on failure.
+/** Parses a virtual-port to real-port/socket mapping separated by
+ * the provided separator and returns a new rend_service_port_config_t,
+ * or NULL and an optional error string on failure.
  *
  * The format is: VirtualPort SEP (IP|RealPort|IP:RealPort|'socket':path)?
  *
@@ -381,14 +394,12 @@ rend_service_parse_port_config(const char *string, const char *sep,
   smartlist_split_string(sl, string, sep,
                          SPLIT_SKIP_SPACE|SPLIT_IGNORE_BLANK, 2);
   if (smartlist_len(sl) < 1 || BUG(smartlist_len(sl) > 2)) {
-    if (err_msg_out)
-      err_msg = tor_strdup("Bad syntax in hidden service port configuration.");
+    err_msg = tor_strdup("Bad syntax in hidden service port configuration.");
     goto err;
   }
   virtport = (int)tor_parse_long(smartlist_get(sl,0), 10, 1, 65535, NULL,NULL);
   if (!virtport) {
-    if (err_msg_out)
-      tor_asprintf(&err_msg, "Missing or invalid port %s in hidden service "
+    tor_asprintf(&err_msg, "Missing or invalid port %s in hidden service "
                    "port configuration", escaped(smartlist_get(sl,0)));
 
     goto err;
@@ -416,10 +427,8 @@ rend_service_parse_port_config(const char *string, const char *sep,
     } else if (strchr(addrport, ':') || strchr(addrport, '.')) {
       /* else try it as an IP:port pair if it has a : or . in it */
       if (tor_addr_port_lookup(addrport, &addr, &p)<0) {
-        if (err_msg_out)
-          err_msg = tor_strdup("Unparseable address in hidden service port "
-                               "configuration.");
-
+        err_msg = tor_strdup("Unparseable address in hidden service port "
+                             "configuration.");
         goto err;
       }
       realport = p?p:virtport;
@@ -427,11 +436,9 @@ rend_service_parse_port_config(const char *string, const char *sep,
       /* No addr:port, no addr -- must be port. */
       realport = (int)tor_parse_long(addrport, 10, 1, 65535, NULL, NULL);
       if (!realport) {
-        if (err_msg_out)
-          tor_asprintf(&err_msg, "Unparseable or out-of-range port %s in "
-                       "hidden service port configuration.",
-                       escaped(addrport));
-
+        tor_asprintf(&err_msg, "Unparseable or out-of-range port %s in "
+                     "hidden service port configuration.",
+                     escaped(addrport));
         goto err;
       }
       tor_addr_from_ipv4h(&addr, 0x7F000001u); /* Default to 127.0.0.1 */
@@ -450,7 +457,11 @@ rend_service_parse_port_config(const char *string, const char *sep,
 
  err:
   tor_free(addrport);
-  if (err_msg_out) *err_msg_out = err_msg;
+  if (err_msg_out != NULL) {
+    *err_msg_out = err_msg;
+  } else {
+    tor_free(err_msg);
+  }
   SMARTLIST_FOREACH(sl, char *, c, tor_free(c));
   smartlist_free(sl);
 
@@ -464,196 +475,259 @@ rend_service_port_config_free(rend_service_port_config_t *p)
   tor_free(p);
 }
 
-/* Check the directory for <b>service</b>, and add the service to
- * <b>service_list</b>, or to the global list if <b>service_list</b> is NULL.
- * Only add the service to the list if <b>validate_only</b> is false.
- * If <b>validate_only</b> is true, free the service.
- * If <b>service</b> is NULL, ignore it, and return 0.
- * Returns 0 on success, and -1 on failure.
- * Takes ownership of <b>service</b>, either freeing it, or adding it to the
- * global service list.
- */
-STATIC int
-rend_service_check_dir_and_add(smartlist_t *service_list,
-                               const or_options_t *options,
-                               rend_service_t *service,
-                               int validate_only)
+/* Copy relevant data from service src to dst while pruning the service lists.
+ * This should only be called during the pruning process which takes existing
+ * services and copy their data to the newly configured services. The src
+ * service replaycache will be set to NULL after this call. */
+static void
+copy_service_on_prunning(rend_service_t *dst, rend_service_t *src)
 {
-  if (!service) {
-    /* It is ok for a service to be NULL, this means there are no services */
-    return 0;
+  tor_assert(dst);
+  tor_assert(src);
+
+  /* Keep the timestamps for when the content changed and the next upload
+   * time so we can properly upload the descriptor if needed for the new
+   * service object. */
+  dst->desc_is_dirty = src->desc_is_dirty;
+  dst->next_upload_time = src->next_upload_time;
+  /* Move the replaycache to the new object. */
+  dst->accepted_intro_dh_parts = src->accepted_intro_dh_parts;
+  src->accepted_intro_dh_parts = NULL;
+  /* Copy intro point information to destination service. */
+  dst->intro_period_started = src->intro_period_started;
+  dst->n_intro_circuits_launched = src->n_intro_circuits_launched;
+  dst->n_intro_points_wanted = src->n_intro_points_wanted;
+}
+
+/* Helper: Actual implementation of the pruning on reload which we've
+ * decoupled in order to make the unit test workeable without ugly hacks.
+ * Furthermore, this function does NOT free any memory but will nullify the
+ * temporary list pointer whatever happens. */
+STATIC void
+rend_service_prune_list_impl_(void)
+{
+  origin_circuit_t *ocirc = NULL;
+  smartlist_t *surviving_services, *old_service_list, *new_service_list;
+
+  /* When pruning our current service list, we must have a staging list that
+   * contains what we want to check else it's a code flow error. */
+  tor_assert(rend_service_staging_list);
+
+  /* We are about to prune the current list of its dead service so set the
+   * semantic for that list to be the "old" one. */
+  old_service_list = rend_service_list;
+  /* The staging list is now the "new" list so set this semantic. */
+  new_service_list = rend_service_staging_list;
+  /* After this, whatever happens, we'll use our new list. */
+  rend_service_list = new_service_list;
+  /* Finally, nullify the staging list pointer as we don't need it anymore
+   * and it needs to be NULL before the next reload. */
+  rend_service_staging_list = NULL;
+  /* Nothing to prune if we have no service list so stop right away. */
+  if (!old_service_list) {
+    return;
   }
 
-  if (rend_service_check_private_dir(options, service, !validate_only)
-      < 0) {
-    rend_service_free(service);
-    return -1;
-  }
+  /* This contains all _existing_ services that survives the relaod that is
+   * that haven't been removed from the configuration. The difference between
+   * this list and the new service list is that the new list can possibly
+   * contain newly configured service that have no introduction points opened
+   * yet nor key material loaded or generated. */
+  surviving_services = smartlist_new();
 
-  if (validate_only) {
-    rend_service_free(service);
-    return 0;
-  } else {
-    /* Use service_list for unit tests */
-    smartlist_t *s_list = NULL;
-    /* If no special service list is provided, then just use the global one. */
-    if (!service_list) {
-      if (BUG(!rend_service_list)) {
-        /* No global HS list, which is a failure, because we plan on adding to
-         * it */
-        return -1;
+  /* Preserve the existing ephemeral services.
+   *
+   * This is the ephemeral service equivalent of the "Copy introduction
+   * points to new services" block, except there's no copy required since
+   * the service structure isn't regenerated.
+   *
+   * After this is done, all ephemeral services will be:
+   *  * Removed from old_service_list, so the equivalent non-ephemeral code
+   *    will not attempt to preserve them.
+   *  * Added to the new_service_list (that previously only had the
+   *    services listed in the configuration).
+   *  * Added to surviving_services, which is the list of services that
+   *    will NOT have their intro point closed.
+   */
+  SMARTLIST_FOREACH_BEGIN(old_service_list, rend_service_t *, old) {
+    if (rend_service_is_ephemeral(old)) {
+      SMARTLIST_DEL_CURRENT(old_service_list, old);
+      smartlist_add(surviving_services, old);
+      smartlist_add(new_service_list, old);
+    }
+  } SMARTLIST_FOREACH_END(old);
+
+  /* Copy introduction points to new services. This is O(n^2), but it's only
+   * called on reconfigure, so it's ok performance wise. */
+  SMARTLIST_FOREACH_BEGIN(new_service_list, rend_service_t *, new) {
+    SMARTLIST_FOREACH_BEGIN(old_service_list, rend_service_t *, old) {
+      /* Skip ephemeral services as we only want to copy introduction points
+       * from current services to newly configured one that already exists.
+       * The same directory means it's the same service. */
+      if (rend_service_is_ephemeral(new) || rend_service_is_ephemeral(old) ||
+          strcmp(old->directory, new->directory)) {
+        continue;
       }
-      s_list = rend_service_list;
-    } else {
-      s_list = service_list;
+      smartlist_add_all(new->intro_nodes, old->intro_nodes);
+      smartlist_clear(old->intro_nodes);
+      smartlist_add_all(new->expiring_nodes, old->expiring_nodes);
+      smartlist_clear(old->expiring_nodes);
+
+      /* Copy needed information from old to new. */
+      copy_service_on_prunning(new, old);
+
+      /* This regular service will survive the closing IPs step after. */
+      smartlist_add(surviving_services, old);
+      break;
+    } SMARTLIST_FOREACH_END(old);
+  } SMARTLIST_FOREACH_END(new);
+
+  /* For every service introduction circuit we can find, see if we have a
+   * matching surviving configured service. If not, close the circuit. */
+  while ((ocirc = circuit_get_next_service_intro_circ(ocirc))) {
+    int keep_it = 0;
+    if (ocirc->rend_data == NULL) {
+      /* This is a v3 circuit, ignore it. */
+      continue;
     }
-    /* s_list can not be NULL here - if both service_list and rend_service_list
-     * are NULL, and validate_only is false, we exit earlier in the function
-     */
-    if (BUG(!s_list)) {
-      return -1;
+    SMARTLIST_FOREACH_BEGIN(surviving_services, const rend_service_t *, s) {
+      if (rend_circuit_pk_digest_eq(ocirc, (uint8_t *) s->pk_digest)) {
+        /* Keep this circuit as we have a matching configured service. */
+        keep_it = 1;
+        break;
+      }
+    } SMARTLIST_FOREACH_END(s);
+    if (keep_it) {
+      continue;
     }
-    /* Ignore service failures until 030 */
-    rend_add_service(s_list, service);
-    return 0;
+    log_info(LD_REND, "Closing intro point %s for service %s.",
+             safe_str_client(extend_info_describe(
+                                        ocirc->build_state->chosen_exit)),
+             safe_str_client(rend_data_get_address(ocirc->rend_data)));
+    /* Reason is FINISHED because service has been removed and thus the
+     * circuit is considered old/uneeded. */
+    circuit_mark_for_close(TO_CIRCUIT(ocirc), END_CIRC_REASON_FINISHED);
+  }
+  smartlist_free(surviving_services);
+}
+
+/* Try to prune our main service list using the temporary one that we just
+ * loaded and parsed successfully. The pruning process decides which onion
+ * services to keep and which to discard after a reload. */
+void
+rend_service_prune_list(void)
+{
+  smartlist_t *old_service_list = rend_service_list;
+  /* Don't try to prune anything if we have no staging list. */
+  if (!rend_service_staging_list) {
+    return;
+  }
+  rend_service_prune_list_impl_();
+  if (old_service_list) {
+    /* Every remaining service in the old list have been removed from the
+     * configuration so clean them up safely. */
+    SMARTLIST_FOREACH(old_service_list, rend_service_t *, s,
+                      rend_service_free(s));
+    smartlist_free(old_service_list);
   }
 }
 
-/** Set up rend_service_list, based on the values of HiddenServiceDir and
- * HiddenServicePort in <b>options</b>.  Return 0 on success and -1 on
- * failure.  (If <b>validate_only</b> is set, parse, warn and return as
- * normal, but don't actually change the configured services.)
- */
-int
-rend_config_services(const or_options_t *options, int validate_only)
+/* Copy all the relevant data that the hs_service object contains over to the
+ * rend_service_t object. The reason to do so is because when configuring a
+ * service, we go through a generic handler that creates an hs_service_t
+ * object which so we have to copy the parsed values to a rend service object
+ * which is version 2 specific. */
+static void
+service_config_shadow_copy(rend_service_t *service,
+                           hs_service_config_t *config)
 {
-  config_line_t *line;
-  rend_service_t *service = NULL;
-  rend_service_port_config_t *portcfg;
-  smartlist_t *old_service_list = NULL;
-  int ok = 0;
+  tor_assert(service);
+  tor_assert(config);
 
-  if (!validate_only) {
-    old_service_list = rend_service_list;
-    rend_service_list = smartlist_new();
+  service->directory = tor_strdup(config->directory_path);
+  service->dir_group_readable = config->dir_group_readable;
+  service->allow_unknown_ports = config->allow_unknown_ports;
+  /* This value can't go above HS_CONFIG_MAX_STREAMS_PER_RDV_CIRCUIT (65535)
+   * if the code flow is right so this cast is safe. But just in case, we'll
+   * check it. */
+  service->max_streams_per_circuit = (int) config->max_streams_per_rdv_circuit;
+  if (BUG(config->max_streams_per_rdv_circuit >
+          HS_CONFIG_MAX_STREAMS_PER_RDV_CIRCUIT)) {
+    service->max_streams_per_circuit = HS_CONFIG_MAX_STREAMS_PER_RDV_CIRCUIT;
+  }
+  service->max_streams_close_circuit = config->max_streams_close_circuit;
+  service->n_intro_points_wanted = config->num_intro_points;
+  /* Switching ownership of the ports to the rend service object. */
+  smartlist_add_all(service->ports, config->ports);
+  smartlist_free(config->ports);
+  config->ports = NULL;
+}
+
+/* Parse the hidden service configuration starting at <b>line_</b> using the
+ * already configured generic service configuration in <b>config</b>. This
+ * function will translate the config object to a rend_service_t and add it to
+ * the temporary list if valid. If <b>validate_only</b> is set, parse, warn
+ * and return as normal but don't actually add the service to the list. */
+int
+rend_config_service(const config_line_t *line_,
+                    const or_options_t *options,
+                    hs_service_config_t *config)
+{
+  const config_line_t *line;
+  rend_service_t *service = NULL;
+
+  /* line_ can be NULL which would mean that the service configuration only
+   * have one line that is the directory directive. */
+  tor_assert(options);
+  tor_assert(config);
+
+  /* Use the staging service list so that we can check then do the pruning
+   * process using the main list at the end. */
+  if (rend_service_staging_list == NULL) {
+    rend_service_staging_list = smartlist_new();
   }
 
-  for (line = options->RendConfigLines; line; line = line->next) {
+  /* Initialize service. */
+  service = tor_malloc_zero(sizeof(rend_service_t));
+  service->intro_period_started = time(NULL);
+  service->ports = smartlist_new();
+  /* From the hs_service object which has been used to load the generic
+   * options, we'll copy over the useful data to the rend_service_t object. */
+  service_config_shadow_copy(service, config);
+
+  for (line = line_; line; line = line->next) {
     if (!strcasecmp(line->key, "HiddenServiceDir")) {
-      /* register the service we just finished parsing
-       * this code registers every service except the last one parsed,
-       * which is registered below the loop */
-      if (rend_service_check_dir_and_add(NULL, options, service,
-                                         validate_only) < 0) {
-          return -1;
-      }
-      service = tor_malloc_zero(sizeof(rend_service_t));
-      service->directory = tor_strdup(line->value);
-      service->ports = smartlist_new();
-      service->intro_period_started = time(NULL);
-      service->n_intro_points_wanted = NUM_INTRO_POINTS_DEFAULT;
-      continue;
+      /* We just hit the next hidden service, stop right now. */
+      break;
     }
-    if (!service) {
-      log_warn(LD_CONFIG, "%s with no preceding HiddenServiceDir directive",
-               line->key);
-      rend_service_free(service);
-      return -1;
-    }
-    if (!strcasecmp(line->key, "HiddenServicePort")) {
-      char *err_msg = NULL;
-      portcfg = rend_service_parse_port_config(line->value, " ", &err_msg);
-      if (!portcfg) {
-        if (err_msg)
-          log_warn(LD_CONFIG, "%s", err_msg);
-        tor_free(err_msg);
-        rend_service_free(service);
-        return -1;
-      }
-      tor_assert(!err_msg);
-      smartlist_add(service->ports, portcfg);
-    } else if (!strcasecmp(line->key, "HiddenServiceAllowUnknownPorts")) {
-      service->allow_unknown_ports = (int)tor_parse_long(line->value,
-                                                        10, 0, 1, &ok, NULL);
-      if (!ok) {
-        log_warn(LD_CONFIG,
-                 "HiddenServiceAllowUnknownPorts should be 0 or 1, not %s",
-                 line->value);
-        rend_service_free(service);
-        return -1;
-      }
-      log_info(LD_CONFIG,
-               "HiddenServiceAllowUnknownPorts=%d for %s",
-               (int)service->allow_unknown_ports, service->directory);
-    } else if (!strcasecmp(line->key,
-                           "HiddenServiceDirGroupReadable")) {
-        service->dir_group_readable = (int)tor_parse_long(line->value,
-                                                        10, 0, 1, &ok, NULL);
-        if (!ok) {
-            log_warn(LD_CONFIG,
-                     "HiddenServiceDirGroupReadable should be 0 or 1, not %s",
-                     line->value);
-            rend_service_free(service);
-            return -1;
-        }
-        log_info(LD_CONFIG,
-                 "HiddenServiceDirGroupReadable=%d for %s",
-                 service->dir_group_readable, service->directory);
-    } else if (!strcasecmp(line->key, "HiddenServiceMaxStreams")) {
-      service->max_streams_per_circuit = (int)tor_parse_long(line->value,
-                                                    10, 0, 65535, &ok, NULL);
-      if (!ok) {
-        log_warn(LD_CONFIG,
-                 "HiddenServiceMaxStreams should be between 0 and %d, not %s",
-                 65535, line->value);
-        rend_service_free(service);
-        return -1;
-      }
-      log_info(LD_CONFIG,
-               "HiddenServiceMaxStreams=%d for %s",
-               service->max_streams_per_circuit, service->directory);
-    } else if (!strcasecmp(line->key, "HiddenServiceMaxStreamsCloseCircuit")) {
-      service->max_streams_close_circuit = (int)tor_parse_long(line->value,
-                                                        10, 0, 1, &ok, NULL);
-      if (!ok) {
-        log_warn(LD_CONFIG,
-                 "HiddenServiceMaxStreamsCloseCircuit should be 0 or 1, "
-                 "not %s",
-                 line->value);
-        rend_service_free(service);
-        return -1;
-      }
-      log_info(LD_CONFIG,
-               "HiddenServiceMaxStreamsCloseCircuit=%d for %s",
-               (int)service->max_streams_close_circuit, service->directory);
-    } else if (!strcasecmp(line->key, "HiddenServiceNumIntroductionPoints")) {
+    /* Number of introduction points. */
+    if (!strcasecmp(line->key, "HiddenServiceNumIntroductionPoints")) {
+      int ok = 0;
+      /* Those are specific defaults for version 2. */
       service->n_intro_points_wanted =
         (unsigned int) tor_parse_long(line->value, 10,
-                                      NUM_INTRO_POINTS_DEFAULT,
-                                      NUM_INTRO_POINTS_MAX, &ok, NULL);
+                                      0, NUM_INTRO_POINTS_MAX, &ok, NULL);
       if (!ok) {
         log_warn(LD_CONFIG,
                  "HiddenServiceNumIntroductionPoints "
                  "should be between %d and %d, not %s",
-                 NUM_INTRO_POINTS_DEFAULT, NUM_INTRO_POINTS_MAX,
-                 line->value);
-        rend_service_free(service);
-        return -1;
+                 0, NUM_INTRO_POINTS_MAX, line->value);
+        goto err;
       }
       log_info(LD_CONFIG, "HiddenServiceNumIntroductionPoints=%d for %s",
-               service->n_intro_points_wanted, service->directory);
-    } else if (!strcasecmp(line->key, "HiddenServiceAuthorizeClient")) {
+               service->n_intro_points_wanted, escaped(service->directory));
+      continue;
+    }
+    if (!strcasecmp(line->key, "HiddenServiceAuthorizeClient")) {
       /* Parse auth type and comma-separated list of client names and add a
        * rend_authorized_client_t for each client to the service's list
        * of authorized clients. */
       smartlist_t *type_names_split, *clients;
       const char *authname;
-      int num_clients;
       if (service->auth_type != REND_NO_AUTH) {
         log_warn(LD_CONFIG, "Got multiple HiddenServiceAuthorizeClient "
                  "lines for a single service.");
-        rend_service_free(service);
-        return -1;
+        goto err;
       }
       type_names_split = smartlist_new();
       smartlist_split_string(type_names_split, line->value, " ", 0, 2);
@@ -662,8 +736,7 @@ rend_config_services(const or_options_t *options, int validate_only)
                          "should have been prevented when parsing the "
                          "configuration.");
         smartlist_free(type_names_split);
-        rend_service_free(service);
-        return -1;
+        goto err;
       }
       authname = smartlist_get(type_names_split, 0);
       if (!strcasecmp(authname, "basic")) {
@@ -677,8 +750,7 @@ rend_config_services(const or_options_t *options, int validate_only)
                  (char *) smartlist_get(type_names_split, 0));
         SMARTLIST_FOREACH(type_names_split, char *, cp, tor_free(cp));
         smartlist_free(type_names_split);
-        rend_service_free(service);
-        return -1;
+        goto err;
       }
       service->clients = smartlist_new();
       if (smartlist_len(type_names_split) < 2) {
@@ -695,14 +767,15 @@ rend_config_services(const or_options_t *options, int validate_only)
       SMARTLIST_FOREACH(type_names_split, char *, cp, tor_free(cp));
       smartlist_free(type_names_split);
       /* Remove duplicate client names. */
-      num_clients = smartlist_len(clients);
-      smartlist_sort_strings(clients);
-      smartlist_uniq_strings(clients);
-      if (smartlist_len(clients) < num_clients) {
-        log_info(LD_CONFIG, "HiddenServiceAuthorizeClient contains %d "
-                            "duplicate client name(s); removing.",
-                 num_clients - smartlist_len(clients));
-        num_clients = smartlist_len(clients);
+      {
+        int num_clients = smartlist_len(clients);
+        smartlist_sort_strings(clients);
+        smartlist_uniq_strings(clients);
+        if (smartlist_len(clients) < num_clients) {
+          log_info(LD_CONFIG, "HiddenServiceAuthorizeClient contains %d "
+                   "duplicate client name(s); removing.",
+                   num_clients - smartlist_len(clients));
+        }
       }
       SMARTLIST_FOREACH_BEGIN(clients, const char *, client_name)
       {
@@ -715,8 +788,7 @@ rend_config_services(const or_options_t *options, int validate_only)
                    client_name, REND_CLIENTNAME_MAX_LEN);
           SMARTLIST_FOREACH(clients, char *, cp, tor_free(cp));
           smartlist_free(clients);
-          rend_service_free(service);
-          return -1;
+          goto err;
         }
         client = tor_malloc_zero(sizeof(rend_authorized_client_t));
         client->client_name = tor_strdup(client_name);
@@ -738,109 +810,29 @@ rend_config_services(const or_options_t *options, int validate_only)
                  smartlist_len(service->clients),
                  service->auth_type == REND_BASIC_AUTH ? 512 : 16,
                  service->auth_type == REND_BASIC_AUTH ? "basic" : "stealth");
-        rend_service_free(service);
-        return -1;
+        goto err;
       }
-    } else {
-      tor_assert(!strcasecmp(line->key, "HiddenServiceVersion"));
-      if (strcmp(line->value, "2")) {
-        log_warn(LD_CONFIG,
-                 "The only supported HiddenServiceVersion is 2.");
-        rend_service_free(service);
-        return -1;
-      }
+      continue;
     }
   }
-  /* register the final service after we have finished parsing all services
-   * this code only registers the last service, other services are registered
-   * within the loop. It is ok for this service to be NULL, it is ignored. */
-  if (rend_service_check_dir_and_add(NULL, options, service,
-                                     validate_only) < 0) {
-    return -1;
+  /* Validate the service just parsed. */
+  if (rend_validate_service(rend_service_staging_list, service) < 0) {
+    /* Service is in the staging list so don't try to free it. */
+    goto err;
   }
 
-  /* If this is a reload and there were hidden services configured before,
-   * keep the introduction points that are still needed and close the
-   * other ones. */
-  if (old_service_list && !validate_only) {
-    smartlist_t *surviving_services = smartlist_new();
-
-    /* Preserve the existing ephemeral services.
-     *
-     * This is the ephemeral service equivalent of the "Copy introduction
-     * points to new services" block, except there's no copy required since
-     * the service structure isn't regenerated.
-     *
-     * After this is done, all ephemeral services will be:
-     *  * Removed from old_service_list, so the equivalent non-ephemeral code
-     *    will not attempt to preserve them.
-     *  * Added to the new rend_service_list (that previously only had the
-     *    services listed in the configuration).
-     *  * Added to surviving_services, which is the list of services that
-     *    will NOT have their intro point closed.
-     */
-    SMARTLIST_FOREACH(old_service_list, rend_service_t *, old, {
-      if (!old->directory) {
-        SMARTLIST_DEL_CURRENT(old_service_list, old);
-        smartlist_add(surviving_services, old);
-        smartlist_add(rend_service_list, old);
-      }
-    });
-
-    /* Copy introduction points to new services. */
-    /* XXXX This is O(n^2), but it's only called on reconfigure, so it's
-     * probably ok? */
-    SMARTLIST_FOREACH_BEGIN(rend_service_list, rend_service_t *, new) {
-      SMARTLIST_FOREACH_BEGIN(old_service_list, rend_service_t *, old) {
-        if (new->directory && old->directory &&
-            !strcmp(old->directory, new->directory)) {
-          smartlist_add_all(new->intro_nodes, old->intro_nodes);
-          smartlist_clear(old->intro_nodes);
-          smartlist_add_all(new->expiring_nodes, old->expiring_nodes);
-          smartlist_clear(old->expiring_nodes);
-          smartlist_add(surviving_services, old);
-          break;
-        }
-      } SMARTLIST_FOREACH_END(old);
-    } SMARTLIST_FOREACH_END(new);
-
-    /* Close introduction circuits of services we don't serve anymore. */
-    /* XXXX it would be nicer if we had a nicer abstraction to use here,
-     * so we could just iterate over the list of services to close, but
-     * once again, this isn't critical-path code. */
-    SMARTLIST_FOREACH_BEGIN(circuit_get_global_list(), circuit_t *, circ) {
-      if (!circ->marked_for_close &&
-          circ->state == CIRCUIT_STATE_OPEN &&
-          (circ->purpose == CIRCUIT_PURPOSE_S_ESTABLISH_INTRO ||
-           circ->purpose == CIRCUIT_PURPOSE_S_INTRO)) {
-        origin_circuit_t *oc = TO_ORIGIN_CIRCUIT(circ);
-        int keep_it = 0;
-        tor_assert(oc->rend_data);
-        SMARTLIST_FOREACH(surviving_services, rend_service_t *, ptr, {
-          if (tor_memeq(ptr->pk_digest, oc->rend_data->rend_pk_digest,
-                      DIGEST_LEN)) {
-            keep_it = 1;
-            break;
-          }
-        });
-        if (keep_it)
-          continue;
-        log_info(LD_REND, "Closing intro point %s for service %s.",
-                 safe_str_client(extend_info_describe(
-                                            oc->build_state->chosen_exit)),
-                 oc->rend_data->onion_address);
-        circuit_mark_for_close(circ, END_CIRC_REASON_FINISHED);
-        /* XXXX Is there another reason we should use here? */
-      }
-    }
-    SMARTLIST_FOREACH_END(circ);
-    smartlist_free(surviving_services);
-    SMARTLIST_FOREACH(old_service_list, rend_service_t *, ptr,
-                      rend_service_free(ptr));
-    smartlist_free(old_service_list);
+  /* Add it to the temporary list which we will use to prune our current
+   * list if any after configuring all services. */
+  if (rend_add_service(rend_service_staging_list, service) < 0) {
+    /* The object has been freed on error already. */
+    service = NULL;
+    goto err;
   }
 
   return 0;
+ err:
+  rend_service_free(service);
+  return -1;
 }
 
 /** Add the ephemeral service <b>pk</b>/<b>ports</b> if possible, using
@@ -929,7 +921,7 @@ int
 rend_service_del_ephemeral(const char *service_id)
 {
   rend_service_t *s;
-  if (!rend_valid_service_id(service_id)) {
+  if (!rend_valid_v2_service_id(service_id)) {
     log_warn(LD_CONFIG, "Requested malformed Onion Service id for removal.");
     return -1;
   }
@@ -938,7 +930,7 @@ rend_service_del_ephemeral(const char *service_id)
              "removal.");
     return -1;
   }
-  if (s->directory) {
+  if (!rend_service_is_ephemeral(s)) {
     log_warn(LD_CONFIG, "Requested non-ephemeral Onion Service for removal.");
     return -1;
   }
@@ -954,13 +946,14 @@ rend_service_del_ephemeral(const char *service_id)
         (circ->purpose == CIRCUIT_PURPOSE_S_ESTABLISH_INTRO ||
          circ->purpose == CIRCUIT_PURPOSE_S_INTRO)) {
       origin_circuit_t *oc = TO_ORIGIN_CIRCUIT(circ);
-      tor_assert(oc->rend_data);
-      if (!tor_memeq(s->pk_digest, oc->rend_data->rend_pk_digest, DIGEST_LEN))
+      if (oc->rend_data == NULL ||
+          !rend_circuit_pk_digest_eq(oc, (uint8_t *) s->pk_digest)) {
         continue;
+      }
       log_debug(LD_REND, "Closing intro point %s for service %s.",
                 safe_str_client(extend_info_describe(
                                           oc->build_state->chosen_exit)),
-                oc->rend_data->onion_address);
+                rend_data_get_address(oc->rend_data));
       circuit_mark_for_close(circ, END_CIRC_REASON_FINISHED);
     }
   } SMARTLIST_FOREACH_END(circ);
@@ -972,6 +965,45 @@ rend_service_del_ephemeral(const char *service_id)
   return 0;
 }
 
+/* There can be 1 second's delay due to second_elapsed_callback, and perhaps
+ * another few seconds due to blocking calls. */
+#define INTRO_CIRC_RETRY_PERIOD_SLOP 10
+
+/** Log information about the intro point creation rate and current intro
+ * points for service, upgrading the log level from min_severity to warn if
+ * we have stopped launching new intro point circuits. */
+static void
+rend_log_intro_limit(const rend_service_t *service, int min_severity)
+{
+  int exceeded_limit = (service->n_intro_circuits_launched >=
+                        rend_max_intro_circs_per_period(
+                                              service->n_intro_points_wanted));
+  int severity = min_severity;
+  /* We stopped creating circuits */
+  if (exceeded_limit) {
+    severity = LOG_WARN;
+  }
+  time_t intro_period_elapsed = time(NULL) - service->intro_period_started;
+  tor_assert_nonfatal(intro_period_elapsed >= 0);
+  {
+    char *msg;
+    static ratelim_t rlimit = RATELIM_INIT(INTRO_CIRC_RETRY_PERIOD);
+    if ((msg = rate_limit_log(&rlimit, approx_time()))) {
+      log_fn(severity, LD_REND,
+             "Hidden service %s %s %d intro points in the last %d seconds. "
+             "Intro circuit launches are limited to %d per %d seconds.%s",
+             service->service_id,
+             exceeded_limit ? "exceeded launch limit with" : "launched",
+             service->n_intro_circuits_launched,
+             (int)intro_period_elapsed,
+             rend_max_intro_circs_per_period(service->n_intro_points_wanted),
+             INTRO_CIRC_RETRY_PERIOD, msg);
+      rend_service_dump_stats(severity);
+      tor_free(msg);
+    }
+  }
+}
+
 /** Replace the old value of <b>service</b>-\>desc with one that reflects
  * the other fields in service.
  */
@@ -979,7 +1011,6 @@ static void
 rend_service_update_descriptor(rend_service_t *service)
 {
   rend_service_descriptor_t *d;
-  origin_circuit_t *circ;
   int i;
 
   rend_service_descriptor_free(service->desc);
@@ -1000,9 +1031,10 @@ rend_service_update_descriptor(rend_service_t *service)
     /* This intro point won't be listed in the descriptor... */
     intro_svc->listed_in_last_desc = 0;
 
-    circ = find_intro_circuit(intro_svc, service->pk_digest);
-    if (!circ || circ->base_.purpose != CIRCUIT_PURPOSE_S_INTRO) {
-      /* This intro point's circuit isn't finished yet.  Don't list it. */
+    /* circuit_established is set in rend_service_intro_established(), and
+     * checked every second in rend_consider_services_intro_points(), so it's
+     * safe to use it here */
+    if (!intro_svc->circuit_established) {
       continue;
     }
 
@@ -1024,6 +1056,26 @@ rend_service_update_descriptor(rend_service_t *service)
       intro_svc->time_published = time(NULL);
     }
   }
+
+  /* Check that we have the right number of intro points */
+  unsigned int have_intro = (unsigned int)smartlist_len(d->intro_nodes);
+  if (have_intro != service->n_intro_points_wanted) {
+    int severity;
+    /* Getting less than we wanted or more than we're allowed is serious */
+    if (have_intro < service->n_intro_points_wanted ||
+        have_intro > NUM_INTRO_POINTS_MAX) {
+      severity = LOG_WARN;
+    } else {
+      /* Getting more than we wanted is weird, but less of a problem */
+      severity = LOG_NOTICE;
+    }
+    log_fn(severity, LD_REND, "Hidden service %s wanted %d intro points, but "
+           "descriptor was updated with %d instead.",
+           service->service_id,
+           service->n_intro_points_wanted, have_intro);
+    /* Now log an informative message about how we might have got here. */
+    rend_log_intro_limit(service, severity);
+  }
 }
 
 /* Allocate and return a string containing the path to file_name in
@@ -1033,15 +1085,8 @@ rend_service_update_descriptor(rend_service_t *service)
 static char *
 rend_service_path(const rend_service_t *service, const char *file_name)
 {
-  char *file_path = NULL;
-
   tor_assert(service->directory);
-
-  /* Can never fail: asserts rather than leaving file_path NULL. */
-  tor_asprintf(&file_path, "%s%s%s",
-               service->directory, PATH_SEPARATOR, file_name);
-
-  return file_path;
+  return hs_path_from_filename(service->directory, file_name);
 }
 
 /* Allocate and return a string containing the path to the single onion
@@ -1054,7 +1099,7 @@ rend_service_sos_poison_path(const rend_service_t *service)
   return rend_service_path(service, sos_poison_fname);
 }
 
-/** Return True if hidden services <b>service> has been poisoned by single
+/** Return True if hidden services <b>service</b> has been poisoned by single
  * onion mode. */
 static int
 service_is_single_onion_poisoned(const rend_service_t *service)
@@ -1067,7 +1112,7 @@ service_is_single_onion_poisoned(const rend_service_t *service)
     return 0;
   }
 
-  if (!service->directory) {
+  if (rend_service_is_ephemeral(service)) {
     return 0;
   }
 
@@ -1119,8 +1164,13 @@ rend_service_verify_single_onion_poison(const rend_service_t* s,
   }
 
   /* Ephemeral services are checked at ADD_ONION time */
-  if (!s->directory) {
-    return 0;
+  if (BUG(rend_service_is_ephemeral(s))) {
+    return -1;
+  }
+
+  /* Service is expected to have a directory */
+  if (BUG(!s->directory)) {
+    return -1;
   }
 
   /* Services without keys are always ok - their keys will only ever be used
@@ -1163,7 +1213,7 @@ poison_new_single_onion_hidden_service_dir_impl(const rend_service_t *service,
   int retval = -1;
   char *poison_fname = NULL;
 
-  if (!service->directory) {
+  if (rend_service_is_ephemeral(service)) {
     log_info(LD_REND, "Ephemeral HS started in non-anonymous mode.");
     return 0;
   }
@@ -1176,7 +1226,8 @@ poison_new_single_onion_hidden_service_dir_impl(const rend_service_t *service,
   }
 
   /* Make sure the directory was created before calling this function. */
-  if (BUG(rend_service_check_private_dir_impl(options, service, 0) < 0))
+  if (BUG(hs_check_service_private_dir(options->User, service->directory,
+                                       service->dir_group_readable, 0) < 0))
     return -1;
 
   poison_fname = rend_service_sos_poison_path(service);
@@ -1213,7 +1264,7 @@ poison_new_single_onion_hidden_service_dir_impl(const rend_service_t *service,
   return retval;
 }
 
-/** We just got launched in Single Onion Mode. That's a non-anoymous mode for
+/** We just got launched in Single Onion Mode. That's a non-anonymous mode for
  * hidden services. If s is new, we should mark its hidden service
  * directory appropriately so that it is never launched as a location-private
  * hidden service. (New directories don't have private key files.)
@@ -1229,6 +1280,16 @@ rend_service_poison_new_single_onion_dir(const rend_service_t *s,
 
   /* We must only poison directories if we're in Single Onion mode */
   tor_assert(rend_service_non_anonymous_mode_enabled(options));
+
+  /* Ephemeral services aren't allowed in non-anonymous mode */
+  if (BUG(rend_service_is_ephemeral(s))) {
+    return -1;
+  }
+
+  /* Service is expected to have a directory */
+  if (BUG(!s->directory)) {
+    return -1;
+  }
 
   if (!rend_service_private_key_exists(s)) {
     if (poison_new_single_onion_hidden_service_dir_impl(s, options)
@@ -1249,22 +1310,17 @@ rend_service_poison_new_single_onion_dir(const rend_service_t *s,
 int
 rend_service_load_all_keys(const smartlist_t *service_list)
 {
-  const smartlist_t *s_list = NULL;
-  /* If no special service list is provided, then just use the global one. */
-  if (!service_list) {
-    if (BUG(!rend_service_list)) {
-      return -1;
-    }
-    s_list = rend_service_list;
-  } else {
-    s_list = service_list;
+  /* Use service_list for unit tests */
+  const smartlist_t *s_list = rend_get_service_list(service_list);
+  if (BUG(!s_list)) {
+    return -1;
   }
 
   SMARTLIST_FOREACH_BEGIN(s_list, rend_service_t *, s) {
     if (s->private_key)
       continue;
-    log_info(LD_REND, "Loading hidden-service keys from \"%s\"",
-             s->directory);
+    log_info(LD_REND, "Loading hidden-service keys from %s",
+             rend_service_escaped_dir(s));
 
     if (rend_service_load_keys(s) < 0)
       return -1;
@@ -1296,9 +1352,9 @@ rend_services_add_filenames_to_lists(smartlist_t *open_lst,
   if (!rend_service_list)
     return;
   SMARTLIST_FOREACH_BEGIN(rend_service_list, rend_service_t *, s) {
-    if (s->directory) {
+    if (!rend_service_is_ephemeral(s)) {
       rend_service_add_filenames_to_list(open_lst, s);
-      smartlist_add(stat_lst, tor_strdup(s->directory));
+      smartlist_add_strdup(stat_lst, s->directory);
     }
   } SMARTLIST_FOREACH_END(s);
 }
@@ -1315,32 +1371,6 @@ rend_service_derive_key_digests(struct rend_service_t *s)
   }
   if (crypto_pk_get_digest(s->private_key, s->pk_digest)<0) {
     log_warn(LD_BUG, "Couldn't compute hash of public key.");
-    return -1;
-  }
-
-  return 0;
-}
-
-/* Implements the directory check from rend_service_check_private_dir,
- * without doing the single onion poison checks. */
-static int
-rend_service_check_private_dir_impl(const or_options_t *options,
-                                    const rend_service_t *s,
-                                    int create)
-{
-  cpd_check_t  check_opts = CPD_NONE;
-  if (create) {
-    check_opts |= CPD_CREATE;
-  } else {
-    check_opts |= CPD_CHECK_MODE_ONLY;
-    check_opts |= CPD_CHECK;
-  }
-  if (s->dir_group_readable) {
-    check_opts |= CPD_GROUP_READ;
-  }
-  /* Check/create directory */
-  if (check_private_dir(s->directory, check_opts, options->User) < 0) {
-    log_warn(LD_REND, "Checking service directory %s failed.", s->directory);
     return -1;
   }
 
@@ -1367,7 +1397,8 @@ rend_service_check_private_dir(const or_options_t *options,
   }
 
   /* Check/create directory */
-  if (rend_service_check_private_dir_impl(options, s, create) < 0) {
+  if (hs_check_service_private_dir(options->User, s->directory,
+                                   s->dir_group_readable, create) < 0) {
     return -1;
   }
 
@@ -1425,9 +1456,9 @@ rend_service_load_keys(rend_service_t *s)
   char *fname = NULL;
   char buf[128];
 
-  /* Make sure the directory was created and single onion poisoning was
-   * checked before calling this function */
-  if (BUG(rend_service_check_private_dir(get_options(), s, 0) < 0))
+  /* Create the directory if needed which will also poison it in case of
+   * single onion service. */
+  if (rend_service_check_private_dir(get_options(), s, 1) < 0)
     goto err;
 
   /* Load key */
@@ -1456,7 +1487,7 @@ rend_service_load_keys(rend_service_t *s)
       log_warn(LD_FS,"Unable to make hidden hostname file %s group-readable.",
                fname);
   }
-#endif
+#endif /* !defined(_WIN32) */
 
   /* If client authorization is configured, load or generate keys. */
   if (s->auth_type != REND_NO_AUTH) {
@@ -1685,24 +1716,6 @@ rend_service_get_by_service_id(const char *id)
   return NULL;
 }
 
-/** Return 1 if any virtual port in <b>service</b> wants a circuit
- * to have good uptime. Else return 0.
- */
-static int
-rend_service_requires_uptime(rend_service_t *service)
-{
-  int i;
-  rend_service_port_config_t *p;
-
-  for (i=0; i < smartlist_len(service->ports); ++i) {
-    p = smartlist_get(service->ports, i);
-    if (smartlist_contains_int_as_string(get_options()->LongLivedPorts,
-                                  p->virtual_port))
-      return 1;
-  }
-  return 0;
-}
-
 /** Check client authorization of a given <b>descriptor_cookie</b> of
  * length <b>cookie_len</b> for <b>service</b>. Return 1 for success
  * and 0 for failure. */
@@ -1793,7 +1806,7 @@ rend_service_receive_introduction(origin_circuit_t *circuit,
   const or_options_t *options = get_options();
   char *err_msg = NULL;
   int err_msg_severity = LOG_WARN;
-  const char *stage_descr = NULL;
+  const char *stage_descr = NULL, *rend_pk_digest;
   int reason = END_CIRC_REASON_TORPROTOCOL;
   /* Service/circuit/key stuff we can learn before parsing */
   char serviceid[REND_SERVICE_ID_LEN_BASE32+1];
@@ -1816,6 +1829,7 @@ rend_service_receive_introduction(origin_circuit_t *circuit,
   time_t now = time(NULL);
   time_t elapsed;
   int replay;
+  ssize_t keylen;
 
   /* Do some initial validation and logging before we parse the cell */
   if (circuit->base_.purpose != CIRCUIT_PURPOSE_S_INTRO) {
@@ -1827,14 +1841,15 @@ rend_service_receive_introduction(origin_circuit_t *circuit,
 
   assert_circ_anonymity_ok(circuit, options);
   tor_assert(circuit->rend_data);
+  /* XXX: This is version 2 specific (only one supported). */
+  rend_pk_digest = (char *) rend_data_get_pk_digest(circuit->rend_data, NULL);
 
   /* We'll use this in a bazillion log messages */
   base32_encode(serviceid, REND_SERVICE_ID_LEN_BASE32+1,
-                circuit->rend_data->rend_pk_digest, REND_SERVICE_ID_LEN);
+                rend_pk_digest, REND_SERVICE_ID_LEN);
 
   /* look up service depending on circuit. */
-  service =
-    rend_service_get_by_pk_digest(circuit->rend_data->rend_pk_digest);
+  service = rend_service_get_by_pk_digest(rend_pk_digest);
   if (!service) {
     log_warn(LD_BUG,
              "Internal error: Got an INTRODUCE2 cell on an intro "
@@ -1889,9 +1904,10 @@ rend_service_receive_introduction(origin_circuit_t *circuit,
   }
 
   /* check for replay of PK-encrypted portion. */
+  keylen = crypto_pk_keysize(intro_key);
   replay = replaycache_add_test_and_elapsed(
     intro_point->accepted_intro_rsa_parts,
-    parsed_req->ciphertext, parsed_req->ciphertext_len,
+    parsed_req->ciphertext, MIN(parsed_req->ciphertext_len, keylen),
     &elapsed);
 
   if (replay) {
@@ -2019,14 +2035,15 @@ rend_service_receive_introduction(origin_circuit_t *circuit,
     goto err;
   }
 
-  circ_needs_uptime = rend_service_requires_uptime(service);
+  circ_needs_uptime = hs_service_requires_uptime_circ(service->ports);
 
   /* help predict this next time */
   rep_hist_note_used_internal(now, circ_needs_uptime, 1);
 
   /* Launch a circuit to the client's chosen rendezvous point.
    */
-  for (i=0;i<MAX_REND_FAILURES;i++) {
+  int max_rend_failures=hs_get_service_max_rend_failures();
+  for (i=0;i<max_rend_failures;i++) {
     int flags = CIRCLAUNCH_NEED_CAPACITY | CIRCLAUNCH_IS_INTERNAL;
     if (circ_needs_uptime) flags |= CIRCLAUNCH_NEED_UPTIME;
     /* A Single Onion Service only uses a direct connection if its
@@ -2057,8 +2074,7 @@ rend_service_receive_introduction(origin_circuit_t *circuit,
   /* Fill in the circuit's state. */
 
   launched->rend_data =
-    rend_data_service_create(service->service_id,
-                             circuit->rend_data->rend_pk_digest,
+    rend_data_service_create(service->service_id, rend_pk_digest,
                              parsed_req->rc, service->auth_type);
 
   launched->build_state->service_pending_final_cpath_ref =
@@ -2072,7 +2088,9 @@ rend_service_receive_introduction(origin_circuit_t *circuit,
 
   cpath->rend_dh_handshake_state = dh;
   dh = NULL;
-  if (circuit_init_cpath_crypto(cpath,keys+DIGEST_LEN,1)<0)
+  if (circuit_init_cpath_crypto(cpath,
+                                keys+DIGEST_LEN, sizeof(keys)-DIGEST_LEN,
+                                1, 0)<0)
     goto err;
   memcpy(cpath->rend_circ_nonce, keys, DIGEST_LEN);
 
@@ -2135,7 +2153,7 @@ find_rp_for_intro(const rend_intro_cell_t *intro,
   if (intro->version == 0 || intro->version == 1) {
     rp_nickname = (const char *)(intro->u.v0_v1.rp);
 
-    node = node_get_by_nickname(rp_nickname, 0);
+    node = node_get_by_nickname(rp_nickname, NNF_NO_WARN_UNNAMED);
     if (!node) {
       if (err_msg_out) {
         tor_asprintf(&err_msg,
@@ -2689,7 +2707,14 @@ rend_service_decrypt_intro(
   /* Check that this cell actually matches this service key */
 
   /* first DIGEST_LEN bytes of request is intro or service pk digest */
-  crypto_pk_get_digest(key, (char *)key_digest);
+  if (crypto_pk_get_digest(key, (char *)key_digest) < 0) {
+    if (err_msg_out)
+      *err_msg_out = tor_strdup("Couldn't compute RSA digest.");
+    log_warn(LD_BUG, "Couldn't compute key digest.");
+    status = -7;
+    goto err;
+  }
+
   if (tor_memneq(key_digest, intro->pk, DIGEST_LEN)) {
     if (err_msg_out) {
       base32_encode(service_id, REND_SERVICE_ID_LEN_BASE32 + 1,
@@ -2720,10 +2745,8 @@ rend_service_decrypt_intro(
   }
 
   /* Decrypt the encrypted part */
-
-  note_crypto_pk_op(REND_SERVER);
   result =
-    crypto_pk_private_hybrid_decrypt(
+    crypto_pk_obsolete_private_hybrid_decrypt(
        key, (char *)buf, sizeof(buf),
        (const char *)(intro->ciphertext), intro->ciphertext_len,
        PK_PKCS1_OAEP_PADDING, 1);
@@ -2916,30 +2939,6 @@ rend_service_relaunch_rendezvous(origin_circuit_t *oldcirc)
   cpath_build_state_t *newstate, *oldstate;
 
   tor_assert(oldcirc->base_.purpose == CIRCUIT_PURPOSE_S_CONNECT_REND);
-
-  /* Don't relaunch the same rend circ twice. */
-  if (oldcirc->hs_service_side_rend_circ_has_been_relaunched) {
-    log_info(LD_REND, "Rendezvous circuit to %s has already been relaunched; "
-             "not relaunching it again.",
-             oldcirc->build_state ?
-             safe_str(extend_info_describe(oldcirc->build_state->chosen_exit))
-             : "*unknown*");
-    return;
-  }
-  oldcirc->hs_service_side_rend_circ_has_been_relaunched = 1;
-
-  if (!oldcirc->build_state ||
-      oldcirc->build_state->failure_count > MAX_REND_FAILURES ||
-      oldcirc->build_state->expiry_time < time(NULL)) {
-    log_info(LD_REND,
-             "Attempt to build circuit to %s for rendezvous has failed "
-             "too many times or expired; giving up.",
-             oldcirc->build_state ?
-             safe_str(extend_info_describe(oldcirc->build_state->chosen_exit))
-             : "*unknown*");
-    return;
-  }
-
   oldstate = oldcirc->build_state;
   tor_assert(oldstate);
 
@@ -3092,13 +3091,65 @@ count_intro_point_circuits(const rend_service_t *service)
          circ->purpose == CIRCUIT_PURPOSE_S_INTRO)) {
       origin_circuit_t *oc = TO_ORIGIN_CIRCUIT(circ);
       if (oc->rend_data &&
-          !rend_cmp_service_ids(service->service_id,
-                                oc->rend_data->onion_address))
+          rend_circuit_pk_digest_eq(oc, (uint8_t *) service->pk_digest)) {
         num_ipos++;
+      }
     }
   }
   SMARTLIST_FOREACH_END(circ);
   return num_ipos;
+}
+
+/* Given a buffer of at least RELAY_PAYLOAD_SIZE bytes in <b>cell_body_out</b>,
+   write the body of a legacy ESTABLISH_INTRO cell in it. Use <b>intro_key</b>
+   as the intro point auth key, and <b>rend_circ_nonce</b> as the circuit
+   crypto material. On success, fill <b>cell_body_out</b> and return the number
+   of bytes written. On fail, return -1.
+ */
+ssize_t
+rend_service_encode_establish_intro_cell(char *cell_body_out,
+                                         size_t cell_body_out_len,
+                                         crypto_pk_t *intro_key,
+                                         const char *rend_circ_nonce)
+{
+  int retval = -1;
+  int r;
+  int len = 0;
+  char auth[DIGEST_LEN + 9];
+
+  tor_assert(intro_key);
+  tor_assert(rend_circ_nonce);
+
+  /* Build the payload for a RELAY_ESTABLISH_INTRO cell. */
+  r = crypto_pk_asn1_encode(intro_key, cell_body_out+2,
+                            RELAY_PAYLOAD_SIZE-2);
+  if (r < 0) {
+    log_warn(LD_BUG, "Internal error; failed to establish intro point.");
+    goto err;
+  }
+  len = r;
+  set_uint16(cell_body_out, htons((uint16_t)len));
+  len += 2;
+  memcpy(auth, rend_circ_nonce, DIGEST_LEN);
+  memcpy(auth+DIGEST_LEN, "INTRODUCE", 9);
+  if (crypto_digest(cell_body_out+len, auth, DIGEST_LEN+9))
+    goto err;
+  len += 20;
+  r = crypto_pk_private_sign_digest(intro_key, cell_body_out+len,
+                                    cell_body_out_len - len,
+                                    cell_body_out, len);
+  if (r<0) {
+    log_warn(LD_BUG, "Internal error: couldn't sign introduction request.");
+    goto err;
+  }
+  len += r;
+
+  retval = len;
+
+ err:
+  memwipe(auth, 0, sizeof(auth));
+
+  return retval;
 }
 
 /** Called when we're done building a circuit to an introduction point:
@@ -3108,23 +3159,23 @@ void
 rend_service_intro_has_opened(origin_circuit_t *circuit)
 {
   rend_service_t *service;
-  size_t len;
-  int r;
   char buf[RELAY_PAYLOAD_SIZE];
-  char auth[DIGEST_LEN + 9];
   char serviceid[REND_SERVICE_ID_LEN_BASE32+1];
+  unsigned int expiring_nodes_len, num_ip_circuits, valid_ip_circuits = 0;
   int reason = END_CIRC_REASON_TORPROTOCOL;
+  const char *rend_pk_digest;
 
   tor_assert(circuit->base_.purpose == CIRCUIT_PURPOSE_S_ESTABLISH_INTRO);
   assert_circ_anonymity_ok(circuit, get_options());
   tor_assert(circuit->cpath);
   tor_assert(circuit->rend_data);
+  /* XXX: This is version 2 specific (only on supported). */
+  rend_pk_digest = (char *) rend_data_get_pk_digest(circuit->rend_data, NULL);
 
   base32_encode(serviceid, REND_SERVICE_ID_LEN_BASE32+1,
-                circuit->rend_data->rend_pk_digest, REND_SERVICE_ID_LEN);
+                rend_pk_digest, REND_SERVICE_ID_LEN);
 
-  service = rend_service_get_by_pk_digest(
-                circuit->rend_data->rend_pk_digest);
+  service = rend_service_get_by_pk_digest(rend_pk_digest);
   if (!service) {
     log_warn(LD_REND, "Unrecognized service ID %s on introduction circuit %u.",
              safe_str_client(serviceid), (unsigned)circuit->base_.n_circ_id);
@@ -3132,13 +3183,22 @@ rend_service_intro_has_opened(origin_circuit_t *circuit)
     goto err;
   }
 
+  /* Take the current amount of expiring nodes and the current amount of IP
+   * circuits and compute how many valid IP circuits we have. */
+  expiring_nodes_len = (unsigned int) smartlist_len(service->expiring_nodes);
+  num_ip_circuits = count_intro_point_circuits(service);
+  /* Let's avoid an underflow. The valid_ip_circuits is initialized to 0 in
+   * case this condition turns out false because it means that all circuits
+   * are expiring so we need to keep this circuit. */
+  if (num_ip_circuits > expiring_nodes_len) {
+    valid_ip_circuits = num_ip_circuits - expiring_nodes_len;
+  }
+
   /* If we already have enough introduction circuits for this service,
    * redefine this one as a general circuit or close it, depending.
-   * Substract the amount of expiring nodes here since the circuits are
+   * Substract the amount of expiring nodes here because the circuits are
    * still opened. */
-  if ((count_intro_point_circuits(service) -
-       smartlist_len(service->expiring_nodes)) >
-      service->n_intro_points_wanted) {
+  if (valid_ip_circuits > service->n_intro_points_wanted) {
     const or_options_t *options = get_options();
     /* Remove the intro point associated with this circuit, it's being
      * repurposed or closed thus cleanup memory. */
@@ -3165,9 +3225,8 @@ rend_service_intro_has_opened(origin_circuit_t *circuit)
       circuit_change_purpose(TO_CIRCUIT(circuit), CIRCUIT_PURPOSE_C_GENERAL);
 
       {
-        rend_data_t *rend_data = circuit->rend_data;
+        rend_data_free(circuit->rend_data);
         circuit->rend_data = NULL;
-        rend_data_free(rend_data);
       }
       {
         crypto_pk_t *intro_key = circuit->intro_key;
@@ -3185,42 +3244,25 @@ rend_service_intro_has_opened(origin_circuit_t *circuit)
            (unsigned)circuit->base_.n_circ_id, serviceid);
   circuit_log_path(LOG_INFO, LD_REND, circuit);
 
-  /* Use the intro key instead of the service key in ESTABLISH_INTRO. */
-  crypto_pk_t *intro_key = circuit->intro_key;
-  /* Build the payload for a RELAY_ESTABLISH_INTRO cell. */
-  r = crypto_pk_asn1_encode(intro_key, buf+2,
-                            RELAY_PAYLOAD_SIZE-2);
-  if (r < 0) {
-    log_warn(LD_BUG, "Internal error; failed to establish intro point.");
-    reason = END_CIRC_REASON_INTERNAL;
-    goto err;
-  }
-  len = r;
-  set_uint16(buf, htons((uint16_t)len));
-  len += 2;
-  memcpy(auth, circuit->cpath->prev->rend_circ_nonce, DIGEST_LEN);
-  memcpy(auth+DIGEST_LEN, "INTRODUCE", 9);
-  if (crypto_digest(buf+len, auth, DIGEST_LEN+9))
-    goto err;
-  len += 20;
-  note_crypto_pk_op(REND_SERVER);
-  r = crypto_pk_private_sign_digest(intro_key, buf+len, sizeof(buf)-len,
-                                    buf, len);
-  if (r<0) {
-    log_warn(LD_BUG, "Internal error: couldn't sign introduction request.");
-    reason = END_CIRC_REASON_INTERNAL;
-    goto err;
-  }
-  len += r;
+  /* Send the ESTABLISH_INTRO cell */
+  {
+    ssize_t len;
+    len = rend_service_encode_establish_intro_cell(buf, sizeof(buf),
+                                      circuit->intro_key,
+                                      circuit->cpath->prev->rend_circ_nonce);
+    if (len < 0) {
+      reason = END_CIRC_REASON_INTERNAL;
+      goto err;
+    }
 
-  if (relay_send_command_from_edge(0, TO_CIRCUIT(circuit),
-                                   RELAY_COMMAND_ESTABLISH_INTRO,
-                                   buf, len, circuit->cpath->prev)<0) {
-    log_info(LD_GENERAL,
+    if (relay_send_command_from_edge(0, TO_CIRCUIT(circuit),
+                                     RELAY_COMMAND_ESTABLISH_INTRO,
+                                     buf, len, circuit->cpath->prev)<0) {
+      log_info(LD_GENERAL,
              "Couldn't send introduction request for service %s on circuit %u",
              serviceid, (unsigned)circuit->base_.n_circ_id);
-    reason = END_CIRC_REASON_INTERNAL;
-    goto err;
+      goto done;
+    }
   }
 
   /* We've attempted to use this circuit */
@@ -3232,7 +3274,6 @@ rend_service_intro_has_opened(origin_circuit_t *circuit)
   circuit_mark_for_close(TO_CIRCUIT(circuit), reason);
  done:
   memwipe(buf, 0, sizeof(buf));
-  memwipe(auth, 0, sizeof(auth));
   memwipe(serviceid, 0, sizeof(serviceid));
 
   return;
@@ -3251,20 +3292,24 @@ rend_service_intro_established(origin_circuit_t *circuit,
   char serviceid[REND_SERVICE_ID_LEN_BASE32+1];
   (void) request;
   (void) request_len;
+  tor_assert(circuit->rend_data);
+  /* XXX: This is version 2 specific (only supported one for now). */
+  const char *rend_pk_digest =
+    (char *) rend_data_get_pk_digest(circuit->rend_data, NULL);
 
   if (circuit->base_.purpose != CIRCUIT_PURPOSE_S_ESTABLISH_INTRO) {
     log_warn(LD_PROTOCOL,
              "received INTRO_ESTABLISHED cell on non-intro circuit.");
     goto err;
   }
-  tor_assert(circuit->rend_data);
-  service = rend_service_get_by_pk_digest(
-                circuit->rend_data->rend_pk_digest);
+  service = rend_service_get_by_pk_digest(rend_pk_digest);
   if (!service) {
     log_warn(LD_REND, "Unknown service on introduction circuit %u.",
              (unsigned)circuit->base_.n_circ_id);
     goto err;
   }
+  base32_encode(serviceid, REND_SERVICE_ID_LEN_BASE32 + 1,
+                rend_pk_digest, REND_SERVICE_ID_LEN);
   /* We've just successfully established a intro circuit to one of our
    * introduction point, account for it. */
   intro = find_intro_point(circuit);
@@ -3281,8 +3326,6 @@ rend_service_intro_established(origin_circuit_t *circuit,
   service->desc_is_dirty = time(NULL);
   circuit_change_purpose(TO_CIRCUIT(circuit), CIRCUIT_PURPOSE_S_INTRO);
 
-  base32_encode(serviceid, REND_SERVICE_ID_LEN_BASE32 + 1,
-                circuit->rend_data->rend_pk_digest, REND_SERVICE_ID_LEN);
   log_info(LD_REND,
            "Received INTRO_ESTABLISHED cell on circuit %u for service %s",
            (unsigned)circuit->base_.n_circ_id, serviceid);
@@ -3309,6 +3352,7 @@ rend_service_rendezvous_has_opened(origin_circuit_t *circuit)
   char serviceid[REND_SERVICE_ID_LEN_BASE32+1];
   char hexcookie[9];
   int reason;
+  const char *rend_cookie, *rend_pk_digest;
 
   tor_assert(circuit->base_.purpose == CIRCUIT_PURPOSE_S_CONNECT_REND);
   tor_assert(circuit->cpath);
@@ -3316,18 +3360,24 @@ rend_service_rendezvous_has_opened(origin_circuit_t *circuit)
   assert_circ_anonymity_ok(circuit, get_options());
   tor_assert(circuit->rend_data);
 
-  /* Declare the circuit dirty to avoid reuse, and for path-bias */
-  if (!circuit->base_.timestamp_dirty)
-    circuit->base_.timestamp_dirty = time(NULL);
+  /* XXX: This is version 2 specific (only one supported). */
+  rend_pk_digest = (char *) rend_data_get_pk_digest(circuit->rend_data,
+                                                    NULL);
+  rend_cookie = circuit->rend_data->rend_cookie;
+
+  /* Declare the circuit dirty to avoid reuse, and for path-bias. We set the
+   * timestamp regardless of its content because that circuit could have been
+   * cannibalized so in any cases, we are about to use that circuit more. */
+  circuit->base_.timestamp_dirty = time(NULL);
 
   /* This may be redundant */
   pathbias_count_use_attempt(circuit);
 
   hop = circuit->build_state->service_pending_final_cpath_ref->cpath;
 
-  base16_encode(hexcookie,9,circuit->rend_data->rend_cookie,4);
+  base16_encode(hexcookie,9, rend_cookie,4);
   base32_encode(serviceid, REND_SERVICE_ID_LEN_BASE32+1,
-                circuit->rend_data->rend_pk_digest, REND_SERVICE_ID_LEN);
+                rend_pk_digest, REND_SERVICE_ID_LEN);
 
   log_info(LD_REND,
            "Done building circuit %u to rendezvous with "
@@ -3356,8 +3406,7 @@ rend_service_rendezvous_has_opened(origin_circuit_t *circuit)
   circuit->build_state->pending_final_cpath = hop;
   circuit->build_state->service_pending_final_cpath_ref->cpath = NULL;
 
-  service = rend_service_get_by_pk_digest(
-                circuit->rend_data->rend_pk_digest);
+  service = rend_service_get_by_pk_digest(rend_pk_digest);
   if (!service) {
     log_warn(LD_GENERAL, "Internal error: unrecognized service ID on "
              "rendezvous circuit.");
@@ -3366,7 +3415,7 @@ rend_service_rendezvous_has_opened(origin_circuit_t *circuit)
   }
 
   /* All we need to do is send a RELAY_RENDEZVOUS1 cell... */
-  memcpy(buf, circuit->rend_data->rend_cookie, REND_COOKIE_LEN);
+  memcpy(buf, rend_cookie, REND_COOKIE_LEN);
   if (crypto_dh_get_public(hop->rend_dh_handshake_state,
                            buf+REND_COOKIE_LEN, DH_KEY_LEN)<0) {
     log_warn(LD_GENERAL,"Couldn't get DH public key.");
@@ -3379,11 +3428,10 @@ rend_service_rendezvous_has_opened(origin_circuit_t *circuit)
   /* Send the cell */
   if (relay_send_command_from_edge(0, TO_CIRCUIT(circuit),
                                    RELAY_COMMAND_RENDEZVOUS1,
-                                   buf, REND_COOKIE_LEN+DH_KEY_LEN+DIGEST_LEN,
+                                   buf, HS_LEGACY_RENDEZVOUS_CELL_SIZE,
                                    circuit->cpath->prev)<0) {
     log_warn(LD_GENERAL, "Couldn't send RENDEZVOUS1 cell.");
-    reason = END_CIRC_REASON_INTERNAL;
-    goto err;
+    goto done;
   }
 
   crypto_dh_free(hop->rend_dh_handshake_state);
@@ -3430,8 +3478,8 @@ find_intro_circuit(rend_intro_point_t *intro, const char *pk_digest)
   origin_circuit_t *circ = NULL;
 
   tor_assert(intro);
-  while ((circ = circuit_get_next_by_pk_and_purpose(circ,pk_digest,
-                                                  CIRCUIT_PURPOSE_S_INTRO))) {
+  while ((circ = circuit_get_next_by_pk_and_purpose(circ,
+                         (uint8_t *) pk_digest, CIRCUIT_PURPOSE_S_INTRO))) {
     if (tor_memeq(circ->build_state->chosen_exit->identity_digest,
                 intro->extend_info->identity_digest, DIGEST_LEN) &&
         circ->rend_data) {
@@ -3440,8 +3488,9 @@ find_intro_circuit(rend_intro_point_t *intro, const char *pk_digest)
   }
 
   circ = NULL;
-  while ((circ = circuit_get_next_by_pk_and_purpose(circ,pk_digest,
-                                        CIRCUIT_PURPOSE_S_ESTABLISH_INTRO))) {
+  while ((circ = circuit_get_next_by_pk_and_purpose(circ,
+                         (uint8_t *) pk_digest,
+                         CIRCUIT_PURPOSE_S_ESTABLISH_INTRO))) {
     if (tor_memeq(circ->build_state->chosen_exit->identity_digest,
                 intro->extend_info->identity_digest, DIGEST_LEN) &&
         circ->rend_data) {
@@ -3480,7 +3529,7 @@ find_intro_point(origin_circuit_t *circ)
   tor_assert(TO_CIRCUIT(circ)->purpose == CIRCUIT_PURPOSE_S_ESTABLISH_INTRO ||
              TO_CIRCUIT(circ)->purpose == CIRCUIT_PURPOSE_S_INTRO);
   tor_assert(circ->rend_data);
-  serviceid = circ->rend_data->onion_address;
+  serviceid = rend_data_get_address(circ->rend_data);
 
   SMARTLIST_FOREACH(rend_service_list, rend_service_t *, s,
     if (tor_memeq(s->service_id, serviceid, REND_SERVICE_ID_LEN_BASE32)) {
@@ -3556,13 +3605,16 @@ directory_post_to_hs_dir(rend_service_descriptor_t *renddesc,
        * request. Lookup is made in rend_service_desc_has_uploaded(). */
       rend_data = rend_data_client_create(service_id, desc->desc_id, NULL,
                                           REND_NO_AUTH);
-      directory_initiate_command_routerstatus_rend(hs_dir,
-                                              DIR_PURPOSE_UPLOAD_RENDDESC_V2,
-                                                   ROUTER_PURPOSE_GENERAL,
-                                                   DIRIND_ANONYMOUS, NULL,
-                                                   desc->desc_str,
-                                                   strlen(desc->desc_str),
-                                                   0, rend_data);
+      directory_request_t *req =
+        directory_request_new(DIR_PURPOSE_UPLOAD_RENDDESC_V2);
+      directory_request_set_routerstatus(req, hs_dir);
+      directory_request_set_indirection(req, DIRIND_ANONYMOUS);
+      directory_request_set_payload(req,
+                                    desc->desc_str, strlen(desc->desc_str));
+      directory_request_set_rend_query(req, rend_data);
+      directory_initiate_request(req);
+      directory_request_free(req);
+
       rend_data_free(rend_data);
       base32_encode(desc_id_base32, sizeof(desc_id_base32),
                     desc->desc_id, DIGEST_LEN);
@@ -3794,6 +3846,19 @@ remove_invalid_intro_points(rend_service_t *service,
 {
   tor_assert(service);
 
+  /* Remove any expired nodes that doesn't have a circuit. */
+  SMARTLIST_FOREACH_BEGIN(service->expiring_nodes, rend_intro_point_t *,
+                          intro) {
+    origin_circuit_t *intro_circ =
+      find_intro_circuit(intro, service->pk_digest);
+    if (intro_circ) {
+      continue;
+    }
+    /* No more circuit, cleanup the into point object. */
+    SMARTLIST_DEL_CURRENT(service->expiring_nodes, intro);
+    rend_intro_point_free(intro);
+  } SMARTLIST_FOREACH_END(intro);
+
   SMARTLIST_FOREACH_BEGIN(service->intro_nodes, rend_intro_point_t *,
                           intro) {
     /* Find the introduction point node object. */
@@ -3849,6 +3914,10 @@ remove_invalid_intro_points(rend_service_t *service,
       log_info(LD_REND, "Expiring %s as intro point for %s.",
                safe_str_client(extend_info_describe(intro->extend_info)),
                safe_str_client(service->service_id));
+      /* We might have put it in the retry list if so, undo. */
+      if (retry_nodes) {
+        smartlist_remove(retry_nodes, intro);
+      }
       smartlist_add(service->expiring_nodes, intro);
       SMARTLIST_DEL_CURRENT(service->intro_nodes, intro);
       /* Intro point is expired, we need a new one thus don't consider it
@@ -3865,10 +3934,13 @@ void
 rend_service_desc_has_uploaded(const rend_data_t *rend_data)
 {
   rend_service_t *service;
+  const char *onion_address;
 
   tor_assert(rend_data);
 
-  service = rend_service_get_by_service_id(rend_data->onion_address);
+  onion_address = rend_data_get_address(rend_data);
+
+  service = rend_service_get_by_service_id(onion_address);
   if (service == NULL) {
     return;
   }
@@ -3886,6 +3958,23 @@ rend_service_desc_has_uploaded(const rend_data_t *rend_data)
   } SMARTLIST_FOREACH_END(intro);
 }
 
+/** Don't try to build more than this many circuits before giving up
+ * for a while. Dynamically calculated based on the configured number of
+ * introduction points for the service, n_intro_points_wanted. */
+static int
+rend_max_intro_circs_per_period(unsigned int n_intro_points_wanted)
+{
+  /* Allow all but one of the initial connections to fail and be
+   * retried. (If all fail, we *want* to wait, because something is broken.) */
+  tor_assert(n_intro_points_wanted <= NUM_INTRO_POINTS_MAX);
+
+  /* For the normal use case, 3 intro points plus 2 extra for performance and
+   * allow that twice because once every 24h or so, we can do it twice for two
+   * descriptors that is the current one and the next one. So (3 + 2) * 2 ==
+   * 12 allowed attempts for one period. */
+  return ((n_intro_points_wanted + NUM_INTRO_POINTS_EXTRA) * 2);
+}
+
 /** For every service, check how many intro points it currently has, and:
  *  - Invalidate introdution points based on specific criteria, see
  *  remove_invalid_intro_points comments.
@@ -3895,10 +3984,9 @@ rend_service_desc_has_uploaded(const rend_data_t *rend_data)
  * This is called once a second by the main loop.
  */
 void
-rend_consider_services_intro_points(void)
+rend_consider_services_intro_points(time_t now)
 {
   int i;
-  time_t now;
   const or_options_t *options = get_options();
   /* Are we in single onion mode? */
   const int allow_direct = rend_service_allow_non_anonymous_connection(
@@ -3915,7 +4003,6 @@ rend_consider_services_intro_points(void)
 
   exclude_nodes = smartlist_new();
   retry_nodes = smartlist_new();
-  now = time(NULL);
 
   SMARTLIST_FOREACH_BEGIN(rend_service_list, rend_service_t *, service) {
     int r;
@@ -3930,22 +4017,28 @@ rend_consider_services_intro_points(void)
     smartlist_clear(exclude_nodes);
     smartlist_clear(retry_nodes);
 
+    /* Cleanup the invalid intro points and save the node objects, if any,
+     * in the exclude_nodes and retry_nodes lists. */
+    remove_invalid_intro_points(service, exclude_nodes, retry_nodes, now);
+
     /* This retry period is important here so we don't stress circuit
      * creation. */
+
     if (now > service->intro_period_started + INTRO_CIRC_RETRY_PERIOD) {
-      /* One period has elapsed; we can try building circuits again. */
+      /* One period has elapsed:
+       *  - if we stopped, we can try building circuits again,
+       *  - if we haven't, we reset the circuit creation counts. */
+      rend_log_intro_limit(service, LOG_INFO);
       service->intro_period_started = now;
       service->n_intro_circuits_launched = 0;
     } else if (service->n_intro_circuits_launched >=
-               MAX_INTRO_CIRCS_PER_PERIOD) {
+               rend_max_intro_circs_per_period(
+                                      service->n_intro_points_wanted)) {
       /* We have failed too many times in this period; wait for the next
-       * one before we try again. */
+       * one before we try to initiate any more connections. */
+      rend_log_intro_limit(service, LOG_WARN);
       continue;
     }
-
-    /* Cleanup the invalid intro points and save the node objects, if apply,
-     * in the exclude_nodes and retry_nodes list. */
-    remove_invalid_intro_points(service, exclude_nodes, retry_nodes, now);
 
     /* Let's try to rebuild circuit on the nodes we want to retry on. */
     SMARTLIST_FOREACH_BEGIN(retry_nodes, rend_intro_point_t *, intro) {
@@ -3966,17 +4059,17 @@ rend_consider_services_intro_points(void)
     /* Avoid mismatched signed comparaison below. */
     intro_nodes_len = (unsigned int) smartlist_len(service->intro_nodes);
 
-    /* Quiescent state, no node expiring and we have more or the amount of
-     * wanted node for this service. Proceed to the next service. Could be
-     * more because we launch two preemptive circuits if our intro nodes
-     * list is empty. */
-    if (smartlist_len(service->expiring_nodes) == 0 &&
-        intro_nodes_len >= service->n_intro_points_wanted) {
+    /* Quiescent state, we have more or the equal amount of wanted node for
+     * this service. Proceed to the next service. We can have more nodes
+     * because we launch extra preemptive circuits if our intro nodes list was
+     * originally empty for performance reasons. */
+    if (intro_nodes_len >= service->n_intro_points_wanted) {
       continue;
     }
 
-    /* Number of intro points we want to open which is the wanted amount
-     * minus the current amount of valid nodes. */
+    /* Number of intro points we want to open which is the wanted amount minus
+     * the current amount of valid nodes. We know that this won't underflow
+     * because of the check above. */
     n_intro_points_to_open = service->n_intro_points_wanted - intro_nodes_len;
     if (intro_nodes_len == 0) {
       /* We want to end up with n_intro_points_wanted intro points, but if
@@ -3996,8 +4089,6 @@ rend_consider_services_intro_points(void)
       const node_t *node;
       rend_intro_point_t *intro;
       router_crn_flags_t flags = CRN_NEED_UPTIME|CRN_NEED_DESC;
-      if (get_options()->AllowInvalid_ & ALLOW_INVALID_INTRODUCTION)
-        flags |= CRN_ALLOW_INVALID;
       router_crn_flags_t direct_flags = flags;
       direct_flags |= CRN_PREF_ADDR;
       direct_flags |= CRN_DIRECT_CONN;
@@ -4033,6 +4124,9 @@ rend_consider_services_intro_points(void)
        * even if we are a single onion service and intend to connect to it
        * directly ourselves. */
       intro->extend_info = extend_info_from_node(node, 0);
+      if (BUG(intro->extend_info == NULL)) {
+        break;
+      }
       intro->intro_key = crypto_pk_new();
       const int fail = crypto_pk_generate_key(intro->intro_key);
       tor_assert(!fail);
@@ -4168,8 +4262,8 @@ rend_service_dump_stats(int severity)
 
   for (i=0; i < smartlist_len(rend_service_list); ++i) {
     service = smartlist_get(rend_service_list, i);
-    tor_log(severity, LD_GENERAL, "Service configured in \"%s\":",
-        service->directory);
+    tor_log(severity, LD_GENERAL, "Service configured in %s:",
+            rend_service_escaped_dir(service));
     for (j=0; j < smartlist_len(service->intro_nodes); ++j) {
       intro = smartlist_get(service->intro_nodes, j);
       safe_name = safe_str_client(intro->extend_info->nickname);
@@ -4186,60 +4280,6 @@ rend_service_dump_stats(int severity)
   }
 }
 
-#ifdef HAVE_SYS_UN_H
-
-/** Given <b>ports</b>, a smarlist containing rend_service_port_config_t,
- * add the given <b>p</b>, a AF_UNIX port to the list. Return 0 on success
- * else return -ENOSYS if AF_UNIX is not supported (see function in the
- * #else statement below). */
-static int
-add_unix_port(smartlist_t *ports, rend_service_port_config_t *p)
-{
-  tor_assert(ports);
-  tor_assert(p);
-  tor_assert(p->is_unix_addr);
-
-  smartlist_add(ports, p);
-  return 0;
-}
-
-/** Given <b>conn</b> set it to use the given port <b>p</b> values. Return 0
- * on success else return -ENOSYS if AF_UNIX is not supported (see function
- * in the #else statement below). */
-static int
-set_unix_port(edge_connection_t *conn, rend_service_port_config_t *p)
-{
-  tor_assert(conn);
-  tor_assert(p);
-  tor_assert(p->is_unix_addr);
-
-  conn->base_.socket_family = AF_UNIX;
-  tor_addr_make_unspec(&conn->base_.addr);
-  conn->base_.port = 1;
-  conn->base_.address = tor_strdup(p->unix_addr);
-  return 0;
-}
-
-#else /* defined(HAVE_SYS_UN_H) */
-
-static int
-set_unix_port(edge_connection_t *conn, rend_service_port_config_t *p)
-{
-  (void) conn;
-  (void) p;
-  return -ENOSYS;
-}
-
-static int
-add_unix_port(smartlist_t *ports, rend_service_port_config_t *p)
-{
-  (void) ports;
-  (void) p;
-  return -ENOSYS;
-}
-
-#endif /* HAVE_SYS_UN_H */
-
 /** Given <b>conn</b>, a rendezvous exit stream, look up the hidden service for
  * 'circ', and look up the port and address based on conn-\>port.
  * Assign the actual conn-\>addr and conn-\>port. Return -2 on failure
@@ -4252,17 +4292,15 @@ rend_service_set_connection_addr_port(edge_connection_t *conn,
 {
   rend_service_t *service;
   char serviceid[REND_SERVICE_ID_LEN_BASE32+1];
-  smartlist_t *matching_ports;
-  rend_service_port_config_t *chosen_port;
-  unsigned int warn_once = 0;
+  const char *rend_pk_digest;
 
   tor_assert(circ->base_.purpose == CIRCUIT_PURPOSE_S_REND_JOINED);
   tor_assert(circ->rend_data);
   log_debug(LD_REND,"beginning to hunt for addr/port");
+  rend_pk_digest = (char *) rend_data_get_pk_digest(circ->rend_data, NULL);
   base32_encode(serviceid, REND_SERVICE_ID_LEN_BASE32+1,
-                circ->rend_data->rend_pk_digest, REND_SERVICE_ID_LEN);
-  service = rend_service_get_by_pk_digest(
-                circ->rend_data->rend_pk_digest);
+                rend_pk_digest, REND_SERVICE_ID_LEN);
+  service = rend_service_get_by_pk_digest(rend_pk_digest);
   if (!service) {
     log_warn(LD_REND, "Couldn't find any service associated with pk %s on "
              "rendezvous circuit %u; closing.",
@@ -4288,41 +4326,9 @@ rend_service_set_connection_addr_port(edge_connection_t *conn,
       return service->max_streams_close_circuit ? -2 : -1;
     }
   }
-  matching_ports = smartlist_new();
-  SMARTLIST_FOREACH(service->ports, rend_service_port_config_t *, p,
-  {
-    if (conn->base_.port != p->virtual_port) {
-      continue;
-    }
-    if (!(p->is_unix_addr)) {
-      smartlist_add(matching_ports, p);
-    } else {
-      if (add_unix_port(matching_ports, p)) {
-        if (!warn_once) {
-         /* Unix port not supported so warn only once. */
-          log_warn(LD_REND,
-              "Saw AF_UNIX virtual port mapping for port %d on service "
-              "%s, which is unsupported on this platform. Ignoring it.",
-              conn->base_.port, serviceid);
-        }
-        warn_once++;
-      }
-    }
-  });
-  chosen_port = smartlist_choose(matching_ports);
-  smartlist_free(matching_ports);
-  if (chosen_port) {
-    if (!(chosen_port->is_unix_addr)) {
-      /* Get a non-AF_UNIX connection ready for connection_exit_connect() */
-      tor_addr_copy(&conn->base_.addr, &chosen_port->real_addr);
-      conn->base_.port = chosen_port->real_port;
-    } else {
-      if (set_unix_port(conn, chosen_port)) {
-        /* Simply impossible to end up here else we were able to add a Unix
-         * port without AF_UNIX support... ? */
-        tor_assert(0);
-      }
-    }
+
+  if (hs_set_conn_addr_port(service->ports, conn) == 0) {
+    /* Successfully set the port to the connection. We are done. */
     return 0;
   }
 
@@ -4383,4 +4389,20 @@ rend_service_non_anonymous_mode_enabled(const or_options_t *options)
   tor_assert(rend_service_non_anonymous_mode_consistent(options));
   return options->HiddenServiceNonAnonymousMode ? 1 : 0;
 }
+
+#ifdef TOR_UNIT_TESTS
+
+STATIC void
+set_rend_service_list(smartlist_t *new_list)
+{
+  rend_service_list = new_list;
+}
+
+STATIC void
+set_rend_rend_service_staging_list(smartlist_t *new_list)
+{
+  rend_service_staging_list = new_list;
+}
+
+#endif /* defined(TOR_UNIT_TESTS) */
 

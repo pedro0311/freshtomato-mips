@@ -1,6 +1,6 @@
 /* Copyright (c) 2003-2004, Roger Dingledine
  * Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -33,7 +33,7 @@
 #include <process.h>
 #include <windows.h>
 #include <iphlpapi.h>
-#endif
+#endif /* defined(_WIN32) */
 
 #include "compat.h"
 #include "util.h"
@@ -159,6 +159,8 @@ tor_addr_from_sockaddr(tor_addr_t *a, const struct sockaddr *sa,
   tor_assert(a);
   tor_assert(sa);
 
+  /* This memset is redundant; leaving it in to avoid any future accidents,
+     however. */
   memset(a, 0, sizeof(*a));
 
   if (sa->sa_family == AF_INET) {
@@ -196,7 +198,7 @@ tor_sockaddr_to_str(const struct sockaddr *sa)
     tor_asprintf(&result, "unix:%s", s_un->sun_path);
     return result;
   }
-#endif
+#endif /* defined(HAVE_SYS_UN_H) */
   if (sa->sa_family == AF_UNSPEC)
     return tor_strdup("unspec");
 
@@ -235,8 +237,8 @@ tor_addr_make_null(tor_addr_t *a, sa_family_t family)
  *
  * Return 0 on success, -1 on failure; 1 on transient failure.
  */
-int
-tor_addr_lookup(const char *name, uint16_t family, tor_addr_t *addr)
+MOCK_IMPL(int,
+tor_addr_lookup,(const char *name, uint16_t family, tor_addr_t *addr))
 {
   /* Perhaps eventually this should be replaced by a tor_getaddrinfo or
    * something.
@@ -303,7 +305,7 @@ tor_addr_lookup(const char *name, uint16_t family, tor_addr_t *addr)
       return result;
     }
     return (err == EAI_AGAIN) ? 1 : -1;
-#else
+#else /* !(defined(HAVE_GETADDRINFO)) */
     struct hostent *ent;
     int err;
 #ifdef HAVE_GETHOSTBYNAME_R_6_ARG
@@ -328,7 +330,7 @@ tor_addr_lookup(const char *name, uint16_t family, tor_addr_t *addr)
 #else
     err = h_errno;
 #endif
-#endif /* endif HAVE_GETHOSTBYNAME_R_6_ARG. */
+#endif /* defined(HAVE_GETHOSTBYNAME_R_6_ARG) || ... */
     if (ent) {
       if (ent->h_addrtype == AF_INET) {
         tor_addr_from_in(addr, (struct in_addr*) ent->h_addr);
@@ -344,7 +346,7 @@ tor_addr_lookup(const char *name, uint16_t family, tor_addr_t *addr)
 #else
     return (err == TRY_AGAIN) ? 1 : -1;
 #endif
-#endif
+#endif /* defined(HAVE_GETADDRINFO) */
   }
 }
 
@@ -562,8 +564,8 @@ tor_addr_parse_PTR_name(tor_addr_t *result, const char *address,
 
 /** Convert <b>addr</b> to an in-addr.arpa name or a .ip6.arpa name,
  * and store the result in the <b>outlen</b>-byte buffer at
- * <b>out</b>.  Return the number of chars written to <b>out</b>, not
- * including the trailing \0, on success. Returns -1 on failure. */
+ * <b>out</b>.  Returns a non-negative integer on success.
+ * Returns -1 on failure. */
 int
 tor_addr_to_PTR_name(char *out, size_t outlen,
                      const tor_addr_t *addr)
@@ -905,8 +907,8 @@ tor_addr_is_loopback(const tor_addr_t *addr)
       return (tor_addr_to_ipv4h(addr) & 0xff000000) == 0x7f000000;
     case AF_UNSPEC:
       return 0;
-    default:
       /* LCOV_EXCL_START */
+    default:
       tor_fragile_assert();
       return 0;
       /* LCOV_EXCL_STOP */
@@ -1029,8 +1031,10 @@ tor_addr_copy_tight(tor_addr_t *dest, const tor_addr_t *src)
       memcpy(dest->addr.in6_addr.s6_addr, src->addr.in6_addr.s6_addr, 16);
     case AF_UNSPEC:
       break;
+      // LCOV_EXCL_START
     default:
-      tor_fragile_assert(); // LCOV_EXCL_LINE
+      tor_fragile_assert();
+      // LCOV_EXCL_STOP
     }
 }
 
@@ -1136,8 +1140,8 @@ tor_addr_compare_masked(const tor_addr_t *addr1, const tor_addr_t *addr2,
           return 0;
         else
           return 1;
-      default:
         /* LCOV_EXCL_START */
+      default:
         tor_fragile_assert();
         return 0;
         /* LCOV_EXCL_STOP */
@@ -1181,6 +1185,9 @@ tor_addr_compare_masked(const tor_addr_t *addr1, const tor_addr_t *addr2,
   }
 }
 
+/** Input for siphash, to produce some output for an unspec value. */
+static const uint32_t unspec_hash_input[] = { 0x4e4df09f, 0x92985342 };
+
 /** Return a hash code based on the address addr. DOCDOC extra */
 uint64_t
 tor_addr_hash(const tor_addr_t *addr)
@@ -1189,9 +1196,31 @@ tor_addr_hash(const tor_addr_t *addr)
   case AF_INET:
     return siphash24g(&addr->addr.in_addr.s_addr, 4);
   case AF_UNSPEC:
-    return 0x4e4d5342;
+    return siphash24g(unspec_hash_input, sizeof(unspec_hash_input));
   case AF_INET6:
     return siphash24g(&addr->addr.in6_addr.s6_addr, 16);
+    /* LCOV_EXCL_START */
+  default:
+    tor_fragile_assert();
+    return 0;
+    /* LCOV_EXCL_STOP */
+  }
+}
+
+/** As tor_addr_hash, but use a particular siphash key. */
+uint64_t
+tor_addr_keyed_hash(const struct sipkey *key, const tor_addr_t *addr)
+{
+  /* This is duplicate code with tor_addr_hash, since this function needs to
+   * be backportable all the way to 0.2.9. */
+
+  switch (tor_addr_family(addr)) {
+  case AF_INET:
+    return siphash24(&addr->addr.in_addr.s_addr, 4, key);
+  case AF_UNSPEC:
+    return siphash24(unspec_hash_input, sizeof(unspec_hash_input), key);
+  case AF_INET6:
+    return siphash24(&addr->addr.in6_addr.s6_addr, 16, key);
   default:
     /* LCOV_EXCL_START */
     tor_fragile_assert();
@@ -1407,7 +1436,7 @@ get_interface_addresses_ifaddrs(int severity, sa_family_t family)
 
   return result;
 }
-#endif
+#endif /* defined(HAVE_IFADDRS_TO_SMARTLIST) */
 
 #ifdef HAVE_IP_ADAPTER_TO_SMARTLIST
 
@@ -1498,7 +1527,7 @@ get_interface_addresses_win32(int severity, sa_family_t family)
   return result;
 }
 
-#endif
+#endif /* defined(HAVE_IP_ADAPTER_TO_SMARTLIST) */
 
 #ifdef HAVE_IFCONF_TO_SMARTLIST
 
@@ -1600,7 +1629,7 @@ get_interface_addresses_ioctl(int severity, sa_family_t family)
   tor_free(ifc.ifc_buf);
   return result;
 }
-#endif
+#endif /* defined(HAVE_IFCONF_TO_SMARTLIST) */
 
 /** Try to ask our network interfaces what addresses they are bound to.
  * Return a new smartlist of tor_addr_t on success, and NULL on failure.
@@ -1779,9 +1808,10 @@ free_interface_address6_list(smartlist_t *addrs)
  * Returns NULL on failure.
  * Use free_interface_address6_list to free the returned list.
  */
-MOCK_IMPL(smartlist_t *,get_interface_address6_list,(int severity,
-                                                     sa_family_t family,
-                                                     int include_internal))
+MOCK_IMPL(smartlist_t *,
+get_interface_address6_list,(int severity,
+                             sa_family_t family,
+                             int include_internal))
 {
   smartlist_t *addrs;
   tor_addr_t addr;
@@ -2049,7 +2079,8 @@ parse_port_range(const char *port, uint16_t *port_min_out,
 
 /** Given an IPv4 in_addr struct *<b>in</b> (in network order, as usual),
  *  write it as a string into the <b>buf_len</b>-byte buffer in
- *  <b>buf</b>.
+ *  <b>buf</b>. Returns a non-negative integer on success.
+ *  Returns -1 on failure.
  */
 int
 tor_inet_ntoa(const struct in_addr *in, char *buf, size_t buf_len)
@@ -2100,7 +2131,8 @@ get_interface_address,(int severity, uint32_t *addr))
 }
 
 /** Return true if we can tell that <b>name</b> is a canonical name for the
- * loopback address. */
+ * loopback address.  Return true also for *.local hostnames, which are
+ * multicast DNS names for hosts on the local network. */
 int
 tor_addr_hostname_is_local(const char *name)
 {
@@ -2119,5 +2151,13 @@ tor_addr_port_new(const tor_addr_t *addr, uint16_t port)
     tor_addr_copy(&ap->addr, addr);
   ap->port = port;
   return ap;
+}
+
+/** Return true iff <a>a</b> and <b>b</b> are the same address and port */
+int
+tor_addr_port_eq(const tor_addr_port_t *a,
+                 const tor_addr_port_t *b)
+{
+  return tor_addr_eq(&a->addr, &b->addr) && a->port == b->port;
 }
 

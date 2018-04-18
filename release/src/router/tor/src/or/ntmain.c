@@ -1,6 +1,6 @@
 /* Copyright (c) 2001-2004, Roger Dingledine.
  * Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -293,6 +293,7 @@ nt_service_body(int argc, char **argv)
    * event loop */
   service_status.dwCurrentState = SERVICE_RUNNING;
   service_fns.SetServiceStatus_fn(hStatus, &service_status);
+  set_main_thread();
   do_main_loop();
   tor_cleanup();
 }
@@ -328,9 +329,10 @@ nt_service_main(void)
       case CMD_VERIFY_CONFIG:
       case CMD_DUMP_CONFIG:
       case CMD_KEYGEN:
+      case CMD_KEY_EXPIRATION:
         log_err(LD_CONFIG, "Unsupported command (--list-fingerprint, "
-               "--hash-password, --keygen, --dump-config, or --verify-config) "
-                "in NT service.");
+               "--hash-password, --keygen, --dump-config, --verify-config, "
+               "or --key-expiration) in NT service.");
         break;
       case CMD_RUN_UNITTESTS:
       default:
@@ -500,7 +502,7 @@ nt_service_command_line(int *using_default_torrc)
   tor_exe_ascii[sizeof(tor_exe_ascii)-1] = '\0';
 #else
   strlcpy(tor_exe_ascii, tor_exe, sizeof(tor_exe_ascii));
-#endif
+#endif /* defined(UNICODE) */
 
   /* Allocate a string for the NT service command line and */
   /* Format the service command */
@@ -776,5 +778,5 @@ nt_service_parse_options(int argc, char **argv, int *should_exit)
   return 0;
 }
 
-#endif
+#endif /* defined(_WIN32) */
 

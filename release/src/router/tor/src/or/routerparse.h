@@ -1,7 +1,7 @@
 /* Copyright (c) 2001 Matej Pfajfar.
  * Copyright (c) 2001-2004, Roger Dingledine.
  * Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -16,6 +16,11 @@ int router_get_router_hash(const char *s, size_t s_len, char *digest);
 int router_get_dir_hash(const char *s, char *digest);
 int router_get_networkstatus_v3_hashes(const char *s,
                                        common_digests_t *digests);
+int router_get_networkstatus_v3_signed_boundaries(const char *s,
+                                                  const char **start_out,
+                                                  const char **end_out);
+int router_get_networkstatus_v3_sha3_as_signed(uint8_t *digest_out,
+                                               const char *s);
 int router_get_extrainfo_hash(const char *s, size_t s_len, char *digest);
 #define DIROBJ_MAX_SIG_LEN 256
 char *router_get_dirobj_signature(const char *digest,
@@ -113,7 +118,6 @@ STATIC int routerstatus_parse_guardfraction(const char *guardfraction_str,
 MOCK_DECL(STATIC dumped_desc_t *, dump_desc_populate_one_file,
     (const char *dirname, const char *f));
 STATIC void dump_desc_populate_fifo_from_directory(const char *dirname);
-STATIC void dump_desc(const char *desc, const char *type);
 STATIC void dump_desc_fifo_cleanup(void);
 struct memarea_t;
 STATIC routerstatus_t *routerstatus_parse_entry_from_string(
@@ -123,9 +127,15 @@ STATIC routerstatus_t *routerstatus_parse_entry_from_string(
                                      vote_routerstatus_t *vote_rs,
                                      int consensus_method,
                                      consensus_flavor_t flav);
-#endif
+MOCK_DECL(STATIC void,dump_desc,(const char *desc, const char *type));
+MOCK_DECL(STATIC int, router_compute_hash_final,(char *digest,
+                           const char *start, size_t len,
+                           digest_algorithm_t alg));
+MOCK_DECL(STATIC int, signed_digest_equals,
+          (const uint8_t *d1, const uint8_t *d2, size_t len));
+#endif /* defined(ROUTERPARSE_PRIVATE) */
 
 #define ED_DESC_SIGNATURE_PREFIX "Tor router descriptor signature v1"
 
-#endif
+#endif /* !defined(TOR_ROUTERPARSE_H) */
 
