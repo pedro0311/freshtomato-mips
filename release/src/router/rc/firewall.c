@@ -757,6 +757,7 @@ static void mangle_table(void)
 		}
 #endif
 	}
+	}
 
 // Clamp TCP MSS to PMTU of WAN interface (IPv4 & IPv6)
 	ip46t_write("-I FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n");
