@@ -1,7 +1,7 @@
 /* Copyright (c) 2001, Matej Pfajfar.
  * Copyright (c) 2001-2004, Roger Dingledine.
  * Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -159,6 +159,27 @@ curve25519_public_from_base64(curve25519_public_key_t *pkey,
   } else {
     return -1;
   }
+}
+
+/** For logging convenience: Convert <b>pkey</b> to a statically allocated
+ * base64 string and return it. Not threadsafe. Format not meant to be
+ * computer-readable; it may change in the future. Subsequent calls invalidate
+ * previous returns. */
+const char *
+ed25519_fmt(const ed25519_public_key_t *pkey)
+{
+  static char formatted[ED25519_BASE64_LEN+1];
+  if (pkey) {
+    if (ed25519_public_key_is_zero(pkey)) {
+      strlcpy(formatted, "<unset>", sizeof(formatted));
+    } else {
+      int r = ed25519_public_to_base64(formatted, pkey);
+      tor_assert(!r);
+    }
+  } else {
+    strlcpy(formatted, "<null>", sizeof(formatted));
+  }
+  return formatted;
 }
 
 /** Try to decode the string <b>input</b> into an ed25519 public key. On

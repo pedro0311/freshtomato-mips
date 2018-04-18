@@ -1,6 +1,6 @@
 # Copyright (c) 2001-2004, Roger Dingledine
 # Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson
-# Copyright (c) 2007-2015, The Tor Project, Inc.
+# Copyright (c) 2007-2017, The Tor Project, Inc.
 # See LICENSE for licensing information
 
 ACLOCAL_AMFLAGS = -I m4
@@ -9,19 +9,27 @@ noinst_LIBRARIES=
 EXTRA_DIST=
 noinst_HEADERS=
 bin_PROGRAMS=
+EXTRA_PROGRAMS=
 CLEANFILES=
 TESTS=
 noinst_PROGRAMS=
 DISTCLEANFILES=
 bin_SCRIPTS=
 AM_CPPFLAGS=
-AM_CFLAGS=@TOR_SYSTEMD_CFLAGS@ @CFLAGS_BUGTRAP@
+AM_CFLAGS=@TOR_SYSTEMD_CFLAGS@ @CFLAGS_BUGTRAP@ @TOR_LZMA_CFLAGS@ @TOR_ZSTD_CFLAGS@
 SHELL=@SHELL@
 
 if COVERAGE_ENABLED
 TESTING_TOR_BINARY=$(top_builddir)/src/or/tor-cov$(EXEEXT)
 else
 TESTING_TOR_BINARY=$(top_builddir)/src/or/tor$(EXEEXT)
+endif
+
+if USE_RUST
+rust_ldadd=$(top_builddir)/src/rust/target/release/@TOR_RUST_UTIL_STATIC_NAME@ \
+	@TOR_RUST_EXTRA_LIBS@
+else
+rust_ldadd=
 endif
 
 include src/include.am
@@ -34,7 +42,8 @@ EXTRA_DIST+= \
 	LICENSE						\
 	Makefile.nmake					\
 	README						\
-	ReleaseNotes
+	ReleaseNotes					\
+	scripts/maint/checkSpace.pl
 
 ## This tells etags how to find mockable function definitions.
 AM_ETAGSFLAGS=--regex='{c}/MOCK_IMPL([^,]+,\W*\([a-zA-Z0-9_]+\)\W*,/\1/s'
@@ -51,6 +60,12 @@ else
 TEST_CFLAGS=
 TEST_CPPFLAGS=-DTOR_UNIT_TESTS
 TEST_NETWORK_FLAGS=--hs-multi-client 1
+endif
+TEST_NETWORK_WARNING_FLAGS=--quiet --only-warnings
+
+if LIBFUZZER_ENABLED
+TEST_CFLAGS += -fsanitize-coverage=trace-pc-guard,trace-cmp,trace-div
+# not "edge"
 endif
 
 TEST_NETWORK_ALL_LOG_DIR=$(top_builddir)/test_network_log
@@ -81,6 +96,8 @@ doxygen:
 
 test: all
 	$(top_builddir)/src/test/test
+
+check-local: check-spaces check-changes
 
 need-chutney-path:
 	@if test ! -d "$$CHUTNEY_PATH"; then \
@@ -126,6 +143,7 @@ test-network-all: need-chutney-path test-driver $(TESTING_TOR_BINARY) src/tools/
 	done; \
 	for f in $$flavors; do \
 		$(SHELL) $(top_srcdir)/test-driver --test-name $$f --log-file $(TEST_NETWORK_ALL_LOG_DIR)/$$f.log --trs-file $(TEST_NETWORK_ALL_LOG_DIR)/$$f.trs $(TEST_NETWORK_ALL_DRIVER_FLAGS) $(top_srcdir)/src/test/test-network.sh --flavor $$f $(TEST_NETWORK_FLAGS); \
+		$(top_srcdir)/src/test/test-network.sh $(TEST_NETWORK_WARNING_FLAGS); \
 	done; \
 	echo "Log and result files are available in $(TEST_NETWORK_ALL_LOG_DIR)."; \
 	! grep -q FAIL test_network_log/*.trs
@@ -181,11 +199,14 @@ coverage-html-full: all
 # Avoid strlcpy.c, strlcat.c, aes.c, OpenBSD_malloc_Linux.c, sha256.c,
 # tinytest*.[ch]
 check-spaces:
-	$(top_srcdir)/scripts/maint/checkSpace.pl -C \
+if USE_PERL
+	$(PERL) $(top_srcdir)/scripts/maint/checkSpace.pl -C \
 		$(top_srcdir)/src/common/*.[ch] \
 		$(top_srcdir)/src/or/*.[ch] \
 		$(top_srcdir)/src/test/*.[ch] \
+		$(top_srcdir)/src/test/*/*.[ch] \
 		$(top_srcdir)/src/tools/*.[ch]
+endif
 
 check-docs: all
 	$(PERL) $(top_builddir)/scripts/maint/checkOptionDocs.pl
@@ -196,13 +217,19 @@ check-logs:
 
 .PHONY: check-changes
 check-changes:
+if USEPYTHON
 	@if test -d "$(top_srcdir)/changes"; then \
-		$(PYTHON) $(top_srcdir)/scripts/maint/lintChanges.py $(top_srcdir)/changes/*; \
+		$(PYTHON) $(top_srcdir)/scripts/maint/lintChanges.py $(top_srcdir)/changes; \
 		fi
+endif
 
 .PHONY: update-versions
 update-versions:
 	$(PERL) $(top_builddir)/scripts/maint/updateVersions.pl
+
+.PHONY: callgraph
+callgraph:
+	$(top_builddir)/scripts/maint/run_calltool.sh
 
 version:
 	@echo "Tor @VERSION@"
@@ -216,3 +243,7 @@ mostlyclean-local:
 	rm -rf $(HTML_COVER_DIR)
 	rm -rf $(top_builddir)/doc/doxygen
 	rm -rf $(TEST_NETWORK_ALL_LOG_DIR)
+
+clean-local:
+	rm -rf $(top_builddir)/src/rust/target
+	rm -rf $(top_builddir)/src/rust/.cargo/registry

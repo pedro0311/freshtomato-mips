@@ -9,6 +9,9 @@
 /* tor's configuration directory */
 #undef CONFDIR
 
+/* Defined if we're turning off memory safety code to look for bugs */
+#undef DISABLE_MEMORY_SENTINELS
+
 /* Defined if we're not going to look for a torrc in SYSCONF */
 #undef DISABLE_SYSTEM_TORRC
 
@@ -66,6 +69,10 @@
 
 /* Define to 1 if you have the <cygwin/signal.h> header file. */
 #undef HAVE_CYGWIN_SIGNAL_H
+
+/* Define to 1 if you have the declaration of `getpagesize', and to 0 if you
+   don't. */
+#undef HAVE_DECL_GETPAGESIZE
 
 /* Define to 1 if you have the declaration of `mlockall', and to 0 if you
    don't. */
@@ -167,8 +174,17 @@
 /* Define to 1 if you have the `gettimeofday' function. */
 #undef HAVE_GETTIMEOFDAY
 
+/* Define to 1 if you have the `get_current_dir_name' function. */
+#undef HAVE_GET_CURRENT_DIR_NAME
+
 /* Define to 1 if you have the `gmtime_r' function. */
 #undef HAVE_GMTIME_R
+
+/* Define to 1 if you have the `gnu_get_libc_version' function. */
+#undef HAVE_GNU_GET_LIBC_VERSION
+
+/* Define to 1 if you have the <gnu/libc-version.h> header file. */
+#undef HAVE_GNU_LIBC_VERSION_H
 
 /* Define to 1 if you have the <grp.h> header file. */
 #undef HAVE_GRP_H
@@ -190,6 +206,9 @@
 
 /* Define to 1 if you have the `issetugid' function. */
 #undef HAVE_ISSETUGID
+
+/* Defined if KIST scheduler is supported on this system */
+#undef HAVE_KIST_SUPPORT
 
 /* Define to 1 if you have the `cap' library (-lcap). */
 #undef HAVE_LIBCAP
@@ -224,6 +243,9 @@
 
 /* Define to 1 if you have the `lround' function. */
 #undef HAVE_LROUND
+
+/* Have LZMA */
+#undef HAVE_LZMA
 
 /* Define to 1 if you have the <machine/limits.h> header file. */
 #undef HAVE_MACHINE_LIMITS_H
@@ -315,6 +337,9 @@
 
 /* Define to 1 if you have the `RtlSecureZeroMemory' function. */
 #undef HAVE_RTLSECUREZEROMEMORY
+
+/* have Rust */
+#undef HAVE_RUST
 
 /* Define to 1 if the system has the type `sa_family_t'. */
 #undef HAVE_SA_FAMILY_T
@@ -409,6 +434,12 @@
 /* Define to 1 if `get_cipher_by_char' is a member of `struct ssl_method_st'.
    */
 #undef HAVE_STRUCT_SSL_METHOD_ST_GET_CIPHER_BY_CHAR
+
+/* Define to 1 if `tcpi_snd_mss' is a member of `struct tcp_info'. */
+#undef HAVE_STRUCT_TCP_INFO_TCPI_SND_MSS
+
+/* Define to 1 if `tcpi_unacked' is a member of `struct tcp_info'. */
+#undef HAVE_STRUCT_TCP_INFO_TCPI_UNACKED
 
 /* Define to 1 if `tv_sec' is a member of `struct timeval'. */
 #undef HAVE_STRUCT_TIMEVAL_TV_SEC
@@ -536,6 +567,9 @@
 /* Define to 1 if you have the `vasprintf' function. */
 #undef HAVE_VASPRINTF
 
+/* Have Zstd */
+#undef HAVE_ZSTD
+
 /* Define to 1 if you have the `_NSGetEnviron' function. */
 #undef HAVE__NSGETENVIRON
 
@@ -550,9 +584,6 @@
 
 /* Define to 1 iff memset(0) sets pointers to NULL */
 #undef NULL_REP_IS_ZERO_BYTES
-
-/* "Define to handle pf on OpenBSD properly" */
-#undef OPENBSD
 
 /* Name of package */
 #undef PACKAGE
@@ -650,6 +681,9 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
+/* Compile the event tracing instrumentation */
+#undef TOR_EVENT_TRACING_ENABLED
+
 /* Defined if we should use an internal curve25519_donna{,_c64} implementation
    */
 #undef USE_CURVE25519_DONNA
@@ -659,6 +693,9 @@
 
 /* Debug memory allocation library */
 #undef USE_DMALLOC
+
+/* Tracing framework to log debug */
+#undef USE_EVENT_TRACING_DEBUG
 
 /* Enable extensions on AIX 3, Interix.  */
 #ifndef _ALL_SOURCE

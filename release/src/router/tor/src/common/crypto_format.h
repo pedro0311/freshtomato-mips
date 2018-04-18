@@ -1,7 +1,7 @@
 /* Copyright (c) 2001, Matej Pfajfar.
  * Copyright (c) 2001-2004, Roger Dingledine.
  * Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 #ifndef TOR_CRYPTO_FORMAT_H
@@ -28,6 +28,7 @@ int ed25519_public_from_base64(ed25519_public_key_t *pkey,
                                const char *input);
 int ed25519_public_to_base64(char *output,
                              const ed25519_public_key_t *pkey);
+const char *ed25519_fmt(const ed25519_public_key_t *pkey);
 
 /* XXXX move these to crypto_format.h */
 #define ED25519_SIG_BASE64_LEN 86
@@ -42,5 +43,5 @@ int digest_from_base64(char *digest, const char *d64);
 int digest256_to_base64(char *d64, const char *digest);
 int digest256_from_base64(char *digest, const char *d64);
 
-#endif
+#endif /* !defined(TOR_CRYPTO_FORMAT_H) */
 

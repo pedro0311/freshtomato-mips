@@ -1,4 +1,4 @@
-/* * Copyright (c) 2012-2016, The Tor Project, Inc. */
+/* * Copyright (c) 2012-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -500,7 +500,7 @@ ewma_cmp_cmux(circuitmux_t *cmux_1, circuitmux_policy_data_t *pol_data_1,
   tor_assert(pol_data_2);
 
   p1 = TO_EWMA_POL_DATA(pol_data_1);
-  p2 = TO_EWMA_POL_DATA(pol_data_1);
+  p2 = TO_EWMA_POL_DATA(pol_data_2);
 
   if (p1 != p2) {
     /* Get the head cell_ewma_t from each queue */
@@ -731,7 +731,7 @@ add_cell_ewma(ewma_policy_data_t *pol, cell_ewma_t *ewma)
 
   smartlist_pqueue_add(pol->active_circuit_pqueue,
                        compare_cell_ewma_counts,
-                       STRUCT_OFFSET(cell_ewma_t, heap_index),
+                       offsetof(cell_ewma_t, heap_index),
                        ewma);
 }
 
@@ -746,7 +746,7 @@ remove_cell_ewma(ewma_policy_data_t *pol, cell_ewma_t *ewma)
 
   smartlist_pqueue_remove(pol->active_circuit_pqueue,
                           compare_cell_ewma_counts,
-                          STRUCT_OFFSET(cell_ewma_t, heap_index),
+                          offsetof(cell_ewma_t, heap_index),
                           ewma);
 }
 
@@ -760,6 +760,6 @@ pop_first_cell_ewma(ewma_policy_data_t *pol)
 
   return smartlist_pqueue_pop(pol->active_circuit_pqueue,
                               compare_cell_ewma_counts,
-                              STRUCT_OFFSET(cell_ewma_t, heap_index));
+                              offsetof(cell_ewma_t, heap_index));
 }
 

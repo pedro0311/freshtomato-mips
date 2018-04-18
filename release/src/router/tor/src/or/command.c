@@ -1,7 +1,7 @@
 /* Copyright (c) 2001 Matej Pfajfar.
  * Copyright (c) 2001-2004, Roger Dingledine.
  * Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -46,6 +46,7 @@
 #include "config.h"
 #include "control.h"
 #include "cpuworker.h"
+#include "dos.h"
 #include "hibernate.h"
 #include "nodelist.h"
 #include "onion.h"
@@ -128,7 +129,7 @@ command_time_process_cell(cell_t *cell, channel_t *chan, int *time,
   }
   *time += time_passed;
 }
-#endif
+#endif /* defined(KEEP_TIMING_STATS) */
 
 /** Process a <b>cell</b> that was just received on <b>chan</b>. Keep internal
  * statistics about how many of each cell we've processed so far
@@ -165,7 +166,7 @@ command_process_cell(channel_t *chan, cell_t *cell)
     /* remember which second it is, for next time */
     current_second = now;
   }
-#endif
+#endif /* defined(KEEP_TIMING_STATS) */
 
 #ifdef KEEP_TIMING_STATS
 #define PROCESS_CELL(tp, cl, cn) STMT_BEGIN {                   \
@@ -173,9 +174,9 @@ command_process_cell(channel_t *chan, cell_t *cell)
     command_time_process_cell(cl, cn, & tp ## time ,            \
                               command_process_ ## tp ## _cell);  \
   } STMT_END
-#else
+#else /* !(defined(KEEP_TIMING_STATS)) */
 #define PROCESS_CELL(tp, cl, cn) command_process_ ## tp ## _cell(cl, cn)
-#endif
+#endif /* defined(KEEP_TIMING_STATS) */
 
   switch (cell->command) {
     case CELL_CREATE:
@@ -247,6 +248,11 @@ command_process_create_cell(cell_t *cell, channel_t *chan)
             (unsigned)cell->circ_id,
             U64_PRINTF_ARG(chan->global_identifier), chan);
 
+  /* First thing we do, even though the cell might be invalid, is inform the
+   * DoS mitigation subsystem layer of this event. Validation is done by this
+   * function. */
+  dos_cc_new_create_cell(chan);
+
   /* We check for the conditions that would make us drop the cell before
    * we check for the conditions that would make us send a DESTROY back,
    * since those conditions would make a DESTROY nonsensical. */
@@ -281,6 +287,13 @@ command_process_create_cell(cell_t *cell, channel_t *chan)
              "destroy.");
     channel_send_destroy(cell->circ_id, chan,
                                END_CIRC_REASON_HIBERNATING);
+    return;
+  }
+
+  /* Check if we should apply a defense for this channel. */
+  if (dos_cc_get_defense_type(chan) == DOS_CC_DEFENSE_REFUSE_CELL) {
+    channel_send_destroy(cell->circ_id, chan,
+                         END_CIRC_REASON_RESOURCELIMIT);
     return;
   }
 
@@ -326,10 +339,13 @@ command_process_create_cell(cell_t *cell, channel_t *chan)
     return;
   }
 
+  if (connection_or_digest_is_known_relay(chan->identity_digest)) {
+    rep_hist_note_circuit_handshake_requested(create_cell->handshake_type);
+  }
+
   if (create_cell->handshake_type != ONION_HANDSHAKE_TYPE_FAST) {
     /* hand it off to the cpuworkers, and then return. */
-    if (connection_or_digest_is_known_relay(chan->identity_digest))
-      rep_hist_note_circuit_handshake_requested(create_cell->handshake_type);
+
     if (assign_onionskin_to_cpuworker(circ, create_cell) < 0) {
       log_debug(LD_GENERAL,"Failed to hand off onionskin. Closing.");
       circuit_mark_for_close(TO_CIRCUIT(circ), END_CIRC_REASON_RESOURCELIMIT);
@@ -343,10 +359,6 @@ command_process_create_cell(cell_t *cell, channel_t *chan)
     uint8_t rend_circ_nonce[DIGEST_LEN];
     int len;
     created_cell_t created_cell;
-
-    /* Make sure we never try to use the OR connection on which we
-     * received this cell to satisfy an EXTEND request,  */
-    channel_mark_client(chan);
 
     memset(&created_cell, 0, sizeof(created_cell));
     len = onion_skin_server_handshake(ONION_HANDSHAKE_TYPE_FAST,
@@ -366,7 +378,8 @@ command_process_create_cell(cell_t *cell, channel_t *chan)
     created_cell.handshake_len = len;
 
     if (onionskin_answer(circ, &created_cell,
-                         (const char *)keys, rend_circ_nonce)<0) {
+                         (const char *)keys, sizeof(keys),
+                         rend_circ_nonce)<0) {
       log_warn(LD_OR,"Failed to reply to CREATE_FAST cell. Closing.");
       circuit_mark_for_close(TO_CIRCUIT(circ), END_CIRC_REASON_INTERNAL);
       return;

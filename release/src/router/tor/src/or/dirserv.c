@@ -1,6 +1,6 @@
 /* Copyright (c) 2001-2004, Roger Dingledine.
  * Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 #define DIRSERV_PRIVATE
@@ -13,6 +13,8 @@
 #include "command.h"
 #include "connection.h"
 #include "connection_or.h"
+#include "conscache.h"
+#include "consdiffmgr.h"
 #include "control.h"
 #include "directory.h"
 #include "dirserv.h"
@@ -81,13 +83,22 @@ dirserv_get_status_impl(const char *fp, const char *nickname,
                         int severity);
 static void clear_cached_dir(cached_dir_t *d);
 static const signed_descriptor_t *get_signed_descriptor_by_fp(
-                                                        const char *fp,
-                                                        int extrainfo,
-                                                        time_t publish_cutoff);
+                                                        const uint8_t *fp,
+                                                        int extrainfo);
 static was_router_added_t dirserv_add_extrainfo(extrainfo_t *ei,
                                                 const char **msg);
 static uint32_t dirserv_get_bandwidth_for_router_kb(const routerinfo_t *ri);
 static uint32_t dirserv_get_credible_bandwidth_kb(const routerinfo_t *ri);
+
+static int spooled_resource_lookup_body(const spooled_resource_t *spooled,
+                                        int conn_is_encrypted,
+                                        const uint8_t **body_out,
+                                        size_t *size_out,
+                                        time_t *published_out);
+static cached_dir_t *spooled_resource_lookup_cached_dir(
+                                   const spooled_resource_t *spooled,
+                                   time_t *published_out);
+static cached_dir_t *lookup_cached_dir_by_fp(const uint8_t *fp);
 
 /************** Fingerprint handling code ************/
 
@@ -274,6 +285,13 @@ dirserv_router_get_status(const routerinfo_t *router, const char **msg,
     return FP_REJECT;
   }
 
+  /* Check for the more usual versions to reject a router first. */
+  const uint32_t r = dirserv_get_status_impl(d, router->nickname,
+                                             router->addr, router->or_port,
+                                             router->platform, msg, severity);
+  if (r)
+    return r;
+
   /* dirserv_get_status_impl already rejects versions older than 0.2.4.18-rc,
    * and onion_curve25519_pkey was introduced in 0.2.4.8-alpha.
    * But just in case a relay doesn't provide or lies about its version, or
@@ -320,13 +338,11 @@ dirserv_router_get_status(const routerinfo_t *router, const char **msg,
         }
         return FP_REJECT;
       }
-#endif
+#endif /* defined(DISABLE_DISABLING_ED25519) */
     }
   }
 
-  return dirserv_get_status_impl(d, router->nickname,
-                                 router->addr, router->or_port,
-                                 router->platform, msg, severity);
+  return 0;
 }
 
 /** Return true if there is no point in downloading the router described by
@@ -383,6 +399,17 @@ dirserv_get_status_impl(const char *id_digest, const char *nickname,
     return FP_REJECT;
   }
 
+  /* Tor 0.2.9.x where x<5 suffers from bug #20499, where relays don't
+   * keep their consensus up to date so they make bad guards.
+   * The simple fix is to just drop them from the network. */
+  if (platform &&
+      tor_version_as_new_as(platform,"0.2.9.0-alpha") &&
+      !tor_version_as_new_as(platform,"0.2.9.5-alpha")) {
+    if (msg)
+      *msg = "Tor version contains bug 20499. Please upgrade!";
+    return FP_REJECT;
+  }
+
   status_by_digest = digestmap_get(fingerprint_list->status_by_digest,
                                    id_digest);
   if (status_by_digest)
@@ -390,7 +417,10 @@ dirserv_get_status_impl(const char *id_digest, const char *nickname,
 
   if (result & FP_REJECT) {
     if (msg)
-      *msg = "Fingerprint is marked rejected -- please contact us?";
+      *msg = "Fingerprint is marked rejected -- if you think this is a "
+             "mistake please set a valid email address in ContactInfo and "
+             "send an email to bad-relays@lists.torproject.org mentioning "
+             "your fingerprint(s)?";
     return FP_REJECT;
   } else if (result & FP_INVALID) {
     if (msg)
@@ -408,7 +438,10 @@ dirserv_get_status_impl(const char *id_digest, const char *nickname,
     log_fn(severity, LD_DIRSERV, "Rejecting '%s' because of address '%s'",
                nickname, fmt_addr32(addr));
     if (msg)
-      *msg = "Suspicious relay address range -- please contact us?";
+      *msg = "Suspicious relay address range -- if you think this is a "
+             "mistake please set a valid email address in ContactInfo and "
+             "send an email to bad-relays@lists.torproject.org mentioning "
+             "your address(es) and fingerprint(s)?";
     return FP_REJECT;
   }
   if (!authdir_policy_valid_address(addr, or_port)) {
@@ -561,6 +594,8 @@ dirserv_add_multiple_descriptors(const char *desc, uint8_t purpose,
                    !general ? router_purpose_to_string(purpose) : "",
                    !general ? "\n" : "")<0) {
     *msg = "Couldn't format annotations";
+    /* XXX Not cool: we return -1 below, but (was_router_added_t)-1 is
+     * ROUTER_BAD_EI, which isn't what's gone wrong here. :( */
     return -1;
   }
 
@@ -615,7 +650,11 @@ dirserv_add_multiple_descriptors(const char *desc, uint8_t purpose,
  * passed back to the origin of this descriptor, or NULL if there is no such
  * message. Use <b>source</b> to produce better log messages.
  *
- * Return the status of the operation
+ * If <b>ri</b> is not added to the list of server descriptors, free it.
+ * That means the caller must not access <b>ri</b> after this function
+ * returns, since it might have been freed.
+ *
+ * Return the status of the operation.
  *
  * This function is only called when fresh descriptors are posted, not when
  * we re-load the cache.
@@ -640,11 +679,8 @@ dirserv_add_descriptor(routerinfo_t *ri, const char **msg, const char *source)
                ri->nickname, source, (int)ri->cache_info.signed_descriptor_len,
                MAX_DESCRIPTOR_UPLOAD_SIZE);
     *msg = "Router descriptor was too large.";
-    control_event_or_authdir_new_descriptor("REJECTED",
-               ri->cache_info.signed_descriptor_body,
-                                            desclen, *msg);
-    routerinfo_free(ri);
-    return ROUTER_AUTHDIR_REJECTS;
+    r = ROUTER_AUTHDIR_REJECTS;
+    goto fail;
   }
 
   /* Check whether this descriptor is semantically identical to the last one
@@ -661,20 +697,26 @@ dirserv_add_descriptor(routerinfo_t *ri, const char **msg, const char *source)
              router_describe(ri), source);
     *msg = "Not replacing router descriptor; no information has changed since "
       "the last one with this identity.";
-    control_event_or_authdir_new_descriptor("DROPPED",
-                         ri->cache_info.signed_descriptor_body,
-                                            desclen, *msg);
-    routerinfo_free(ri);
-    return ROUTER_IS_ALREADY_KNOWN;
+    r = ROUTER_IS_ALREADY_KNOWN;
+    goto fail;
   }
 
   /* Do keypinning again ... this time, to add the pin if appropriate */
   int keypin_status;
   if (ri->cache_info.signing_key_cert) {
+    ed25519_public_key_t *pkey = &ri->cache_info.signing_key_cert->signing_key;
+    /* First let's validate this pubkey before pinning it */
+    if (ed25519_validate_pubkey(pkey) < 0) {
+      log_warn(LD_DIRSERV, "Received bad key from %s (source %s)",
+               router_describe(ri), source);
+      routerinfo_free(ri);
+      return ROUTER_AUTHDIR_REJECTS;
+    }
+
+    /* Now pin it! */
     keypin_status = keypin_check_and_add(
       (const uint8_t*)ri->cache_info.identity_digest,
-      ri->cache_info.signing_key_cert->signing_key.pubkey,
-      ! key_pinning);
+      pkey->pubkey, ! key_pinning);
   } else {
     keypin_status = keypin_check_lone_rsa(
       (const uint8_t*)ri->cache_info.identity_digest);
@@ -687,8 +729,14 @@ dirserv_add_descriptor(routerinfo_t *ri, const char **msg, const char *source)
     log_info(LD_DIRSERV, "Dropping descriptor from %s (source: %s) because "
              "its key did not match an older RSA/Ed25519 keypair",
              router_describe(ri), source);
-    *msg = "Looks like your keypair does not match its older value.";
-    return ROUTER_AUTHDIR_REJECTS;
+    *msg = "Looks like your keypair has changed? This authority previously "
+      "recorded a different RSA identity for this Ed25519 identity (or vice "
+      "versa.) Did you replace or copy some of your key files, but not "
+      "the others? You should either restore the expected keypair, or "
+      "delete your keys and restart Tor to start your relay with a new "
+      "identity.";
+    r = ROUTER_AUTHDIR_REJECTS;
+    goto fail;
   }
 
   /* Make a copy of desc, since router_add_to_routerlist might free
@@ -703,14 +751,11 @@ dirserv_add_descriptor(routerinfo_t *ri, const char **msg, const char *source)
   r = router_add_to_routerlist(ri, msg, 0, 0);
   if (!WRA_WAS_ADDED(r)) {
     /* unless the routerinfo was fine, just out-of-date */
-    if (WRA_WAS_REJECTED(r))
-      control_event_or_authdir_new_descriptor("REJECTED", desc, desclen, *msg);
     log_info(LD_DIRSERV,
              "Did not add descriptor from '%s' (source: %s): %s.",
              nickname, source, *msg ? *msg : "(no message)");
   } else {
     smartlist_t *changed;
-    control_event_or_authdir_new_descriptor("ACCEPTED", desc, desclen, *msg);
 
     changed = smartlist_new();
     smartlist_add(changed, ri);
@@ -726,6 +771,20 @@ dirserv_add_descriptor(routerinfo_t *ri, const char **msg, const char *source)
   tor_free(desc);
   tor_free(nickname);
   return r;
+ fail:
+  {
+    const char *desc_digest = ri->cache_info.signed_descriptor_digest;
+    download_status_t *dls =
+      router_get_dl_status_by_descriptor_digest(desc_digest);
+    if (dls) {
+      log_info(LD_GENERAL, "Marking router with descriptor %s as rejected, "
+               "and therefore undownloadable",
+               hex_str(desc_digest, DIGEST_LEN));
+      download_status_mark_impossible(dls);
+    }
+    routerinfo_free(ri);
+  }
+  return r;
 }
 
 /** As dirserv_add_descriptor, but for an extrainfo_t <b>ei</b>. */
@@ -734,6 +793,7 @@ dirserv_add_extrainfo(extrainfo_t *ei, const char **msg)
 {
   routerinfo_t *ri;
   int r;
+  was_router_added_t rv;
   tor_assert(msg);
   *msg = NULL;
 
@@ -742,8 +802,8 @@ dirserv_add_extrainfo(extrainfo_t *ei, const char **msg)
   ri = router_get_mutable_by_digest(ei->cache_info.identity_digest);
   if (!ri) {
     *msg = "No corresponding router descriptor for extra-info descriptor";
-    extrainfo_free(ei);
-    return ROUTER_BAD_EI;
+    rv = ROUTER_BAD_EI;
+    goto fail;
   }
 
   /* If it's too big, refuse it now. Otherwise we'll cache it all over the
@@ -755,17 +815,34 @@ dirserv_add_extrainfo(extrainfo_t *ei, const char **msg)
                (int)ei->cache_info.signed_descriptor_len,
                MAX_EXTRAINFO_UPLOAD_SIZE);
     *msg = "Extrainfo document was too large";
-    extrainfo_free(ei);
-    return ROUTER_BAD_EI;
+    rv = ROUTER_BAD_EI;
+    goto fail;
   }
 
   if ((r = routerinfo_incompatible_with_extrainfo(ri->identity_pkey, ei,
                                                   &ri->cache_info, msg))) {
-    extrainfo_free(ei);
-    return r < 0 ? ROUTER_IS_ALREADY_KNOWN : ROUTER_BAD_EI;
+    if (r<0) {
+      extrainfo_free(ei);
+      return ROUTER_IS_ALREADY_KNOWN;
+    }
+    rv = ROUTER_BAD_EI;
+    goto fail;
   }
   router_add_extrainfo_to_routerlist(ei, msg, 0, 0);
   return ROUTER_ADDED_SUCCESSFULLY;
+ fail:
+  {
+    const char *d = ei->cache_info.signed_descriptor_digest;
+    signed_descriptor_t *sd = router_get_by_extrainfo_digest((char*)d);
+    if (sd) {
+      log_info(LD_GENERAL, "Marking extrainfo with descriptor %s as "
+               "rejected, and therefore undownloadable",
+               hex_str((char*)d,DIGEST_LEN));
+      download_status_mark_impossible(&sd->ei_dl_status);
+    }
+    extrainfo_free(ei);
+  }
+  return rv;
 }
 
 /** Remove all descriptors whose nicknames or fingerprints no longer
@@ -814,6 +891,9 @@ directory_remove_invalid(void)
  * Allocate and return a description of the status of the server <b>desc</b>,
  * for use in a v1-style router-status line.  The server is listed
  * as running iff <b>is_live</b> is true.
+ *
+ * This is deprecated: it's only used for controllers that want outputs in
+ * the old format.
  */
 static char *
 list_single_server_status(const routerinfo_t *desc, int is_live)
@@ -926,6 +1006,9 @@ dirserv_set_router_is_running(routerinfo_t *router, time_t now)
  * *<b>router_status_out</b>.  Return 0 on success, -1 on failure.
  *
  * If for_controller is true, include the routers with very old descriptors.
+ *
+ * This is deprecated: it's only used for controllers that want outputs in
+ * the old format.
  */
 int
 list_server_status_v1(smartlist_t *routers, char **router_status_out,
@@ -958,7 +1041,7 @@ list_server_status_v1(smartlist_t *routers, char **router_status_out,
       if (!node->is_running)
         *cp++ = '!';
       router_get_verbose_nickname(cp, ri);
-      smartlist_add(rs_entries, tor_strdup(name_buf));
+      smartlist_add_strdup(rs_entries, name_buf);
     } else if (ri->cache_info.published_on >= cutoff) {
       smartlist_add(rs_entries, list_single_server_status(ri,
                                                           node->is_running));
@@ -1079,8 +1162,10 @@ directory_fetches_dir_info_later(const or_options_t *options)
   return options->UseBridges != 0;
 }
 
-/** Return true iff we want to fetch and keep certificates for authorities
+/** Return true iff we want to serve certificates for authorities
  * that we don't acknowledge as authorities ourself.
+ * Use we_want_to_fetch_unknown_auth_certs to check if we want to fetch
+ * and keep these certificates.
  */
 int
 directory_caches_unknown_auth_certs(const or_options_t *options)
@@ -1088,11 +1173,14 @@ directory_caches_unknown_auth_certs(const or_options_t *options)
   return dir_server_mode(options) || options->BridgeRelay;
 }
 
-/** Return 1 if we want to keep descriptors, networkstatuses, etc around.
+/** Return 1 if we want to fetch and serve descriptors, networkstatuses, etc
  * Else return 0.
  * Check options->DirPort_set and directory_permits_begindir_requests()
  * to see if we are willing to serve these directory documents to others via
  * the DirPort and begindir-over-ORPort, respectively.
+ *
+ * To check if we should fetch documents, use we_want_to_fetch_flavor and
+ * we_want_to_fetch_unknown_auth_certs instead of this function.
  */
 int
 directory_caches_dir_info(const or_options_t *options)
@@ -1107,7 +1195,7 @@ directory_caches_dir_info(const or_options_t *options)
     should_refuse_unknown_exits(options);
 }
 
-/** Return 1 if we want to allow remote people to ask us directory
+/** Return 1 if we want to allow remote clients to ask us directory
  * requests via the "begin_dir" interface, which doesn't require
  * having any separate port open. */
 int
@@ -1156,8 +1244,8 @@ new_cached_dir(char *s, time_t published)
   d->dir = s;
   d->dir_len = strlen(s);
   d->published = published;
-  if (tor_gzip_compress(&(d->dir_z), &(d->dir_z_len), d->dir, d->dir_len,
-                        ZLIB_METHOD)) {
+  if (tor_compress(&(d->dir_compressed), &(d->dir_compressed_len),
+                   d->dir, d->dir_len, ZLIB_METHOD)) {
     log_warn(LD_BUG, "Error compressing directory");
   }
   return d;
@@ -1168,7 +1256,7 @@ static void
 clear_cached_dir(cached_dir_t *d)
 {
   tor_free(d->dir);
-  tor_free(d->dir_z);
+  tor_free(d->dir_compressed);
   memset(d, 0, sizeof(cached_dir_t));
 }
 
@@ -1191,6 +1279,7 @@ void
 dirserv_set_cached_consensus_networkstatus(const char *networkstatus,
                                            const char *flavor_name,
                                            const common_digests_t *digests,
+                                           const uint8_t *sha3_as_signed,
                                            time_t published)
 {
   cached_dir_t *new_networkstatus;
@@ -1200,6 +1289,8 @@ dirserv_set_cached_consensus_networkstatus(const char *networkstatus,
 
   new_networkstatus = new_cached_dir(tor_strdup(networkstatus), published);
   memcpy(&new_networkstatus->digests, digests, sizeof(common_digests_t));
+  memcpy(&new_networkstatus->digest_sha3_as_signed, sha3_as_signed,
+         DIGEST256_LEN);
   old_networkstatus = strmap_set(cached_consensuses, flavor_name,
                                  new_networkstatus);
   if (old_networkstatus)
@@ -1959,7 +2050,7 @@ routerstatus_format_entry(const routerstatus_t *rs, const char *version,
                              vrs->status.guardfraction_percentage);
     }
 
-    smartlist_add(chunks, tor_strdup("\n"));
+    smartlist_add_strdup(chunks, "\n");
 
     if (desc) {
       summary = policy_summarize(desc->exit_policy, AF_INET);
@@ -1969,7 +2060,7 @@ routerstatus_format_entry(const routerstatus_t *rs, const char *version,
 
     if (format == NS_V3_VOTE && vrs) {
       if (tor_mem_is_zero((char*)vrs->ed25519_id, ED25519_PUBKEY_LEN)) {
-        smartlist_add(chunks, tor_strdup("id ed25519 none\n"));
+        smartlist_add_strdup(chunks, "id ed25519 none\n");
       } else {
         char ed_b64[BASE64_DIGEST256_LEN+1];
         digest256_to_base64(ed_b64, (const char*)vrs->ed25519_id);
@@ -2061,12 +2152,8 @@ get_possible_sybil_list(const smartlist_t *routers)
   int addr_count;
   /* Allow at most this number of Tor servers on a single IP address, ... */
   int max_with_same_addr = options->AuthDirMaxServersPerAddr;
-  /* ... unless it's a directory authority, in which case allow more. */
-  int max_with_same_addr_on_authority = options->AuthDirMaxServersPerAuthAddr;
   if (max_with_same_addr <= 0)
     max_with_same_addr = INT_MAX;
-  if (max_with_same_addr_on_authority <= 0)
-    max_with_same_addr_on_authority = INT_MAX;
 
   smartlist_add_all(routers_by_ip, routers);
   smartlist_sort(routers_by_ip, compare_routerinfo_by_ip_and_bw_);
@@ -2079,9 +2166,7 @@ get_possible_sybil_list(const smartlist_t *routers)
         last_addr = ri->addr;
         addr_count = 1;
       } else if (++addr_count > max_with_same_addr) {
-        if (!router_addr_is_trusted_dir(ri->addr) ||
-            addr_count > max_with_same_addr_on_authority)
-          digestmap_set(omit_as_sybil, ri->cache_info.identity_digest, ri);
+        digestmap_set(omit_as_sybil, ri->cache_info.identity_digest, ri);
       }
   } SMARTLIST_FOREACH_END(ri);
 
@@ -2241,8 +2326,8 @@ dirserv_set_routerstatus_testing(routerstatus_t *rs)
 }
 
 /** Routerstatus <b>rs</b> is part of a group of routers that are on
- * too narrow an IP-space. Clear out its flags: we don't want people
- * using it.
+ * too narrow an IP-space. Clear out its flags since we don't want it be used
+ * because of its Sybil-like appearance.
  *
  * Leave its BadExit flag alone though, since if we think it's a bad exit,
  * we want to vote that way in case all the other authorities are voting
@@ -2614,7 +2699,7 @@ measured_bw_line_parse(measured_bw_line_t *out, const char *orig_line)
       }
       cp+=strlen("bw=");
 
-      out->bw_kb = tor_parse_long(cp, 0, 0, LONG_MAX, &parse_ok, &endptr);
+      out->bw_kb = tor_parse_long(cp, 10, 0, LONG_MAX, &parse_ok, &endptr);
       if (!parse_ok || (*endptr && !TOR_ISSPACE(*endptr))) {
         log_warn(LD_DIRSERV, "Invalid bandwidth in bandwidth file line: %s",
                  escaped(orig_line));
@@ -2982,7 +3067,7 @@ dirserv_generate_networkstatus_vote_obj(crypto_pk_t *private_key,
     config_line_t *cl;
     for (cl = get_options()->RecommendedPackages; cl; cl = cl->next) {
       if (validate_recommended_package_line(cl->value))
-        smartlist_add(v3_out->package_lines, tor_strdup(cl->value));
+        smartlist_add_strdup(v3_out->package_lines, cl->value);
     }
   }
 
@@ -2991,9 +3076,9 @@ dirserv_generate_networkstatus_vote_obj(crypto_pk_t *private_key,
                 "Authority Exit Fast Guard Stable V2Dir Valid HSDir",
                 0, SPLIT_SKIP_SPACE|SPLIT_IGNORE_BLANK, 0);
   if (vote_on_reachability)
-    smartlist_add(v3_out->known_flags, tor_strdup("Running"));
+    smartlist_add_strdup(v3_out->known_flags, "Running");
   if (listbadexits)
-    smartlist_add(v3_out->known_flags, tor_strdup("BadExit"));
+    smartlist_add_strdup(v3_out->known_flags, "BadExit");
   smartlist_sort_strings(v3_out->known_flags);
 
   if (options->ConsensusParams) {
@@ -3038,58 +3123,61 @@ dirserv_generate_networkstatus_vote_obj(crypto_pk_t *private_key,
  * requests, adds identity digests.
  */
 int
-dirserv_get_routerdesc_fingerprints(smartlist_t *fps_out, const char *key,
-                                    const char **msg, int for_unencrypted_conn,
-                                    int is_extrainfo)
+dirserv_get_routerdesc_spool(smartlist_t *spool_out,
+                             const char *key,
+                             dir_spool_source_t source,
+                             int conn_is_encrypted,
+                             const char **msg_out)
 {
-  int by_id = 1;
-  *msg = NULL;
+  *msg_out = NULL;
 
   if (!strcmp(key, "all")) {
-    routerlist_t *rl = router_get_routerlist();
-    SMARTLIST_FOREACH(rl->routers, routerinfo_t *, r,
-                      smartlist_add(fps_out,
-                      tor_memdup(r->cache_info.identity_digest, DIGEST_LEN)));
-    /* Treat "all" requests as if they were unencrypted */
-    for_unencrypted_conn = 1;
+    const routerlist_t *rl = router_get_routerlist();
+    SMARTLIST_FOREACH_BEGIN(rl->routers, const routerinfo_t *, r) {
+      spooled_resource_t *spooled;
+      spooled = spooled_resource_new(source,
+                              (const uint8_t *)r->cache_info.identity_digest,
+                              DIGEST_LEN);
+      /* Treat "all" requests as if they were unencrypted */
+      conn_is_encrypted = 0;
+      smartlist_add(spool_out, spooled);
+    } SMARTLIST_FOREACH_END(r);
   } else if (!strcmp(key, "authority")) {
     const routerinfo_t *ri = router_get_my_routerinfo();
     if (ri)
-      smartlist_add(fps_out,
-                    tor_memdup(ri->cache_info.identity_digest, DIGEST_LEN));
+      smartlist_add(spool_out,
+                    spooled_resource_new(source,
+                             (const uint8_t *)ri->cache_info.identity_digest,
+                             DIGEST_LEN));
   } else if (!strcmpstart(key, "d/")) {
-    by_id = 0;
     key += strlen("d/");
-    dir_split_resource_into_fingerprints(key, fps_out, NULL,
-                                         DSR_HEX|DSR_SORT_UNIQ);
+    dir_split_resource_into_spoolable(key, source, spool_out, NULL,
+                                  DSR_HEX|DSR_SORT_UNIQ);
   } else if (!strcmpstart(key, "fp/")) {
     key += strlen("fp/");
-    dir_split_resource_into_fingerprints(key, fps_out, NULL,
-                                         DSR_HEX|DSR_SORT_UNIQ);
+    dir_split_resource_into_spoolable(key, source, spool_out, NULL,
+                                  DSR_HEX|DSR_SORT_UNIQ);
   } else {
-    *msg = "Key not recognized";
+    *msg_out = "Not found";
     return -1;
   }
 
-  if (for_unencrypted_conn) {
+  if (! conn_is_encrypted) {
     /* Remove anything that insists it not be sent unencrypted. */
-    SMARTLIST_FOREACH_BEGIN(fps_out, char *, cp) {
-        const signed_descriptor_t *sd;
-        if (by_id)
-          sd = get_signed_descriptor_by_fp(cp,is_extrainfo,0);
-        else if (is_extrainfo)
-          sd = extrainfo_get_by_descriptor_digest(cp);
-        else
-          sd = router_get_by_descriptor_digest(cp);
-        if (sd && !sd->send_unencrypted) {
-          tor_free(cp);
-          SMARTLIST_DEL_CURRENT(fps_out, cp);
-        }
-    } SMARTLIST_FOREACH_END(cp);
+    SMARTLIST_FOREACH_BEGIN(spool_out, spooled_resource_t *, spooled) {
+      const uint8_t *body = NULL;
+      size_t bodylen = 0;
+      int r = spooled_resource_lookup_body(spooled, conn_is_encrypted,
+                                           &body, &bodylen, NULL);
+      if (r < 0 || body == NULL || bodylen == 0) {
+        SMARTLIST_DEL_CURRENT(spool_out, spooled);
+        spooled_resource_free(spooled);
+      }
+    } SMARTLIST_FOREACH_END(spooled);
   }
 
-  if (!smartlist_len(fps_out)) {
-    *msg = "Servers unavailable";
+  if (!smartlist_len(spool_out)) {
+    *msg_out = "Servers unavailable";
     return -1;
   }
   return 0;
@@ -3185,7 +3273,8 @@ dirserv_get_routerdescs(smartlist_t *descs_out, const char *key,
 void
 dirserv_orconn_tls_done(const tor_addr_t *addr,
                         uint16_t or_port,
-                        const char *digest_rcvd)
+                        const char *digest_rcvd,
+                        const ed25519_public_key_t *ed_id_rcvd)
 {
   node_t *node = NULL;
   tor_addr_port_t orport;
@@ -3197,7 +3286,25 @@ dirserv_orconn_tls_done(const tor_addr_t *addr,
   node = node_get_mutable_by_id(digest_rcvd);
   if (node == NULL || node->ri == NULL)
     return;
+
   ri = node->ri;
+
+  if (get_options()->AuthDirTestEd25519LinkKeys &&
+      node_supports_ed25519_link_authentication(node) &&
+      ri->cache_info.signing_key_cert) {
+    /* We allow the node to have an ed25519 key if we haven't been told one in
+     * the routerinfo, but if we *HAVE* been told one in the routerinfo, it
+     * needs to match. */
+    const ed25519_public_key_t *expected_id =
+      &ri->cache_info.signing_key_cert->signing_key;
+    tor_assert(!ed25519_public_key_is_zero(expected_id));
+    if (! ed_id_rcvd || ! ed25519_pubkey_eq(ed_id_rcvd, expected_id)) {
+      log_info(LD_DIRSERV, "Router at %s:%d with RSA ID %s "
+               "did not present expected Ed25519 ID.",
+               fmt_addr(addr), or_port, hex_str(digest_rcvd, DIGEST_LEN));
+      return; /* Don't mark it as reachable. */
+    }
+  }
 
   tor_addr_copy(&orport.addr, addr);
   orport.port = or_port;
@@ -3206,7 +3313,7 @@ dirserv_orconn_tls_done(const tor_addr_t *addr,
     if (!authdir_mode_bridge(get_options()) ||
         ri->purpose == ROUTER_PURPOSE_BRIDGE) {
       char addrstr[TOR_ADDR_BUF_LEN];
-      /* This is a bridge or we're not a bridge authorititative --
+      /* This is a bridge or we're not a bridge authority --
          mark it as reachable.  */
       log_info(LD_DIRSERV, "Found router %s to be reachable at %s:%d. Yay.",
                router_describe(ri),
@@ -3254,21 +3361,31 @@ dirserv_should_launch_reachability_test(const routerinfo_t *ri,
 void
 dirserv_single_reachability_test(time_t now, routerinfo_t *router)
 {
+  const or_options_t *options = get_options();
   channel_t *chan = NULL;
-  node_t *node = NULL;
+  const node_t *node = NULL;
   tor_addr_t router_addr;
+  const ed25519_public_key_t *ed_id_key;
   (void) now;
 
   tor_assert(router);
-  node = node_get_mutable_by_id(router->cache_info.identity_digest);
+  node = node_get_by_id(router->cache_info.identity_digest);
   tor_assert(node);
+
+  if (options->AuthDirTestEd25519LinkKeys &&
+      node_supports_ed25519_link_authentication(node)) {
+    ed_id_key = &router->cache_info.signing_key_cert->signing_key;
+  } else {
+    ed_id_key = NULL;
+  }
 
   /* IPv4. */
   log_debug(LD_OR,"Testing reachability of %s at %s:%u.",
             router->nickname, fmt_addr32(router->addr), router->or_port);
   tor_addr_from_ipv4h(&router_addr, router->addr);
   chan = channel_tls_connect(&router_addr, router->or_port,
-                             router->cache_info.identity_digest);
+                             router->cache_info.identity_digest,
+                             ed_id_key);
   if (chan) command_setup_channel(chan);
 
   /* Possible IPv6. */
@@ -3280,7 +3397,8 @@ dirserv_single_reachability_test(time_t now, routerinfo_t *router)
               tor_addr_to_str(addrstr, &router->ipv6_addr, sizeof(addrstr), 1),
               router->ipv6_orport);
     chan = channel_tls_connect(&router->ipv6_addr, router->ipv6_orport,
-                               router->cache_info.identity_digest);
+                               router->cache_info.identity_digest,
+                               ed_id_key);
     if (chan) command_setup_channel(chan);
   }
 }
@@ -3323,45 +3441,409 @@ dirserv_test_reachability(time_t now)
   ctr = (ctr + 1) % REACHABILITY_MODULO_PER_TEST; /* increment ctr */
 }
 
+/* ==========
+ * Spooling code.
+ * ========== */
+
+spooled_resource_t *
+spooled_resource_new(dir_spool_source_t source,
+                     const uint8_t *digest, size_t digestlen)
+{
+  spooled_resource_t *spooled = tor_malloc_zero(sizeof(spooled_resource_t));
+  spooled->spool_source = source;
+  switch (source) {
+    case DIR_SPOOL_NETWORKSTATUS:
+      spooled->spool_eagerly = 0;
+      break;
+    case DIR_SPOOL_SERVER_BY_DIGEST:
+    case DIR_SPOOL_SERVER_BY_FP:
+    case DIR_SPOOL_EXTRA_BY_DIGEST:
+    case DIR_SPOOL_EXTRA_BY_FP:
+    case DIR_SPOOL_MICRODESC:
+    default:
+      spooled->spool_eagerly = 1;
+      break;
+    case DIR_SPOOL_CONSENSUS_CACHE_ENTRY:
+      tor_assert_unreached();
+      break;
+  }
+  tor_assert(digestlen <= sizeof(spooled->digest));
+  if (digest)
+    memcpy(spooled->digest, digest, digestlen);
+  return spooled;
+}
+
+/**
+ * Create a new spooled_resource_t to spool the contents of <b>entry</b> to
+ * the user.  Return the spooled object on success, or NULL on failure (which
+ * is probably caused by a failure to map the body of the item from disk).
+ *
+ * Adds a reference to entry's reference counter.
+ */
+spooled_resource_t *
+spooled_resource_new_from_cache_entry(consensus_cache_entry_t *entry)
+{
+  spooled_resource_t *spooled = tor_malloc_zero(sizeof(spooled_resource_t));
+  spooled->spool_source = DIR_SPOOL_CONSENSUS_CACHE_ENTRY;
+  spooled->spool_eagerly = 0;
+  consensus_cache_entry_incref(entry);
+  spooled->consensus_cache_entry = entry;
+
+  int r = consensus_cache_entry_get_body(entry,
+                                         &spooled->cce_body,
+                                         &spooled->cce_len);
+  if (r == 0) {
+    return spooled;
+  } else {
+    spooled_resource_free(spooled);
+    return NULL;
+  }
+}
+
+/** Release all storage held by <b>spooled</b>. */
+void
+spooled_resource_free(spooled_resource_t *spooled)
+{
+  if (spooled == NULL)
+    return;
+
+  if (spooled->cached_dir_ref) {
+    cached_dir_decref(spooled->cached_dir_ref);
+  }
+
+  if (spooled->consensus_cache_entry) {
+    consensus_cache_entry_decref(spooled->consensus_cache_entry);
+  }
+
+  tor_free(spooled);
+}
+
+/** When spooling data from a cached_dir_t object, we always add
+ * at least this much. */
+#define DIRSERV_CACHED_DIR_CHUNK_SIZE 8192
+
+/** Return an compression ratio for compressing objects from <b>source</b>.
+ */
+static double
+estimate_compression_ratio(dir_spool_source_t source)
+{
+  /* We should put in better estimates here, depending on the number of
+     objects and their type */
+  (void) source;
+  return 0.5;
+}
+
+/** Return an estimated number of bytes needed for transmitting the
+ * resource in <b>spooled</b> on <b>conn</b>
+ *
+ * As a convenient side-effect, set *<b>published_out</b> to the resource's
+ * publication time.
+ */
+static size_t
+spooled_resource_estimate_size(const spooled_resource_t *spooled,
+                               dir_connection_t *conn,
+                               int compressed,
+                               time_t *published_out)
+{
+  if (spooled->spool_eagerly) {
+    const uint8_t *body = NULL;
+    size_t bodylen = 0;
+    int r = spooled_resource_lookup_body(spooled,
+                                         connection_dir_is_encrypted(conn),
+                                         &body, &bodylen,
+                                         published_out);
+    if (r == -1 || body == NULL || bodylen == 0)
+      return 0;
+    if (compressed) {
+      double ratio = estimate_compression_ratio(spooled->spool_source);
+      bodylen = (size_t)(bodylen * ratio);
+    }
+    return bodylen;
+  } else {
+    cached_dir_t *cached;
+    if (spooled->consensus_cache_entry) {
+      if (published_out) {
+        consensus_cache_entry_get_valid_after(
+            spooled->consensus_cache_entry, published_out);
+      }
+
+      return spooled->cce_len;
+    }
+    if (spooled->cached_dir_ref) {
+      cached = spooled->cached_dir_ref;
+    } else {
+      cached = spooled_resource_lookup_cached_dir(spooled,
+                                                  published_out);
+    }
+    if (cached == NULL) {
+      return 0;
+    }
+    size_t result = compressed ? cached->dir_compressed_len : cached->dir_len;
+    return result;
+  }
+}
+
+/** Return code for spooled_resource_flush_some */
+typedef enum {
+  SRFS_ERR = -1,
+  SRFS_MORE = 0,
+  SRFS_DONE
+} spooled_resource_flush_status_t;
+
+/** Flush some or all of the bytes from <b>spooled</b> onto <b>conn</b>.
+ * Return SRFS_ERR on error, SRFS_MORE if there are more bytes to flush from
+ * this spooled resource, or SRFS_DONE if we are done flushing this spooled
+ * resource.
+ */
+static spooled_resource_flush_status_t
+spooled_resource_flush_some(spooled_resource_t *spooled,
+                            dir_connection_t *conn)
+{
+  if (spooled->spool_eagerly) {
+    /* Spool_eagerly resources are sent all-at-once. */
+    const uint8_t *body = NULL;
+    size_t bodylen = 0;
+    int r = spooled_resource_lookup_body(spooled,
+                                         connection_dir_is_encrypted(conn),
+                                         &body, &bodylen, NULL);
+    if (r == -1 || body == NULL || bodylen == 0) {
+      /* Absent objects count as "done". */
+      return SRFS_DONE;
+    }
+    if (conn->compress_state) {
+      connection_buf_add_compress((const char*)body, bodylen, conn, 0);
+    } else {
+      connection_buf_add((const char*)body, bodylen, TO_CONN(conn));
+    }
+    return SRFS_DONE;
+  } else {
+    cached_dir_t *cached = spooled->cached_dir_ref;
+    consensus_cache_entry_t *cce = spooled->consensus_cache_entry;
+    if (cached == NULL && cce == NULL) {
+      /* The cached_dir_t hasn't been materialized yet. So let's look it up. */
+      cached = spooled->cached_dir_ref =
+        spooled_resource_lookup_cached_dir(spooled, NULL);
+      if (!cached) {
+        /* Absent objects count as done. */
+        return SRFS_DONE;
+      }
+      ++cached->refcnt;
+      tor_assert_nonfatal(spooled->cached_dir_offset == 0);
+    }
+
+    if (BUG(!cached && !cce))
+      return SRFS_DONE;
+
+    int64_t total_len;
+    const char *ptr;
+    if (cached) {
+      total_len = cached->dir_compressed_len;
+      ptr = cached->dir_compressed;
+    } else {
+      total_len = spooled->cce_len;
+      ptr = (const char *)spooled->cce_body;
+    }
+    /* How many bytes left to flush? */
+    int64_t remaining;
+    remaining = total_len - spooled->cached_dir_offset;
+    if (BUG(remaining < 0))
+      return SRFS_ERR;
+    ssize_t bytes = (ssize_t) MIN(DIRSERV_CACHED_DIR_CHUNK_SIZE, remaining);
+    if (conn->compress_state) {
+      connection_buf_add_compress(
+              ptr + spooled->cached_dir_offset,
+              bytes, conn, 0);
+    } else {
+      connection_buf_add(ptr + spooled->cached_dir_offset,
+                              bytes, TO_CONN(conn));
+    }
+    spooled->cached_dir_offset += bytes;
+    if (spooled->cached_dir_offset >= (off_t)total_len) {
+      return SRFS_DONE;
+    } else {
+      return SRFS_MORE;
+    }
+  }
+}
+
+/** Helper: find the cached_dir_t for a spooled_resource_t, for
+ * sending it to <b>conn</b>. Set *<b>published_out</b>, if provided,
+ * to the published time of the cached_dir_t.
+ *
+ * DOES NOT increase the reference count on the result.  Callers must do that
+ * themselves if they mean to hang on to it.
+ */
+static cached_dir_t *
+spooled_resource_lookup_cached_dir(const spooled_resource_t *spooled,
+                                   time_t *published_out)
+{
+  tor_assert(spooled->spool_eagerly == 0);
+  cached_dir_t *d = lookup_cached_dir_by_fp(spooled->digest);
+  if (d != NULL) {
+    if (published_out)
+      *published_out = d->published;
+  }
+  return d;
+}
+
+/** Helper: Look up the body for an eagerly-served spooled_resource.  If
+ * <b>conn_is_encrypted</b> is false, don't look up any resource that
+ * shouldn't be sent over an unencrypted connection.  On success, set
+ * <b>body_out</b>, <b>size_out</b>, and <b>published_out</b> to refer
+ * to the resource's body, size, and publication date, and return 0.
+ * On failure return -1. */
+static int
+spooled_resource_lookup_body(const spooled_resource_t *spooled,
+                             int conn_is_encrypted,
+                             const uint8_t **body_out,
+                             size_t *size_out,
+                             time_t *published_out)
+{
+  tor_assert(spooled->spool_eagerly == 1);
+
+  const signed_descriptor_t *sd = NULL;
+
+  switch (spooled->spool_source) {
+    case DIR_SPOOL_EXTRA_BY_FP: {
+      sd = get_signed_descriptor_by_fp(spooled->digest, 1);
+      break;
+    }
+    case DIR_SPOOL_SERVER_BY_FP: {
+      sd = get_signed_descriptor_by_fp(spooled->digest, 0);
+      break;
+    }
+    case DIR_SPOOL_SERVER_BY_DIGEST: {
+      sd = router_get_by_descriptor_digest((const char *)spooled->digest);
+      break;
+    }
+    case DIR_SPOOL_EXTRA_BY_DIGEST: {
+      sd = extrainfo_get_by_descriptor_digest((const char *)spooled->digest);
+      break;
+    }
+    case DIR_SPOOL_MICRODESC: {
+      microdesc_t *md = microdesc_cache_lookup_by_digest256(
+                                  get_microdesc_cache(),
+                                  (const char *)spooled->digest);
+      if (! md || ! md->body) {
+        return -1;
+      }
+      *body_out = (const uint8_t *)md->body;
+      *size_out = md->bodylen;
+      if (published_out)
+        *published_out = TIME_MAX;
+      return 0;
+    }
+    case DIR_SPOOL_NETWORKSTATUS:
+    case DIR_SPOOL_CONSENSUS_CACHE_ENTRY:
+    default:
+      /* LCOV_EXCL_START */
+      tor_assert_nonfatal_unreached();
+      return -1;
+      /* LCOV_EXCL_STOP */
+  }
+
+  /* If we get here, then we tried to set "sd" to a signed_descriptor_t. */
+
+  if (sd == NULL) {
+    return -1;
+  }
+  if (sd->send_unencrypted == 0 && ! conn_is_encrypted) {
+    /* we did this check once before (so we could have an accurate size
+     * estimate and maybe send a 404 if somebody asked for only bridges on
+     * a connection), but we need to do it again in case a previously
+     * unknown bridge descriptor has shown up between then and now. */
+    return -1;
+  }
+  *body_out = (const uint8_t *) signed_descriptor_get_body(sd);
+  *size_out = sd->signed_descriptor_len;
+  if (published_out)
+    *published_out = sd->published_on;
+  return 0;
+}
+
 /** Given a fingerprint <b>fp</b> which is either set if we're looking for a
  * v2 status, or zeroes if we're looking for a v3 status, or a NUL-padded
  * flavor name if we want a flavored v3 status, return a pointer to the
  * appropriate cached dir object, or NULL if there isn't one available. */
 static cached_dir_t *
-lookup_cached_dir_by_fp(const char *fp)
+lookup_cached_dir_by_fp(const uint8_t *fp)
 {
   cached_dir_t *d = NULL;
-  if (tor_digest_is_zero(fp) && cached_consensuses) {
+  if (tor_digest_is_zero((const char *)fp) && cached_consensuses) {
     d = strmap_get(cached_consensuses, "ns");
-  } else if (memchr(fp, '\0', DIGEST_LEN) && cached_consensuses &&
-           (d = strmap_get(cached_consensuses, fp))) {
-    /* this here interface is a nasty hack XXXX */;
+  } else if (memchr(fp, '\0', DIGEST_LEN) && cached_consensuses) {
+    /* this here interface is a nasty hack: we're shoving a flavor into
+     * a digest field. */
+    d = strmap_get(cached_consensuses, (const char *)fp);
   }
   return d;
 }
 
-/** Remove from <b>fps</b> every networkstatus key where both
- * a) we have a networkstatus document and
- * b) it is not newer than <b>cutoff</b>.
- *
- * Return 1 if any items were present at all; else return 0.
- */
-int
-dirserv_remove_old_statuses(smartlist_t *fps, time_t cutoff)
+/** Try to guess the number of bytes that will be needed to send the
+ * spooled objects for <b>conn</b>'s outgoing spool.  In the process,
+ * remove every element of the spool that refers to an absent object, or
+ * which was published earlier than <b>cutoff</b>.  Set *<b>size_out</b>
+ * to the number of bytes, and *<b>n_expired_out</b> to the number of
+ * objects removed for being too old. */
+void
+dirserv_spool_remove_missing_and_guess_size(dir_connection_t *conn,
+                                            time_t cutoff,
+                                            int compression,
+                                            size_t *size_out,
+                                            int *n_expired_out)
 {
-  int found_any = 0;
-  SMARTLIST_FOREACH_BEGIN(fps, char *, digest) {
-    cached_dir_t *d = lookup_cached_dir_by_fp(digest);
-    if (!d)
-      continue;
-    found_any = 1;
-    if (d->published <= cutoff) {
-      tor_free(digest);
-      SMARTLIST_DEL_CURRENT(fps, digest);
-    }
-  } SMARTLIST_FOREACH_END(digest);
+  if (BUG(!conn))
+    return;
 
-  return found_any;
+  smartlist_t *spool = conn->spool;
+  if (!spool) {
+    if (size_out)
+      *size_out = 0;
+    if (n_expired_out)
+      *n_expired_out = 0;
+    return;
+  }
+  int n_expired = 0;
+  uint64_t total = 0;
+  SMARTLIST_FOREACH_BEGIN(spool, spooled_resource_t *, spooled) {
+    time_t published = TIME_MAX;
+    size_t sz = spooled_resource_estimate_size(spooled, conn,
+                                               compression, &published);
+    if (published < cutoff) {
+      ++n_expired;
+      SMARTLIST_DEL_CURRENT(spool, spooled);
+      spooled_resource_free(spooled);
+    } else if (sz == 0) {
+      SMARTLIST_DEL_CURRENT(spool, spooled);
+      spooled_resource_free(spooled);
+    } else {
+      total += sz;
+    }
+  } SMARTLIST_FOREACH_END(spooled);
+
+  if (size_out) {
+    *size_out = (total > SIZE_MAX) ? SIZE_MAX : (size_t)total;
+  }
+  if (n_expired_out)
+    *n_expired_out = n_expired;
+}
+
+/** Helper: used to sort a connection's spool. */
+static int
+dirserv_spool_sort_comparison_(const void **a_, const void **b_)
+{
+  const spooled_resource_t *a = *a_;
+  const spooled_resource_t *b = *b_;
+  return fast_memcmp(a->digest, b->digest, sizeof(a->digest));
+}
+
+/** Sort all the entries in <b>conn</b> by digest. */
+void
+dirserv_spool_sort(dir_connection_t *conn)
+{
+  if (conn->spool == NULL)
+    return;
+  smartlist_sort(conn->spool, dirserv_spool_sort_comparison_);
 }
 
 /** Return the cache-info for identity fingerprint <b>fp</b>, or
@@ -3369,18 +3851,16 @@ dirserv_remove_old_statuses(smartlist_t *fps, time_t cutoff)
  * NULL if not found or if the descriptor is older than
  * <b>publish_cutoff</b>. */
 static const signed_descriptor_t *
-get_signed_descriptor_by_fp(const char *fp, int extrainfo,
-                            time_t publish_cutoff)
+get_signed_descriptor_by_fp(const uint8_t *fp, int extrainfo)
 {
-  if (router_digest_is_me(fp)) {
+  if (router_digest_is_me((const char *)fp)) {
     if (extrainfo)
       return &(router_get_my_extrainfo()->cache_info);
     else
       return &(router_get_my_routerinfo()->cache_info);
   } else {
-    const routerinfo_t *ri = router_get_by_id_digest(fp);
-    if (ri &&
-        ri->cache_info.published_on > publish_cutoff) {
+    const routerinfo_t *ri = router_get_by_id_digest((const char *)fp);
+    if (ri) {
       if (extrainfo)
         return extrainfo_get_by_descriptor_digest(
                                      ri->cache_info.extra_info_digest);
@@ -3391,342 +3871,72 @@ get_signed_descriptor_by_fp(const char *fp, int extrainfo,
   return NULL;
 }
 
-/** Return true iff we have any of the documents (extrainfo or routerdesc)
- * specified by the fingerprints in <b>fps</b> and <b>spool_src</b>.  Used to
- * decide whether to send a 404.  */
-int
-dirserv_have_any_serverdesc(smartlist_t *fps, int spool_src)
-{
-  time_t publish_cutoff = time(NULL)-ROUTER_MAX_AGE_TO_PUBLISH;
-  SMARTLIST_FOREACH_BEGIN(fps, const char *, fp) {
-      switch (spool_src)
-      {
-        case DIR_SPOOL_EXTRA_BY_DIGEST:
-          if (extrainfo_get_by_descriptor_digest(fp)) return 1;
-          break;
-        case DIR_SPOOL_SERVER_BY_DIGEST:
-          if (router_get_by_descriptor_digest(fp)) return 1;
-          break;
-        case DIR_SPOOL_EXTRA_BY_FP:
-        case DIR_SPOOL_SERVER_BY_FP:
-          if (get_signed_descriptor_by_fp(fp,
-                spool_src == DIR_SPOOL_EXTRA_BY_FP, publish_cutoff))
-            return 1;
-          break;
-      }
-  } SMARTLIST_FOREACH_END(fp);
-  return 0;
-}
-
-/** Return true iff any of the 256-bit elements in <b>fps</b> is the digest of
- * a microdescriptor we have. */
-int
-dirserv_have_any_microdesc(const smartlist_t *fps)
-{
-  microdesc_cache_t *cache = get_microdesc_cache();
-  SMARTLIST_FOREACH(fps, const char *, fp,
-                    if (microdesc_cache_lookup_by_digest256(cache, fp))
-                      return 1);
-  return 0;
-}
-
-/** Return an approximate estimate of the number of bytes that will
- * be needed to transmit the server descriptors (if is_serverdescs --
- * they can be either d/ or fp/ queries) or networkstatus objects (if
- * !is_serverdescs) listed in <b>fps</b>.  If <b>compressed</b> is set,
- * we guess how large the data will be after compression.
- *
- * The return value is an estimate; it might be larger or smaller.
- **/
-size_t
-dirserv_estimate_data_size(smartlist_t *fps, int is_serverdescs,
-                           int compressed)
-{
-  size_t result;
-  tor_assert(fps);
-  if (is_serverdescs) {
-    int n = smartlist_len(fps);
-    const routerinfo_t *me = router_get_my_routerinfo();
-    result = (me?me->cache_info.signed_descriptor_len:2048) * n;
-    if (compressed)
-      result /= 2; /* observed compressibility is between 35 and 55%. */
-  } else {
-    result = 0;
-    SMARTLIST_FOREACH(fps, const char *, digest, {
-        cached_dir_t *dir = lookup_cached_dir_by_fp(digest);
-        if (dir)
-          result += compressed ? dir->dir_z_len : dir->dir_len;
-      });
-  }
-  return result;
-}
-
-/** Given a list of microdescriptor hashes, guess how many bytes will be
- * needed to transmit them, and return the guess. */
-size_t
-dirserv_estimate_microdesc_size(const smartlist_t *fps, int compressed)
-{
-  size_t result = smartlist_len(fps) * microdesc_average_size(NULL);
-  if (compressed)
-    result /= 2;
-  return result;
-}
-
 /** When we're spooling data onto our outbuf, add more whenever we dip
  * below this threshold. */
 #define DIRSERV_BUFFER_MIN 16384
 
-/** Spooling helper: called when we have no more data to spool to <b>conn</b>.
- * Flushes any remaining data to be (un)compressed, and changes the spool
- * source to NONE.  Returns 0 on success, negative on failure. */
-static int
-connection_dirserv_finish_spooling(dir_connection_t *conn)
-{
-  if (conn->zlib_state) {
-    connection_write_to_buf_zlib("", 0, conn, 1);
-    tor_zlib_free(conn->zlib_state);
-    conn->zlib_state = NULL;
-  }
-  conn->dir_spool_src = DIR_SPOOL_NONE;
-  return 0;
-}
-
-/** Spooling helper: called when we're sending a bunch of server descriptors,
- * and the outbuf has become too empty. Pulls some entries from
- * fingerprint_stack, and writes the corresponding servers onto outbuf.  If we
- * run out of entries, flushes the zlib state and sets the spool source to
- * NONE.  Returns 0 on success, negative on failure.
+/**
+ * Called whenever we have flushed some directory data in state
+ * SERVER_WRITING, or whenever we want to fill the buffer with initial
+ * directory data (so that subsequent writes will occur, and trigger this
+ * function again.)
+ *
+ * Return 0 on success, and -1 on failure.
  */
-static int
-connection_dirserv_add_servers_to_outbuf(dir_connection_t *conn)
-{
-  int by_fp = (conn->dir_spool_src == DIR_SPOOL_SERVER_BY_FP ||
-               conn->dir_spool_src == DIR_SPOOL_EXTRA_BY_FP);
-  int extra = (conn->dir_spool_src == DIR_SPOOL_EXTRA_BY_FP ||
-               conn->dir_spool_src == DIR_SPOOL_EXTRA_BY_DIGEST);
-  time_t publish_cutoff = time(NULL)-ROUTER_MAX_AGE_TO_PUBLISH;
-
-  const or_options_t *options = get_options();
-
-  while (smartlist_len(conn->fingerprint_stack) &&
-         connection_get_outbuf_len(TO_CONN(conn)) < DIRSERV_BUFFER_MIN) {
-    const char *body;
-    char *fp = smartlist_pop_last(conn->fingerprint_stack);
-    const signed_descriptor_t *sd = NULL;
-    if (by_fp) {
-      sd = get_signed_descriptor_by_fp(fp, extra, publish_cutoff);
-    } else {
-      sd = extra ? extrainfo_get_by_descriptor_digest(fp)
-        : router_get_by_descriptor_digest(fp);
-    }
-    tor_free(fp);
-    if (!sd)
-      continue;
-    if (!connection_dir_is_encrypted(conn) && !sd->send_unencrypted) {
-      /* we did this check once before (so we could have an accurate size
-       * estimate and maybe send a 404 if somebody asked for only bridges on a
-       * connection), but we need to do it again in case a previously
-       * unknown bridge descriptor has shown up between then and now. */
-      continue;
-    }
-
-    /** If we are the bridge authority and the descriptor is a bridge
-     * descriptor, remember that we served this descriptor for desc stats. */
-    if (options->BridgeAuthoritativeDir && by_fp) {
-      const routerinfo_t *router =
-          router_get_by_id_digest(sd->identity_digest);
-      /* router can be NULL here when the bridge auth is asked for its own
-       * descriptor. */
-      if (router && router->purpose == ROUTER_PURPOSE_BRIDGE)
-        rep_hist_note_desc_served(sd->identity_digest);
-    }
-    body = signed_descriptor_get_body(sd);
-    if (conn->zlib_state) {
-      int last = ! smartlist_len(conn->fingerprint_stack);
-      connection_write_to_buf_zlib(body, sd->signed_descriptor_len, conn,
-                                   last);
-      if (last) {
-        tor_zlib_free(conn->zlib_state);
-        conn->zlib_state = NULL;
-      }
-    } else {
-      connection_write_to_buf(body,
-                              sd->signed_descriptor_len,
-                              TO_CONN(conn));
-    }
-  }
-
-  if (!smartlist_len(conn->fingerprint_stack)) {
-    /* We just wrote the last one; finish up. */
-    if (conn->zlib_state) {
-      connection_write_to_buf_zlib("", 0, conn, 1);
-      tor_zlib_free(conn->zlib_state);
-      conn->zlib_state = NULL;
-    }
-    conn->dir_spool_src = DIR_SPOOL_NONE;
-    smartlist_free(conn->fingerprint_stack);
-    conn->fingerprint_stack = NULL;
-  }
-  return 0;
-}
-
-/** Spooling helper: called when we're sending a bunch of microdescriptors,
- * and the outbuf has become too empty. Pulls some entries from
- * fingerprint_stack, and writes the corresponding microdescs onto outbuf.  If
- * we run out of entries, flushes the zlib state and sets the spool source to
- * NONE.  Returns 0 on success, negative on failure.
- */
-static int
-connection_dirserv_add_microdescs_to_outbuf(dir_connection_t *conn)
-{
-  microdesc_cache_t *cache = get_microdesc_cache();
-  while (smartlist_len(conn->fingerprint_stack) &&
-         connection_get_outbuf_len(TO_CONN(conn)) < DIRSERV_BUFFER_MIN) {
-    char *fp256 = smartlist_pop_last(conn->fingerprint_stack);
-    microdesc_t *md = microdesc_cache_lookup_by_digest256(cache, fp256);
-    tor_free(fp256);
-    if (!md || !md->body)
-      continue;
-    if (conn->zlib_state) {
-      int last = !smartlist_len(conn->fingerprint_stack);
-      connection_write_to_buf_zlib(md->body, md->bodylen, conn, last);
-      if (last) {
-        tor_zlib_free(conn->zlib_state);
-        conn->zlib_state = NULL;
-      }
-    } else {
-      connection_write_to_buf(md->body, md->bodylen, TO_CONN(conn));
-    }
-  }
-  if (!smartlist_len(conn->fingerprint_stack)) {
-    if (conn->zlib_state) {
-      connection_write_to_buf_zlib("", 0, conn, 1);
-      tor_zlib_free(conn->zlib_state);
-      conn->zlib_state = NULL;
-    }
-    conn->dir_spool_src = DIR_SPOOL_NONE;
-    smartlist_free(conn->fingerprint_stack);
-    conn->fingerprint_stack = NULL;
-  }
-  return 0;
-}
-
-/** Spooling helper: Called when we're sending a directory or networkstatus,
- * and the outbuf has become too empty.  Pulls some bytes from
- * <b>conn</b>-\>cached_dir-\>dir_z, uncompresses them if appropriate, and
- * puts them on the outbuf.  If we run out of entries, flushes the zlib state
- * and sets the spool source to NONE.  Returns 0 on success, negative on
- * failure. */
-static int
-connection_dirserv_add_dir_bytes_to_outbuf(dir_connection_t *conn)
-{
-  ssize_t bytes;
-  int64_t remaining;
-
-  bytes = DIRSERV_BUFFER_MIN - connection_get_outbuf_len(TO_CONN(conn));
-  tor_assert(bytes > 0);
-  tor_assert(conn->cached_dir);
-  if (bytes < 8192)
-    bytes = 8192;
-  remaining = conn->cached_dir->dir_z_len - conn->cached_dir_offset;
-  if (bytes > remaining)
-    bytes = (ssize_t) remaining;
-
-  if (conn->zlib_state) {
-    connection_write_to_buf_zlib(
-                             conn->cached_dir->dir_z + conn->cached_dir_offset,
-                             bytes, conn, bytes == remaining);
-  } else {
-    connection_write_to_buf(conn->cached_dir->dir_z + conn->cached_dir_offset,
-                            bytes, TO_CONN(conn));
-  }
-  conn->cached_dir_offset += bytes;
-  if (conn->cached_dir_offset == (int)conn->cached_dir->dir_z_len) {
-    /* We just wrote the last one; finish up. */
-    connection_dirserv_finish_spooling(conn);
-    cached_dir_decref(conn->cached_dir);
-    conn->cached_dir = NULL;
-  }
-  return 0;
-}
-
-/** Spooling helper: Called when we're spooling networkstatus objects on
- * <b>conn</b>, and the outbuf has become too empty.  If the current
- * networkstatus object (in <b>conn</b>-\>cached_dir) has more data, pull data
- * from there.  Otherwise, pop the next fingerprint from fingerprint_stack,
- * and start spooling the next networkstatus.  (A digest of all 0 bytes is
- * treated as a request for the current consensus.) If we run out of entries,
- * flushes the zlib state and sets the spool source to NONE.  Returns 0 on
- * success, negative on failure. */
-static int
-connection_dirserv_add_networkstatus_bytes_to_outbuf(dir_connection_t *conn)
-{
-
-  while (connection_get_outbuf_len(TO_CONN(conn)) < DIRSERV_BUFFER_MIN) {
-    if (conn->cached_dir) {
-      int uncompressing = (conn->zlib_state != NULL);
-      int r = connection_dirserv_add_dir_bytes_to_outbuf(conn);
-      if (conn->dir_spool_src == DIR_SPOOL_NONE) {
-        /* add_dir_bytes thinks we're done with the cached_dir.  But we
-         * may have more cached_dirs! */
-        conn->dir_spool_src = DIR_SPOOL_NETWORKSTATUS;
-        /* This bit is tricky.  If we were uncompressing the last
-         * networkstatus, we may need to make a new zlib object to
-         * uncompress the next one. */
-        if (uncompressing && ! conn->zlib_state &&
-            conn->fingerprint_stack &&
-            smartlist_len(conn->fingerprint_stack)) {
-          conn->zlib_state = tor_zlib_new(0, ZLIB_METHOD, HIGH_COMPRESSION);
-        }
-      }
-      if (r) return r;
-    } else if (conn->fingerprint_stack &&
-               smartlist_len(conn->fingerprint_stack)) {
-      /* Add another networkstatus; start serving it. */
-      char *fp = smartlist_pop_last(conn->fingerprint_stack);
-      cached_dir_t *d = lookup_cached_dir_by_fp(fp);
-      tor_free(fp);
-      if (d) {
-        ++d->refcnt;
-        conn->cached_dir = d;
-        conn->cached_dir_offset = 0;
-      }
-    } else {
-      connection_dirserv_finish_spooling(conn);
-      smartlist_free(conn->fingerprint_stack);
-      conn->fingerprint_stack = NULL;
-      return 0;
-    }
-  }
-  return 0;
-}
-
-/** Called whenever we have flushed some directory data in state
- * SERVER_WRITING. */
 int
 connection_dirserv_flushed_some(dir_connection_t *conn)
 {
   tor_assert(conn->base_.state == DIR_CONN_STATE_SERVER_WRITING);
-
-  if (connection_get_outbuf_len(TO_CONN(conn)) >= DIRSERV_BUFFER_MIN)
+  if (conn->spool == NULL)
     return 0;
 
-  switch (conn->dir_spool_src) {
-    case DIR_SPOOL_EXTRA_BY_DIGEST:
-    case DIR_SPOOL_EXTRA_BY_FP:
-    case DIR_SPOOL_SERVER_BY_DIGEST:
-    case DIR_SPOOL_SERVER_BY_FP:
-      return connection_dirserv_add_servers_to_outbuf(conn);
-    case DIR_SPOOL_MICRODESC:
-      return connection_dirserv_add_microdescs_to_outbuf(conn);
-    case DIR_SPOOL_CACHED_DIR:
-      return connection_dirserv_add_dir_bytes_to_outbuf(conn);
-    case DIR_SPOOL_NETWORKSTATUS:
-      return connection_dirserv_add_networkstatus_bytes_to_outbuf(conn);
-    case DIR_SPOOL_NONE:
-    default:
+  while (connection_get_outbuf_len(TO_CONN(conn)) < DIRSERV_BUFFER_MIN &&
+         smartlist_len(conn->spool)) {
+    spooled_resource_t *spooled =
+      smartlist_get(conn->spool, smartlist_len(conn->spool)-1);
+    spooled_resource_flush_status_t status;
+    status = spooled_resource_flush_some(spooled, conn);
+    if (status == SRFS_ERR) {
+      return -1;
+    } else if (status == SRFS_MORE) {
       return 0;
+    }
+    tor_assert(status == SRFS_DONE);
+
+    /* If we're here, we're done flushing this resource. */
+    tor_assert(smartlist_pop_last(conn->spool) == spooled);
+    spooled_resource_free(spooled);
   }
+
+  if (smartlist_len(conn->spool) > 0) {
+    /* We're still spooling something. */
+    return 0;
+  }
+
+  /* If we get here, we're done. */
+  smartlist_free(conn->spool);
+  conn->spool = NULL;
+  if (conn->compress_state) {
+    /* Flush the compression state: there could be more bytes pending in there,
+     * and we don't want to omit bytes. */
+    connection_buf_add_compress("", 0, conn, 1);
+    tor_compress_free(conn->compress_state);
+    conn->compress_state = NULL;
+  }
+  return 0;
+}
+
+/** Remove every element from <b>conn</b>'s outgoing spool, and delete
+ * the spool. */
+void
+dir_conn_clear_spool(dir_connection_t *conn)
+{
+  if (!conn || ! conn->spool)
+    return;
+  SMARTLIST_FOREACH(conn->spool, spooled_resource_t *, s,
+                    spooled_resource_free(s));
+  smartlist_free(conn->spool);
+  conn->spool = NULL;
 }
 
 /** Return true iff <b>line</b> is a valid RecommendedPackages line.

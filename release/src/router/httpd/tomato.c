@@ -1317,15 +1317,15 @@ static const nvset_t nvset_list[] = {
 	{ "qos_udp",			V_01				},
 	{ "qos_reset",			V_01				},
 	{ "qos_pfifo",			V_01				}, // !!TB
-	{ "wan_qos_obw",		V_RANGE(10, 999999)		},
-	{ "wan_qos_ibw",		V_RANGE(10, 999999)		},
-	{ "wan2_qos_obw",		V_RANGE(10, 999999)		},
-	{ "wan2_qos_ibw",		V_RANGE(10, 999999)		},
+	{ "wan_qos_obw",		V_RANGE(10, 99999999)		},
+	{ "wan_qos_ibw",		V_RANGE(10, 99999999)		},
+	{ "wan2_qos_obw",		V_RANGE(10, 99999999)		},
+	{ "wan2_qos_ibw",		V_RANGE(10, 99999999)		},
 #ifdef TCONFIG_MULTIWAN
-	{ "wan3_qos_obw",		V_RANGE(10, 999999)		},
-	{ "wan3_qos_ibw",		V_RANGE(10, 999999)		},
-	{ "wan4_qos_obw",		V_RANGE(10, 999999)		},
-	{ "wan4_qos_ibw",		V_RANGE(10, 999999)		},
+	{ "wan3_qos_obw",		V_RANGE(10, 99999999)		},
+	{ "wan3_qos_ibw",		V_RANGE(10, 99999999)		},
+	{ "wan4_qos_obw",		V_RANGE(10, 99999999)		},
+	{ "wan4_qos_ibw",		V_RANGE(10, 99999999)		},
 #endif
 
 	{ "qos_orules",			V_LENGTH(0, 4096)	},
@@ -1343,30 +1343,30 @@ static const nvset_t nvset_list[] = {
 	{ "new_qoslimit_enable",         V_01                   },
 	{ "new_qoslimit_rules",          V_LENGTH(0, 4096)      },
 	{ "qosl_enable",                 V_01                   },
-	{ "qosl_ulr",                    V_RANGE(0, 999999)     },
-	{ "qosl_ulc",                    V_RANGE(0, 999999)     },
-	{ "qosl_dlr",                    V_RANGE(0, 999999)     },
-	{ "qosl_dlc",                    V_RANGE(0, 999999)     },
+	{ "qosl_ulr",                    V_RANGE(0, 99999999)   },
+	{ "qosl_ulc",                    V_RANGE(0, 99999999)   },
+	{ "qosl_dlr",                    V_RANGE(0, 99999999)   },
+	{ "qosl_dlc",                    V_RANGE(0, 99999999)   },
 	{ "qosl_tcp",                    V_RANGE(0, 1000)       },
 	{ "qosl_udp",                    V_RANGE(0, 100)        },
 	{ "limit_br0_prio",              V_RANGE(0, 5)          },
 	{ "limit_br1_enable",            V_01                   },
-	{ "limit_br1_ulr",               V_RANGE(0, 999999)     },
-	{ "limit_br1_ulc",               V_RANGE(0, 999999)     },
-	{ "limit_br1_dlr",               V_RANGE(0, 999999)     },
-	{ "limit_br1_dlc",               V_RANGE(0, 999999)     },
+	{ "limit_br1_ulr",               V_RANGE(0, 99999999)   },
+	{ "limit_br1_ulc",               V_RANGE(0, 99999999)   },
+	{ "limit_br1_dlr",               V_RANGE(0, 99999999)   },
+	{ "limit_br1_dlc",               V_RANGE(0, 99999999)   },
 	{ "limit_br1_prio",              V_RANGE(0, 5)          },
 	{ "limit_br2_enable",            V_01                   },
-	{ "limit_br2_ulr",               V_RANGE(0, 999999)     },
-	{ "limit_br2_ulc",               V_RANGE(0, 999999)     },
-	{ "limit_br2_dlr",               V_RANGE(0, 999999)     },
-	{ "limit_br2_dlc",               V_RANGE(0, 999999)     },
+	{ "limit_br2_ulr",               V_RANGE(0, 99999999)   },
+	{ "limit_br2_ulc",               V_RANGE(0, 99999999)   },
+	{ "limit_br2_dlr",               V_RANGE(0, 99999999)   },
+	{ "limit_br2_dlc",               V_RANGE(0, 99999999)   },
 	{ "limit_br2_prio",              V_RANGE(0, 5)          },
 	{ "limit_br3_enable",            V_01                   },
-	{ "limit_br3_ulr",               V_RANGE(0, 999999)     },
-	{ "limit_br3_ulc",               V_RANGE(0, 999999)     },
-	{ "limit_br3_dlr",               V_RANGE(0, 999999)     },
-	{ "limit_br3_dlc",               V_RANGE(0, 999999)     },
+	{ "limit_br3_ulr",               V_RANGE(0, 99999999)   },
+	{ "limit_br3_ulc",               V_RANGE(0, 99999999)   },
+	{ "limit_br3_dlr",               V_RANGE(0, 99999999)   },
+	{ "limit_br3_dlc",               V_RANGE(0, 99999999)   },
 	{ "limit_br3_prio",              V_RANGE(0, 5)          },
 
 
@@ -1506,8 +1506,11 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_server1_port",     V_PORT              },
 	{ "vpn_server1_firewall", V_TEXT(0, 8)        },  // auto, external, custom
 	{ "vpn_server1_crypt",    V_TEXT(0, 6)        },  // tls, secret, custom
-	{ "vpn_server1_comp",     V_TEXT(0, 8)        },  // yes, no, adaptive
+	{ "vpn_server1_comp",     V_TEXT(0, 8)        },  // yes, no, adaptive, lz4
 	{ "vpn_server1_cipher",   V_TEXT(0, 16)       },
+	{ "vpn_server1_ncp_enable", V_RANGE(0,3)      },
+	{ "vpn_server1_ncp_ciphers",V_TEXT(0, 47)     },
+	{ "vpn_server1_digest",     V_TEXT(0, 15)     },
 	{ "vpn_server1_dhcp",     V_01                },
 	{ "vpn_server1_r1",       V_IP                },
 	{ "vpn_server1_r2",       V_IP                },
@@ -1542,8 +1545,11 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_server2_port",     V_PORT              },
 	{ "vpn_server2_firewall", V_TEXT(0, 8)        },  // auto, external, custom
 	{ "vpn_server2_crypt",    V_TEXT(0, 6)        },  // tls, secret, custom
-	{ "vpn_server2_comp",     V_TEXT(0, 8)        },  // yes, no, adaptive
+	{ "vpn_server2_comp",     V_TEXT(0, 8)        },  // yes, no, adaptive, lz4
 	{ "vpn_server2_cipher",   V_TEXT(0, 16)       },
+	{ "vpn_server2_ncp_enable", V_RANGE(0,3)      },
+	{ "vpn_server2_ncp_ciphers",V_TEXT(0, 47)     },
+	{ "vpn_server2_digest",     V_TEXT(0, 15)     },
 	{ "vpn_server2_dhcp",     V_01                },
 	{ "vpn_server2_r1",       V_IP                },
 	{ "vpn_server2_r2",       V_IP                },
@@ -1583,8 +1589,11 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_client1_retry",    V_RANGE(-1,32767)   },  // -1 infinite, 0 disabled, >= 1 custom
 	{ "vpn_client1_firewall", V_TEXT(0, 6)        },  // auto, custom
 	{ "vpn_client1_crypt",    V_TEXT(0, 6)        },  // tls, secret, custom
-	{ "vpn_client1_comp",     V_TEXT(0, 8)        },  // yes, no, adaptive
+	{ "vpn_client1_comp",     V_TEXT(0, 8)        },  // yes, no, adaptive, lz4
 	{ "vpn_client1_cipher",   V_TEXT(0, 16)       },
+	{ "vpn_client1_ncp_enable", V_RANGE(0,3)      },
+	{ "vpn_client1_ncp_ciphers",V_TEXT(0, 47)     },
+	{ "vpn_client1_digest",     V_TEXT(0, 15)     },
 	{ "vpn_client1_local",    V_IP                },
 	{ "vpn_client1_remote",   V_IP                },
 	{ "vpn_client1_nm",       V_IP                },
@@ -1606,6 +1615,7 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_client1_cn",       V_NONE              },
 	{ "vpn_client1_br",       V_LENGTH(0, 50)     },
 	{ "vpn_client1_nopull",   V_01                },
+	{ "vpn_client1_noexec",   V_01                },
 	{ "vpn_client1_route",    V_01                },
 	{ "vpn_client1_routing_val", V_NONE           },
 	{ "vpn_client2_poll",     V_RANGE(0, 1440)    },
@@ -1618,8 +1628,11 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_client2_retry",    V_RANGE(-1,32767)   },  // -1 infinite, 0 disabled, >= 1 custom
 	{ "vpn_client2_firewall", V_TEXT(0, 6)        },  // auto, custom
 	{ "vpn_client2_crypt",    V_TEXT(0, 6)        },  // tls, secret, custom
-	{ "vpn_client2_comp",     V_TEXT(0, 8)        },  // yes, no, adaptive
+	{ "vpn_client2_comp",     V_TEXT(0, 8)        },  // yes, no, adaptive, lz4
 	{ "vpn_client2_cipher",   V_TEXT(0, 16)       },
+	{ "vpn_client2_ncp_enable", V_RANGE(0,3)      },
+	{ "vpn_client2_ncp_ciphers",V_TEXT(0, 47)     },
+	{ "vpn_client2_digest",     V_TEXT(0, 15)     },
 	{ "vpn_client2_local",    V_IP                },
 	{ "vpn_client2_remote",   V_IP                },
 	{ "vpn_client2_nm",       V_IP                },
@@ -1641,6 +1654,7 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_client2_cn",       V_NONE              },
 	{ "vpn_client2_br",       V_LENGTH(0, 50)     },
 	{ "vpn_client2_nopull",   V_01                },
+	{ "vpn_client2_noexec",   V_01                },
 	{ "vpn_client2_route",    V_01                },
 	{ "vpn_client2_routing_val", V_NONE           },
 #endif // vpn

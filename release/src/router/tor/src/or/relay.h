@@ -1,7 +1,7 @@
 /* Copyright (c) 2001 Matej Pfajfar.
  * Copyright (c) 2001-2004, Roger Dingledine.
  * Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -20,10 +20,13 @@ int circuit_receive_relay_cell(cell_t *cell, circuit_t *circ,
 
 void relay_header_pack(uint8_t *dest, const relay_header_t *src);
 void relay_header_unpack(relay_header_t *dest, const uint8_t *src);
-int relay_send_command_from_edge_(streamid_t stream_id, circuit_t *circ,
+MOCK_DECL(int,
+relay_send_command_from_edge_,(streamid_t stream_id, circuit_t *circ,
                                uint8_t relay_command, const char *payload,
                                size_t payload_len, crypt_path_t *cpath_layer,
-                               const char *filename, int lineno);
+                               const char *filename, int lineno));
+/* Indicates to relay_send_command_from_edge() that it is a control cell. */
+#define CONTROL_CELL_ID 0
 #define relay_send_command_from_edge(stream_id, circ, relay_command, payload, \
                                      payload_len, cpath_layer)          \
   relay_send_command_from_edge_((stream_id), (circ), (relay_command),   \
@@ -60,6 +63,13 @@ void cell_queue_append_packed_copy(circuit_t *circ, cell_queue_t *queue,
 void append_cell_to_circuit_queue(circuit_t *circ, channel_t *chan,
                                   cell_t *cell, cell_direction_t direction,
                                   streamid_t fromstream);
+
+void destroy_cell_queue_init(destroy_cell_queue_t *queue);
+void destroy_cell_queue_clear(destroy_cell_queue_t *queue);
+void destroy_cell_queue_append(destroy_cell_queue_t *queue,
+                               circid_t circid,
+                               uint8_t reason);
+
 void channel_unlink_all_circuits(channel_t *chan, smartlist_t *detached_out);
 MOCK_DECL(int, channel_flush_from_first_active_circuit,
           (channel_t *chan, int max));
@@ -99,9 +109,10 @@ STATIC int connection_edge_process_resolved_cell(edge_connection_t *conn,
                                                  const relay_header_t *rh);
 STATIC packed_cell_t *packed_cell_new(void);
 STATIC packed_cell_t *cell_queue_pop(cell_queue_t *queue);
+STATIC destroy_cell_t *destroy_cell_queue_pop(destroy_cell_queue_t *queue);
 STATIC size_t cell_queues_get_total_allocation(void);
 STATIC int cell_queues_check_size(void);
-#endif
+#endif /* defined(RELAY_PRIVATE) */
 
-#endif
+#endif /* !defined(TOR_RELAY_H) */
 

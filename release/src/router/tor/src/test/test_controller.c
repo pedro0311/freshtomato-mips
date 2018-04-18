@@ -1,14 +1,16 @@
-/* Copyright (c) 2015-2016, The Tor Project, Inc. */
+/* Copyright (c) 2015-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 #define CONTROL_PRIVATE
 #include "or.h"
+#include "bridges.h"
 #include "control.h"
 #include "entrynodes.h"
 #include "networkstatus.h"
 #include "rendservice.h"
 #include "routerlist.h"
 #include "test.h"
+#include "test_helpers.h"
 
 static void
 test_add_onion_helper_keyarg(void *arg)
@@ -29,7 +31,7 @@ test_add_onion_helper_keyarg(void *arg)
   tt_assert(pk);
   tt_str_op(key_new_alg, OP_EQ, "RSA1024");
   tt_assert(key_new_blob);
-  tt_assert(!err_msg);
+  tt_ptr_op(err_msg, OP_EQ, NULL);
 
   /* Test "BEST" key generation (Assumes BEST = RSA1024). */
   crypto_pk_free(pk);
@@ -39,7 +41,7 @@ test_add_onion_helper_keyarg(void *arg)
   tt_assert(pk);
   tt_str_op(key_new_alg, OP_EQ, "RSA1024");
   tt_assert(key_new_blob);
-  tt_assert(!err_msg);
+  tt_ptr_op(err_msg, OP_EQ, NULL);
 
   /* Test discarding the private key. */
   crypto_pk_free(pk);
@@ -47,17 +49,17 @@ test_add_onion_helper_keyarg(void *arg)
   pk = add_onion_helper_keyarg("NEW:BEST", 1, &key_new_alg, &key_new_blob,
                                &err_msg);
   tt_assert(pk);
-  tt_assert(!key_new_alg);
-  tt_assert(!key_new_blob);
-  tt_assert(!err_msg);
+  tt_ptr_op(key_new_alg, OP_EQ, NULL);
+  tt_ptr_op(key_new_blob, OP_EQ, NULL);
+  tt_ptr_op(err_msg, OP_EQ, NULL);
 
   /* Test generating a invalid key type. */
   crypto_pk_free(pk);
   pk = add_onion_helper_keyarg("NEW:RSA512", 0, &key_new_alg, &key_new_blob,
                                &err_msg);
-  tt_assert(!pk);
-  tt_assert(!key_new_alg);
-  tt_assert(!key_new_blob);
+  tt_ptr_op(pk, OP_EQ, NULL);
+  tt_ptr_op(key_new_alg, OP_EQ, NULL);
+  tt_ptr_op(key_new_blob, OP_EQ, NULL);
   tt_assert(err_msg);
 
   /* Test loading a RSA1024 key. */
@@ -68,10 +70,10 @@ test_add_onion_helper_keyarg(void *arg)
   pk2 = add_onion_helper_keyarg(arg_str, 0, &key_new_alg, &key_new_blob,
                                 &err_msg);
   tt_assert(pk2);
-  tt_assert(!key_new_alg);
-  tt_assert(!key_new_blob);
-  tt_assert(!err_msg);
-  tt_assert(crypto_pk_cmp_keys(pk, pk2) == 0);
+  tt_ptr_op(key_new_alg, OP_EQ, NULL);
+  tt_ptr_op(key_new_blob, OP_EQ, NULL);
+  tt_ptr_op(err_msg, OP_EQ, NULL);
+  tt_int_op(crypto_pk_cmp_keys(pk, pk2), OP_EQ, 0);
 
   /* Test loading a invalid key type. */
   tor_free(arg_str);
@@ -79,9 +81,9 @@ test_add_onion_helper_keyarg(void *arg)
   tor_asprintf(&arg_str, "RSA512:%s", encoded);
   pk = add_onion_helper_keyarg(arg_str, 0, &key_new_alg, &key_new_blob,
                                &err_msg);
-  tt_assert(!pk);
-  tt_assert(!key_new_alg);
-  tt_assert(!key_new_blob);
+  tt_ptr_op(pk, OP_EQ, NULL);
+  tt_ptr_op(key_new_alg, OP_EQ, NULL);
+  tt_ptr_op(key_new_blob, OP_EQ, NULL);
   tt_assert(err_msg);
 
   /* Test loading a invalid key. */
@@ -92,9 +94,9 @@ test_add_onion_helper_keyarg(void *arg)
   tor_asprintf(&arg_str, "RSA1024:%s", encoded);
   pk = add_onion_helper_keyarg(arg_str, 0, &key_new_alg, &key_new_blob,
                                &err_msg);
-  tt_assert(!pk);
-  tt_assert(!key_new_alg);
-  tt_assert(!key_new_blob);
+  tt_ptr_op(pk, OP_EQ, NULL);
+  tt_ptr_op(key_new_alg, OP_EQ, NULL);
+  tt_ptr_op(key_new_blob, OP_EQ, NULL);
   tt_assert(err_msg);
 
  done:
@@ -104,6 +106,45 @@ test_add_onion_helper_keyarg(void *arg)
   tor_free(err_msg);
   tor_free(encoded);
   tor_free(arg_str);
+}
+
+static void
+test_getinfo_helper_onion(void *arg)
+{
+  (void)arg;
+  control_connection_t dummy;
+  /* Get results out */
+  char *answer = NULL;
+  const char *errmsg = NULL;
+  char *service_id = NULL;
+  int rt = 0;
+
+  dummy.ephemeral_onion_services = NULL;
+
+  /* successfully get an empty answer */
+  rt = getinfo_helper_onions(&dummy, "onions/current", &answer, &errmsg);
+  tt_int_op(rt, OP_EQ, 0);
+  tt_str_op(answer, OP_EQ, "");
+  tor_free(answer);
+
+  /* successfully get an empty answer */
+  rt = getinfo_helper_onions(&dummy, "onions/detached", &answer, &errmsg);
+  tt_int_op(rt, OP_EQ, 0);
+  tt_str_op(answer, OP_EQ, "");
+  tor_free(answer);
+
+  /* get an answer for one onion service */
+  service_id = tor_strdup("dummy_onion_id");
+  dummy.ephemeral_onion_services = smartlist_new();
+  smartlist_add(dummy.ephemeral_onion_services, service_id);
+  rt = getinfo_helper_onions(&dummy, "onions/current", &answer, &errmsg);
+  tt_int_op(rt, OP_EQ, 0);
+  tt_str_op(answer, OP_EQ, "dummy_onion_id");
+
+ done:
+  tor_free(answer);
+  tor_free(service_id);
+  smartlist_free(dummy.ephemeral_onion_services);
 }
 
 static void
@@ -118,25 +159,25 @@ test_rend_service_parse_port_config(void *arg)
   /* Test "VIRTPORT" only. */
   cfg = rend_service_parse_port_config("80", sep, &err_msg);
   tt_assert(cfg);
-  tt_assert(!err_msg);
+  tt_ptr_op(err_msg, OP_EQ, NULL);
 
   /* Test "VIRTPORT,TARGET" (Target is port). */
   rend_service_port_config_free(cfg);
   cfg = rend_service_parse_port_config("80,8080", sep, &err_msg);
   tt_assert(cfg);
-  tt_assert(!err_msg);
+  tt_ptr_op(err_msg, OP_EQ, NULL);
 
   /* Test "VIRTPORT,TARGET" (Target is IPv4:port). */
   rend_service_port_config_free(cfg);
   cfg = rend_service_parse_port_config("80,192.0.2.1:8080", sep, &err_msg);
   tt_assert(cfg);
-  tt_assert(!err_msg);
+  tt_ptr_op(err_msg, OP_EQ, NULL);
 
   /* Test "VIRTPORT,TARGET" (Target is IPv6:port). */
   rend_service_port_config_free(cfg);
   cfg = rend_service_parse_port_config("80,[2001:db8::1]:8080", sep, &err_msg);
   tt_assert(cfg);
-  tt_assert(!err_msg);
+  tt_ptr_op(err_msg, OP_EQ, NULL);
   rend_service_port_config_free(cfg);
   cfg = NULL;
 
@@ -145,13 +186,13 @@ test_rend_service_parse_port_config(void *arg)
   /* Test empty config. */
   rend_service_port_config_free(cfg);
   cfg = rend_service_parse_port_config("", sep, &err_msg);
-  tt_assert(!cfg);
+  tt_ptr_op(cfg, OP_EQ, NULL);
   tt_assert(err_msg);
 
   /* Test invalid port. */
   tor_free(err_msg);
   cfg = rend_service_parse_port_config("90001", sep, &err_msg);
-  tt_assert(!cfg);
+  tt_ptr_op(cfg, OP_EQ, NULL);
   tt_assert(err_msg);
   tor_free(err_msg);
 
@@ -163,7 +204,7 @@ test_rend_service_parse_port_config(void *arg)
   cfg = rend_service_parse_port_config("100 unix:\"/tmp/foo bar\"",
                                        " ", &err_msg);
   tt_assert(cfg);
-  tt_assert(!err_msg);
+  tt_ptr_op(err_msg, OP_EQ, NULL);
   rend_service_port_config_free(cfg);
   cfg = NULL;
 
@@ -172,22 +213,24 @@ test_rend_service_parse_port_config(void *arg)
   cfg = rend_service_parse_port_config("100 unix:\"/tmp/foo bar\"",
                                        " ", &err_msg);
   tt_assert(cfg);
-  tt_assert(!err_msg);
+  tt_ptr_op(err_msg, OP_EQ, NULL);
   rend_service_port_config_free(cfg);
   cfg = NULL;
 
   /* quoted unix port, missing end quote */
   cfg = rend_service_parse_port_config("100 unix:\"/tmp/foo bar",
                                        " ", &err_msg);
-  tt_assert(!cfg);
+  tt_ptr_op(cfg, OP_EQ, NULL);
   tt_str_op(err_msg, OP_EQ, "Couldn't process address <unix:\"/tmp/foo bar> "
             "from hidden service configuration");
   tor_free(err_msg);
 
   /* bogus IP address */
-  cfg = rend_service_parse_port_config("100 1.2.3.4.5:9000",
+  MOCK(tor_addr_lookup, mock_tor_addr_lookup__fail_on_bad_addrs);
+  cfg = rend_service_parse_port_config("100 foo!!.example.com:9000",
                                        " ", &err_msg);
-  tt_assert(!cfg);
+  UNMOCK(tor_addr_lookup);
+  tt_ptr_op(cfg, OP_EQ, NULL);
   tt_str_op(err_msg, OP_EQ, "Unparseable address in hidden service port "
             "configuration.");
   tor_free(err_msg);
@@ -195,7 +238,7 @@ test_rend_service_parse_port_config(void *arg)
   /* bogus port port */
   cfg = rend_service_parse_port_config("100 99999",
                                        " ", &err_msg);
-  tt_assert(!cfg);
+  tt_ptr_op(cfg, OP_EQ, NULL);
   tt_str_op(err_msg, OP_EQ, "Unparseable or out-of-range port \"99999\" "
             "in hidden service port configuration.");
   tor_free(err_msg);
@@ -218,7 +261,7 @@ test_add_onion_helper_clientauth(void *arg)
   client = add_onion_helper_clientauth("alice", &created, &err_msg);
   tt_assert(client);
   tt_assert(created);
-  tt_assert(!err_msg);
+  tt_ptr_op(err_msg, OP_EQ, NULL);
   rend_authorized_client_free(client);
 
   /* Test "ClientName:Blob" */
@@ -226,26 +269,26 @@ test_add_onion_helper_clientauth(void *arg)
                                        &created, &err_msg);
   tt_assert(client);
   tt_assert(!created);
-  tt_assert(!err_msg);
+  tt_ptr_op(err_msg, OP_EQ, NULL);
   rend_authorized_client_free(client);
 
   /* Test invalid client names */
   client = add_onion_helper_clientauth("no*asterisks*allowed", &created,
                                        &err_msg);
-  tt_assert(!client);
+  tt_ptr_op(client, OP_EQ, NULL);
   tt_assert(err_msg);
   tor_free(err_msg);
 
   /* Test invalid auth cookie */
   client = add_onion_helper_clientauth("alice:12345", &created, &err_msg);
-  tt_assert(!client);
+  tt_ptr_op(client, OP_EQ, NULL);
   tt_assert(err_msg);
   tor_free(err_msg);
 
   /* Test invalid syntax */
   client = add_onion_helper_clientauth(":475hGBHPlq7Mc0cRZitK/B", &created,
                                        &err_msg);
-  tt_assert(!client);
+  tt_ptr_op(client, OP_EQ, NULL);
   tt_assert(err_msg);
   tor_free(err_msg);
 
@@ -501,7 +544,7 @@ cert_dl_status_def_for_auth_mock(const char *digest)
   download_status_t *dl = NULL;
   char digest_str[HEX_DIGEST_LEN+1];
 
-  tt_assert(digest != NULL);
+  tt_ptr_op(digest, OP_NE, NULL);
   base16_encode(digest_str, HEX_DIGEST_LEN + 1,
                 digest, DIGEST_LEN);
   digest_str[HEX_DIGEST_LEN] = '\0';
@@ -525,7 +568,7 @@ cert_dl_status_sks_for_auth_id_mock(const char *digest)
   char *tmp;
   int len;
 
-  tt_assert(digest != NULL);
+  tt_ptr_op(digest, OP_NE, NULL);
   base16_encode(digest_str, HEX_DIGEST_LEN + 1,
                 digest, DIGEST_LEN);
   digest_str[HEX_DIGEST_LEN] = '\0';
@@ -579,11 +622,11 @@ cert_dl_status_fp_sk_mock(const char *fp_digest, const char *sk_digest)
    * dl status we want.
    */
 
-  tt_assert(fp_digest != NULL);
+  tt_ptr_op(fp_digest, OP_NE, NULL);
   base16_encode(fp_digest_str, HEX_DIGEST_LEN + 1,
                 fp_digest, DIGEST_LEN);
   fp_digest_str[HEX_DIGEST_LEN] = '\0';
-  tt_assert(sk_digest != NULL);
+  tt_ptr_op(sk_digest, OP_NE, NULL);
   base16_encode(sk_digest_str, HEX_DIGEST_LEN + 1,
                 sk_digest, DIGEST_LEN);
   sk_digest_str[HEX_DIGEST_LEN] = '\0';
@@ -663,7 +706,7 @@ descbr_get_dl_by_digest_mock(const char *digest)
   char digest_str[HEX_DIGEST_LEN+1];
 
   if (!disable_descbr) {
-    tt_assert(digest != NULL);
+    tt_ptr_op(digest, OP_NE, NULL);
     base16_encode(digest_str, HEX_DIGEST_LEN + 1,
                   digest, DIGEST_LEN);
     digest_str[HEX_DIGEST_LEN] = '\0';
@@ -730,7 +773,7 @@ test_download_status_consensus(void *arg)
 
   /* Check that the unknown prefix case works; no mocks needed yet */
   getinfo_helper_downloads(&dummy, "downloads/foo", &answer, &errmsg);
-  tt_assert(answer == NULL);
+  tt_ptr_op(answer, OP_EQ, NULL);
   tt_str_op(errmsg, OP_EQ, "Unknown download status query");
 
   setup_ns_mocks();
@@ -745,8 +788,8 @@ test_download_status_consensus(void *arg)
          sizeof(download_status_t));
   getinfo_helper_downloads(&dummy, "downloads/networkstatus/ns",
                            &answer, &errmsg);
-  tt_assert(answer != NULL);
-  tt_assert(errmsg == NULL);
+  tt_ptr_op(answer, OP_NE, NULL);
+  tt_ptr_op(errmsg, OP_EQ, NULL);
   tt_str_op(answer, OP_EQ, dls_sample_1_str);
   tor_free(answer);
   errmsg = NULL;
@@ -756,8 +799,8 @@ test_download_status_consensus(void *arg)
          sizeof(download_status_t));
   getinfo_helper_downloads(&dummy, "downloads/networkstatus/microdesc",
                            &answer, &errmsg);
-  tt_assert(answer != NULL);
-  tt_assert(errmsg == NULL);
+  tt_ptr_op(answer, OP_NE, NULL);
+  tt_ptr_op(errmsg, OP_EQ, NULL);
   tt_str_op(answer, OP_EQ, dls_sample_2_str);
   tor_free(answer);
   errmsg = NULL;
@@ -767,8 +810,8 @@ test_download_status_consensus(void *arg)
          sizeof(download_status_t));
   getinfo_helper_downloads(&dummy, "downloads/networkstatus/ns/bootstrap",
                            &answer, &errmsg);
-  tt_assert(answer != NULL);
-  tt_assert(errmsg == NULL);
+  tt_ptr_op(answer, OP_NE, NULL);
+  tt_ptr_op(errmsg, OP_EQ, NULL);
   tt_str_op(answer, OP_EQ, dls_sample_3_str);
   tor_free(answer);
   errmsg = NULL;
@@ -779,8 +822,8 @@ test_download_status_consensus(void *arg)
   getinfo_helper_downloads(&dummy,
                            "downloads/networkstatus/microdesc/bootstrap",
                            &answer, &errmsg);
-  tt_assert(answer != NULL);
-  tt_assert(errmsg == NULL);
+  tt_ptr_op(answer, OP_NE, NULL);
+  tt_ptr_op(errmsg, OP_EQ, NULL);
   tt_str_op(answer, OP_EQ, dls_sample_4_str);
   tor_free(answer);
   errmsg = NULL;
@@ -791,8 +834,8 @@ test_download_status_consensus(void *arg)
   getinfo_helper_downloads(&dummy,
                            "downloads/networkstatus/ns/running",
                            &answer, &errmsg);
-  tt_assert(answer != NULL);
-  tt_assert(errmsg == NULL);
+  tt_ptr_op(answer, OP_NE, NULL);
+  tt_ptr_op(errmsg, OP_EQ, NULL);
   tt_str_op(answer, OP_EQ, dls_sample_5_str);
   tor_free(answer);
   errmsg = NULL;
@@ -803,8 +846,8 @@ test_download_status_consensus(void *arg)
   getinfo_helper_downloads(&dummy,
                            "downloads/networkstatus/microdesc/running",
                            &answer, &errmsg);
-  tt_assert(answer != NULL);
-  tt_assert(errmsg == NULL);
+  tt_ptr_op(answer, OP_NE, NULL);
+  tt_ptr_op(errmsg, OP_EQ, NULL);
   tt_str_op(answer, OP_EQ, dls_sample_6_str);
   tor_free(answer);
   errmsg = NULL;
@@ -812,8 +855,8 @@ test_download_status_consensus(void *arg)
   /* Now check the error case */
   getinfo_helper_downloads(&dummy, "downloads/networkstatus/foo",
                            &answer, &errmsg);
-  tt_assert(answer == NULL);
-  tt_assert(errmsg != NULL);
+  tt_ptr_op(answer, OP_EQ, NULL);
+  tt_ptr_op(errmsg, OP_NE, NULL);
   tt_str_op(errmsg, OP_EQ, "Unknown flavor");
   errmsg = NULL;
 
@@ -847,8 +890,8 @@ test_download_status_cert(void *arg)
   getinfo_helper_downloads(&dummy,
                            "downloads/cert/fps",
                            &answer, &errmsg);
-  tt_assert(answer != NULL);
-  tt_assert(errmsg == NULL);
+  tt_ptr_op(answer, OP_NE, NULL);
+  tt_ptr_op(errmsg, OP_EQ, NULL);
   tt_str_op(answer, OP_EQ, auth_id_digest_expected_list);
   tor_free(answer);
   errmsg = NULL;
@@ -857,10 +900,10 @@ test_download_status_cert(void *arg)
   memcpy(&auth_def_cert_download_status_1, &dls_sample_1,
          sizeof(download_status_t));
   tor_asprintf(&question, "downloads/cert/fp/%s", auth_id_digest_1_str);
-  tt_assert(question != NULL);
+  tt_ptr_op(question, OP_NE, NULL);
   getinfo_helper_downloads(&dummy, question, &answer, &errmsg);
-  tt_assert(answer != NULL);
-  tt_assert(errmsg == NULL);
+  tt_ptr_op(answer, OP_NE, NULL);
+  tt_ptr_op(errmsg, OP_EQ, NULL);
   tt_str_op(answer, OP_EQ, dls_sample_1_str);
   tor_free(question);
   tor_free(answer);
@@ -870,10 +913,10 @@ test_download_status_cert(void *arg)
   memcpy(&auth_def_cert_download_status_2, &dls_sample_2,
          sizeof(download_status_t));
   tor_asprintf(&question, "downloads/cert/fp/%s", auth_id_digest_2_str);
-  tt_assert(question != NULL);
+  tt_ptr_op(question, OP_NE, NULL);
   getinfo_helper_downloads(&dummy, question, &answer, &errmsg);
-  tt_assert(answer != NULL);
-  tt_assert(errmsg == NULL);
+  tt_ptr_op(answer, OP_NE, NULL);
+  tt_ptr_op(errmsg, OP_EQ, NULL);
   tt_str_op(answer, OP_EQ, dls_sample_2_str);
   tor_free(question);
   tor_free(answer);
@@ -881,10 +924,10 @@ test_download_status_cert(void *arg)
 
   /* Case 4 - list of signing key digests for 1st auth id */
   tor_asprintf(&question, "downloads/cert/fp/%s/sks", auth_id_digest_1_str);
-  tt_assert(question != NULL);
+  tt_ptr_op(question, OP_NE, NULL);
   getinfo_helper_downloads(&dummy, question, &answer, &errmsg);
-  tt_assert(answer != NULL);
-  tt_assert(errmsg == NULL);
+  tt_ptr_op(answer, OP_NE, NULL);
+  tt_ptr_op(errmsg, OP_EQ, NULL);
   tt_str_op(answer, OP_EQ, auth_1_sk_digest_expected_list);
   tor_free(question);
   tor_free(answer);
@@ -892,10 +935,10 @@ test_download_status_cert(void *arg)
 
   /* Case 5 - list of signing key digests for 2nd auth id */
   tor_asprintf(&question, "downloads/cert/fp/%s/sks", auth_id_digest_2_str);
-  tt_assert(question != NULL);
+  tt_ptr_op(question, OP_NE, NULL);
   getinfo_helper_downloads(&dummy, question, &answer, &errmsg);
-  tt_assert(answer != NULL);
-  tt_assert(errmsg == NULL);
+  tt_ptr_op(answer, OP_NE, NULL);
+  tt_ptr_op(errmsg, OP_EQ, NULL);
   tt_str_op(answer, OP_EQ, auth_2_sk_digest_expected_list);
   tor_free(question);
   tor_free(answer);
@@ -906,10 +949,10 @@ test_download_status_cert(void *arg)
          sizeof(download_status_t));
   tor_asprintf(&question, "downloads/cert/fp/%s/%s",
                auth_id_digest_1_str, auth_1_sk_1_str);
-  tt_assert(question != NULL);
+  tt_ptr_op(question, OP_NE, NULL);
   getinfo_helper_downloads(&dummy, question, &answer, &errmsg);
-  tt_assert(answer != NULL);
-  tt_assert(errmsg == NULL);
+  tt_ptr_op(answer, OP_NE, NULL);
+  tt_ptr_op(errmsg, OP_EQ, NULL);
   tt_str_op(answer, OP_EQ, dls_sample_3_str);
   tor_free(question);
   tor_free(answer);
@@ -920,10 +963,10 @@ test_download_status_cert(void *arg)
          sizeof(download_status_t));
   tor_asprintf(&question, "downloads/cert/fp/%s/%s",
                auth_id_digest_1_str, auth_1_sk_2_str);
-  tt_assert(question != NULL);
+  tt_ptr_op(question, OP_NE, NULL);
   getinfo_helper_downloads(&dummy, question, &answer, &errmsg);
-  tt_assert(answer != NULL);
-  tt_assert(errmsg == NULL);
+  tt_ptr_op(answer, OP_NE, NULL);
+  tt_ptr_op(errmsg, OP_EQ, NULL);
   tt_str_op(answer, OP_EQ, dls_sample_4_str);
   tor_free(question);
   tor_free(answer);
@@ -934,10 +977,10 @@ test_download_status_cert(void *arg)
          sizeof(download_status_t));
   tor_asprintf(&question, "downloads/cert/fp/%s/%s",
                auth_id_digest_2_str, auth_2_sk_1_str);
-  tt_assert(question != NULL);
+  tt_ptr_op(question, OP_NE, NULL);
   getinfo_helper_downloads(&dummy, question, &answer, &errmsg);
-  tt_assert(answer != NULL);
-  tt_assert(errmsg == NULL);
+  tt_ptr_op(answer, OP_NE, NULL);
+  tt_ptr_op(errmsg, OP_EQ, NULL);
   tt_str_op(answer, OP_EQ, dls_sample_5_str);
   tor_free(question);
   tor_free(answer);
@@ -948,10 +991,10 @@ test_download_status_cert(void *arg)
          sizeof(download_status_t));
   tor_asprintf(&question, "downloads/cert/fp/%s/%s",
                auth_id_digest_2_str, auth_2_sk_2_str);
-  tt_assert(question != NULL);
+  tt_ptr_op(question, OP_NE, NULL);
   getinfo_helper_downloads(&dummy, question, &answer, &errmsg);
-  tt_assert(answer != NULL);
-  tt_assert(errmsg == NULL);
+  tt_ptr_op(answer, OP_NE, NULL);
+  tt_ptr_op(errmsg, OP_EQ, NULL);
   tt_str_op(answer, OP_EQ, dls_sample_6_str);
   tor_free(question);
   tor_free(answer);
@@ -962,8 +1005,8 @@ test_download_status_cert(void *arg)
   /* Case 1 - query is garbage after downloads/cert/ part */
   getinfo_helper_downloads(&dummy, "downloads/cert/blahdeblah",
                            &answer, &errmsg);
-  tt_assert(answer == NULL);
-  tt_assert(errmsg != NULL);
+  tt_ptr_op(answer, OP_EQ, NULL);
+  tt_ptr_op(errmsg, OP_NE, NULL);
   tt_str_op(errmsg, OP_EQ, "Unknown certificate download status query");
   errmsg = NULL;
 
@@ -973,8 +1016,8 @@ test_download_status_cert(void *arg)
    */
   getinfo_helper_downloads(&dummy, "downloads/cert/fp/2B1D36D32B2942406",
                            &answer, &errmsg);
-  tt_assert(answer == NULL);
-  tt_assert(errmsg != NULL);
+  tt_ptr_op(answer, OP_EQ, NULL);
+  tt_ptr_op(errmsg, OP_NE, NULL);
   tt_str_op(errmsg, OP_EQ, "That didn't look like a digest");
   errmsg = NULL;
 
@@ -985,8 +1028,8 @@ test_download_status_cert(void *arg)
   getinfo_helper_downloads(&dummy,
       "downloads/cert/fp/82F52AF55D250115FE44D3GC81D49643241D56A1",
       &answer, &errmsg);
-  tt_assert(answer == NULL);
-  tt_assert(errmsg != NULL);
+  tt_ptr_op(answer, OP_EQ, NULL);
+  tt_ptr_op(errmsg, OP_NE, NULL);
   tt_str_op(errmsg, OP_EQ, "That didn't look like a digest");
   errmsg = NULL;
 
@@ -997,8 +1040,8 @@ test_download_status_cert(void *arg)
   getinfo_helper_downloads(&dummy,
       "downloads/cert/fp/AC4F23B5745BDD2A77997B85B1FD85D05C2E0F61",
       &answer, &errmsg);
-  tt_assert(answer == NULL);
-  tt_assert(errmsg != NULL);
+  tt_ptr_op(answer, OP_EQ, NULL);
+  tt_ptr_op(errmsg, OP_NE, NULL);
   tt_str_op(errmsg, OP_EQ,
       "Failed to get download status for this authority identity digest");
   errmsg = NULL;
@@ -1010,8 +1053,8 @@ test_download_status_cert(void *arg)
   getinfo_helper_downloads(&dummy,
       "downloads/cert/fp/82F52AF55D250115FE44D3GC81D49643241D56A1/blah",
       &answer, &errmsg);
-  tt_assert(answer == NULL);
-  tt_assert(errmsg != NULL);
+  tt_ptr_op(answer, OP_EQ, NULL);
+  tt_ptr_op(errmsg, OP_NE, NULL);
   tt_str_op(errmsg, OP_EQ, "That didn't look like an identity digest");
   errmsg = NULL;
 
@@ -1022,8 +1065,8 @@ test_download_status_cert(void *arg)
   getinfo_helper_downloads(&dummy,
       "downloads/cert/fp/82F52AF55D25/blah",
       &answer, &errmsg);
-  tt_assert(answer == NULL);
-  tt_assert(errmsg != NULL);
+  tt_ptr_op(answer, OP_EQ, NULL);
+  tt_ptr_op(errmsg, OP_NE, NULL);
   tt_str_op(errmsg, OP_EQ, "That didn't look like an identity digest");
   errmsg = NULL;
 
@@ -1034,8 +1077,8 @@ test_download_status_cert(void *arg)
   getinfo_helper_downloads(&dummy,
       "downloads/cert/fp/AC4F23B5745BDD2A77997B85B1FD85D05C2E0F61/sks",
       &answer, &errmsg);
-  tt_assert(answer == NULL);
-  tt_assert(errmsg != NULL);
+  tt_ptr_op(answer, OP_EQ, NULL);
+  tt_ptr_op(errmsg, OP_NE, NULL);
   tt_str_op(errmsg, OP_EQ,
       "Failed to get list of signing key digests for this authority "
       "identity digest");
@@ -1049,8 +1092,8 @@ test_download_status_cert(void *arg)
       "downloads/cert/fp/AC4F23B5745BDD2A77997B85B1FD85D05C2E0F61/"
       "82F52AF55D250115FE44D3GC81D49643241D56A1",
       &answer, &errmsg);
-  tt_assert(answer == NULL);
-  tt_assert(errmsg != NULL);
+  tt_ptr_op(answer, OP_EQ, NULL);
+  tt_ptr_op(errmsg, OP_NE, NULL);
   tt_str_op(errmsg, OP_EQ, "That didn't look like a signing key digest");
   errmsg = NULL;
 
@@ -1062,8 +1105,8 @@ test_download_status_cert(void *arg)
       "downloads/cert/fp/AC4F23B5745BDD2A77997B85B1FD85D05C2E0F61/"
       "82F52AF55D250115FE44D",
       &answer, &errmsg);
-  tt_assert(answer == NULL);
-  tt_assert(errmsg != NULL);
+  tt_ptr_op(answer, OP_EQ, NULL);
+  tt_ptr_op(errmsg, OP_NE, NULL);
   tt_str_op(errmsg, OP_EQ, "That didn't look like a signing key digest");
   errmsg = NULL;
 
@@ -1075,8 +1118,8 @@ test_download_status_cert(void *arg)
       "downloads/cert/fp/C6B05DF332F74DB9A13498EE3BBC7AA2F69FCB45/"
       "3A214FC21AE25B012C2ECCB5F4EC8A3602D0545D",
       &answer, &errmsg);
-  tt_assert(answer == NULL);
-  tt_assert(errmsg != NULL);
+  tt_ptr_op(answer, OP_EQ, NULL);
+  tt_ptr_op(errmsg, OP_NE, NULL);
   tt_str_op(errmsg, OP_EQ,
       "Failed to get download status for this identity/"
       "signing key digest pair");
@@ -1090,8 +1133,8 @@ test_download_status_cert(void *arg)
       "downloads/cert/fp/63CDD326DFEF0CA020BDD3FEB45A3286FE13A061/"
       "3A214FC21AE25B012C2ECCB5F4EC8A3602D0545D",
       &answer, &errmsg);
-  tt_assert(answer == NULL);
-  tt_assert(errmsg != NULL);
+  tt_ptr_op(answer, OP_EQ, NULL);
+  tt_ptr_op(errmsg, OP_NE, NULL);
   tt_str_op(errmsg, OP_EQ,
       "Failed to get download status for this identity/"
       "signing key digest pair");
@@ -1105,8 +1148,8 @@ test_download_status_cert(void *arg)
       "downloads/cert/fp/63CDD326DFEF0CA020BDD3FEB45A3286FE13A061/"
       "9451B8F1B10952384EB58B5F230C0BB701626C9B",
       &answer, &errmsg);
-  tt_assert(answer == NULL);
-  tt_assert(errmsg != NULL);
+  tt_ptr_op(answer, OP_EQ, NULL);
+  tt_ptr_op(errmsg, OP_NE, NULL);
   tt_str_op(errmsg, OP_EQ,
       "Failed to get download status for this identity/"
       "signing key digest pair");
@@ -1142,8 +1185,8 @@ test_download_status_desc(void *arg)
   getinfo_helper_downloads(&dummy,
                            "downloads/desc/descs",
                            &answer, &errmsg);
-  tt_assert(answer != NULL);
-  tt_assert(errmsg == NULL);
+  tt_ptr_op(answer, OP_NE, NULL);
+  tt_ptr_op(errmsg, OP_EQ, NULL);
   tt_str_op(answer, OP_EQ, descbr_expected_list);
   tor_free(answer);
   errmsg = NULL;
@@ -1152,10 +1195,10 @@ test_download_status_desc(void *arg)
   memcpy(&descbr_digest_1_dl, &dls_sample_1,
          sizeof(download_status_t));
   tor_asprintf(&question, "downloads/desc/%s", descbr_digest_1_str);
-  tt_assert(question != NULL);
+  tt_ptr_op(question, OP_NE, NULL);
   getinfo_helper_downloads(&dummy, question, &answer, &errmsg);
-  tt_assert(answer != NULL);
-  tt_assert(errmsg == NULL);
+  tt_ptr_op(answer, OP_NE, NULL);
+  tt_ptr_op(errmsg, OP_EQ, NULL);
   tt_str_op(answer, OP_EQ, dls_sample_1_str);
   tor_free(question);
   tor_free(answer);
@@ -1165,10 +1208,10 @@ test_download_status_desc(void *arg)
   memcpy(&descbr_digest_2_dl, &dls_sample_2,
          sizeof(download_status_t));
   tor_asprintf(&question, "downloads/desc/%s", descbr_digest_2_str);
-  tt_assert(question != NULL);
+  tt_ptr_op(question, OP_NE, NULL);
   getinfo_helper_downloads(&dummy, question, &answer, &errmsg);
-  tt_assert(answer != NULL);
-  tt_assert(errmsg == NULL);
+  tt_ptr_op(answer, OP_NE, NULL);
+  tt_ptr_op(errmsg, OP_EQ, NULL);
   tt_str_op(answer, OP_EQ, dls_sample_2_str);
   tor_free(question);
   tor_free(answer);
@@ -1179,8 +1222,8 @@ test_download_status_desc(void *arg)
   /* Case 1 - non-digest-length garbage after downloads/desc */
   getinfo_helper_downloads(&dummy, "downloads/desc/blahdeblah",
                            &answer, &errmsg);
-  tt_assert(answer == NULL);
-  tt_assert(errmsg != NULL);
+  tt_ptr_op(answer, OP_EQ, NULL);
+  tt_ptr_op(errmsg, OP_NE, NULL);
   tt_str_op(errmsg, OP_EQ, "Unknown router descriptor download status query");
   errmsg = NULL;
 
@@ -1189,8 +1232,8 @@ test_download_status_desc(void *arg)
     &dummy,
     "downloads/desc/774EC52FD9A5B80A6FACZE536616E8022E3470AG",
     &answer, &errmsg);
-  tt_assert(answer == NULL);
-  tt_assert(errmsg != NULL);
+  tt_ptr_op(answer, OP_EQ, NULL);
+  tt_ptr_op(errmsg, OP_NE, NULL);
   tt_str_op(errmsg, OP_EQ, "That didn't look like a digest");
   errmsg = NULL;
 
@@ -1199,8 +1242,8 @@ test_download_status_desc(void *arg)
     &dummy,
     "downloads/desc/B05B46135B0B2C04EBE1DD6A6AE4B12D7CD2226A",
     &answer, &errmsg);
-  tt_assert(answer == NULL);
-  tt_assert(errmsg != NULL);
+  tt_ptr_op(answer, OP_EQ, NULL);
+  tt_ptr_op(errmsg, OP_NE, NULL);
   tt_str_op(errmsg, OP_EQ, "No such descriptor digest found");
   errmsg = NULL;
 
@@ -1209,8 +1252,8 @@ test_download_status_desc(void *arg)
   getinfo_helper_downloads(&dummy,
                            "downloads/desc/descs",
                            &answer, &errmsg);
-  tt_assert(answer == NULL);
-  tt_assert(errmsg != NULL);
+  tt_ptr_op(answer, OP_EQ, NULL);
+  tt_ptr_op(errmsg, OP_NE, NULL);
   tt_str_op(errmsg, OP_EQ,
             "We don't seem to have a networkstatus-flavored consensus");
   errmsg = NULL;
@@ -1246,8 +1289,8 @@ test_download_status_bridge(void *arg)
   getinfo_helper_downloads(&dummy,
                            "downloads/bridge/bridges",
                            &answer, &errmsg);
-  tt_assert(answer != NULL);
-  tt_assert(errmsg == NULL);
+  tt_ptr_op(answer, OP_NE, NULL);
+  tt_ptr_op(errmsg, OP_EQ, NULL);
   tt_str_op(answer, OP_EQ, descbr_expected_list);
   tor_free(answer);
   errmsg = NULL;
@@ -1256,10 +1299,10 @@ test_download_status_bridge(void *arg)
   memcpy(&descbr_digest_1_dl, &dls_sample_3,
          sizeof(download_status_t));
   tor_asprintf(&question, "downloads/bridge/%s", descbr_digest_1_str);
-  tt_assert(question != NULL);
+  tt_ptr_op(question, OP_NE, NULL);
   getinfo_helper_downloads(&dummy, question, &answer, &errmsg);
-  tt_assert(answer != NULL);
-  tt_assert(errmsg == NULL);
+  tt_ptr_op(answer, OP_NE, NULL);
+  tt_ptr_op(errmsg, OP_EQ, NULL);
   tt_str_op(answer, OP_EQ, dls_sample_3_str);
   tor_free(question);
   tor_free(answer);
@@ -1269,10 +1312,10 @@ test_download_status_bridge(void *arg)
   memcpy(&descbr_digest_2_dl, &dls_sample_4,
          sizeof(download_status_t));
   tor_asprintf(&question, "downloads/bridge/%s", descbr_digest_2_str);
-  tt_assert(question != NULL);
+  tt_ptr_op(question, OP_NE, NULL);
   getinfo_helper_downloads(&dummy, question, &answer, &errmsg);
-  tt_assert(answer != NULL);
-  tt_assert(errmsg == NULL);
+  tt_ptr_op(answer, OP_NE, NULL);
+  tt_ptr_op(errmsg, OP_EQ, NULL);
   tt_str_op(answer, OP_EQ, dls_sample_4_str);
   tor_free(question);
   tor_free(answer);
@@ -1283,8 +1326,8 @@ test_download_status_bridge(void *arg)
   /* Case 1 - non-digest-length garbage after downloads/bridge */
   getinfo_helper_downloads(&dummy, "downloads/bridge/blahdeblah",
                            &answer, &errmsg);
-  tt_assert(answer == NULL);
-  tt_assert(errmsg != NULL);
+  tt_ptr_op(answer, OP_EQ, NULL);
+  tt_ptr_op(errmsg, OP_NE, NULL);
   tt_str_op(errmsg, OP_EQ, "Unknown bridge descriptor download status query");
   errmsg = NULL;
 
@@ -1293,8 +1336,8 @@ test_download_status_bridge(void *arg)
     &dummy,
     "downloads/bridge/774EC52FD9A5B80A6FACZE536616E8022E3470AG",
     &answer, &errmsg);
-  tt_assert(answer == NULL);
-  tt_assert(errmsg != NULL);
+  tt_ptr_op(answer, OP_EQ, NULL);
+  tt_ptr_op(errmsg, OP_NE, NULL);
   tt_str_op(errmsg, OP_EQ, "That didn't look like a digest");
   errmsg = NULL;
 
@@ -1303,8 +1346,8 @@ test_download_status_bridge(void *arg)
     &dummy,
     "downloads/bridge/B05B46135B0B2C04EBE1DD6A6AE4B12D7CD2226A",
     &answer, &errmsg);
-  tt_assert(answer == NULL);
-  tt_assert(errmsg != NULL);
+  tt_ptr_op(answer, OP_EQ, NULL);
+  tt_ptr_op(errmsg, OP_NE, NULL);
   tt_str_op(errmsg, OP_EQ, "No such bridge identity digest found");
   errmsg = NULL;
 
@@ -1313,8 +1356,8 @@ test_download_status_bridge(void *arg)
   getinfo_helper_downloads(&dummy,
                            "downloads/bridge/bridges",
                            &answer, &errmsg);
-  tt_assert(answer == NULL);
-  tt_assert(errmsg != NULL);
+  tt_ptr_op(answer, OP_EQ, NULL);
+  tt_ptr_op(errmsg, OP_NE, NULL);
   tt_str_op(errmsg, OP_EQ, "We don't seem to be using bridges");
   errmsg = NULL;
   disable_descbr = 0;
@@ -1328,6 +1371,7 @@ test_download_status_bridge(void *arg)
 
 struct testcase_t controller_tests[] = {
   { "add_onion_helper_keyarg", test_add_onion_helper_keyarg, 0, NULL, NULL },
+  { "getinfo_helper_onion", test_getinfo_helper_onion, 0, NULL, NULL },
   { "rend_service_parse_port_config", test_rend_service_parse_port_config, 0,
     NULL, NULL },
   { "add_onion_helper_clientauth", test_add_onion_helper_clientauth, 0, NULL,

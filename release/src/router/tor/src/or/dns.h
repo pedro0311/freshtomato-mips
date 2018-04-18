@@ -1,7 +1,7 @@
 /* Copyright (c) 2001 Matej Pfajfar.
  * Copyright (c) 2001-2004, Roger Dingledine.
  * Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -11,6 +11,18 @@
 
 #ifndef TOR_DNS_H
 #define TOR_DNS_H
+
+/** Lowest value for DNS ttl that a server will give. */
+#define MIN_DNS_TTL_AT_EXIT (5*60)
+/** Highest value for DNS ttl that a server will give. */
+#define MAX_DNS_TTL_AT_EXIT (60*60)
+
+/** How long do we keep DNS cache entries before purging them (regardless of
+ * their TTL)? */
+#define MAX_DNS_ENTRY_AGE (3*60*60)
+/** How long do we cache/tell clients to cache DNS records when no TTL is
+ * known? */
+#define DEFAULT_DNS_TTL (30*60)
 
 int dns_init(void);
 int has_dns_init_failed(void);
@@ -30,8 +42,6 @@ void dump_dns_mem_usage(int severity);
 
 #ifdef DNS_PRIVATE
 #include "dns_structs.h"
-
-STATIC uint32_t dns_get_expiry_ttl(uint32_t ttl);
 
 MOCK_DECL(STATIC int,dns_resolve_impl,(edge_connection_t *exitconn,
 int is_resolve,or_circuit_t *oncirc, char **hostname_out,
@@ -54,7 +64,7 @@ set_exitconn_info_from_resolve,(edge_connection_t *exitconn,
 MOCK_DECL(STATIC int,
 launch_resolve,(cached_resolve_t *resolve));
 
-#endif
+#endif /* defined(DNS_PRIVATE) */
 
-#endif
+#endif /* !defined(TOR_DNS_H) */
 

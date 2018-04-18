@@ -1,6 +1,6 @@
 /* Copyright (c) 2003-2004, Roger Dingledine
  * Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -130,6 +130,24 @@ smartlist_remove(smartlist_t *sl, const void *element)
       i--; /* so we process the new i'th element */
       sl->list[sl->num_used] = NULL;
     }
+}
+
+/** As <b>smartlist_remove</b>, but do not change the order of
+ * any elements not removed */
+void
+smartlist_remove_keeporder(smartlist_t *sl, const void *element)
+{
+  int i, j, num_used_orig = sl->num_used;
+  if (element == NULL)
+    return;
+
+  for (i=j=0; j < num_used_orig; ++j) {
+    if (sl->list[j] == element) {
+      --sl->num_used;
+    } else {
+      sl->list[i++] = sl->list[j];
+    }
+  }
 }
 
 /** If <b>sl</b> is nonempty, remove and return the final element.  Otherwise,
@@ -825,13 +843,13 @@ smartlist_sort_pointers(smartlist_t *sl)
  *   }
  *
  *   void timer_heap_insert(smartlist_t *heap, timer_t *timer) {
- *      smartlist_pqueue_add(heap, compare, STRUCT_OFFSET(timer_t, heap_index),
+ *      smartlist_pqueue_add(heap, compare, offsetof(timer_t, heap_index),
  *         timer);
  *   }
  *
  *   void timer_heap_pop(smartlist_t *heap) {
  *      return smartlist_pqueue_pop(heap, compare,
- *         STRUCT_OFFSET(timer_t, heap_index));
+ *         offsetof(timer_t, heap_index));
  *   }
  */
 

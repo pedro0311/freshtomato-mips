@@ -1,7 +1,7 @@
 /* Copyright (c) 2001 Matej Pfajfar.
  * Copyright (c) 2001-2004, Roger Dingledine.
  * Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -60,7 +60,7 @@ static circuit_build_times_t circ_times;
 static int unit_tests = 0;
 #else
 #define unit_tests 0
-#endif
+#endif /* defined(TOR_UNIT_TESTS) */
 
 /** Return a pointer to the data structure describing our current circuit
  * build time history and computations. */
@@ -105,13 +105,21 @@ get_circuit_build_timeout_ms(void)
  *  6. If we are configured in Single Onion mode
  */
 int
-circuit_build_times_disabled(void)
+circuit_build_times_disabled(const or_options_t *options)
+{
+  return circuit_build_times_disabled_(options, 0);
+}
+
+/** As circuit_build_times_disabled, but take options as an argument. */
+int
+circuit_build_times_disabled_(const or_options_t *options,
+                              int ignore_consensus)
 {
   if (unit_tests) {
     return 0;
   } else {
-    const or_options_t *options = get_options();
-    int consensus_disabled = networkstatus_get_param(NULL, "cbtdisabled",
+    int consensus_disabled =
+      ignore_consensus ? 0 : networkstatus_get_param(NULL, "cbtdisabled",
                                                      0, 0, 1);
     int config_disabled = !options->LearnCircuitBuildTimeout;
     int dirauth_disabled = options->AuthoritativeDir;
@@ -140,7 +148,7 @@ circuit_build_times_disabled(void)
                "Consensus=%d, Config=%d, AuthDir=%d, StateFile=%d",
                consensus_disabled, config_disabled, dirauth_disabled,
                state_disabled);
-#endif
+#endif /* 0 */
       return 1;
     } else {
 #if 0
@@ -149,7 +157,7 @@ circuit_build_times_disabled(void)
                 "Consensus=%d, Config=%d, AuthDir=%d, StateFile=%d",
                 consensus_disabled, config_disabled, dirauth_disabled,
                 state_disabled);
-#endif
+#endif /* 0 */
       return 0;
     }
   }
@@ -417,15 +425,20 @@ circuit_build_times_new_consensus_params(circuit_build_times_t *cbt,
    * update if we aren't.
    */
 
-  if (!circuit_build_times_disabled()) {
+  if (!circuit_build_times_disabled(get_options())) {
     num = circuit_build_times_recent_circuit_count(ns);
 
     if (num > 0) {
       if (num != cbt->liveness.num_recent_circs) {
         int8_t *recent_circs;
-        log_notice(LD_CIRC, "The Tor Directory Consensus has changed how many "
-                   "circuits we must track to detect network failures from %d "
-                   "to %d.", cbt->liveness.num_recent_circs, num);
+        if (cbt->liveness.num_recent_circs > 0) {
+          log_notice(LD_CIRC, "The Tor Directory Consensus has changed how "
+                     "many circuits we must track to detect network failures "
+                     "from %d to %d.", cbt->liveness.num_recent_circs, num);
+        } else {
+          log_notice(LD_CIRC, "Upon receiving a consensus directory, "
+                     "re-enabling circuit-based network failure detection.");
+        }
 
         tor_assert(cbt->liveness.timeouts_after_firsthop ||
                    cbt->liveness.num_recent_circs == 0);
@@ -493,14 +506,15 @@ static double
 circuit_build_times_get_initial_timeout(void)
 {
   double timeout;
+  const or_options_t *options = get_options();
 
   /*
    * Check if we have LearnCircuitBuildTimeout, and if we don't,
    * always use CircuitBuildTimeout, no questions asked.
    */
-  if (!unit_tests && get_options()->CircuitBuildTimeout) {
-    timeout = get_options()->CircuitBuildTimeout*1000;
-    if (!circuit_build_times_disabled() &&
+  if (!unit_tests && options->CircuitBuildTimeout) {
+    timeout = options->CircuitBuildTimeout*1000;
+    if (!circuit_build_times_disabled(options) &&
         timeout < circuit_build_times_min_timeout()) {
       log_warn(LD_CIRC, "Config CircuitBuildTimeout too low. Setting to %ds",
                circuit_build_times_min_timeout()/1000);
@@ -542,7 +556,7 @@ circuit_build_times_init(circuit_build_times_t *cbt)
    * Check if we really are using adaptive timeouts, and don't keep
    * track of this stuff if not.
    */
-  if (!circuit_build_times_disabled()) {
+  if (!circuit_build_times_disabled(get_options())) {
     cbt->liveness.num_recent_circs =
       circuit_build_times_recent_circuit_count(NULL);
     cbt->liveness.timeouts_after_firsthop =
@@ -599,7 +613,7 @@ circuit_build_times_rewind_history(circuit_build_times_t *cbt, int n)
           "Rewound history by %d places. Current index: %d. "
           "Total: %d", n, cbt->build_times_idx, cbt->total_build_times);
 }
-#endif
+#endif /* 0 */
 
 /**
  * Add a new build time value <b>time</b> to the set of build times. Time
@@ -667,7 +681,7 @@ circuit_build_times_min(circuit_build_times_t *cbt)
   }
   return min_build_time;
 }
-#endif
+#endif /* 0 */
 
 /**
  * Calculate and return a histogram for the set of build times.
@@ -901,12 +915,12 @@ circuit_build_times_parse_state(circuit_build_times_t *cbt,
   int tot_values = 0;
   uint32_t loaded_cnt = 0, N = 0;
   config_line_t *line;
-  unsigned int i;
+  int i;
   build_time_t *loaded_times;
   int err = 0;
   circuit_build_times_init(cbt);
 
-  if (circuit_build_times_disabled()) {
+  if (circuit_build_times_disabled(get_options())) {
     return 0;
   }
 
@@ -930,7 +944,7 @@ circuit_build_times_parse_state(circuit_build_times_t *cbt,
       uint32_t count, k;
       build_time_t ms;
       int ok;
-      ms = (build_time_t)tor_parse_ulong(ms_str, 0, 0,
+      ms = (build_time_t)tor_parse_ulong(ms_str, 10, 0,
                                          CBT_BUILD_TIME_MAX, &ok, NULL);
       if (!ok) {
         log_warn(LD_GENERAL, "Unable to parse circuit build times: "
@@ -940,7 +954,7 @@ circuit_build_times_parse_state(circuit_build_times_t *cbt,
         smartlist_free(args);
         break;
       }
-      count = (uint32_t)tor_parse_ulong(count_str, 0, 0,
+      count = (uint32_t)tor_parse_ulong(count_str, 10, 0,
                                         UINT32_MAX, &ok, NULL);
       if (!ok) {
         log_warn(LD_GENERAL, "Unable to parse circuit build times: "
@@ -951,8 +965,8 @@ circuit_build_times_parse_state(circuit_build_times_t *cbt,
         break;
       }
 
-      if (loaded_cnt+count+state->CircuitBuildAbandonedCount
-            > state->TotalBuildTimes) {
+      if (loaded_cnt+count+ (unsigned)state->CircuitBuildAbandonedCount
+          > (unsigned) state->TotalBuildTimes) {
         log_warn(LD_CIRC,
                  "Too many build times in state file. "
                  "Stopping short before %d",
@@ -977,7 +991,7 @@ circuit_build_times_parse_state(circuit_build_times_t *cbt,
     loaded_times[loaded_cnt++] = CBT_BUILD_ABANDONED;
   }
 
-  if (loaded_cnt != state->TotalBuildTimes) {
+  if (loaded_cnt != (unsigned)state->TotalBuildTimes) {
     log_warn(LD_CIRC,
             "Corrupt state file? Build times count mismatch. "
             "Read %d times, but file says %d", loaded_cnt,
@@ -1156,7 +1170,7 @@ circuit_build_times_cdf(circuit_build_times_t *cbt, double x)
   tor_assert(0 <= ret && ret <= 1.0);
   return ret;
 }
-#endif
+#endif /* defined(TOR_UNIT_TESTS) */
 
 #ifdef TOR_UNIT_TESTS
 /**
@@ -1191,7 +1205,7 @@ circuit_build_times_generate_sample(circuit_build_times_t *cbt,
   tor_assert(ret > 0);
   return ret;
 }
-#endif
+#endif /* defined(TOR_UNIT_TESTS) */
 
 #ifdef TOR_UNIT_TESTS
 /**
@@ -1214,7 +1228,7 @@ circuit_build_times_initial_alpha(circuit_build_times_t *cbt,
     (tor_mathlog(cbt->Xm)-tor_mathlog(timeout_ms));
   tor_assert(cbt->alpha > 0);
 }
-#endif
+#endif /* defined(TOR_UNIT_TESTS) */
 
 /**
  * Returns true if we need circuits to be built
@@ -1431,7 +1445,7 @@ circuit_build_times_network_check_changed(circuit_build_times_t *cbt)
 
 #define MAX_TIMEOUT ((int32_t) (INT32_MAX/2))
   /* Check to see if this has happened before. If so, double the timeout
-   * to give people on abysmally bad network connections a shot at access */
+   * to give clients on abysmally bad network connections a shot at access */
   if (cbt->timeout_ms >= circuit_build_times_get_initial_timeout()) {
     if (cbt->timeout_ms > MAX_TIMEOUT || cbt->close_ms > MAX_TIMEOUT) {
       log_warn(LD_CIRC, "Insanely large circuit build timeout value. "
@@ -1507,7 +1521,7 @@ circuit_build_times_count_close(circuit_build_times_t *cbt,
                                 int did_onehop,
                                 time_t start_time)
 {
-  if (circuit_build_times_disabled()) {
+  if (circuit_build_times_disabled(get_options())) {
     cbt->close_ms = cbt->timeout_ms
                   = circuit_build_times_get_initial_timeout();
     return 0;
@@ -1538,7 +1552,7 @@ void
 circuit_build_times_count_timeout(circuit_build_times_t *cbt,
                                   int did_onehop)
 {
-  if (circuit_build_times_disabled()) {
+  if (circuit_build_times_disabled(get_options())) {
     cbt->close_ms = cbt->timeout_ms
                   = circuit_build_times_get_initial_timeout();
     return;
@@ -1612,7 +1626,7 @@ circuit_build_times_set_timeout(circuit_build_times_t *cbt)
   /*
    * Just return if we aren't using adaptive timeouts
    */
-  if (circuit_build_times_disabled())
+  if (circuit_build_times_disabled(get_options()))
     return;
 
   if (!circuit_build_times_set_timeout_worker(cbt))
@@ -1673,7 +1687,7 @@ circuitbuild_running_unit_tests(void)
 {
   unit_tests = 1;
 }
-#endif
+#endif /* defined(TOR_UNIT_TESTS) */
 
 void
 circuit_build_times_update_last_circ(circuit_build_times_t *cbt)

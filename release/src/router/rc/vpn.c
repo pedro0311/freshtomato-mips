@@ -222,29 +222,68 @@ void start_vpnclient(int clientNum)
 		fprintf(fp, "nobind\n");
 	fprintf(fp, "persist-key\n");
 	fprintf(fp, "persist-tun\n");
+
+	/* Compression */
 	sprintf(&buffer[0], "vpn_client%d_comp", clientNum);
-	if ( nvram_get_int(&buffer[0]) >= 0 )
-		fprintf(fp, "comp-lzo %s\n", nvram_safe_get(&buffer[0]));
-	sprintf(&buffer[0], "vpn_client%d_cipher", clientNum);
-	if ( !nvram_contains_word(&buffer[0], "default") )
-		fprintf(fp, "cipher %s\n", nvram_safe_get(&buffer[0]));
+	strlcpy(buffer2, nvram_safe_get(&buffer[0]), sizeof (buffer2));
+	if (strcmp(buffer2, "-1")) {
+		if (!strcmp(buffer2, "lz4")) {
+			fprintf(fp, "compress lz4\n");
+		} else if (!strcmp(buffer2, "yes")) {
+			fprintf(fp, "compress lzo\n");
+		} else if (!strcmp(buffer2, "adaptive")) {
+			fprintf(fp, "comp-lzo adaptive\n");
+		} else if (!strcmp(buffer2, "no")) {
+			fprintf(fp, "compress\n");      // Disable, but can be overriden
+		}
+	}
+
+	/* Cipher */
+	if (cryptMode == TLS) {
+		sprintf(&buffer[0], "vpn_client%d_ncp_enable", clientNum);
+		nvi = nvram_get_int(&buffer[0]);
+		sprintf(&buffer[0], "vpn_client%d_ncp_ciphers", clientNum);
+		strlcpy(buffer2, nvram_safe_get(&buffer[0]), sizeof (buffer2));
+		if ((nvi > 0) && (buffer2[0] != '\0')) {
+			fprintf(fp, "ncp-ciphers %s\n", buffer2);
+		} else {
+			nvi = 0;
+		}
+	} else {
+		nvi = 0;
+	}
+
+	if (nvi != 2) {
+		sprintf(&buffer[0], "vpn_client%d_cipher", clientNum);
+		if ( !nvram_contains_word(&buffer[0], "default") )
+			fprintf(fp, "cipher %s\n", nvram_safe_get(&buffer[0]));
+	}
+
+	/* Digest */
+	sprintf(&buffer[0], "vpn_client%d_digest", clientNum);
+	if (!nvram_contains_word(&buffer[0], "default"))
+		fprintf(fp, "auth %s\n", nvram_safe_get(&buffer[0]));
+
 	sprintf(&buffer[0], "vpn_client%d_rgw", clientNum);
 	sprintf(&buffer2[0], "vpn_client%d_nopull", clientNum);
-	if ( nvram_get_int(&buffer[0]) )
+	if (nvram_get_int(&buffer[0]))
 	{
 		sprintf(&buffer[0], "vpn_client%d_gw", clientNum);
-		if ( ifType == TAP && nvram_safe_get(&buffer[0])[0] != '\0' )
+		if (ifType == TAP && nvram_safe_get(&buffer[0])[0] != '\0')
 			fprintf(fp, "route-gateway %s\n", nvram_safe_get(&buffer[0]));
 		fprintf(fp, "redirect-gateway def1\n");
-	} else if ( nvram_get_int(&buffer2[0]) > 0 )
-	{
-		fprintf(fp, "route-nopull\n");
+	} else {
+		if (nvram_get_int(&buffer2[0]) > 0)
+			fprintf(fp, "route-nopull\n");
+		sprintf(&buffer2[0], "vpn_client%d_noexec", clientNum);
+		if (nvram_get_int(&buffer2[0]) > 0)
+			fprintf(fp, "route-noexec\n");
 	}
 	fprintf(fp, "verb 3\n");
-	if ( cryptMode == TLS )
+	if (cryptMode == TLS)
 	{
 		sprintf(&buffer[0], "vpn_client%d_adns", clientNum);
-		if ( nvram_get_int(&buffer[0]) > 0 )
+		if (nvram_get_int(&buffer[0]) > 0)
 		{
 			sprintf(&buffer[0], "/etc/openvpn/client%d/updown.sh", clientNum);
 			symlink("/rom/openvpn/updown.sh", &buffer[0]);
@@ -256,7 +295,7 @@ void start_vpnclient(int clientNum)
 		sprintf(&buffer[0], "vpn_client%d_hmac", clientNum);
 		nvi = nvram_get_int(&buffer[0]);
 		sprintf(&buffer[0], "vpn_client%d_static", clientNum);
-		if ( !nvram_is_empty(&buffer[0]) && nvi >= 0 )
+		if (!nvram_is_empty(&buffer[0]) && nvi >= 0)
 		{
 			fprintf(fp, "tls-auth static.key");
 			if ( nvi < 2 )
@@ -265,30 +304,30 @@ void start_vpnclient(int clientNum)
 		}
 
 		sprintf(&buffer[0], "vpn_client%d_ca", clientNum);
-		if ( !nvram_is_empty(&buffer[0]) )
+		if (!nvram_is_empty(&buffer[0]))
 			fprintf(fp, "ca ca.crt\n");
 		if (!useronly)
 		{
 			sprintf(&buffer[0], "vpn_client%d_crt", clientNum);
-			if ( !nvram_is_empty(&buffer[0]) )
+			if (!nvram_is_empty(&buffer[0]))
 				fprintf(fp, "cert client.crt\n");
 			sprintf(&buffer[0], "vpn_client%d_key", clientNum);
-			if ( !nvram_is_empty(&buffer[0]) )
+			if (!nvram_is_empty(&buffer[0]))
 				fprintf(fp, "key client.key\n");
 		}
 		sprintf(&buffer[0], "vpn_client%d_tlsremote", clientNum);
 		if (nvram_get_int(&buffer[0]))
 		{
 			sprintf(&buffer[0], "vpn_client%d_cn", clientNum);
-			fprintf(fp, "tls-remote %s\n", nvram_safe_get(&buffer[0]));
+			fprintf(fp, "remote-cert-tls %s\n", nvram_safe_get(&buffer[0]));
 		}
 		if (userauth)
 			fprintf(fp, "auth-user-pass up\n");
 	}
-	else if ( cryptMode == SECRET )
+	else if (cryptMode == SECRET)
 	{
 		sprintf(&buffer[0], "vpn_client%d_static", clientNum);
-		if ( !nvram_is_empty(&buffer[0]) )
+		if (!nvram_is_empty(&buffer[0]))
 			fprintf(fp, "secret static.key\n");
 	}
 	fprintf(fp, "status-version 2\n");
@@ -721,12 +760,48 @@ void start_vpnserver(int serverNum)
 	sprintf(&buffer[0], "vpn_server%d_port", serverNum);
 	fprintf(fp, "port %d\n", nvram_get_int(&buffer[0]));
 	fprintf(fp, "dev %s\n", &iface[0]);
-	sprintf(&buffer[0], "vpn_server%d_cipher", serverNum);
-	if ( !nvram_contains_word(&buffer[0], "default") )
-		fprintf(fp, "cipher %s\n", nvram_safe_get(&buffer[0]));
+
+	/* Cipher */
+	if (cryptMode == TLS) {
+		sprintf(&buffer[0], "vpn_server%d_ncp_enable", serverNum);
+		nvi = nvram_get_int(&buffer[0]);
+		sprintf(&buffer[0], "vpn_server%d_ncp_ciphers", serverNum);
+		strlcpy(buffer2, nvram_safe_get(&buffer[0]), sizeof (buffer2));
+		if ((nvi > 0) && (buffer2[0] != '\0')) {
+			fprintf(fp, "ncp-ciphers %s\n", buffer2);
+		} else {
+			nvi = 0;
+		}
+	} else {
+		nvi = 0;
+	}
+	if (nvi != 2) {
+		sprintf(&buffer[0], "vpn_server%d_cipher", serverNum);
+		if ( !nvram_contains_word(&buffer[0], "default") )
+			fprintf(fp, "cipher %s\n", nvram_safe_get(&buffer[0]));
+	}
+
+	/* Digest */
+	sprintf(&buffer[0], "vpn_server%d_digest", serverNum);
+	if (!nvram_contains_word(&buffer[0], "default"))
+		fprintf(fp, "auth %s\n", nvram_safe_get(&buffer[0]));
+
+	/* Compression */
 	sprintf(&buffer[0], "vpn_server%d_comp", serverNum);
-	if ( nvram_get_int(&buffer[0]) >= 0 )
-		fprintf(fp, "comp-lzo %s\n", nvram_safe_get(&buffer[0]));
+	strlcpy(buffer2, nvram_safe_get(&buffer[0]), sizeof (buffer2));
+
+	if (strcmp(buffer2, "-1")) {
+		if (!strcmp(buffer2, "lz4")) {
+			fprintf(fp, "compress lz4\n");
+		} else if (!strcmp(buffer2, "yes")) {
+			fprintf(fp, "compress lzo\n");
+		} else if (!strcmp(buffer2, "adaptive")) {
+			fprintf(fp, "comp-lzo adaptive\n");
+		} else if (!strcmp(buffer2, "no")) {
+			fprintf(fp, "compress\n");	/* Disable, but client can override if desired */
+		}
+	}
+
 	sprintf(&buffer[0], "vpn_server%d_reneg", serverNum);
 	if ( (nvl = atol(nvram_safe_get(&buffer[0]))) >= 0 )
 		fprintf(fp, "reneg-sec %ld\n", nvl);

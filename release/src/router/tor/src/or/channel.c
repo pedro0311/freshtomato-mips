@@ -1,4 +1,4 @@
-/* * Copyright (c) 2012-2016, The Tor Project, Inc. */
+/* * Copyright (c) 2012-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -49,6 +49,7 @@
 #include "or.h"
 #include "channel.h"
 #include "channeltls.h"
+#include "channelpadding.h"
 #include "circuitbuild.h"
 #include "circuitlist.h"
 #include "circuitstats.h"
@@ -63,6 +64,9 @@
 #include "router.h"
 #include "routerlist.h"
 #include "scheduler.h"
+#include "compat_time.h"
+#include "networkstatus.h"
+#include "rendservice.h"
 
 /* Global lists of channels */
 
@@ -83,6 +87,28 @@ static smartlist_t *active_listeners = NULL;
 
 /* All channel_listener_t instances in LISTENING state */
 static smartlist_t *finished_listeners = NULL;
+
+/** Map from channel->global_identifier to channel.  Contains the same
+ * elements as all_channels. */
+static HT_HEAD(channel_gid_map, channel_s) channel_gid_map = HT_INITIALIZER();
+
+static unsigned
+channel_id_hash(const channel_t *chan)
+{
+  return (unsigned) chan->global_identifier;
+}
+static int
+channel_id_eq(const channel_t *a, const channel_t *b)
+{
+  return a->global_identifier == b->global_identifier;
+}
+HT_PROTOTYPE(channel_gid_map, channel_s, gidmap_node,
+             channel_id_hash, channel_id_eq)
+HT_GENERATE2(channel_gid_map, channel_s, gidmap_node,
+             channel_id_hash, channel_id_eq,
+             0.6, tor_reallocarray_, tor_free_)
+
+HANDLE_IMPL(channel, channel_s,)
 
 /* Counter for ID numbers */
 static uint64_t n_channels_allocated = 0;
@@ -429,6 +455,7 @@ void
 channel_register(channel_t *chan)
 {
   tor_assert(chan);
+  tor_assert(chan->global_identifier);
 
   /* No-op if already registered */
   if (chan->registered) return;
@@ -443,6 +470,8 @@ channel_register(channel_t *chan)
   /* Make sure we have all_channels, then add it */
   if (!all_channels) all_channels = smartlist_new();
   smartlist_add(all_channels, chan);
+  channel_t *oldval = HT_REPLACE(channel_gid_map, &channel_gid_map, chan);
+  tor_assert(! oldval);
 
   /* Is it finished? */
   if (CHANNEL_FINISHED(chan)) {
@@ -498,7 +527,9 @@ channel_unregister(channel_t *chan)
   }
 
   /* Get it out of all_channels */
- if (all_channels) smartlist_remove(all_channels, chan);
+  if (all_channels) smartlist_remove(all_channels, chan);
+  channel_t *oldval = HT_REMOVE(channel_gid_map, &channel_gid_map, chan);
+  tor_assert(oldval == NULL || oldval == chan);
 
   /* Mark it as unregistered */
   chan->registered = 0;
@@ -533,7 +564,7 @@ channel_listener_register(channel_listener_t *chan_l)
             channel_listener_state_to_string(chan_l->state),
             chan_l->state);
 
-  /* Make sure we have all_channels, then add it */
+  /* Make sure we have all_listeners, then add it */
   if (!all_listeners) all_listeners = smartlist_new();
   smartlist_add(all_listeners, chan_l);
 
@@ -578,7 +609,7 @@ channel_listener_unregister(channel_listener_t *chan_l)
     if (active_listeners) smartlist_remove(active_listeners, chan_l);
   }
 
-  /* Get it out of all_channels */
+  /* Get it out of all_listeners */
  if (all_listeners) smartlist_remove(all_listeners, chan_l);
 
   /* Mark it as unregistered */
@@ -670,7 +701,7 @@ channel_remove_from_digest_map(channel_t *chan)
 
     return;
   }
-#endif
+#endif /* 0 */
 
   /* Pull it out of its list, wherever that list is */
   TOR_LIST_REMOVE(chan, next_with_same_id);
@@ -719,40 +750,73 @@ channel_remove_from_digest_map(channel_t *chan)
 channel_t *
 channel_find_by_global_id(uint64_t global_identifier)
 {
+  channel_t lookup;
   channel_t *rv = NULL;
 
-  if (all_channels && smartlist_len(all_channels) > 0) {
-    SMARTLIST_FOREACH_BEGIN(all_channels, channel_t *, curr) {
-      if (curr->global_identifier == global_identifier) {
-        rv = curr;
-        break;
-      }
-    } SMARTLIST_FOREACH_END(curr);
+  lookup.global_identifier = global_identifier;
+  rv = HT_FIND(channel_gid_map, &channel_gid_map, &lookup);
+  if (rv) {
+    tor_assert(rv->global_identifier == global_identifier);
   }
 
   return rv;
 }
 
-/**
- * Find channel by digest of the remote endpoint
- *
- * This function looks up a channel by the digest of its remote endpoint in
- * the channel digest map.  It's possible that more than one channel to a
- * given endpoint exists.  Use channel_next_with_digest() to walk the list.
- */
+/** Return true iff <b>chan</b> matches <b>rsa_id_digest</b> and <b>ed_id</b>.
+ * as its identity keys.  If either is NULL, do not check for a match. */
+static int
+channel_remote_identity_matches(const channel_t *chan,
+                                const char *rsa_id_digest,
+                                const ed25519_public_key_t *ed_id)
+{
+  if (BUG(!chan))
+    return 0;
+  if (rsa_id_digest) {
+    if (tor_memneq(rsa_id_digest, chan->identity_digest, DIGEST_LEN))
+      return 0;
+  }
+  if (ed_id) {
+    if (tor_memneq(ed_id->pubkey, chan->ed25519_identity.pubkey,
+                   ED25519_PUBKEY_LEN))
+      return 0;
+  }
+  return 1;
+}
 
+/**
+ * Find channel by RSA/Ed25519 identity of of the remote endpoint
+ *
+ * This function looks up a channel by the digest of its remote endpoint's RSA
+ * identity key.  If <b>ed_id</b> is provided and nonzero, only a channel
+ * matching the <b>ed_id</b> will be returned.
+ *
+ * It's possible that more than one channel to a given endpoint exists.  Use
+ * channel_next_with_rsa_identity() to walk the list of channels; make sure
+ * to test for Ed25519 identity match too (as appropriate)
+ */
 channel_t *
-channel_find_by_remote_digest(const char *identity_digest)
+channel_find_by_remote_identity(const char *rsa_id_digest,
+                                const ed25519_public_key_t *ed_id)
 {
   channel_t *rv = NULL;
   channel_idmap_entry_t *ent, search;
 
-  tor_assert(identity_digest);
+  tor_assert(rsa_id_digest); /* For now, we require that every channel have
+                              * an RSA identity, and that every lookup
+                              * contain an RSA identity */
+  if (ed_id && ed25519_public_key_is_zero(ed_id)) {
+    /* Treat zero as meaning "We don't care about the presence or absence of
+     * an Ed key", not "There must be no Ed key". */
+    ed_id = NULL;
+  }
 
-  memcpy(search.digest, identity_digest, DIGEST_LEN);
+  memcpy(search.digest, rsa_id_digest, DIGEST_LEN);
   ent = HT_FIND(channel_idmap, &channel_identity_map, &search);
   if (ent) {
     rv = TOR_LIST_FIRST(&ent->channel_list);
+  }
+  while (rv && ! channel_remote_identity_matches(rv, rsa_id_digest, ed_id)) {
+    rv = channel_next_with_rsa_identity(rv);
   }
 
   return rv;
@@ -766,11 +830,88 @@ channel_find_by_remote_digest(const char *identity_digest)
  */
 
 channel_t *
-channel_next_with_digest(channel_t *chan)
+channel_next_with_rsa_identity(channel_t *chan)
 {
   tor_assert(chan);
 
   return TOR_LIST_NEXT(chan, next_with_same_id);
+}
+
+/**
+ * Relays run this once an hour to look over our list of channels to other
+ * relays. It prints out some statistics if there are multiple connections
+ * to many relays.
+ *
+ * This function is similar to connection_or_set_bad_connections(),
+ * and probably could be adapted to replace it, if it was modified to actually
+ * take action on any of these connections.
+ */
+void
+channel_check_for_duplicates(void)
+{
+  channel_idmap_entry_t **iter;
+  channel_t *chan;
+  int total_relay_connections = 0, total_relays = 0, total_canonical = 0;
+  int total_half_canonical = 0;
+  int total_gt_one_connection = 0, total_gt_two_connections = 0;
+  int total_gt_four_connections = 0;
+
+  HT_FOREACH(iter, channel_idmap, &channel_identity_map) {
+    int connections_to_relay = 0;
+
+    /* Only consider relay connections */
+    if (!connection_or_digest_is_known_relay((char*)(*iter)->digest))
+      continue;
+
+    total_relays++;
+
+    for (chan = TOR_LIST_FIRST(&(*iter)->channel_list); chan;
+        chan = channel_next_with_rsa_identity(chan)) {
+
+      if (CHANNEL_CONDEMNED(chan) || !CHANNEL_IS_OPEN(chan))
+        continue;
+
+      connections_to_relay++;
+      total_relay_connections++;
+
+      if (chan->is_canonical(chan, 0)) total_canonical++;
+
+      if (!chan->is_canonical_to_peer && chan->is_canonical(chan, 0)
+          && chan->is_canonical(chan, 1)) {
+        total_half_canonical++;
+      }
+    }
+
+    if (connections_to_relay > 1) total_gt_one_connection++;
+    if (connections_to_relay > 2) total_gt_two_connections++;
+    if (connections_to_relay > 4) total_gt_four_connections++;
+  }
+
+#define MIN_RELAY_CONNECTIONS_TO_WARN 5
+
+  /* If we average 1.5 or more connections per relay, something is wrong */
+  if (total_relays > MIN_RELAY_CONNECTIONS_TO_WARN &&
+          total_relay_connections >= 1.5*total_relays) {
+    log_notice(LD_OR,
+        "Your relay has a very large number of connections to other relays. "
+        "Is your outbound address the same as your relay address? "
+        "Found %d connections to %d relays. Found %d current canonical "
+        "connections, in %d of which we were a non-canonical peer. "
+        "%d relays had more than 1 connection, %d had more than 2, and "
+        "%d had more than 4 connections.",
+        total_relay_connections, total_relays, total_canonical,
+        total_half_canonical, total_gt_one_connection,
+        total_gt_two_connections, total_gt_four_connections);
+  } else {
+    log_info(LD_OR, "Performed connection pruning. "
+        "Found %d connections to %d relays. Found %d current canonical "
+        "connections, in %d of which we were a non-canonical peer. "
+        "%d relays had more than 1 connection, %d had more than 2, and "
+        "%d had more than 4 connections.",
+        total_relay_connections, total_relays, total_canonical,
+        total_half_canonical, total_gt_one_connection,
+        total_gt_two_connections, total_gt_four_connections);
+  }
 }
 
 /**
@@ -787,7 +928,7 @@ channel_init(channel_t *chan)
   tor_assert(chan);
 
   /* Assign an ID and bump the counter */
-  chan->global_identifier = n_channels_allocated++;
+  chan->global_identifier = ++n_channels_allocated;
 
   /* Init timestamp */
   chan->timestamp_last_had_circuits = time(NULL);
@@ -810,6 +951,9 @@ channel_init(channel_t *chan)
 
   /* Scheduler state is idle */
   chan->scheduler_state = SCHED_CHAN_IDLE;
+
+  /* Channel is not in the scheduler heap. */
+  chan->sched_heap_idx = -1;
 }
 
 /**
@@ -826,7 +970,7 @@ channel_init_listener(channel_listener_t *chan_l)
   tor_assert(chan_l);
 
   /* Assign an ID and bump the counter */
-  chan_l->global_identifier = n_channels_allocated++;
+  chan_l->global_identifier = ++n_channels_allocated;
 
   /* Timestamp it */
   channel_listener_timestamp_created(chan_l);
@@ -862,6 +1006,11 @@ channel_free(channel_t *chan)
   if (chan->cmux) {
     circuitmux_set_policy(chan->cmux, NULL);
   }
+
+  /* Remove all timers and associated handle entries now */
+  timer_free(chan->padding_timer);
+  channel_handle_free(chan->timer_handle);
+  channel_handles_clear(chan);
 
   /* Call a free method if there is one */
   if (chan->free_fn) chan->free_fn(chan);
@@ -940,6 +1089,11 @@ channel_force_free(channel_t *chan)
   if (chan->cmux) {
     circuitmux_set_policy(chan->cmux, NULL);
   }
+
+  /* Remove all timers and associated handle entries now */
+  timer_free(chan->padding_timer);
+  channel_handle_free(chan->timer_handle);
+  channel_handles_clear(chan);
 
   /* Call a free method if there is one */
   if (chan->free_fn) chan->free_fn(chan);
@@ -1433,10 +1587,10 @@ channel_clear_identity_digest(channel_t *chan)
  * This function sets the identity digest of the remote endpoint for a
  * channel; this is intended for use by the lower layer.
  */
-
 void
 channel_set_identity_digest(channel_t *chan,
-                            const char *identity_digest)
+                            const char *identity_digest,
+                            const ed25519_public_key_t *ed_identity)
 {
   int was_in_digest_map, should_be_in_digest_map, state_not_in_map;
 
@@ -1474,6 +1628,11 @@ channel_set_identity_digest(channel_t *chan,
   } else {
     memset(chan->identity_digest, 0,
            sizeof(chan->identity_digest));
+  }
+  if (ed_identity) {
+    memcpy(&chan->ed25519_identity, ed_identity, sizeof(*ed_identity));
+  } else {
+    memset(&chan->ed25519_identity, 0, sizeof(*ed_identity));
   }
 
   /* Put it in the digest map if we should */
@@ -1676,7 +1835,7 @@ cell_queue_entry_is_padding(cell_queue_entry_t *q)
 
   return 0;
 }
-#endif
+#endif /* 0 */
 
 /**
  * Allocate a new cell queue entry for a fixed-size cell
@@ -1738,7 +1897,7 @@ channel_get_cell_queue_entry_size(channel_t *chan, cell_queue_entry_t *q)
       rv = get_cell_network_size(chan->wide_circ_ids);
       break;
     default:
-      tor_assert(1);
+      tor_assert_nonfatal_unreached_once();
   }
 
   return rv;
@@ -1838,6 +1997,39 @@ channel_write_cell_queue_entry(channel_t *chan, cell_queue_entry_t *q)
   }
 }
 
+/** Write a generic cell type to a channel
+ *
+ * Write a generic cell to a channel. It is called by channel_write_cell(),
+ * channel_write_var_cell() and channel_write_packed_cell() in order to reduce
+ * code duplication. Notice that it takes cell as pointer of type void,
+ * this can be dangerous because no type check is performed.
+ */
+
+void
+channel_write_cell_generic_(channel_t *chan, const char *cell_type,
+                            void *cell, cell_queue_entry_t *q)
+{
+
+  tor_assert(chan);
+  tor_assert(cell);
+
+  if (CHANNEL_IS_CLOSING(chan)) {
+    log_debug(LD_CHANNEL, "Discarding %c %p on closing channel %p with "
+              "global ID "U64_FORMAT, *cell_type, cell, chan,
+              U64_PRINTF_ARG(chan->global_identifier));
+    tor_free(cell);
+    return;
+  }
+  log_debug(LD_CHANNEL,
+            "Writing %c %p to channel %p with global ID "
+            U64_FORMAT, *cell_type,
+            cell, chan, U64_PRINTF_ARG(chan->global_identifier));
+
+  channel_write_cell_queue_entry(chan, q);
+  /* Update the queue size estimate */
+  channel_update_xmit_queue_size(chan);
+}
+
 /**
  * Write a cell to a channel
  *
@@ -1851,29 +2043,9 @@ void
 channel_write_cell(channel_t *chan, cell_t *cell)
 {
   cell_queue_entry_t q;
-
-  tor_assert(chan);
-  tor_assert(cell);
-
-  if (CHANNEL_IS_CLOSING(chan)) {
-    log_debug(LD_CHANNEL, "Discarding cell_t %p on closing channel %p with "
-              "global ID "U64_FORMAT, cell, chan,
-              U64_PRINTF_ARG(chan->global_identifier));
-    tor_free(cell);
-    return;
-  }
-
-  log_debug(LD_CHANNEL,
-            "Writing cell_t %p to channel %p with global ID "
-            U64_FORMAT,
-            cell, chan, U64_PRINTF_ARG(chan->global_identifier));
-
   q.type = CELL_QUEUE_FIXED;
   q.u.fixed.cell = cell;
-  channel_write_cell_queue_entry(chan, &q);
-
-  /* Update the queue size estimate */
-  channel_update_xmit_queue_size(chan);
+  channel_write_cell_generic_(chan, "cell_t", cell, &q);
 }
 
 /**
@@ -1888,30 +2060,9 @@ void
 channel_write_packed_cell(channel_t *chan, packed_cell_t *packed_cell)
 {
   cell_queue_entry_t q;
-
-  tor_assert(chan);
-  tor_assert(packed_cell);
-
-  if (CHANNEL_IS_CLOSING(chan)) {
-    log_debug(LD_CHANNEL, "Discarding packed_cell_t %p on closing channel %p "
-              "with global ID "U64_FORMAT, packed_cell, chan,
-              U64_PRINTF_ARG(chan->global_identifier));
-    packed_cell_free(packed_cell);
-    return;
-  }
-
-  log_debug(LD_CHANNEL,
-            "Writing packed_cell_t %p to channel %p with global ID "
-            U64_FORMAT,
-            packed_cell, chan,
-            U64_PRINTF_ARG(chan->global_identifier));
-
   q.type = CELL_QUEUE_PACKED;
   q.u.packed.packed_cell = packed_cell;
-  channel_write_cell_queue_entry(chan, &q);
-
-  /* Update the queue size estimate */
-  channel_update_xmit_queue_size(chan);
+  channel_write_cell_generic_(chan, "packed_cell_t", packed_cell, &q);
 }
 
 /**
@@ -1927,30 +2078,9 @@ void
 channel_write_var_cell(channel_t *chan, var_cell_t *var_cell)
 {
   cell_queue_entry_t q;
-
-  tor_assert(chan);
-  tor_assert(var_cell);
-
-  if (CHANNEL_IS_CLOSING(chan)) {
-    log_debug(LD_CHANNEL, "Discarding var_cell_t %p on closing channel %p "
-              "with global ID "U64_FORMAT, var_cell, chan,
-              U64_PRINTF_ARG(chan->global_identifier));
-    var_cell_free(var_cell);
-    return;
-  }
-
-  log_debug(LD_CHANNEL,
-            "Writing var_cell_t %p to channel %p with global ID "
-            U64_FORMAT,
-            var_cell, chan,
-            U64_PRINTF_ARG(chan->global_identifier));
-
   q.type = CELL_QUEUE_VAR;
   q.u.var.var_cell = var_cell;
-  channel_write_cell_queue_entry(chan, &q);
-
-  /* Update the queue size estimate */
-  channel_update_xmit_queue_size(chan);
+  channel_write_cell_generic_(chan, "var_cell_t", var_cell, &q);
 }
 
 /**
@@ -1961,8 +2091,8 @@ channel_write_var_cell(channel_t *chan, var_cell_t *var_cell)
  * are appropriate to the state transition in question.
  */
 
-void
-channel_change_state(channel_t *chan, channel_state_t to_state)
+static void
+channel_change_state_(channel_t *chan, channel_state_t to_state)
 {
   channel_state_t from_state;
   unsigned char was_active, is_active;
@@ -2081,22 +2211,41 @@ channel_change_state(channel_t *chan, channel_state_t to_state)
     estimated_total_queue_size += chan->bytes_in_queue;
   }
 
-  /* Tell circuits if we opened and stuff */
-  if (to_state == CHANNEL_STATE_OPEN) {
-    channel_do_open_actions(chan);
-    chan->has_been_open = 1;
-
-    /* Check for queued cells to process */
-    if (! TOR_SIMPLEQ_EMPTY(&chan->incoming_queue))
-      channel_process_cells(chan);
-    if (! TOR_SIMPLEQ_EMPTY(&chan->outgoing_queue))
-      channel_flush_cells(chan);
-  } else if (to_state == CHANNEL_STATE_CLOSED ||
-             to_state == CHANNEL_STATE_ERROR) {
+  if (to_state == CHANNEL_STATE_CLOSED ||
+      to_state == CHANNEL_STATE_ERROR) {
     /* Assert that all queues are empty */
     tor_assert(TOR_SIMPLEQ_EMPTY(&chan->incoming_queue));
     tor_assert(TOR_SIMPLEQ_EMPTY(&chan->outgoing_queue));
   }
+}
+
+/**
+ * As channel_change_state_, but change the state to any state but open.
+ */
+void
+channel_change_state(channel_t *chan, channel_state_t to_state)
+{
+  tor_assert(to_state != CHANNEL_STATE_OPEN);
+  channel_change_state_(chan, to_state);
+}
+
+/**
+ * As channel_change_state, but change the state to open.
+ */
+void
+channel_change_state_open(channel_t *chan)
+{
+  channel_change_state_(chan, CHANNEL_STATE_OPEN);
+
+  /* Tell circuits if we opened and stuff */
+  channel_do_open_actions(chan);
+  chan->has_been_open = 1;
+
+  /* Check for queued cells to process */
+  if (! TOR_SIMPLEQ_EMPTY(&chan->incoming_queue))
+    channel_process_cells(chan);
+  if (! TOR_SIMPLEQ_EMPTY(&chan->outgoing_queue))
+    channel_flush_cells(chan);
 }
 
 /**
@@ -2307,121 +2456,120 @@ channel_flush_some_cells_from_outgoing_queue(channel_t *chan,
       free_q = 0;
       handed_off = 0;
 
-      if (1) {
-        /* Figure out how big it is for statistical purposes */
-        cell_size = channel_get_cell_queue_entry_size(chan, q);
-        /*
-         * Okay, we have a good queue entry, try to give it to the lower
-         * layer.
-         */
-        switch (q->type) {
-          case CELL_QUEUE_FIXED:
-            if (q->u.fixed.cell) {
-              if (chan->write_cell(chan,
-                    q->u.fixed.cell)) {
-                ++flushed;
-                channel_timestamp_xmit(chan);
-                ++(chan->n_cells_xmitted);
-                chan->n_bytes_xmitted += cell_size;
-                free_q = 1;
-                handed_off = 1;
-              }
-              /* Else couldn't write it; leave it on the queue */
-            } else {
-              /* This shouldn't happen */
-              log_info(LD_CHANNEL,
-                       "Saw broken cell queue entry of type CELL_QUEUE_FIXED "
-                       "with no cell on channel %p "
-                       "(global ID " U64_FORMAT ").",
-                       chan, U64_PRINTF_ARG(chan->global_identifier));
-              /* Throw it away */
-              free_q = 1;
-              handed_off = 0;
-            }
-            break;
-         case CELL_QUEUE_PACKED:
-            if (q->u.packed.packed_cell) {
-              if (chan->write_packed_cell(chan,
-                    q->u.packed.packed_cell)) {
-                ++flushed;
-                channel_timestamp_xmit(chan);
-                ++(chan->n_cells_xmitted);
-                chan->n_bytes_xmitted += cell_size;
-                free_q = 1;
-                handed_off = 1;
-              }
-              /* Else couldn't write it; leave it on the queue */
-            } else {
-              /* This shouldn't happen */
-              log_info(LD_CHANNEL,
-                       "Saw broken cell queue entry of type CELL_QUEUE_PACKED "
-                       "with no cell on channel %p "
-                       "(global ID " U64_FORMAT ").",
-                       chan, U64_PRINTF_ARG(chan->global_identifier));
-              /* Throw it away */
-              free_q = 1;
-              handed_off = 0;
-            }
-            break;
-         case CELL_QUEUE_VAR:
-            if (q->u.var.var_cell) {
-              if (chan->write_var_cell(chan,
-                    q->u.var.var_cell)) {
-                ++flushed;
-                channel_timestamp_xmit(chan);
-                ++(chan->n_cells_xmitted);
-                chan->n_bytes_xmitted += cell_size;
-                free_q = 1;
-                handed_off = 1;
-              }
-              /* Else couldn't write it; leave it on the queue */
-            } else {
-              /* This shouldn't happen */
-              log_info(LD_CHANNEL,
-                       "Saw broken cell queue entry of type CELL_QUEUE_VAR "
-                       "with no cell on channel %p "
-                       "(global ID " U64_FORMAT ").",
-                       chan, U64_PRINTF_ARG(chan->global_identifier));
-              /* Throw it away */
-              free_q = 1;
-              handed_off = 0;
-            }
-            break;
-          default:
-            /* Unknown type, log and free it */
-            log_info(LD_CHANNEL,
-                     "Saw an unknown cell queue entry type %d on channel %p "
-                     "(global ID " U64_FORMAT "; ignoring it."
-                     "  Someone should fix this.",
-                     q->type, chan, U64_PRINTF_ARG(chan->global_identifier));
+      /* Figure out how big it is for statistical purposes */
+      cell_size = channel_get_cell_queue_entry_size(chan, q);
+      /*
+       * Okay, we have a good queue entry, try to give it to the lower
+       * layer.
+       */
+      switch (q->type) {
+      case CELL_QUEUE_FIXED:
+        if (q->u.fixed.cell) {
+          if (chan->write_cell(chan,
+                               q->u.fixed.cell)) {
+            ++flushed;
+            channel_timestamp_xmit(chan);
+            ++(chan->n_cells_xmitted);
+            chan->n_bytes_xmitted += cell_size;
             free_q = 1;
-            handed_off = 0;
+            handed_off = 1;
+          }
+          /* Else couldn't write it; leave it on the queue */
+        } else {
+          /* This shouldn't happen */
+          log_info(LD_CHANNEL,
+                   "Saw broken cell queue entry of type CELL_QUEUE_FIXED "
+                   "with no cell on channel %p "
+                   "(global ID " U64_FORMAT ").",
+                   chan, U64_PRINTF_ARG(chan->global_identifier));
+          /* Throw it away */
+          free_q = 1;
+          handed_off = 0;
         }
+        break;
+      case CELL_QUEUE_PACKED:
+        if (q->u.packed.packed_cell) {
+          if (chan->write_packed_cell(chan,
+                                      q->u.packed.packed_cell)) {
+            ++flushed;
+            channel_timestamp_xmit(chan);
+            ++(chan->n_cells_xmitted);
+            chan->n_bytes_xmitted += cell_size;
+            free_q = 1;
+            handed_off = 1;
+          }
+          /* Else couldn't write it; leave it on the queue */
+        } else {
+          /* This shouldn't happen */
+          log_info(LD_CHANNEL,
+                   "Saw broken cell queue entry of type CELL_QUEUE_PACKED "
+                   "with no cell on channel %p "
+                   "(global ID " U64_FORMAT ").",
+                   chan, U64_PRINTF_ARG(chan->global_identifier));
+          /* Throw it away */
+          free_q = 1;
+          handed_off = 0;
+        }
+        break;
+      case CELL_QUEUE_VAR:
+        if (q->u.var.var_cell) {
+          if (chan->write_var_cell(chan,
+                                   q->u.var.var_cell)) {
+            ++flushed;
+            channel_timestamp_xmit(chan);
+            ++(chan->n_cells_xmitted);
+            chan->n_bytes_xmitted += cell_size;
+            free_q = 1;
+            handed_off = 1;
+          }
+          /* Else couldn't write it; leave it on the queue */
+        } else {
+          /* This shouldn't happen */
+          log_info(LD_CHANNEL,
+                   "Saw broken cell queue entry of type CELL_QUEUE_VAR "
+                   "with no cell on channel %p "
+                   "(global ID " U64_FORMAT ").",
+                   chan, U64_PRINTF_ARG(chan->global_identifier));
+          /* Throw it away */
+          free_q = 1;
+          handed_off = 0;
+        }
+        break;
+      default:
+        /* Unknown type, log and free it */
+        log_info(LD_CHANNEL,
+                 "Saw an unknown cell queue entry type %d on channel %p "
+                 "(global ID " U64_FORMAT "; ignoring it."
+                 "  Someone should fix this.",
+                 q->type, chan, U64_PRINTF_ARG(chan->global_identifier));
+        free_q = 1;
+        handed_off = 0;
+      }
 
+      /*
+       * if free_q is set, we used it and should remove the queue entry;
+       * we have to do the free down here so TOR_SIMPLEQ_REMOVE_HEAD isn't
+       * accessing freed memory
+       */
+      if (free_q) {
+        TOR_SIMPLEQ_REMOVE_HEAD(&chan->outgoing_queue, next);
         /*
-         * if free_q is set, we used it and should remove the queue entry;
-         * we have to do the free down here so TOR_SIMPLEQ_REMOVE_HEAD isn't
-         * accessing freed memory
+         * ...and we handed a cell off to the lower layer, so we should
+         * update the counters.
          */
-        if (free_q) {
-          TOR_SIMPLEQ_REMOVE_HEAD(&chan->outgoing_queue, next);
-          /*
-           * ...and we handed a cell off to the lower layer, so we should
-           * update the counters.
-           */
-          ++n_channel_cells_passed_to_lower_layer;
-          --n_channel_cells_in_queues;
-          n_channel_bytes_passed_to_lower_layer += cell_size;
-          n_channel_bytes_in_queues -= cell_size;
-          channel_assert_counter_consistency();
-          /* Update the channel's queue size too */
-          chan->bytes_in_queue -= cell_size;
-          /* Finally, free q */
-          cell_queue_entry_free(q, handed_off);
-          q = NULL;
-        }
+        ++n_channel_cells_passed_to_lower_layer;
+        --n_channel_cells_in_queues;
+        n_channel_bytes_passed_to_lower_layer += cell_size;
+        n_channel_bytes_in_queues -= cell_size;
+        channel_assert_counter_consistency();
+        /* Update the channel's queue size too */
+        chan->bytes_in_queue -= cell_size;
+        /* Finally, free q */
+        cell_queue_entry_free(q, handed_off);
+        q = NULL;
+      } else {
         /* No cell removed from list, so we can't go on any further */
-        else break;
+        break;
       }
     }
   }
@@ -2458,8 +2606,8 @@ channel_flush_cells(channel_t *chan)
  * available.
  */
 
-int
-channel_more_to_flush(channel_t *chan)
+MOCK_IMPL(int,
+channel_more_to_flush, (channel_t *chan))
 {
   tor_assert(chan);
 
@@ -2567,22 +2715,13 @@ channel_do_open_actions(channel_t *chan)
   if (started_here) {
     circuit_build_times_network_is_live(get_circuit_build_times_mutable());
     rep_hist_note_connect_succeeded(chan->identity_digest, now);
-    if (entry_guard_register_connect_status(
-          chan->identity_digest, 1, 0, now) < 0) {
-      /* Close any circuits pending on this channel. We leave it in state
-       * 'open' though, because it didn't actually *fail* -- we just
-       * chose not to use it. */
-      log_debug(LD_OR,
-                "New entry guard was reachable, but closing this "
-                "connection so we can retry the earlier entry guards.");
-      close_origin_circuits = 1;
-    }
     router_set_status(chan->identity_digest, 1);
   } else {
     /* only report it to the geoip module if it's not a known router */
-    if (!router_get_by_id_digest(chan->identity_digest)) {
+    if (!connection_or_digest_is_known_relay(chan->identity_digest)) {
       if (channel_get_addr_if_possible(chan, &remote_addr)) {
         char *transport_name = NULL;
+        channel_tls_t *tlschan = BASE_CHAN_TO_TLS(chan);
         if (chan->get_transport_name(chan, &transport_name) < 0)
           transport_name = NULL;
 
@@ -2590,8 +2729,38 @@ channel_do_open_actions(channel_t *chan)
                                &remote_addr, transport_name,
                                now);
         tor_free(transport_name);
+        /* Notify the DoS subsystem of a new client. */
+        if (tlschan && tlschan->conn) {
+          dos_new_client_conn(tlschan->conn);
+        }
       }
       /* Otherwise the underlying transport can't tell us this, so skip it */
+    }
+  }
+
+  /* Disable or reduce padding according to user prefs. */
+  if (chan->padding_enabled || get_options()->ConnectionPadding == 1) {
+    if (!get_options()->ConnectionPadding) {
+      /* Disable if torrc disabled */
+      channelpadding_disable_padding_on_channel(chan);
+    } else if (get_options()->Tor2webMode &&
+            !networkstatus_get_param(NULL,
+                                     CHANNELPADDING_TOR2WEB_PARAM,
+                                     CHANNELPADDING_TOR2WEB_DEFAULT, 0, 1)) {
+      /* Disable if we're using tor2web and the consensus disabled padding
+       * for tor2web */
+      channelpadding_disable_padding_on_channel(chan);
+    } else if (rend_service_allow_non_anonymous_connection(get_options()) &&
+               !networkstatus_get_param(NULL,
+                                        CHANNELPADDING_SOS_PARAM,
+                                        CHANNELPADDING_SOS_DEFAULT, 0, 1)) {
+      /* Disable if we're using RSOS and the consensus disabled padding
+       * for RSOS*/
+      channelpadding_disable_padding_on_channel(chan);
+    } else if (get_options()->ReducedConnectionPadding) {
+      /* Padding can be forced and/or reduced by clients, regardless of if
+       * the channel supports it */
+      channelpadding_reduce_padding_on_channel(chan);
     }
   }
 
@@ -3232,6 +3401,11 @@ channel_free_all(void)
   /* Geez, anything still left over just won't die ... let it leak then */
   HT_CLEAR(channel_idmap, &channel_identity_map);
 
+  /* Same with channel_gid_map */
+  log_debug(LD_CHANNEL,
+            "Freeing channel_gid_map");
+  HT_CLEAR(channel_gid_map, &channel_gid_map);
+
   log_debug(LD_CHANNEL,
             "Done cleaning up after channels");
 }
@@ -3249,9 +3423,10 @@ channel_free_all(void)
 
 channel_t *
 channel_connect(const tor_addr_t *addr, uint16_t port,
-                const char *id_digest)
+                const char *id_digest,
+                const ed25519_public_key_t *ed_id)
 {
-  return channel_tls_connect(addr, port, id_digest);
+  return channel_tls_connect(addr, port, id_digest, ed_id);
 }
 
 /**
@@ -3266,21 +3441,19 @@ channel_connect(const tor_addr_t *addr, uint16_t port,
  */
 
 int
-channel_is_better(time_t now, channel_t *a, channel_t *b,
-                  int forgive_new_connections)
+channel_is_better(channel_t *a, channel_t *b)
 {
-  int a_grace, b_grace;
   int a_is_canonical, b_is_canonical;
-  int a_has_circs, b_has_circs;
-
-  /*
-   * Do not definitively deprecate a new channel with no circuits on it
-   * until this much time has passed.
-   */
-#define NEW_CHAN_GRACE_PERIOD (15*60)
 
   tor_assert(a);
   tor_assert(b);
+
+  /* If one channel is bad for new circuits, and the other isn't,
+   * use the one that is still good. */
+  if (!channel_is_bad_for_new_circs(a) && channel_is_bad_for_new_circs(b))
+    return 1;
+  if (channel_is_bad_for_new_circs(a) && !channel_is_bad_for_new_circs(b))
+    return 0;
 
   /* Check if one is canonical and the other isn't first */
   a_is_canonical = channel_is_canonical(a);
@@ -3289,26 +3462,31 @@ channel_is_better(time_t now, channel_t *a, channel_t *b,
   if (a_is_canonical && !b_is_canonical) return 1;
   if (!a_is_canonical && b_is_canonical) return 0;
 
+  /* Check if we suspect that one of the channels will be preferred
+   * by the peer */
+  if (a->is_canonical_to_peer && !b->is_canonical_to_peer) return 1;
+  if (!a->is_canonical_to_peer && b->is_canonical_to_peer) return 0;
+
   /*
-   * Okay, if we're here they tied on canonicity. Next we check if
-   * they have any circuits, and if one does and the other doesn't,
-   * we prefer the one that does, unless we are forgiving and the
-   * one that has no circuits is in its grace period.
+   * Okay, if we're here they tied on canonicity, the prefer the older
+   * connection, so that the adversary can't create a new connection
+   * and try to switch us over to it (which will leak information
+   * about long-lived circuits). Additionally, switching connections
+   * too often makes us more vulnerable to attacks like Torscan and
+   * passive netflow-based equivalents.
+   *
+   * Connections will still only live for at most a week, due to
+   * the check in connection_or_group_set_badness() against
+   * TIME_BEFORE_OR_CONN_IS_TOO_OLD, which marks old connections as
+   * unusable for new circuits after 1 week. That check sets
+   * is_bad_for_new_circs, which is checked in channel_get_for_extend().
+   *
+   * We check channel_is_bad_for_new_circs() above here anyway, for safety.
    */
+  if (channel_when_created(a) < channel_when_created(b)) return 1;
+  else if (channel_when_created(a) > channel_when_created(b)) return 0;
 
-  a_has_circs = (channel_num_circuits(a) > 0);
-  b_has_circs = (channel_num_circuits(b) > 0);
-  a_grace = (forgive_new_connections &&
-             (now < channel_when_created(a) + NEW_CHAN_GRACE_PERIOD));
-  b_grace = (forgive_new_connections &&
-             (now < channel_when_created(b) + NEW_CHAN_GRACE_PERIOD));
-
-  if (a_has_circs && !b_has_circs && !b_grace) return 1;
-  if (!a_has_circs && b_has_circs && !a_grace) return 0;
-
-  /* They tied on circuits too; just prefer whichever is newer */
-
-  if (channel_when_created(a) > channel_when_created(b)) return 1;
+  if (channel_num_circuits(a) > channel_num_circuits(b)) return 1;
   else return 0;
 }
 
@@ -3324,7 +3502,8 @@ channel_is_better(time_t now, channel_t *a, channel_t *b,
  */
 
 channel_t *
-channel_get_for_extend(const char *digest,
+channel_get_for_extend(const char *rsa_id_digest,
+                       const ed25519_public_key_t *ed_id,
                        const tor_addr_t *target_addr,
                        const char **msg_out,
                        int *launch_out)
@@ -3332,19 +3511,18 @@ channel_get_for_extend(const char *digest,
   channel_t *chan, *best = NULL;
   int n_inprogress_goodaddr = 0, n_old = 0;
   int n_noncanonical = 0, n_possible = 0;
-  time_t now = approx_time();
 
   tor_assert(msg_out);
   tor_assert(launch_out);
 
-  chan = channel_find_by_remote_digest(digest);
+  chan = channel_find_by_remote_identity(rsa_id_digest, ed_id);
 
   /* Walk the list, unrefing the old one and refing the new at each
    * iteration.
    */
-  for (; chan; chan = channel_next_with_digest(chan)) {
+  for (; chan; chan = channel_next_with_rsa_identity(chan)) {
     tor_assert(tor_memeq(chan->identity_digest,
-                         digest, DIGEST_LEN));
+                         rsa_id_digest, DIGEST_LEN));
 
    if (CHANNEL_CONDEMNED(chan))
       continue;
@@ -3352,6 +3530,11 @@ channel_get_for_extend(const char *digest,
     /* Never return a channel on which the other end appears to be
      * a client. */
     if (channel_is_client(chan)) {
+      continue;
+    }
+
+    /* The Ed25519 key has to match too */
+    if (!channel_remote_identity_matches(chan, rsa_id_digest, ed_id)) {
       continue;
     }
 
@@ -3397,7 +3580,7 @@ channel_get_for_extend(const char *digest,
       continue;
     }
 
-    if (channel_is_better(now, chan, best, 0))
+    if (channel_is_better(chan, best))
       best = chan;
   }
 
@@ -3840,8 +4023,8 @@ channel_get_canonical_remote_descr(channel_t *chan)
  * supports this operation, and return 1.  Return 0 if the underlying transport
  * doesn't let us do this.
  */
-int
-channel_get_addr_if_possible(channel_t *chan, tor_addr_t *addr_out)
+MOCK_IMPL(int,
+channel_get_addr_if_possible,(channel_t *chan, tor_addr_t *addr_out))
 {
   tor_assert(chan);
   tor_assert(addr_out);
@@ -3915,7 +4098,7 @@ channel_mark_bad_for_new_circs(channel_t *chan)
  */
 
 int
-channel_is_client(channel_t *chan)
+channel_is_client(const channel_t *chan)
 {
   tor_assert(chan);
 
@@ -3934,6 +4117,20 @@ channel_mark_client(channel_t *chan)
   tor_assert(chan);
 
   chan->is_client = 1;
+}
+
+/**
+ * Clear the client flag
+ *
+ * Mark a channel as being _not_ from a client
+ */
+
+void
+channel_clear_client(channel_t *chan)
+{
+  tor_assert(chan);
+
+  chan->is_client = 0;
 }
 
 /**
@@ -4179,8 +4376,12 @@ channel_timestamp_active(channel_t *chan)
   time_t now = time(NULL);
 
   tor_assert(chan);
+  chan->timestamp_xfer_ms = monotime_coarse_absolute_msec();
 
   chan->timestamp_active = now;
+
+  /* Clear any potential netflow padding timer. We're active */
+  chan->next_padding_time_ms = 0;
 }
 
 /**
@@ -4263,11 +4464,14 @@ void
 channel_timestamp_recv(channel_t *chan)
 {
   time_t now = time(NULL);
-
   tor_assert(chan);
+  chan->timestamp_xfer_ms = monotime_coarse_absolute_msec();
 
   chan->timestamp_active = now;
   chan->timestamp_recv = now;
+
+  /* Clear any potential netflow padding timer. We're active */
+  chan->next_padding_time_ms = 0;
 }
 
 /**
@@ -4280,11 +4484,15 @@ void
 channel_timestamp_xmit(channel_t *chan)
 {
   time_t now = time(NULL);
-
   tor_assert(chan);
+
+  chan->timestamp_xfer_ms = monotime_coarse_absolute_msec();
 
   chan->timestamp_active = now;
   chan->timestamp_xmit = now;
+
+  /* Clear any potential netflow padding timer. We're active */
+  chan->next_padding_time_ms = 0;
 }
 
 /***************************************************************
@@ -4526,6 +4734,81 @@ channel_set_circid_type,(channel_t *chan,
   }
 }
 
+/** Helper for channel_update_bad_for_new_circs(): Perform the
+ * channel_update_bad_for_new_circs operation on all channels in <b>lst</b>,
+ * all of which MUST have the same RSA ID.  (They MAY have different
+ * Ed25519 IDs.) */
+static void
+channel_rsa_id_group_set_badness(struct channel_list_s *lst, int force)
+{
+  /*XXXX This function should really be about channels. 15056 */
+  channel_t *chan;
+
+  /* First, get a minimal list of the ed25519 identites */
+  smartlist_t *ed_identities = smartlist_new();
+  TOR_LIST_FOREACH(chan, lst, next_with_same_id) {
+    uint8_t *id_copy =
+      tor_memdup(&chan->ed25519_identity.pubkey, DIGEST256_LEN);
+    smartlist_add(ed_identities, id_copy);
+  }
+  smartlist_sort_digests256(ed_identities);
+  smartlist_uniq_digests256(ed_identities);
+
+  /* Now, for each Ed identity, build a smartlist and find the best entry on
+   * it.  */
+  smartlist_t *or_conns = smartlist_new();
+  SMARTLIST_FOREACH_BEGIN(ed_identities, const uint8_t *, ed_id) {
+    TOR_LIST_FOREACH(chan, lst, next_with_same_id) {
+      channel_tls_t *chantls = BASE_CHAN_TO_TLS(chan);
+      if (tor_memneq(ed_id, &chan->ed25519_identity.pubkey, DIGEST256_LEN))
+        continue;
+      or_connection_t *orconn = chantls->conn;
+      if (orconn) {
+        tor_assert(orconn->chan == chantls);
+        smartlist_add(or_conns, orconn);
+      }
+    }
+
+    connection_or_group_set_badness_(or_conns, force);
+    smartlist_clear(or_conns);
+  } SMARTLIST_FOREACH_END(ed_id);
+
+  /* XXXX 15056 we may want to do something special with connections that have
+   * no set Ed25519 identity! */
+
+  smartlist_free(or_conns);
+
+  SMARTLIST_FOREACH(ed_identities, uint8_t *, ed_id, tor_free(ed_id));
+  smartlist_free(ed_identities);
+}
+
+/** Go through all the channels (or if <b>digest</b> is non-NULL, just
+ * the OR connections with that digest), and set the is_bad_for_new_circs
+ * flag based on the rules in connection_or_group_set_badness() (or just
+ * always set it if <b>force</b> is true).
+ */
+void
+channel_update_bad_for_new_circs(const char *digest, int force)
+{
+  if (digest) {
+    channel_idmap_entry_t *ent;
+    channel_idmap_entry_t search;
+    memset(&search, 0, sizeof(search));
+    memcpy(search.digest, digest, DIGEST_LEN);
+    ent = HT_FIND(channel_idmap, &channel_identity_map, &search);
+    if (ent) {
+      channel_rsa_id_group_set_badness(&ent->channel_list, force);
+    }
+    return;
+  }
+
+  /* no digest; just look at everything. */
+  channel_idmap_entry_t **iter;
+  HT_FOREACH(iter, channel_idmap, &channel_identity_map) {
+    channel_rsa_id_group_set_badness(&(*iter)->channel_list, force);
+  }
+}
+
 /**
  * Update the estimated number of bytes queued to transmit for this channel,
  * and notify the scheduler.  The estimate includes both the channel queue and
@@ -4580,8 +4863,6 @@ channel_update_xmit_queue_size(channel_t *chan)
                 U64_FORMAT ", new size is " U64_FORMAT,
                 U64_PRINTF_ARG(adj), U64_PRINTF_ARG(chan->global_identifier),
                 U64_PRINTF_ARG(estimated_total_queue_size));
-      /* Tell the scheduler we're increasing the queue size */
-      scheduler_adjust_queue_size(chan, 1, adj);
     }
   } else if (queued < chan->bytes_queued_for_xmit) {
     adj = chan->bytes_queued_for_xmit - queued;
@@ -4604,8 +4885,6 @@ channel_update_xmit_queue_size(channel_t *chan)
                 U64_FORMAT ", new size is " U64_FORMAT,
                 U64_PRINTF_ARG(adj), U64_PRINTF_ARG(chan->global_identifier),
                 U64_PRINTF_ARG(estimated_total_queue_size));
-      /* Tell the scheduler we're decreasing the queue size */
-      scheduler_adjust_queue_size(chan, -1, adj);
     }
   }
 }

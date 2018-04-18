@@ -1,7 +1,7 @@
 /* Copyright (c) 2001, Matej Pfajfar.
  * Copyright (c) 2001-2004, Roger Dingledine.
  * Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -19,6 +19,9 @@
 #include "torint.h"
 #include "testsupport.h"
 #include "compat.h"
+
+#include <openssl/engine.h>
+#include "keccak-tiny/keccak-tiny.h"
 
 /*
   Macro to create an arbitrary OpenSSL version number as used by
@@ -59,15 +62,20 @@
 #define DIGEST256_LEN 32
 /** Length of the output of our 64-bit optimized message digests (SHA512). */
 #define DIGEST512_LEN 64
-/** Length of our symmetric cipher's keys. */
+/** Length of our symmetric cipher's keys of 128-bit. */
 #define CIPHER_KEY_LEN 16
-/** Length of our symmetric cipher's IV. */
+/** Length of our symmetric cipher's IV of 128-bit. */
 #define CIPHER_IV_LEN 16
+/** Length of our symmetric cipher's keys of 256-bit. */
+#define CIPHER256_KEY_LEN 32
 /** Length of our public keys. */
 #define PK_BYTES (1024/8)
 /** Length of our DH keys. */
 #define DH_BYTES (1024/8)
 
+/** Length of a sha1 message digest when encoded in base32 with trailing =
+ * signs removed. */
+#define BASE32_DIGEST_LEN 32
 /** Length of a sha1 message digest when encoded in base64 with trailing =
  * signs removed. */
 #define BASE64_DIGEST_LEN 27
@@ -129,6 +137,10 @@ int crypto_early_init(void) ATTR_WUR;
 int crypto_global_init(int hardwareAccel,
                        const char *accelName,
                        const char *accelPath) ATTR_WUR;
+#ifdef USE_DMALLOC
+int crypto_use_tor_alloc_functions(void);
+#endif
+
 void crypto_thread_cleanup(void);
 int crypto_global_cleanup(void);
 
@@ -178,19 +190,21 @@ int crypto_pk_public_encrypt(crypto_pk_t *env, char *to, size_t tolen,
 int crypto_pk_private_decrypt(crypto_pk_t *env, char *to, size_t tolen,
                               const char *from, size_t fromlen,
                               int padding, int warnOnFailure);
-int crypto_pk_public_checksig(const crypto_pk_t *env, char *to, size_t tolen,
-                              const char *from, size_t fromlen);
-int crypto_pk_public_checksig_digest(crypto_pk_t *env, const char *data,
-                               size_t datalen, const char *sig, size_t siglen);
+MOCK_DECL(int, crypto_pk_public_checksig,(const crypto_pk_t *env,
+                                          char *to, size_t tolen,
+                                          const char *from, size_t fromlen));
+MOCK_DECL(int, crypto_pk_public_checksig_digest,(crypto_pk_t *env,
+                                         const char *data, size_t datalen,
+                                         const char *sig, size_t siglen));
 int crypto_pk_private_sign(const crypto_pk_t *env, char *to, size_t tolen,
                            const char *from, size_t fromlen);
 int crypto_pk_private_sign_digest(crypto_pk_t *env, char *to, size_t tolen,
                                   const char *from, size_t fromlen);
-int crypto_pk_public_hybrid_encrypt(crypto_pk_t *env, char *to,
+int crypto_pk_obsolete_public_hybrid_encrypt(crypto_pk_t *env, char *to,
                                     size_t tolen,
                                     const char *from, size_t fromlen,
                                     int padding, int force);
-int crypto_pk_private_hybrid_decrypt(crypto_pk_t *env, char *to,
+int crypto_pk_obsolete_private_hybrid_decrypt(crypto_pk_t *env, char *to,
                                      size_t tolen,
                                      const char *from, size_t fromlen,
                                      int padding, int warnOnFailure);
@@ -255,6 +269,10 @@ void crypto_digest_assign(crypto_digest_t *into,
 void crypto_hmac_sha256(char *hmac_out,
                         const char *key, size_t key_len,
                         const char *msg, size_t msg_len);
+void crypto_mac_sha3_256(uint8_t *mac_out, size_t len_out,
+                         const uint8_t *key, size_t key_len,
+                         const uint8_t *msg, size_t msg_len);
+
 crypto_xof_t *crypto_xof_new(void);
 void crypto_xof_add_bytes(crypto_xof_t *xof, const uint8_t *data, size_t len);
 void crypto_xof_squeeze_bytes(crypto_xof_t *xof, uint8_t *out, size_t len);
@@ -323,6 +341,7 @@ struct dh_st *crypto_dh_get_dh_(crypto_dh_t *dh);
 void crypto_add_spaces_to_fp(char *out, size_t outlen, const char *in);
 
 #ifdef CRYPTO_PRIVATE
+
 STATIC int crypto_force_rand_ssleay(void);
 STATIC int crypto_strongest_rand_raw(uint8_t *out, size_t out_len);
 
@@ -330,11 +349,12 @@ STATIC int crypto_strongest_rand_raw(uint8_t *out, size_t out_len);
 extern int break_strongest_rng_syscall;
 extern int break_strongest_rng_fallback;
 #endif
-#endif
+#endif /* defined(CRYPTO_PRIVATE) */
 
 #ifdef TOR_UNIT_TESTS
 void crypto_pk_assign_(crypto_pk_t *dest, const crypto_pk_t *src);
+digest_algorithm_t crypto_digest_get_algorithm(crypto_digest_t *digest);
 #endif
 
-#endif
+#endif /* !defined(TOR_CRYPTO_H) */
 

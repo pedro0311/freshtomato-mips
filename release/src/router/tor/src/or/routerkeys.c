@@ -1,12 +1,17 @@
-/* Copyright (c) 2014-2016, The Tor Project, Inc. */
+/* Copyright (c) 2014-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
  * \file routerkeys.c
  *
  * \brief Functions and structures to handle generating and maintaining the
- *  set of keypairs necessary to be an OR. (Some of the code in router.c
- *  belongs here.)
+ *  set of keypairs necessary to be an OR.
+ *
+ * The keys handled here now are the Ed25519 keys that Tor relays use to sign
+ * descriptors, authenticate themselves on links, and identify one another
+ * uniquely.  Other keys are maintained in router.c and rendservice.c.
+ *
+ * (TODO: The keys in router.c should go here too.)
  */
 
 #include "or.h"
@@ -19,6 +24,7 @@
 #define ENC_KEY_HEADER "Boxed Ed25519 key"
 #define ENC_KEY_TAG "master"
 
+/* DOCDOC */
 static ssize_t
 do_getpass(const char *prompt, char *buf, size_t buflen,
            int twice, const or_options_t *options)
@@ -85,6 +91,7 @@ do_getpass(const char *prompt, char *buf, size_t buflen,
   return length;
 }
 
+/* DOCDOC */
 int
 read_encrypted_secret_key(ed25519_secret_key_t *out,
                           const char *fname)
@@ -157,6 +164,7 @@ read_encrypted_secret_key(ed25519_secret_key_t *out,
   return r;
 }
 
+/* DOCDOC */
 int
 write_encrypted_secret_key(const ed25519_secret_key_t *key,
                            const char *fname)
@@ -200,6 +208,7 @@ write_encrypted_secret_key(const ed25519_secret_key_t *key,
   return r;
 }
 
+/* DOCDOC */
 static int
 write_secret_key(const ed25519_secret_key_t *key, int encrypted,
                  const char *fname,
@@ -527,7 +536,8 @@ ed_key_init_from_file(const char *fname, uint32_t flags,
     bad_cert = 1;
   } else if (signing_key &&
              tor_cert_checksig(cert, &signing_key->pubkey, now) < 0) {
-    tor_log(severity, LD_OR, "Can't check certificate");
+    tor_log(severity, LD_OR, "Can't check certificate: %s",
+            tor_cert_describe_signature_status(cert));
     bad_cert = 1;
   } else if (cert->cert_expired) {
     tor_log(severity, LD_OR, "Certificate is expired");
@@ -659,10 +669,14 @@ static tor_cert_t *auth_key_cert = NULL;
 
 static uint8_t *rsa_ed_crosscert = NULL;
 static size_t rsa_ed_crosscert_len = 0;
+static time_t rsa_ed_crosscert_expiration = 0;
 
 /**
  * Running as a server: load, reload, or refresh our ed25519 keys and
  * certificates, creating and saving new ones as needed.
+ *
+ * Return -1 on failure; 0 on success if the signing key was not replaced;
+ * and 1 on success if the signing key was replaced.
  */
 int
 load_ed_keys(const or_options_t *options, time_t now)
@@ -675,6 +689,11 @@ load_ed_keys(const or_options_t *options, time_t now)
   const tor_cert_t *check_signing_cert = NULL;
   tor_cert_t *sign_cert = NULL;
   tor_cert_t *auth_cert = NULL;
+  int signing_key_changed = 0;
+
+  // It is later than 1972, since otherwise there would be no C compilers.
+  // (Try to diagnose #22466.)
+  tor_assert_nonfatal(now >= 2 * 365 * 86400);
 
 #define FAIL(msg) do {                          \
     log_warn(LD_OR, (msg));                     \
@@ -690,8 +709,10 @@ load_ed_keys(const or_options_t *options, time_t now)
       tor_cert_free(cert);                      \
     cert = (newval);                            \
   } while (0)
+#define HAPPENS_SOON(when, interval)            \
+  ((when) < now + (interval))
 #define EXPIRES_SOON(cert, interval)            \
-  (!(cert) || (cert)->valid_until < now + (interval))
+  (!(cert) || HAPPENS_SOON((cert)->valid_until, (interval)))
 
   /* XXXX support encrypted identity keys fully */
 
@@ -710,7 +731,23 @@ load_ed_keys(const or_options_t *options, time_t now)
     use_signing = sign;
   }
 
+  if (use_signing) {
+    /* We loaded a signing key with its certificate.  */
+    if (! master_signing_key) {
+      /* We didn't know one before! */
+      signing_key_changed = 1;
+    } else if (! ed25519_pubkey_eq(&use_signing->pubkey,
+                                   &master_signing_key->pubkey) ||
+               ! tor_memeq(use_signing->seckey.seckey,
+                           master_signing_key->seckey.seckey,
+                           ED25519_SECKEY_LEN)) {
+      /* We loaded a different signing key than the one we knew before. */
+      signing_key_changed = 1;
+    }
+  }
+
   if (!use_signing && master_signing_key) {
+    /* We couldn't load a signing key, but we already had one loaded */
     check_signing_cert = signing_key_cert;
     use_signing = master_signing_key;
   }
@@ -733,8 +770,12 @@ load_ed_keys(const or_options_t *options, time_t now)
 
   if (need_new_signing_key) {
     log_notice(LD_OR, "It looks like I need to generate and sign a new "
-               "medium-term signing key, because %s. To do that, I need to "
-               "load%s the permanent master identity key.",
+               "medium-term signing key, because %s. To do that, I "
+               "need to load%s the permanent master identity key. "
+               "If the master identity key was not moved or encrypted "
+               "with a passphrase, this will be done automatically and "
+               "no further action is required. Otherwise, provide the "
+               "necessary data using 'tor --keygen' to do it manually.",
             (NULL == use_signing) ? "I don't have one" :
             EXPIRES_SOON(check_signing_cert, 0) ? "the one I have is expired" :
                "you asked me to make one with --keygen",
@@ -742,15 +783,19 @@ load_ed_keys(const or_options_t *options, time_t now)
   } else if (want_new_signing_key && !offline_master) {
     log_notice(LD_OR, "It looks like I should try to generate and sign a "
                "new medium-term signing key, because the one I have is "
-               "going to expire soon. To do that, I'm going to have to try to "
-               "load the permanent master identity key.");
+               "going to expire soon. To do that, I'm going to have to "
+               "try to load the permanent master identity key. "
+               "If the master identity key was not moved or encrypted "
+               "with a passphrase, this will be done automatically and "
+               "no further action is required. Otherwise, provide the "
+               "necessary data using 'tor --keygen' to do it manually.");
   } else if (want_new_signing_key) {
     log_notice(LD_OR, "It looks like I should try to generate and sign a "
                "new medium-term signing key, because the one I have is "
                "going to expire soon. But OfflineMasterKey is set, so I "
-               "won't try to load a permanent master identity key is set. "
-               "You will need to use 'tor --keygen' make a new signing key "
-               "and certificate.");
+               "won't try to load a permanent master identity key. You "
+               "will need to use 'tor --keygen' to make a new signing "
+               "key and certificate.");
   }
 
   {
@@ -768,8 +813,11 @@ load_ed_keys(const or_options_t *options, time_t now)
     if (options->command == CMD_KEYGEN)
       flags |= INIT_ED_KEY_TRY_ENCRYPTED;
 
-    /* Check the key directory */
-    if (check_private_dir(options->DataDirectory, CPD_CREATE, options->User)) {
+    /* Check/Create the key directory */
+    cpd_check_t cpd_opts = CPD_CREATE;
+    if (options->DataDirectoryGroupReadable)
+      cpd_opts |= CPD_GROUP_READ;
+    if (check_private_dir(options->DataDirectory, cpd_opts, options->User)) {
       log_err(LD_OR, "Can't create/check datadirectory %s",
               options->DataDirectory);
       goto err;
@@ -836,8 +884,12 @@ load_ed_keys(const or_options_t *options, time_t now)
     if (! ed25519_pubkey_eq(&sign_cert->signing_key, &id->pubkey))
       FAIL("The signing cert we have was not signed with the master key "
            "we loaded!");
-    if (tor_cert_checksig(sign_cert, &id->pubkey, 0) < 0)
-      FAIL("The signing cert we loaded was not signed correctly!");
+    if (tor_cert_checksig(sign_cert, &id->pubkey, 0) < 0) {
+      log_warn(LD_OR, "The signing cert we loaded was not signed "
+               "correctly: %s!",
+               tor_cert_describe_signature_status(sign_cert));
+      goto err;
+    }
   }
 
   if (want_new_signing_key && sign_signing_key_with_id) {
@@ -859,6 +911,7 @@ load_ed_keys(const or_options_t *options, time_t now)
     if (!sign)
       FAIL("Missing signing key");
     use_signing = sign;
+    signing_key_changed = 1;
 
     tor_assert(sign_cert->signing_key_included);
     tor_assert(ed25519_pubkey_eq(&sign_cert->signing_key, &id->pubkey));
@@ -879,17 +932,23 @@ load_ed_keys(const or_options_t *options, time_t now)
   if (options->command == CMD_KEYGEN)
     goto end;
 
-  if (!rsa_ed_crosscert && server_mode(options)) {
+  if (server_mode(options) &&
+      (!rsa_ed_crosscert ||
+       HAPPENS_SOON(rsa_ed_crosscert_expiration, 30*86400))) {
     uint8_t *crosscert;
+    time_t expiration = now+6*30*86400; /* 6 months in the future. */
     ssize_t crosscert_len = tor_make_rsa_ed25519_crosscert(&id->pubkey,
                                                    get_server_identity_key(),
-                                                   now+10*365*86400,/*XXXX*/
+                                                   expiration,
                                                    &crosscert);
+    tor_free(rsa_ed_crosscert);
     rsa_ed_crosscert_len = crosscert_len;
     rsa_ed_crosscert = crosscert;
+    rsa_ed_crosscert_expiration = expiration;
   }
 
   if (!current_auth_key ||
+      signing_key_changed ||
       EXPIRES_SOON(auth_key_cert, options->TestingAuthKeySlop)) {
     auth = ed_key_new(use_signing, INIT_ED_KEY_NEEDCERT,
                       now,
@@ -917,7 +976,7 @@ load_ed_keys(const or_options_t *options, time_t now)
     SET_CERT(auth_key_cert, auth_cert);
   }
 
-  return 0;
+  return signing_key_changed;
  err:
   ed25519_keypair_free(id);
   ed25519_keypair_free(sign);
@@ -927,21 +986,39 @@ load_ed_keys(const or_options_t *options, time_t now)
   return -1;
 }
 
-/* DOCDOC */
+/**
+ * Retrieve our currently-in-use Ed25519 link certificate and id certificate,
+ * and, if they would expire soon (based on the time <b>now</b>, generate new
+ * certificates (without embedding the public part of the signing key inside).
+ * If <b>force</b> is true, always generate a new certificate.
+ *
+ * The signed_key from the current id->signing certificate will be used to
+ * sign the new key within newly generated X509 certificate.
+ *
+ * Returns -1 upon error.  Otherwise, returns 0 upon success (either when the
+ * current certificate is still valid, or when a new certificate was
+ * successfully generated, or no certificate was needed).
+ */
 int
-generate_ed_link_cert(const or_options_t *options, time_t now)
+generate_ed_link_cert(const or_options_t *options, time_t now,
+                      int force)
 {
   const tor_x509_cert_t *link_ = NULL, *id = NULL;
   tor_cert_t *link_cert = NULL;
 
   if (tor_tls_get_my_certs(1, &link_, &id) < 0 || link_ == NULL) {
+    if (!server_mode(options)) {
+        /* No need to make an Ed25519->Link cert: we are a client */
+      return 0;
+    }
     log_warn(LD_OR, "Can't get my x509 link cert.");
     return -1;
   }
 
   const common_digests_t *digests = tor_x509_cert_get_cert_digests(link_);
 
-  if (link_cert_cert &&
+  if (force == 0 &&
+      link_cert_cert &&
       ! EXPIRES_SOON(link_cert_cert, options->TestingLinkKeySlop) &&
       fast_memeq(digests->d[DIGEST_SHA256], link_cert_cert->signed_key.pubkey,
                  DIGEST256_LEN)) {
@@ -967,6 +1044,17 @@ generate_ed_link_cert(const or_options_t *options, time_t now)
 #undef SET_KEY
 #undef SET_CERT
 
+/**
+ * Return 1 if any of the following are true:
+ *
+ *   - if one of our Ed25519 signing, auth, or link certificates would expire
+ *     soon w.r.t. the time <b>now</b>,
+ *   - if we do not currently have a link certificate, or
+ *   - if our cached Ed25519 link certificate is not same as the one we're
+ *     currently using.
+ *
+ * Otherwise, returns 0.
+ */
 int
 should_make_new_ed_keys(const or_options_t *options, const time_t now)
 {
@@ -996,6 +1084,164 @@ should_make_new_ed_keys(const or_options_t *options, const time_t now)
 }
 
 #undef EXPIRES_SOON
+#undef HAPPENS_SOON
+
+#ifdef TOR_UNIT_TESTS
+/* Helper for unit tests: populate the ed25519 keys without saving or
+ * loading */
+void
+init_mock_ed_keys(const crypto_pk_t *rsa_identity_key)
+{
+  routerkeys_free_all();
+
+#define MAKEKEY(k)                                      \
+  k = tor_malloc_zero(sizeof(*k));                      \
+  if (ed25519_keypair_generate(k, 0) < 0) {             \
+    log_warn(LD_BUG, "Couldn't make a keypair");        \
+    goto err;                                           \
+  }
+  MAKEKEY(master_identity_key);
+  MAKEKEY(master_signing_key);
+  MAKEKEY(current_auth_key);
+#define MAKECERT(cert, signing, signed_, type, flags)            \
+  cert = tor_cert_create(signing,                                \
+                         type,                                   \
+                         &signed_->pubkey,                       \
+                         time(NULL), 86400,                      \
+                         flags);                                 \
+  if (!cert) {                                                   \
+    log_warn(LD_BUG, "Couldn't make a %s certificate!", #cert);  \
+    goto err;                                                    \
+  }
+
+  MAKECERT(signing_key_cert,
+           master_identity_key, master_signing_key, CERT_TYPE_ID_SIGNING,
+           CERT_FLAG_INCLUDE_SIGNING_KEY);
+  MAKECERT(auth_key_cert,
+           master_signing_key, current_auth_key, CERT_TYPE_SIGNING_AUTH, 0);
+
+  if (generate_ed_link_cert(get_options(), time(NULL), 0) < 0) {
+    log_warn(LD_BUG, "Couldn't make link certificate");
+    goto err;
+  }
+
+  rsa_ed_crosscert_len = tor_make_rsa_ed25519_crosscert(
+                                     &master_identity_key->pubkey,
+                                     rsa_identity_key,
+                                     time(NULL)+86400,
+                                     &rsa_ed_crosscert);
+
+  return;
+
+ err:
+  routerkeys_free_all();
+  tor_assert_nonfatal_unreached();
+}
+#undef MAKEKEY
+#undef MAKECERT
+#endif /* defined(TOR_UNIT_TESTS) */
+
+/**
+ * Print the ISO8601-formated <b>expiration</b> for a certificate with
+ * some <b>description</b> to stdout.
+ *
+ * For example, for a signing certificate, this might print out:
+ * signing-cert-expiry: 2017-07-25 08:30:15 UTC
+ */
+static void
+print_cert_expiration(const char *expiration,
+                      const char *description)
+{
+  fprintf(stderr, "%s-cert-expiry: %s\n", description, expiration);
+}
+
+/**
+ * Log when a certificate, <b>cert</b>, with some <b>description</b> and
+ * stored in a file named <b>fname</b>, is going to expire.
+ */
+static void
+log_ed_cert_expiration(const tor_cert_t *cert,
+                       const char *description,
+                       const char *fname) {
+  char expiration[ISO_TIME_LEN+1];
+
+  if (BUG(!cert)) { /* If the specified key hasn't been loaded */
+    log_warn(LD_OR, "No %s key loaded; can't get certificate expiration.",
+             description);
+  } else {
+    format_local_iso_time(expiration, cert->valid_until);
+    log_notice(LD_OR, "The %s certificate stored in %s is valid until %s.",
+               description, fname, expiration);
+    print_cert_expiration(expiration, description);
+  }
+}
+
+/**
+ * Log when our master signing key certificate expires.  Used when tor is given
+ * the --key-expiration command-line option.
+ *
+ * Returns 0 on success and 1 on failure.
+ */
+static int
+log_master_signing_key_cert_expiration(const or_options_t *options)
+{
+  const tor_cert_t *signing_key;
+  char *fn = NULL;
+  int failed = 0;
+  time_t now = approx_time();
+
+  fn = options_get_datadir_fname2(options, "keys", "ed25519_signing_cert");
+
+  /* Try to grab our cached copy of the key. */
+  signing_key = get_master_signing_key_cert();
+
+  tor_assert(server_identity_key_is_set());
+
+  /* Load our keys from disk, if necessary. */
+  if (!signing_key) {
+    failed = load_ed_keys(options, now) < 0;
+    signing_key = get_master_signing_key_cert();
+  }
+
+  /* If we do have a signing key, log the expiration time. */
+  if (signing_key) {
+    log_ed_cert_expiration(signing_key, "signing", fn);
+  } else {
+    log_warn(LD_OR, "Could not load signing key certificate from %s, so " \
+             "we couldn't learn anything about certificate expiration.", fn);
+  }
+
+  tor_free(fn);
+
+  return failed;
+}
+
+/**
+ * Log when a key certificate expires.  Used when tor is given the
+ * --key-expiration command-line option.
+ *
+ * If an command argument is given, which should specify the type of
+ * key to get expiry information about (currently supported arguments
+ * are "sign"), get info about that type of certificate.  Otherwise,
+ * print info about the supported arguments.
+ *
+ * Returns 0 on success and -1 on failure.
+ */
+int
+log_cert_expiration(void)
+{
+  const or_options_t *options = get_options();
+  const char *arg = options->command_arg;
+
+  if (!strcmp(arg, "sign")) {
+    return log_master_signing_key_cert_expiration(options);
+  } else {
+    fprintf(stderr, "No valid argument to --key-expiration found!\n");
+    fprintf(stderr, "Currently recognised arguments are: 'sign'\n");
+
+    return -1;
+  }
+}
 
 const ed25519_public_key_t *
 get_master_identity_key(void)
@@ -1004,6 +1250,24 @@ get_master_identity_key(void)
     return NULL;
   return &master_identity_key->pubkey;
 }
+
+/** Return true iff <b>id</b> is our Ed25519 master identity key. */
+int
+router_ed25519_id_is_me(const ed25519_public_key_t *id)
+{
+  return id && master_identity_key &&
+    ed25519_pubkey_eq(id, &master_identity_key->pubkey);
+}
+
+#ifdef TOR_UNIT_TESTS
+/* only exists for the unit tests, since otherwise the identity key
+ * should be used to sign nothing but the signing key. */
+const ed25519_keypair_t *
+get_master_identity_keypair(void)
+{
+  return master_identity_key;
+}
+#endif /* defined(TOR_UNIT_TESTS) */
 
 const ed25519_keypair_t *
 get_master_signing_keypair(void)
@@ -1079,7 +1343,9 @@ make_tap_onion_key_crosscert(const crypto_pk_t *onion_key,
   uint8_t signed_data[DIGEST_LEN + ED25519_PUBKEY_LEN];
 
   *len_out = 0;
-  crypto_pk_get_digest(rsa_id_key, (char*)signed_data);
+  if (crypto_pk_get_digest(rsa_id_key, (char*)signed_data) < 0) {
+    return NULL;
+  }
   memcpy(signed_data + DIGEST_LEN, master_id_key->pubkey, ED25519_PUBKEY_LEN);
 
   int r = crypto_pk_private_sign(onion_key,
@@ -1095,12 +1361,12 @@ make_tap_onion_key_crosscert(const crypto_pk_t *onion_key,
 
 /** Check whether an RSA-TAP cross-certification is correct. Return 0 if it
  * is, -1 if it isn't. */
-int
-check_tap_onion_key_crosscert(const uint8_t *crosscert,
-                              int crosscert_len,
-                              const crypto_pk_t *onion_pkey,
-                              const ed25519_public_key_t *master_id_pkey,
-                              const uint8_t *rsa_id_digest)
+MOCK_IMPL(int,
+check_tap_onion_key_crosscert,(const uint8_t *crosscert,
+                               int crosscert_len,
+                               const crypto_pk_t *onion_pkey,
+                               const ed25519_public_key_t *master_id_pkey,
+                               const uint8_t *rsa_id_digest))
 {
   uint8_t *cc = tor_malloc(crypto_pk_keysize(onion_pkey));
   int cc_len =
@@ -1139,9 +1405,12 @@ routerkeys_free_all(void)
   tor_cert_free(signing_key_cert);
   tor_cert_free(link_cert_cert);
   tor_cert_free(auth_key_cert);
+  tor_free(rsa_ed_crosscert);
 
   master_identity_key = master_signing_key = NULL;
   current_auth_key = NULL;
   signing_key_cert = link_cert_cert = auth_key_cert = NULL;
+  rsa_ed_crosscert = NULL; // redundant
+  rsa_ed_crosscert_len = 0;
 }
 

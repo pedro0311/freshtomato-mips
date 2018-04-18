@@ -1,7 +1,7 @@
 /* Copyright (c) 2001 Matej Pfajfar.
  * Copyright (c) 2001-2004, Roger Dingledine.
  * Copyright (c) 2004-2006, Roger Dingledine, Nick Mathewson.
- * Copyright (c) 2007-2016, The Tor Project, Inc. */
+ * Copyright (c) 2007-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -55,7 +55,7 @@
 #define MIN_SUPPORTED_CONSENSUS_METHOD 13
 
 /** The highest consensus method that we currently support. */
-#define MAX_SUPPORTED_CONSENSUS_METHOD 25
+#define MAX_SUPPORTED_CONSENSUS_METHOD 26
 
 /** Lowest consensus method where microdesc consensuses omit any entry
  * with no microdesc. */
@@ -111,6 +111,10 @@
  * entries. */
 #define MIN_METHOD_FOR_RS_PROTOCOLS 25
 
+/** Lowest consensus method where authorities initialize bandwidth weights to 1
+ * instead of 0. See #14881 */
+#define MIN_METHOD_FOR_INIT_BW_WEIGHTS_ONE 26
+
 /** Default bandwidth to clip unmeasured bandwidths to using method >=
  * MIN_METHOD_TO_CLIP_UNMEASURED_BW.  (This is not a consensus method; do not
  * get confused with the above macros.) */
@@ -164,12 +168,14 @@ typedef struct {
   int have_fetched_missing_signatures;
   /* True iff we have published our consensus. */
   int have_published_consensus;
+
+  /* True iff this voting schedule was set on demand meaning not through the
+   * normal vote operation of a dirauth or when a consensus is set. This only
+   * applies to a directory authority that needs to recalculate the voting
+   * timings only for the first vote even though this object was initilized
+   * prior to voting. */
+  int created_on_demand;
 } voting_schedule_t;
-
-voting_schedule_t *get_voting_schedule(const or_options_t *options,
-                                       time_t now, int severity);
-
-void voting_schedule_free(voting_schedule_t *voting_schedule_to_free);
 
 void dirvote_get_preferred_voting_intervals(vote_timing_t *timing_out);
 time_t dirvote_get_start_of_next_interval(time_t now,
@@ -177,7 +183,7 @@ time_t dirvote_get_start_of_next_interval(time_t now,
                                           int offset);
 void dirvote_recalculate_timing(const or_options_t *options, time_t now);
 void dirvote_act(const or_options_t *options, time_t now);
-time_t get_next_valid_after_time(time_t now);
+time_t dirvote_get_next_valid_after_time(void);
 
 /* invoked on timers and by outside triggers. */
 struct pending_vote_t * dirvote_add_vote(const char *vote_body,
@@ -234,7 +240,11 @@ STATIC smartlist_t *dirvote_compute_params(smartlist_t *votes, int method,
                              int total_authorities);
 STATIC char *compute_consensus_package_lines(smartlist_t *votes);
 STATIC char *make_consensus_method_list(int low, int high, const char *sep);
-#endif
+STATIC int
+networkstatus_compute_bw_weights_v10(smartlist_t *chunks, int64_t G,
+                                     int64_t M, int64_t E, int64_t D,
+                                     int64_t T, int64_t weight_scale);
+#endif /* defined(DIRVOTE_PRIVATE) */
 
-#endif
+#endif /* !defined(TOR_DIRVOTE_H) */
 

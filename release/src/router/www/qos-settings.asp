@@ -67,9 +67,9 @@ function verifyClassCeilingAndRate(bandwidthString, rateString, ceilingString, r
 		elem.setInnerHTML(
                         resultsFieldName,
                         'Ceiling must be greater than or equal to rate.');
-                                                                
+
                 return 0;
-	}	                                                                                        
+	}
 
 	return 1;
 }
@@ -78,7 +78,7 @@ function verifyFields(focused, quiet)
 {
 	var i, e, b, f;
 
-	if (!v_range('_qos_obw', quiet, 10, 999999)) return 0;
+	if (!v_range('_qos_obw', quiet, 10, 99999999)) return 0;
 	for (i = 0; i < 10; ++i) 
 	{
 		if (!verifyClassCeilingAndRate(
@@ -91,7 +91,7 @@ function verifyFields(focused, quiet)
 		}
 	}
 
-	if (!v_range('_qos_ibw', quiet, 10, 999999)) return 0;
+	if (!v_range('_qos_ibw', quiet, 10, 99999999)) return 0;
 	for (i = 0; i < 10; ++i) 
 	{
 		if (!verifyClassCeilingAndRate(
@@ -154,13 +154,13 @@ function save()
 	fom.qos_orates.value = a.join(',');
 
 	a = [];
-	
+
 	for (i = 0; i < 10; ++i) 
 	{
 		//a.push(E('_f_iceil_' + i).value);
 		a.push(E('_f_irate_' + i).value + '-' + E('_f_iceil_' + i).value);
 	}
-	
+
 	fom.qos_irates.value = a.join(',');
 
 	fom.ne_vegas.value = E('_f_ne_vegas').checked ? 1 : 0;
@@ -256,7 +256,7 @@ cc = nvram.qos_orates.split(/[,-]/);
 f = [];
 for (var uidx = 1; uidx <= nvram.mwan_num; ++uidx){
 	var u = (uidx >1) ? uidx : '';
-	f.push({ title: 'WAN '+uidx+'<br>Max Bandwidth Limit', name: 'wan'+u+'_qos_obw', type: 'text', maxlen: 6, size: 8, suffix: ' <small>kbit/s </small>', value: nvram['wan'+u+'_qos_obw'] });
+	f.push({ title: 'WAN '+uidx+'<br>Max Bandwidth Limit', name: 'wan'+u+'_qos_obw', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s </small>', value: nvram['wan'+u+'_qos_obw'] });
 }
 f.push(null);
 j = 0;
@@ -282,7 +282,7 @@ allRates = nvram.qos_irates.split(',');
 f = [];
 for (var uidx = 1; uidx <= nvram.mwan_num; ++uidx){
 	var u = (uidx >1) ? uidx : '';
-	f.push({ title: 'WAN '+uidx+'<br>Max Bandwidth Limit', name: 'wan'+u+'_qos_ibw', type: 'text', maxlen: 6, size: 8, suffix: ' <small>kbit/s </small>', value: nvram['wan'+u+'_qos_ibw'] });
+	f.push({ title: 'WAN '+uidx+'<br>Max Bandwidth Limit', name: 'wan'+u+'_qos_ibw', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s </small>', value: nvram['wan'+u+'_qos_ibw'] });
 }
 f.push(null);
 
@@ -291,14 +291,14 @@ f.push(
 		title: '', multi: [
 			{ title: 'Rate' },
 			{ title: 'Limit' } ]
-	});			
+	});
 
 for (i = 0; i < 10; ++i) 
 {
 	splitRate = allRates[i].split('-');
 	incoming_rate = splitRate[0] || 1;
 	incoming_ceil = splitRate[1] || 100;
-	
+
 	f.push(
 	{ 
 		title: classNames[i], multi: [
@@ -321,10 +321,10 @@ if ((v = nvram.qos_classnames.match(/^(.+)\s+(.+)\s+(.+)\s+(.+)\s+(.+)\s+(.+)\s+
 	v = ["-","Highest","High","Medium","Low","Lowest","A","B","C","D","E"];
 }
 titles = ['-','Priority Class 1', 'Priority Class 2', 'Priority Class 3', 'Priority Class 4', 'Priority Class 5', 'Priority Class 6', 'Priority Class 7', 'Priority Class 8', 'Priority Class 9', 'Priority Class 10'];
-f = [{ title: ' ', text: '<small>(Maximum 10 characters, no spaces)</small>' }];
+f = [{ title: ' ', text: '<small>(Maximum 12 characters, no spaces)</small>' }];
 for (i = 1; i < 11; ++i) {
 	f.push({ title: titles[i], name: ('f_qos_' + (i - 1)),
-		type: 'text', maxlen: 10, size: 15, value: v[i],
+		type: 'text', maxlen: 12, size: 15, value: v[i],
 		suffix: '<span id="count' + i + '"></span>' });
 }
 createFieldTable('', f);

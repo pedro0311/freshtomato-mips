@@ -1,4 +1,4 @@
-/* Copyright (c) 2014-2016, The Tor Project, Inc. */
+/* Copyright (c) 2014-2017, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 #ifndef TORCERT_H_INCLUDED
@@ -6,12 +6,15 @@
 
 #include "crypto_ed25519.h"
 
-#define SIGNED_KEY_TYPE_ED25519 0x01
+#define SIGNED_KEY_TYPE_ED25519     0x01
 
-#define CERT_TYPE_ID_SIGNING    0x04
-#define CERT_TYPE_SIGNING_LINK  0x05
-#define CERT_TYPE_SIGNING_AUTH  0x06
-#define CERT_TYPE_ONION_ID      0x0A
+#define CERT_TYPE_ID_SIGNING        0x04
+#define CERT_TYPE_SIGNING_LINK      0x05
+#define CERT_TYPE_SIGNING_AUTH      0x06
+#define CERT_TYPE_SIGNING_HS_DESC   0x08
+#define CERT_TYPE_AUTH_HS_IP_KEY    0x09
+#define CERT_TYPE_ONION_ID          0x0A
+#define CERT_TYPE_CROSS_HS_IP_KEYS  0x0B
 
 #define CERT_FLAG_INCLUDE_SIGNING_KEY 0x1
 
@@ -57,11 +60,13 @@ tor_cert_t *tor_cert_parse(const uint8_t *cert, size_t certlen);
 void tor_cert_free(tor_cert_t *cert);
 
 int tor_cert_get_checkable_sig(ed25519_checkable_t *checkable_out,
-                                 const tor_cert_t *out,
-                                 const ed25519_public_key_t *pubkey);
+                               const tor_cert_t *out,
+                               const ed25519_public_key_t *pubkey,
+                               time_t *expiration_out);
 
 int tor_cert_checksig(tor_cert_t *cert,
                       const ed25519_public_key_t *pubkey, time_t now);
+const char *tor_cert_describe_signature_status(const tor_cert_t *cert);
 
 tor_cert_t *tor_cert_dup(const tor_cert_t *cert);
 int tor_cert_eq(const tor_cert_t *cert1, const tor_cert_t *cert2);
@@ -71,6 +76,31 @@ ssize_t tor_make_rsa_ed25519_crosscert(const ed25519_public_key_t *ed_key,
                                        const crypto_pk_t *rsa_key,
                                        time_t expires,
                                        uint8_t **cert);
+MOCK_DECL(int,
+rsa_ed25519_crosscert_check, (const uint8_t *crosscert,
+                              const size_t crosscert_len,
+                              const crypto_pk_t *rsa_id_key,
+                              const ed25519_public_key_t *master_key,
+                              const time_t reject_if_expired_before));
 
-#endif
+or_handshake_certs_t *or_handshake_certs_new(void);
+void or_handshake_certs_free(or_handshake_certs_t *certs);
+int or_handshake_certs_rsa_ok(int severity,
+                              or_handshake_certs_t *certs,
+                              tor_tls_t *tls,
+                              time_t now);
+int or_handshake_certs_ed25519_ok(int severity,
+                                  or_handshake_certs_t *certs,
+                                  tor_tls_t *tls,
+                                  time_t now);
+void or_handshake_certs_check_both(int severity,
+                              or_handshake_certs_t *certs,
+                              tor_tls_t *tls,
+                              time_t now,
+                              const ed25519_public_key_t **ed_id_out,
+                              const common_digests_t **rsa_id_out);
+
+int tor_cert_encode_ed22519(const tor_cert_t *cert, char **cert_str_out);
+
+#endif /* !defined(TORCERT_H_INCLUDED) */
 
