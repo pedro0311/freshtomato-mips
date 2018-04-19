@@ -21,9 +21,7 @@ int main(int argc, char *argv[])
         	return 1;
 	}
 
-//	printf("check_wanup(%s) returns %d.\n", prefix, check_wanup(prefix));
-	
-	if (check_wanup(prefix) && f_read(wantime_file, &uptime, sizeof(time_t)) ==  sizeof(uptime)) {
+	if (check_wanup(prefix) && f_read(wantime_file, &uptime, sizeof(time_t)) == sizeof(uptime)) {
 		printf("%ld\n",si.uptime - uptime);
 	}
 	else
@@ -31,4 +29,3 @@ int main(int argc, char *argv[])
 
 	return 0;
 }
-

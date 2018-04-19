@@ -135,9 +135,6 @@ extern int ip6up_main(int argc, char **argv);
 extern int ip6down_main(int argc, char **argv);
 #endif
 
-// rc.c
-extern void restore_defaults(void);
-
 // redial.c
 extern int start_redial(char *prefix);
 extern int stop_redial(char *prefix);
