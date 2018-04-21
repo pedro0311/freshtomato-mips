@@ -626,7 +626,7 @@ ifeq ($(TCONFIG_PPTPD),y)
 endif
 
 	busybox/examples/depmod.pl -k $(LINUXDIR)/vmlinux -b $(TARGETDIR)/lib/modules/*/
-	@mv $(TARGETDIR)/lib/modules/*/modules.dep $(TARGETDIR)/lib/modules/
+#	@mv $(TARGETDIR)/lib/modules/*/modules.dep $(TARGETDIR)/lib/modules/
 	@echo ---
 
 	@rm -f $(TARGETDIR)/lib/modules/*/build
@@ -1051,7 +1051,7 @@ ntfs-3g-install:
 
 libusb10/Makefile: libusb10/Makefile.in
 	cd libusb10 && CFLAGS="-Os -Wall $(EXTRACFLAGS)" LIBS="-lpthread" \
-	$(CONFIGURE) --prefix=/usr ac_cv_lib_rt_clock_gettime=no
+	$(CONFIGURE) --disable-udev --prefix=/usr ac_cv_lib_rt_clock_gettime=no
 
 libusb10: libusb10/Makefile
 	$(MAKE) -C $@

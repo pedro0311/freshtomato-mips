@@ -11,7 +11,6 @@
  ********************************************************************
 
  function: simple example decoder using vorbisfile
- last mod: $Id: vorbisfile_example.c 16037 2009-05-26 21:10:58Z xiphmont $
 
  ********************************************************************/
 
@@ -38,7 +37,7 @@ int main(){
   int current_section;
 
 #ifdef _WIN32 /* We need to set stdin/stdout to binary mode. Damn windows. */
-  /* Beware the evil ifdef. We avoid these where we can, but this one we 
+  /* Beware the evil ifdef. We avoid these where we can, but this one we
      cannot. Don't add any more, you'll probably go to hell if you do. */
   _setmode( _fileno( stdin ), _O_BINARY );
   _setmode( _fileno( stdout ), _O_BINARY );
@@ -63,14 +62,19 @@ int main(){
             (long)ov_pcm_total(&vf,-1));
     fprintf(stderr,"Encoded by: %s\n\n",ov_comment(&vf,-1)->vendor);
   }
-  
+
   while(!eof){
     long ret=ov_read(&vf,pcmout,sizeof(pcmout),0,2,1,&current_section);
     if (ret == 0) {
       /* EOF */
       eof=1;
     } else if (ret < 0) {
-      /* error in the stream.  Not a problem, just reporting it in
+      if(ret==OV_EBADLINK){
+        fprintf(stderr,"Corrupt bitstream section! Exiting.\n");
+        exit(1);
+      }
+
+      /* some other error in the stream.  Not a problem, just reporting it in
          case we (the app) cares.  In this case, we don't. */
     } else {
       /* we don't bother dealing with sample rate changes, etc, but
@@ -81,7 +85,7 @@ int main(){
 
   /* cleanup */
   ov_clear(&vf);
-    
+
   fprintf(stderr,"Done.\n");
   return(0);
 }
