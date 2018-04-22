@@ -785,7 +785,7 @@ openssl-clean:
 	-@$(MAKE) -C openssl clean
 	@rm -f openssl/stamp-h1
 
-openssl-install: openssl
+openssl-install:
 	install -D openssl/libcrypto.so.1.0.0 $(INSTALLDIR)/openssl/usr/lib/libcrypto.so.1.0.0
 	$(STRIP) $(INSTALLDIR)/openssl/usr/lib/libcrypto.so.1.0.0
 	cd $(INSTALLDIR)/openssl/usr/lib && ln -sf libcrypto.so.1.0.0 libcrypto.so
