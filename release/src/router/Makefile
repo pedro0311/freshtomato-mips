@@ -811,7 +811,7 @@ openssl-clean:
 	-@$(MAKE) -C openssl clean
 	@rm -f openssl/stamp-h1
 
-openssl-install: openssl
+openssl-install:
 	install -D openssl/libcrypto.so.1.0.0 $(INSTALLDIR)/openssl/usr/lib/libcrypto.so.1.0.0
 	$(STRIP) $(INSTALLDIR)/openssl/usr/lib/libcrypto.so.1.0.0
 	cd $(INSTALLDIR)/openssl/usr/lib && ln -sf libcrypto.so.1.0.0 libcrypto.so
@@ -948,6 +948,7 @@ ppp-%:
 	$(MAKE) -C ppp/pppoecd $* INSTALLDIR=$(INSTALLDIR)/ppp $(if $(TCONFIG_IPV6),HAVE_INET6=y,)
 
 rp-pppoe/src/stamp-h1: rp-pppoe/src/Makefile.in
+	$(call patch_files,rp-pppoe)
 	cd rp-pppoe/src && CFLAGS="-g -O2 $(EXTRACFLAGS)" \
 	$(CONFIGURE) --prefix=/usr --enable-plugin=$(TOP)/pppd \
 	ac_cv_linux_kernel_pppoe=yes rpppoe_cv_pack_bitfields=rev
@@ -960,6 +961,7 @@ rp-pppoe-clean:
 	-@$(MAKE) -C rp-pppoe/src clean
 	@rm -f rp-pppoe/src/pppoe-relay
 	@rm -f rp-pppoe/src/stamp-h1
+	$(call unpatch_files,rp-pppoe)
 
 rp-pppoe-install:
 	install -D rp-pppoe/src/rp-pppoe.so $(INSTALLDIR)/rp-pppoe/usr/lib/pppd/rp-pppoe.so
@@ -1199,6 +1201,8 @@ accel-pptp-install:
 	$(STRIP) $(INSTALLDIR)/accel-pptp/usr/lib/pppd/pptp.so
 
 pptpd/stamp-h1:
+	$(call patch_files,pptpd)
+	ln -sf ../../pppd/pppd/ pptpd/plugins/pppd
 	cd pptpd && $(CONFIGURE) --prefix=$(INSTALLDIR)/pptpd --enable-bcrelay CC=$(CC) \
 		STRIP=$(CROSS_COMPILE)strip AR=$(AR) LD=$(LD) NM=$(NM) RANLIB=$(RANLIB)
 	touch pptpd/stamp-h1
@@ -1217,6 +1221,8 @@ pptpd-install:
 pptpd-clean:
 	-@$(MAKE) -C pptpd clean
 	rm -rf pptpd/stamp-h1 pptpd/.deps
+	rm -f pptpd/plugins/pppd
+	$(call unpatch_files,pptpd)
 
 pppd/Makefile: pppd/linux/Makefile.top
 	cd pppd && $(CONFIGURE) --prefix=/usr --sysconfdir=/tmp
