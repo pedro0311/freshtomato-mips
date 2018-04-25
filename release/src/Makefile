@@ -87,7 +87,7 @@ else
 
 all: tomato_ver
 	@echo ""
-	@echo "Building FreshTomato $(ND) $(current_BUILD_USB) $(current_TOMATO_VER)-$(mips_rev)$(beta)$(V2) $(current_BUILD_DESC) $(current_BUILD_NAME) with $(TOMATO_PROFILE_NAME) Profile"
+	@echo "Building FreshTomato $(ND) $(current_BUILD_USB) $(current_TOMATO_VER)$(beta)-$(mips_rev)$(V2) $(current_BUILD_DESC) $(current_BUILD_NAME) with $(TOMATO_PROFILE_NAME) Profile"
 
 	@echo ""
 	@echo ""
@@ -97,15 +97,15 @@ all: tomato_ver
 	@$(MAKE) -C router install
 	@$(MAKE) -C btools
 
-	@rm -f image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER)-$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).trx
-	@rm -f image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER)-$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).bin
+	@rm -f image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER)$(beta)-$(mips_rev)$(V2)-$(current_BUILD_DESC).trx
+	@rm -f image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER)$(beta)-$(mips_rev)$(V2)-$(current_BUILD_DESC).bin
 ifeq ($(LINKSYS_E),1)
-	@rm -f image/freshtomato-E??00$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER)-$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).bin
+	@rm -f image/freshtomato-E??00$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER)$(beta)-$(mips_rev)$(V2)-$(current_BUILD_DESC).bin
 endif
 ifeq ($(BELKIN),y)
 ifneq ($(NVRAM_SIZE),60)
-	@rm -f image/freshtomato-F7D????$(current_BUILD_USB)-$(current_TOMATO_VER)-$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).bin
-	@rm -f image/freshtomato-F5D8235v3$(current_BUILD_USB)-$(current_TOMATO_VER)-$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).bin
+	@rm -f image/freshtomato-F7D????$(current_BUILD_USB)-$(current_TOMATO_VER)$(beta)-$(mips_rev)$(V2)-$(current_BUILD_DESC).bin
+	@rm -f image/freshtomato-F5D8235v3$(current_BUILD_USB)-$(current_TOMATO_VER)$(beta)-$(mips_rev)$(V2)-$(current_BUILD_DESC).bin
 endif
 endif
 	@echo "" >>fpkg.log
@@ -126,33 +126,33 @@ else
 ifeq ($(LINKSYS_E),1)
 	# Linksys E-series build plus generic TRX image
 	@btools/fpkg -i lzma-loader/loader.gz -i $(LINUXDIR)/arch/mips/brcm-boards/bcm947xx/compressed/vmlinuz -a 1024 -i router/mipsel-uclibc/target.image \
-		-t image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER)-$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).trx \
-		-l 4200,image/freshtomato-E4200$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER)-$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).bin \
-		-l 61XN,image/freshtomato-E3000$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER)-$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).bin \
-		-l 32XN,image/freshtomato-E2000$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER)-$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).bin \
+		-t image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER)$(beta)-$(mips_rev)$(V2)-$(current_BUILD_DESC).trx \
+		-l 4200,image/freshtomato-E4200$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER)$(beta)-$(mips_rev)$(V2)-$(current_BUILD_DESC).bin \
+		-l 61XN,image/freshtomato-E3000$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER)$(beta)-$(mips_rev)$(V2)-$(current_BUILD_DESC).bin \
+		-l 32XN,image/freshtomato-E2000$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER)$(beta)-$(mips_rev)$(V2)-$(current_BUILD_DESC).bin \
 		| tee -a fpkg.log
 else
 ifeq ($(BELKIN),y)
 ifneq ($(NVRAM_SIZE),60)
 	# Create Belkin images
 	@btools/fpkg -i lzma-loader/loader.gz -i $(LINUXDIR)/arch/mips/brcm-boards/bcm947xx/compressed/vmlinuz -a 1024 -i router/mipsel-uclibc/target.image \
-		-t image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER)-$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).trx \
-		-b 0x20100322,image/freshtomato-F7D3301$(current_BUILD_USB)-$(current_TOMATO_VER)-$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).bin \
-		-b 0x20090928,image/freshtomato-F7D3302$(current_BUILD_USB)-$(current_TOMATO_VER)-$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).bin \
-		-b 0x20091006,image/freshtomato-F7D4302$(current_BUILD_USB)-$(current_TOMATO_VER)-$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).bin \
-		-b 0x00017116,image/freshtomato-F5D8235v3$(current_BUILD_USB)-$(current_TOMATO_VER)-$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).bin \
+		-t image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER)$(beta)-$(mips_rev)$(V2)-$(current_BUILD_DESC).trx \
+		-b 0x20100322,image/freshtomato-F7D3301$(current_BUILD_USB)-$(current_TOMATO_VER)$(beta)-$(mips_rev)$(V2)-$(current_BUILD_DESC).bin \
+		-b 0x20090928,image/freshtomato-F7D3302$(current_BUILD_USB)-$(current_TOMATO_VER)$(beta)-$(mips_rev)$(V2)-$(current_BUILD_DESC).bin \
+		-b 0x20091006,image/freshtomato-F7D4302$(current_BUILD_USB)-$(current_TOMATO_VER)$(beta)-$(mips_rev)$(V2)-$(current_BUILD_DESC).bin \
+		-b 0x00017116,image/freshtomato-F5D8235v3$(current_BUILD_USB)-$(current_TOMATO_VER)$(beta)-$(mips_rev)$(V2)-$(current_BUILD_DESC).bin \
 		| tee -a fpkg.log
 endif
 else
 	# Create generic TRX image
 	@btools/fpkg -i lzma-loader/loader.gz -i $(LINUXDIR)/arch/mips/brcm-boards/bcm947xx/compressed/vmlinuz -a 1024 -i router/mipsel-uclibc/target.image \
-		-t image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER)-$(mips_rev)$(beta)$(V2)-$(current_BUILD_DESC).trx \
+		-t image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)-$(current_TOMATO_VER)$(beta)-$(mips_rev)$(V2)-$(current_BUILD_DESC).trx \
 		| tee -a fpkg.log
 endif
 endif
 endif
 
-	@cp fpkg.log image/fpkg-$(current_TOMATO_VER)-$(mips_rev)$(beta)$(V2).log
+	@cp fpkg.log image/fpkg-$(current_TOMATO_VER)$(beta)-$(mips_rev)$(V2).log
 	@echo ""
 	@echo "-----------------"
 	@echo `cat router/shared/tomato_version` " ready"
