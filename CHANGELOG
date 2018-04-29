@@ -3,6 +3,87 @@ FreshTomato-MIPS Changelog
 
 
 
+2018.1.066-beta 2018-04-27
+--------------------------
+
+- kernel: patch kernel against CVE-2016-10229
+- kernel: disable router anycast address for /127 and /128 prefixes
+- kernel: resolve force_igmp_version ignored when a IGMPv3 query received
+- kernel: igmp: add a missing spin_lock_init()
+- kernel: igmp: acquire pmc lock for ip_mc_clear_src()
+- kernel: proc/sysctl: fix the int overflow for jiffies conversion
+- kernel: net: ipv4: fix multipath RTM_GETROUTE behavior when iif is given
+- flac: update to 1.3.2
+- libxml2: update to 2.9.3
+- libpng: update to 1.2.57
+- libcurl: update to 7.59.0
+- pcre: update to 8.42
+- nano: update to 2.9.5
+- libsodium: update to 1.0.15
+- Tor: update to 0.3.2.10
+- OpenVPN: update to 2.4.5
+- dnscrypt-proxy: update to 1.9.5
+- dnsmasq: update to 2.79
+- adminer: update to 4.6.2 2018-02-20 (only English)
+- uqmi: updated to uqmi-8ceeab6
+- lzo: update to 2.10
+- libcurl: update CA certificate bundle as of 2018-03-07
+- libexif: update to 0.6.21
+- libogg: update to 1.3.3
+- libvorbis: update to 1.3.6
+- libusb: update to 1.0.22
+- pptpd: update to 1.4.0
+- rp-pppoe: update to 3.12
+- ntfs-3g: update to 2017.3.23
+- sqlite: update to 3.23.1
+- GUI: OpenVPN: add LZ4, NCP and auth digest support
+- GUI: IP Traffic and Bandwith monitors: add possibility to change unit of displayed speeds (kbit/KB and Mbit/MB)
+- GUI: QoS/BW Limiter: increase the maximum number of digits in speed fields to 8
+- GUI: add possibility to select LTE band and roaming on 4G/LTE connection
+- libcurl: size optimization (disable proxy and libcurl output options)
+- OpenVPN: change configuration option 'tls-remote' to 'remote-cert-tls', because 'tls-remote' is deprecated or even removed in newest openvpn version
+- OpenVPN client: fixed issue #136: added 'route-noexec' to client configuration to prevent DNS leaks
+- OpenVPN: change default client's remote/local IPs, so each is different
+- OpenVPN: change default remote/local IPs/subnet for servers, so each is different
+- switch3g/4g, watchdog: fix modem recognition, logic of watchdog
+- switch4g: improved/fixed QMI modem support
+- busybox: drop modules.dep path hack, it doesn't required
+- busybox: add hostname applet, required by some Entware packages
+- minidlna: add persistent uuid based on router's mac
+- Miniupnpd: [PATCH] Tomato Specific: Enable Miniupnpd portinuse check
+- Makefile: disable RAID (mdadm binary) on AIO (z) and Mega-VPN (o) targets
+- router/Makefile: remove dependencies from various install recipes, to reduce the amount of double (and triple) recompile duing build
+- flac: fix compilation on Mint x64
+- nfs-utils: PATCH exportfs: getexportent interprets -test-client- as default options
+- rc/ppp.c: typo
+- rc/pptp_client.c: add pptp-client user/pass quotation (fix issue #148)
+- rc/services.c: [PATCH] REVERT: Do not write out 'no-dhcp-interface' in dnsmasq.conf
+- rc/services.c: SIGINT seems to be issued too soon against dnsmasq - wait one second before doing so
+- rc/services.c: correct val for unlink 
+- rc/services.c: avoid concurrent connections
+- rc/tor.c: removed deprecated option from config (AllowUnverifiedNodes)
+- rc/tor.c: add localhost ports and .onion support; disable IPv6 names resolution for onion domains by default;
+  enable LAN pool for clients; add AvoidDiskWrites option to config
+- rc/wan.c: fix typos, redial period for pppd
+- rc/wan.c: move l2tp route fix to preset_wan
+- rc/wan.c: don't terminate xl2tpd on every ppp start
+- rc/wan.c: dnsmasq process was receiving a second SIGINT signal. Instead of triggering another DNSSEC time checking, it was killing process
+- rc/wan.c: start adblock only when wan is up
+- rc/wan.c: fix boot with only secondary/etc wan active (assume current wan is primary if previous is not up)
+- rc/wan.c: adblock improvments, just start once
+- rc/wan.c: cleanup
+- rc/watchdog.c: changed one of connection checkers from wget to curl; now this is a recommended method for LTE connections
+- fix "Enable DSCP Fix", and make it MultiWan aware *
+- fix ntpc for mwan
+- ipv4: Resolve force_igmp_version ignored when a IGMPv3 query received
+- upnp: external and internal port arguments are swapped in miniupnpd's config file
+- Code cleanup/improvements
+- Make igmpproxy MWAN-friendly (It flooded logs when only secondary wan was connected)
+- Improve vpnrouting and switch3g script logic, other small changes
+- tinc: Add daemon poll option to check if the daemon is running, Similar to OpenVPN
+- Revert: GUI: fix problem with passing Tagged/UNtagged on same port when using default vlan (Not working as intended/has problems)
+
+
 2018.1.010-beta 2018-04-15
 --------------------------
 not public

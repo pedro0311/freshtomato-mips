@@ -1464,6 +1464,7 @@ endif
 	@echo "c            BTgui-VPN - (Ext plus BT gui)"
 	@echo "d            Nocat-VPN - (BTgui plus VPN plus Nocat)"
 	@echo "g            Tor-VPN - (BTgui plus VPN plus TOR Project)"
+	@echo "u            BT"
 	@echo "t            BT-VPN - (BT plus VPN)"
 	@echo "b            Big-VPN - (Big plus VPN)"
 ifeq ($(CONFIG_LINUX26),y)
@@ -1471,6 +1472,7 @@ ifeq ($(CONFIG_LINUX26),y)
 	@echo "z            MIPS Release 15F AIO (for routers +8MB flash)"
 	@echo "i            MiniIPv6 - (IPv6 with no USB support minus CIFS and RIPv1/2)"
 	@echo "j            MiniVPN - (VPN with no USB support minus CIFS and RIPv1/2)"
+	@echo "a            MiniVPN - (with USB support)"
 	@echo "f            Mini - (no USB support minus CIFS and RIPv1/2)"
 endif
 	@echo "v            VPN (no usb) - (VPN with no USB support) / in K26 with IPv6 support"
@@ -1486,10 +1488,12 @@ ifeq ($(CONFIG_LINUX26),y)
 	@echo "r2c          MIPS Release 2 BTgui-VPN"
 	@echo "r2d          MIPS Release 2 Nocat-VPN"
 	@echo "r2g          MIPS Release 2 Tor-VPN"
+	@echo "r2u          MIPS Release 2 BT"
 	@echo "r2t          MIPS Release 2 BT-VPN"
 	@echo "r2b          MIPS Release 2 Big-VPN"
 	@echo "r2o          MIPS Release 2 Mega-VPN (for routers +8MB flash)"
 	@echo "r2z          MIPS Release 2 AIO (for routers +8MB flash)"
+	@echo "r2a          MIPS Release 2 MiniVPN (USB support)"
 	@echo "r2v          MIPS Release 2 VPN (no usb)"
 	@echo "r2m          MIPS Release 2 Max (no usb)"
 	@echo "r2i          MIPS Release 2 MiniIPv6 (for 4MB flash)"
