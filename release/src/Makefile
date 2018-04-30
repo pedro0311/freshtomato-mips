@@ -230,11 +230,11 @@ ifeq ($(LINKSYS_E3200),y)
 	@rm -f image/freshtomato-E3200$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).bin
 	@rm -f image/freshtomato-E2500v3$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).bin
 endif
-ifeq ($(BELKIN),y)
-ifneq ($(NVRAM_SIZE),60)
-	@rm -f image/freshtomato-F7D????$(current_BUILD_USB)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).bin
+ifeq ($(BELKIN_F5D),y)
 	@rm -f image/freshtomato-F5D8235v3$(current_BUILD_USB)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).bin
 endif
+ifeq ($(BELKIN_F7D),y)
+	@rm -f image/freshtomato-F7D????$(current_BUILD_USB)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).bin
 endif
 	@echo "" >>fpkg.log
 	@echo "***********************" `date` "************************" >>fpkg.log
@@ -296,16 +296,19 @@ ifeq ($(LINKSYS_E1200v1),y)
 		-l E120,image/freshtomato-E1200v1$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).bin \
 		| tee -a fpkg.log
 endif
-ifeq ($(BELKIN),y)
-ifneq ($(NVRAM_SIZE),60)
-	# Create Belkin images
+ifeq ($(BELKIN_F5D),y)
+	# Create Belkin F5D8235v3 image
+	@btools/fpkg -i lzma-loader/loader.gz -i $(LINUXDIR)/arch/mips/brcm-boards/bcm947xx/compressed/vmlinuz -a 1024 -i router/mipsel-uclibc/target.image \
+		-b 0x00017116,image/freshtomato-F5D8235v3$(current_BUILD_USB)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).bin \
+		| tee -a fpkg.log
+endif
+ifeq ($(BELKIN_F7D),y)
+	# Create Belkin F7D3301, F7D3302, F7D4302 images
 	@btools/fpkg -i lzma-loader/loader.gz -i $(LINUXDIR)/arch/mips/brcm-boards/bcm947xx/compressed/vmlinuz -a 1024 -i router/mipsel-uclibc/target.image \
 		-b 0x20100322,image/freshtomato-F7D3301$(current_BUILD_USB)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).bin \
 		-b 0x20090928,image/freshtomato-F7D3302$(current_BUILD_USB)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).bin \
 		-b 0x20091006,image/freshtomato-F7D4302$(current_BUILD_USB)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).bin \
-		-b 0x00017116,image/freshtomato-F5D8235v3$(current_BUILD_USB)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).bin \
 		| tee -a fpkg.log
-endif
 endif
 ifeq ($(WNDR),y)
 	@echo "Creating Firmware for Netgear WNDR Routers ..."
@@ -1204,7 +1207,7 @@ r2o:
 	@$(MAKE) o MIPS32=r2
 
 r2f:
-	@$(MAKE) f MIPS32=r2 BELKIN=y
+	@$(MAKE) f MIPS32=r2
 
 r2i:
 	@$(MAKE) i MIPS32=r2
@@ -1217,6 +1220,14 @@ r2v:
 
 r2m:
 	@$(MAKE) m MIPS32=r2
+
+
+## Belkin
+f5d:
+	@$(MAKE) bin MIPS32=r2 NO_JFFS=y NO_CIFS=y NO_ZEBRA=y B=V NFS=y MEDIASRV=y PPTPD=y OPENVPN=y USB="USB" IPV6SUPP=y NVRAM_64K=y BELKIN_F5D=y BUILD_DESC="IPv6-$(VPN)"
+
+f7d:
+	@$(MAKE) bin MIPS32=r2 NO_JFFS=y NO_CIFS=y NO_ZEBRA=y B=V NFS=y MEDIASRV=y USB="USB" IPV6SUPP=y NVRAM_SIZE=32 BELKIN_F7D=y BUILD_DESC="IPv6-$(VPN)"
 
 
 ## Linksys E-series witk 60K NVRAM builds
@@ -1341,6 +1352,9 @@ n60:
 
 n60init:
 	@$(MAKE) bin MIPS32=r2 B=E BUILD_DESC="TendaN60-init" USB="" NO_JFFS=y NO_CIFS=y NO_HTTPS=y NO_XXTP=y NO_ZEBRA=y NO_SSH=y
+
+f9k:
+	@$(MAKE) bin MIPS32=r2 NO_JFFS=y NO_CIFS=y NO_ZEBRA=y B=V NFS=y MEDIASRV=y PPTPD=y OPENVPN=y USB="USB" USBAP=y IPV6SUPP=y NVRAM_64K=y BUILD_DESC="F9K1102" USBEXTRAS=y
 
 
 # it`s not possible to flash tomato on this router. Maybe in the future.
@@ -1509,6 +1523,10 @@ ifeq ($(CONFIG_LINUX26),y)
 	@echo "r2j          MIPS Release 2 MiniVPN (for 4MB flash)"
 	@echo "r2f          MIPS Release 2 Mini (for netgear)"
 	@echo ""
+	@echo "       Belkin F5D/F7D Series with 8MB Flash"
+	@echo "f5d          Belkin F5D8235v3 MIPSr2 Mini w/ USB, IPv6, VPN"
+	@echo "f7d          Belkin F7D3301/3302/4302 MIPSr2 Mini w/ USB, IPv6, VPN"
+	@echo ""
 	@echo "       Linksys E-Series with 4MB Flash (E1000v2/v2.1/E1200v1)"
 	@echo "e1000v2f     Linksys E1000v2-v2.1/Cisco M10v2 Mini"
 	@echo "e1000v2i     Linksys E1000v2-v2.1/Cisco M10v2 MiniIPv6"
@@ -1543,6 +1561,7 @@ ifeq ($(CONFIG_LINUX26),y)
 	@echo ""
 	@echo "       Routers with wl_high module"
 	@echo "rtn53        Asus RT-N53 with wl_high module (dualband support)"
+	@echo "f9k          Belkin F9K1102 (v1/v3) with wl_high module (dualband support)"
 	@echo "e2500        Linksys E2500 with wl_high module (dualband support)"
 	@echo "e3200        Linksys E3200/E2500v3 with wl_high module (dualband support) / max 16MB"
 	@echo "n6           Tenda N6 with wl_high module (dualband support)"

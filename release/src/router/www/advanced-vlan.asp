@@ -85,6 +85,7 @@ switch(nvram['t_model_name']) { //Added by Tvlz, June 2014
 	case 'vlan-testid0':
 	case 'Belkin Share N300 (F7D3302/F7D7302) v1':
 	case 'Belkin Play N600 (F7D4302/F7D8302) v1':
+	case 'Belkin N600 DB Wireless N+':
 	case 'D-Link Dir-620 C1':
 //	case 'FiberHome HG320':
 	case 'Linksys E800 v1.0':
