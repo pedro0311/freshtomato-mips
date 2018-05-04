@@ -1058,6 +1058,7 @@ void start_upnp(void)
 
 				char lanN_ipaddr[] = "lanXX_ipaddr";
 				char lanN_netmask[] = "lanXX_netmask";
+				char lanN_ifname[] = "lanXX_ifname";
 				char upnp_lanN[] = "upnp_lanXX";
 				char br;
 
@@ -1070,16 +1071,18 @@ void start_upnp(void)
 
 					sprintf(lanN_ipaddr, "lan%s_ipaddr", bridge);
 					sprintf(lanN_netmask, "lan%s_netmask", bridge);
+					sprintf(lanN_ifname, "lan%s_ifname", bridge);
 					sprintf(upnp_lanN, "upnp_lan%s", bridge);
 
 					char *lanip = nvram_safe_get(lanN_ipaddr);
 					char *lanmask = nvram_safe_get(lanN_netmask);
+					char *lanifname = nvram_safe_get(lanN_ifname);
 					char *lanlisten = nvram_safe_get(upnp_lanN);
 
-					if((strcmp(lanlisten,"1")==0) && (strcmp(lanip,"")!=0) && (strcmp(lanip,"0.0.0.0")!=0)) {
+					if((strcmp(lanlisten,"1")==0) && (strcmp(lanifname,"")!=0)) {
 						fprintf(f,
-							"listening_ip=%s/%s\n",
-							lanip, lanmask);
+							"listening_ip=%s\n",
+							lanifname);
 						int ports[4];
 						if ((ports[0] = nvram_get_int("upnp_min_port_ext")) > 0 &&
 							(ports[1] = nvram_get_int("upnp_max_port_ext")) > 0 &&
@@ -1451,17 +1454,33 @@ void start_igmp_proxy(void)
 			eval("igmpproxy", "/etc/igmp.alt");
 		}
 		else if ((fp = fopen("/etc/igmp.conf", "w")) != NULL) {
-
+		  /* check that lan, lan1, lan2 and lan3 are not selected and use custom config */
+		  /* The configuration file must define one (or more) upstream interface(s) and one or more downstream interfaces, 
+		     see https://github.com/pali/igmpproxy/commit/b55e0125c79fc9dbc95c6d6ab1121570f0c6f80f and
+		     see https://github.com/pali/igmpproxy/blob/master/igmpproxy.conf
+		   */
+		  if (nvram_match("multicast_lan", "0") && nvram_match("multicast_lan1", "0") && nvram_match("multicast_lan2", "0") && nvram_match("multicast_lan3", "0")) {
+			fprintf(fp, "%s\n", nvram_safe_get("multicast_custom"));
+			fclose(fp);
+			eval("igmpproxy", "/etc/igmp.conf");
+		  }
+		  /* create default config for upstream/downstream interface(s) */
+		  else {
 			fprintf(fp,
 				"quickleave\n");
 			for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
 				get_wan_prefix(wan_unit, wan_prefix);
 				if ((check_wanup(wan_prefix)) && (get_wanx_proto(wan_prefix) != WP_DISABLED)) {
 					count++;
+					/*
+					  Configuration for Upstream Interface
+					  Example:
+					  phyint ppp0 upstream ratelimit 0 threshold 1
+					  altnet 193.158.35.0/24
+					 */
 					fprintf(fp,
-						"phyint %s upstream\n"
+						"phyint %s upstream ratelimit 0 threshold 1\n"
 						"\taltnet %s\n",
-//						"phyint %s downstream ratelimit 0\n",
 						get_wanface(wan_prefix),
 						nvram_get("multicast_altnet") ? : "0.0.0.0/0");
 				}
@@ -1487,13 +1506,19 @@ void start_igmp_proxy(void)
 					sprintf(multicast_lanN, "multicast_lan%s", bridge);
 
 					if((strcmp(nvram_safe_get(multicast_lanN),"1")==0) && (strcmp(nvram_safe_get(lanN_ifname),"")!=0)) {
+					/*
+					  Configuration for Downstream Interface
+					  Example: 
+					  phyint br0 downstream ratelimit 0 threshold 1
+					 */
 						fprintf(fp,
-							"phyint %s downstream ratelimit 0\n",
+							"phyint %s downstream ratelimit 0 threshold 1\n",
 							nvram_safe_get(lanN_ifname));
 					}
 				}
 			fclose(fp);
 			eval("igmpproxy", "/etc/igmp.conf");
+		  }
 		}
 		else {
 			return;

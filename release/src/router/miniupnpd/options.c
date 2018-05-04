@@ -1,8 +1,8 @@
-/* $Id: options.c,v 1.33 2016/02/09 09:37:44 nanard Exp $ */
+/* $Id: options.c,v 1.35 2018/04/22 19:36:58 nanard Exp $ */
 /* MiniUPnP project
  * http://miniupnp.free.fr/ or http://miniupnp.tuxfamily.org/
  * author: Ryan Wagoner
- * (c) 2006-2014 Thomas Bernard
+ * (c) 2006-2018 Thomas Bernard
  * This software is subject to the conditions detailed
  * in the LICENCE file provided within the distribution */
 
@@ -83,6 +83,9 @@ static const struct {
 #ifdef ENABLE_LEASEFILE
 	{ UPNPLEASEFILE, "lease_file"},
 #endif
+#ifdef IGD_V2
+	{ UPNPFORCEIGDDESCV1, "force_igd_desc_v1"},
+#endif
 	{ UPNPMINISSDPDSOCKET, "minissdpdsocket"},
 	{ UPNPSECUREMODE, "secure_mode"}
 };
@@ -103,7 +106,7 @@ readoptionsfile(const char * fname)
 	size_t len;
 	void *tmp;
 
-	if(!fname || (strlen(fname) == 0))
+	if(!fname || (fname[0] == '\0'))
 		return -1;
 
 	memset(buffer, 0, sizeof(buffer));

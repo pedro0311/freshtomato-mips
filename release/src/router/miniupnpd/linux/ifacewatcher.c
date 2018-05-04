@@ -1,7 +1,7 @@
-/* $Id: ifacewatcher.c,v 1.8 2015/03/07 15:52:33 nanard Exp $ */
+/* $Id: ifacewatcher.c,v 1.9 2018/02/03 22:05:42 nanard Exp $ */
 /* MiniUPnP project
- * http://miniupnp.free.fr/ or http://miniupnp.tuxfamily.org/
- * (c) 2006-2015 Thomas Bernard
+ * http://miniupnp.free.fr/ or https://miniupnp.tuxfamily.org/
+ * (c) 2006-2018 Thomas Bernard
  *
  * ifacewatcher.c
  *
@@ -35,11 +35,6 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE. */
 
-
-#include "../config.h"
-
-#ifdef USE_IFACEWATCHER
-
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -52,6 +47,10 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
+
+#include "../config.h"
+
+#ifdef USE_IFACEWATCHER
 
 #include "../ifacewatcher.h"
 #include "../minissdp.h"
@@ -325,7 +324,7 @@ ProcessInterfaceWatchNotify(int s)
 					{
 						struct ifa_cacheinfo *cache_info;
 						cache_info = RTA_DATA(rth);
-						snprintf(tmp, sizeof(tmp), "valid=%u prefered=%u",
+						snprintf(tmp, sizeof(tmp), "valid=%u preferred=%u",
 						         cache_info->ifa_valid, cache_info->ifa_prefered);
 					}
 					break;

@@ -1,7 +1,8 @@
-/* $Id: upnpsoap.c,v 1.147 2016/02/20 19:12:00 nanard Exp $ */
-/* MiniUPnP project
- * http://miniupnp.free.fr/ or http://miniupnp.tuxfamily.org/
- * (c) 2006-2016 Thomas Bernard
+/* $Id: upnpsoap.c,v 1.151 2018/03/13 10:32:53 nanard Exp $ */
+/* vim: tabstop=4 shiftwidth=4 noexpandtab
+ * MiniUPnP project
+ * http://miniupnp.free.fr/ or https://miniupnp.tuxfamily.org/
+ * (c) 2006-2018 Thomas Bernard
  * This software is subject to the conditions detailed
  * in the LICENCE file provided within the distribution */
 
@@ -17,6 +18,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <ctype.h>
 
 #include "macros.h"
 #include "config.h"
@@ -30,6 +32,7 @@
 #include "getifstats.h"
 #include "getconnstatus.h"
 #include "upnpurns.h"
+#include "upnputils.h"
 
 /* utility function */
 static int is_numeric(const char * s)
@@ -272,7 +275,7 @@ GetStatusInfo(struct upnphttp * h, const char * action, const char * ns)
 	 * Disconnecting, Disconnected */
 
 	status = get_wan_connection_status_str(ext_if_name);
-	uptime = (time(NULL) - startup_time);
+	uptime = upnp_get_uptime();
 	bodylen = snprintf(body, sizeof(body), resp,
 		action, ns, /*SERVICE_TYPE_WANIPC,*/
 		status, (long)uptime, action);
@@ -388,12 +391,19 @@ AddPortMapping(struct upnphttp * h, const char * action, const char * ns)
 
 	ParseNameValue(h->req_buf + h->req_contentoff, h->req_contentlen, &data);
 	int_ip = GetValueFromNameValueList(&data, "NewInternalClient");
-	if (!int_ip)
+	if (int_ip) {
+		/* trim */
+		while(int_ip[0] == ' ')
+			int_ip++;
+	}
+#ifdef UPNP_STRICT
+	if (!int_ip || int_ip[0] == '\0')
 	{
 		ClearNameValueList(&data);
 		SoapError(h, 402, "Invalid Args");
 		return;
 	}
+#endif
 
 	/* IGD 2 MUST support both wildcard and specific IP address values
 	 * for RemoteHost (only the wildcard value was REQUIRED in release 1.0) */
@@ -409,6 +419,16 @@ AddPortMapping(struct upnphttp * h, const char * action, const char * ns)
 #endif
 #endif
 
+#ifndef UPNP_STRICT
+	/* if <NewInternalClient> arg is empty, use client address
+	 * see https://github.com/miniupnp/miniupnp/issues/236 */
+	if (!int_ip || int_ip[0] == '\0')
+	{
+		int_ip = h->clientaddr_str;
+		memcpy(&result_ip, &(h->clientaddr), sizeof(struct in_addr));
+	}
+	else
+#endif
 	/* if ip not valid assume hostname and convert */
 	if (inet_pton(AF_INET, int_ip, &result_ip) <= 0)
 	{
@@ -1352,7 +1372,7 @@ QueryStateVariable(struct upnphttp * h, const char * action, const char * ns)
 		BuildSendAndCloseSoapResp(h, body, bodylen);
 	}
 #if 0
-	/* not usefull */
+	/* not useful */
 	else if(strcmp(var_name, "ConnectionType") == 0)
 	{
 		bodylen = snprintf(body, sizeof(body), resp, "IP_Routed");
@@ -1604,8 +1624,14 @@ AddPinhole(struct upnphttp * h, const char * action, const char * ns)
 		goto clear_and_exit;
 	}
 	/* I guess it is useless to convert int_ip to literal ipv6 address */
+	if(rem_host)
+	{
+		/* trim */
+		while(isspace(rem_host[0]))
+			rem_host++;
+	}
 	/* rem_host should be converted to literal ipv6 : */
-	if(rem_host && (rem_host[0] != '\0'))
+	if(rem_host && (rem_host[0] != '\0') && (rem_host[0] != '*'))
 	{
 		struct addrinfo *ai, *p;
 		struct addrinfo hints;

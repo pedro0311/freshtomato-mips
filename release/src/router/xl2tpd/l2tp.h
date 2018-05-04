@@ -38,9 +38,8 @@ typedef unsigned long long _u64;
 #include "aaa.h"
 #include "common.h"
 #include "ipsecmast.h"
-#include <net/route.h>
 
-#define CONTROL_PIPE "/var/run/l2tp-control"
+#define CONTROL_PIPE "/var/run/xl2tpd/l2tp-control"
 #define CONTROL_PIPE_MESSAGE_SIZE 1024
 
 /* Control pip request types */
@@ -59,7 +58,7 @@ typedef unsigned long long _u64;
 #define CONTROL_PIPE_REQ_LNS_REMOVE 'w'     /* Get status of LNS */
 
 #define BINARY "xl2tpd"
-#define SERVER_VERSION "xl2tpd-1.3.9"
+#define SERVER_VERSION "xl2tpd-1.3.11"
 #define VENDOR_NAME "xelerance.com"
 #ifndef PPPD
 #define PPPD		"/usr/sbin/pppd"
@@ -83,7 +82,7 @@ struct control_hdr
 #define CLBIT(ver) (ver & 0x4000)       /* Length bit present.  Must be 1
                                            for control messages */
 
-#define CZBITS(ver) (ver &0x37F8)       /* Reserved bits:  We must drop 
+#define CZBITS(ver) (ver &0x37F8)       /* Reserved bits:  We must drop
                                            anything with these there */
 
 #define CFBIT(ver) (ver & 0x0800)       /* Presence of Ns and Nr fields
@@ -112,12 +111,12 @@ struct payload_hdr
                                    so we can "decompress" the
                                    payloads and simplify coding */
 #if 1
-#define DEFAULT_MAX_RETRIES 5    /* Recommended value from spec */
+#define DEFAULT_MAX_RETRIES 5   /* Recommended value from spec */
 #else
 #define DEFAULT_MAX_RETRIES 95   /* give us more time to debug */
 #endif
 
-#define DEFAULT_RWS_SIZE   4    /* Default max outstanding 
+#define DEFAULT_RWS_SIZE   4    /* Default max outstanding
                                    control packets in queue */
 #define DEFAULT_TX_BPS		10000000        /* For outgoing calls, report this speed */
 #define DEFAULT_RX_BPS		10000000
@@ -184,7 +183,6 @@ struct tunnel
     struct lns *lns;            /* LNS that owns us */
     struct lac *lac;            /* LAC that owns us */
     struct in_pktinfo my_addr;  /* Address of my endpoint */
-    struct rtentry rt;          /* Route added to destination */
     char hostname[MAXSTRLEN];   /* Remote hostname */
     char vendor[MAXSTRLEN];     /* Vendor of remote product */
     struct challenge chal_us;   /* Their Challenge to us */
@@ -252,12 +250,8 @@ extern int get_entropy (unsigned char *, int);
 #endif
 #endif
 
-/* Route manipulation */
-#define sin_addr(s) (((struct sockaddr_in *)(s))->sin_addr)
-extern int route_add(const struct in_addr inetaddr, struct rtentry *rt);
-extern int route_del(struct rtentry *rt);
 
-/* 
+/*
  * This is just some stuff to take
  * care of kernel definitions
  */

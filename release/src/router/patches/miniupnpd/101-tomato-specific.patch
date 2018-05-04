@@ -1,0 +1,103 @@
+--- miniupnpd/genconfig.sh	2016-02-11 11:35:12.000000000 +0100
++++ miniupnpd/genconfig.sh	2018-04-02 00:24:49.000000000 +0200
+@@ -85,6 +85,12 @@ if [ -f ./os.openwrt ]; then
+ 	OS_VERSION=$(cat ./os.openwrt)
+ fi
+ 
++# Tomato USB special case
++if [ -f ../shared/tomato_version ]; then
++	OS_NAME=Tomato
++	OS_VERSION="Tomato $(cat ../shared/tomato_version)"
++fi
++
+ # AstLinux special case
+ if [ -f ./os.astlinux ]; then
+ 	OS_NAME=AstLinux
+@@ -318,11 +318,6 @@ case $OS_NAME in
+ 		echo "#define USE_IFACEWATCHER 1" >> ${CONFIGFILE}
+ 		FW=netfilter
+ 		;;
+-	AstLinux)
+-		OS_URL=http://www.astlinux.org/
+-		echo "#define USE_IFACEWATCHER 1" >> ${CONFIGFILE}
+-		FW=netfilter
+-		;;
+ 	Tomato)
+ 		OS_NAME=UPnP
+ 		OS_URL=http://tomatousb.org/
+--- miniupnpd/linux/ifacewatcher.c	2015-03-07 16:56:51.000000000 +0100
++++ miniupnpd/linux/ifacewatcher.c	2018-04-02 00:24:49.000000000 +0200
+@@ -35,6 +35,11 @@
+  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  * POSSIBILITY OF SUCH DAMAGE. */
+ 
++
++#include "../config.h"
++
++#ifdef USE_IFACEWATCHER
++
+ #include <stdio.h>
+ #include <sys/types.h>
+ #include <sys/socket.h>
+@@ -48,10 +53,6 @@
+ #include <stdlib.h>
+ #include <signal.h>
+ 
+-#include "../config.h"
+-
+-#ifdef USE_IFACEWATCHER
+-
+ #include "../ifacewatcher.h"
+ #include "../minissdp.h"
+ #include "../getifaddr.h"
+--- miniupnpd/Makefile.linux	2016-04-19 23:01:05.000000000 +0200
++++ miniupnpd/Makefile.linux	2018-04-02 00:24:49.000000000 +0200
+@@ -26,6 +26,7 @@ CFLAGS ?= -Os
+ CFLAGS += -fno-strict-aliasing
+ CFLAGS += -fno-common
+ CPPFLAGS += -D_GNU_SOURCE
++CFLAGS += $(EXTRACFLAGS)
+ CFLAGS += -Wall
+ CFLAGS += -Wextra -Wstrict-prototypes -Wdeclaration-after-statement
+ #CFLAGS += -Wno-missing-field-initializers
+@@ -153,7 +154,7 @@ LDLIBS += $(shell $(PKG_CONFIG) --static
+ LDLIBS += $(shell $(PKG_CONFIG) --static --libs-only-l libnetfilter_conntrack)
+ endif # ($(TEST),1)
+ 
+-LDLIBS += $(shell $(PKG_CONFIG) --static --libs-only-l libssl)
++#LDLIBS += $(shell $(PKG_CONFIG) --static --libs-only-l libssl)
+ 
+ TEST := $(shell $(PKG_CONFIG) --exists uuid && echo 1)
+ ifeq ($(TEST),1)
+--- miniupnpd/netfilter/iptcrdr.c	2016-04-19 23:01:06.000000000 +0200
++++ miniupnpd/netfilter/iptcrdr.c	2018-04-02 00:24:49.000000000 +0200
+@@ -13,8 +13,8 @@
+ #include <netinet/in.h>
+ #include <arpa/inet.h>
+ #include <dlfcn.h>
+-#include <xtables.h>
++#include <iptables.h>
+ #include <linux/netfilter/xt_DSCP.h>
+ #include <libiptc/libiptc.h>
+ 
+ #include <linux/version.h>
+@@ -30,8 +30,8 @@
+ #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]) + __must_be_array(arr))
+ #define LIST_POISON2  ((void *) 0x00200200 )
+ 
+-#if 0
+-#include <linux/netfilter/nf_nat.h>
++#if 1
++#include "../../iptables-1.4.x/include/net/netfilter/nf_nat.h"
+ #else
+ #include "tiny_nf_nat.h"
+ #endif
+@@ -43,7 +43,7 @@
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)
+ #include <linux/netfilter_ipv4/ip_nat.h>
+ #else
+-#if 0
++#if 1
+ #include <linux/netfilter/nf_nat.h>
+ #else
+ #include "tiny_nf_nat.h"

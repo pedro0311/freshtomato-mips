@@ -999,6 +999,7 @@ miniupnpd-config:
 
 miniupnpd: iptables miniupnpd-config
 	@$(SEP)
+	$(call patch_files,miniupnpd)
 	$(MAKE) -C miniupnpd miniupnpd -f Makefile.linux CC=$(CC) \
 		CFLAGS="-Wall -Os -D_GNU_SOURCE $(EXTRACFLAGS) -I$(TOP)/iptables/include" \
 		LDFLAGS="-L$(TOP)/iptables -liptc" LIBS="" $(PARALLEL_BUILD)
@@ -1006,6 +1007,7 @@ miniupnpd: iptables miniupnpd-config
 miniupnpd-clean:
 	-@$(MAKE) -C miniupnpd -f Makefile.linux clean
 	@rm -f miniupnpd/config.h
+	$(call unpatch_files,miniupnpd)
 
 miniupnpd-install:
 	install -D miniupnpd/miniupnpd $(INSTALLDIR)/miniupnpd/usr/sbin/miniupnpd
@@ -1053,6 +1055,7 @@ ntfs-3g-install:
 
 libusb10/Makefile: libusb10/Makefile.in
 	cd libusb10 && CFLAGS="-Os -Wall $(EXTRACFLAGS)" LIBS="-lpthread" \
+	autoreconf -fsi && \
 	$(CONFIGURE) --disable-udev --prefix=/usr ac_cv_lib_rt_clock_gettime=no
 
 libusb10: libusb10/Makefile
@@ -1285,12 +1288,15 @@ rp-l2tp-install:
 	$(STRIP) $(INSTALLDIR)/rp-l2tp/usr/sbin/l2tpd
 
 xl2tpd: pppd
+	$(call patch_files,xl2tpd)
 	CFLAGS="-g $(EXTRACFLAGS)" $(MAKE) -C $@ PREFIX=/usr xl2tpd $(PARALLEL_BUILD)
 
 xl2tpd-install:
 	install -D xl2tpd/xl2tpd $(INSTALLDIR)/xl2tpd/usr/sbin/xl2tpd
 	$(STRIP) $(INSTALLDIR)/xl2tpd/usr/sbin/xl2tpd
 
+xl2tpd-clean:
+	$(call unpatch_files,xl2tpd)
 
 bpalogin-install:
 	install -D bpalogin/bpalogin $(INSTALLDIR)/bpalogin/usr/sbin/bpalogin
@@ -1635,6 +1641,7 @@ minidlna-install:
 igmpproxy/src/Makefile: igmpproxy/src/Makefile.in
 	cd igmpproxy && CFLAGS="-O2 -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
+	autoreconf -fsi && \
 	$(CONFIGURE) --prefix=/usr
 
 igmpproxy: igmpproxy/src/Makefile

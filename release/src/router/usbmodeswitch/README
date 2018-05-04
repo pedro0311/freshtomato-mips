@@ -7,7 +7,7 @@ http://www.draisberghof.de/usb_modeswitch
 What it is
 ==========
 
-USB_ModeSwitch is - hardly surprising -  a mode switching tool for controlling
+USB_ModeSwitch is - hardly surprising - a mode switching tool for controlling
 USB devices with multiple "modes". Now, what does THAT mean?
 
 More and more USB devices have their MS Windows drivers onboard; when plugged
@@ -170,7 +170,10 @@ Known working hardware, Troubleshooting
 Please go to the homepage (see link at the top). Read carefully.
 For support questions use ONLY public posts in the forum.
 
-Again - to see the USB IDs of known devices, see the data package.
+ONCE AGAIN: The USB IDs of devices are the only halfway reliable indicator to
+determine if they are known/supported. Brand and model names are often not
+helpful, due to rebranding and fimrware variations.
+See the data package, folder "usb_modeswitch.d" for known IDs.
 
 
 
@@ -244,6 +247,7 @@ Code, fixes and ideas contributed by:
  Leonid Lisovskiy
  Vladislav Grishenko
  Lubomir Rintel
+ Frank Schmirler
 
 Device information contributors are named in the "device_reference.txt" file.
 
@@ -272,4 +276,4 @@ Or find it as the file COPYING in this folder.
 
 
 
-Last revised: 2017-01-16, Josua Dietze
+Last revised: 2017-12-31, Josua Dietze
