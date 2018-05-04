@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.88 2016/02/10 20:32:43 nanard Exp $
+# $Id: Makefile,v 1.90 2017/12/12 11:40:13 nanard Exp $
 # MiniUPnP project
 # http://miniupnp.free.fr/ or http://miniupnp.tuxfamily.org/
 # Author: Thomas Bernard
@@ -46,8 +46,8 @@ FWNAME = pf
 
 # better way to find if we are using ipf or pf
 .if $(OSNAME) == "FreeBSD"
-.if exists(/etc/rc.subr) && exists(/etc/rc.conf)
-FWNAME != . /etc/rc.subr; . /etc/rc.conf; \
+.if exists(/etc/rc.subr) && exists(/etc/default/rc.conf)
+FWNAME != . /etc/rc.subr; . /etc/default/rc.conf; \
           if checkyesno ipfilter_enable; then \
           echo "ipf"; elif checkyesno pf_enable; then \
           echo "pf"; elif checkyesno firewall_enable; then \
@@ -139,11 +139,13 @@ TESTGETIFADDROBJS = testgetifaddr.o getifaddr.o
 MINIUPNPDCTLOBJS = miniupnpdctl.o
 TESTASYNCSENDTOOBJS = testasyncsendto.o asyncsendto.o upnputils.o bsd/getroute.o
 TESTPORTINUSEOBJS = testportinuse.o portinuse.o getifaddr.o
+TESTMINISSDPOBJS = testminissdp.o minissdp.o upnputils.o upnpglobalvars.o \
+                   asyncsendto.o bsd/getroute.o
 
 EXECUTABLES = miniupnpd testupnpdescgen testgetifstats \
               testupnppermissions miniupnpdctl \
               testgetifaddr testgetroute testasyncsendto \
-              testportinuse testssdppktgen
+              testportinuse testssdppktgen testminissdp
 
 .if $(OSNAME) == "Darwin"
 LIBS =
@@ -251,6 +253,9 @@ testasyncsendto:	config.h $(TESTASYNCSENDTOOBJS)
 
 testportinuse:	config.h $(TESTPORTINUSEOBJS)
 	$(CC) $(LDFLAGS) -o $@ $(TESTPORTINUSEOBJS) $(LIBS)
+
+testminissdp:	config.h $(TESTMINISSDPOBJS)
+	$(CC) $(LDFLAGS) -o $@ $(TESTMINISSDPOBJS) $(LIBS)
 
 # gmake :
 #	$(CC) $(CFLAGS) -o $@ $^

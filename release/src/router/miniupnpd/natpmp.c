@@ -1,6 +1,6 @@
-/* $Id: natpmp.c,v 1.53 2015/09/22 10:10:54 nanard Exp $ */
+/* $Id: natpmp.c,v 1.55 2018/03/12 22:41:54 nanard Exp $ */
 /* MiniUPnP project
- * (c) 2007-2015 Thomas Bernard
+ * (c) 2007-2017 Thomas Bernard
  * http://miniupnp.free.fr/ or http://miniupnp.tuxfamily.org/
  * This software is subject to the conditions detailed
  * in the LICENCE file provided within the distribution */
@@ -244,7 +244,10 @@ void ProcessIncomingNATPMPPacket(int s, unsigned char *msg_buff, int len,
 	/* setting response TIME STAMP :
 	 * time elapsed since its port mapping table was initialized on
 	 * startup or reset for any other reason */
-	WRITENU32(resp+4, time(NULL) - startup_time);
+	if(epoch_origin == 0) {
+		epoch_origin = startup_time;
+	}
+	WRITENU32(resp+4, upnp_time() - epoch_origin);
 	if(req[0] > 0) {
 		/* invalid version */
 		syslog(LOG_WARNING, "unsupported NAT-PMP version : %u",
@@ -364,7 +367,7 @@ void ProcessIncomingNATPMPPacket(int s, unsigned char *msg_buff, int len,
 					if(r==0) {
 						if(strcmp(senderaddrstr, iaddr_old)==0
 						    && iport==iport_old) {
-							/* redirection allready existing */
+							/* redirection already existing */
 							syslog(LOG_INFO, "port %hu %s already redirected to %s:%hu, replacing",
 							       eport, (proto==IPPROTO_TCP)?"tcp":"udp", iaddr_old, iport_old);
 							/* remove and then add again */
@@ -379,15 +382,9 @@ void ProcessIncomingNATPMPPacket(int s, unsigned char *msg_buff, int len,
 						}
 					}
 					/* do the redirection */
-#if 0
-					timestamp = (unsigned)(time(NULL) - startup_time)
-					                      + lifetime;
-					snprintf(desc, sizeof(desc), "NAT-PMP %u", timestamp);
-#else
-					timestamp = time(NULL) + lifetime;
+					timestamp = upnp_time() + lifetime;
 					snprintf(desc, sizeof(desc), "NAT-PMP %hu %s",
 					         eport, (proto==IPPROTO_TCP)?"tcp":"udp");
-#endif
 					/* TODO : check return code */
 					if(upnp_redirect_internal(NULL, eport, senderaddrstr,
 					                          iport, proto, desc,
@@ -433,7 +430,10 @@ void SendNATPMPPublicAddressChangeNotification(int * sockets, int n_sockets)
 	/* seconds since "start of epoch" :
 	 * time elapsed since the port mapping table was initialized on
 	 * startup or reset for any other reason */
-	WRITENU32(notif+4, time(NULL) - startup_time);
+	if(epoch_origin == 0) {
+		epoch_origin = startup_time;
+	}
+	WRITENU32(notif+4, upnp_time() - epoch_origin);
 #ifndef MULTIPLE_EXTERNAL_IP
 	FillPublicAddressResponse(notif, 0);
 	if(notif[3])
@@ -466,8 +466,8 @@ void SendNATPMPPublicAddressChangeNotification(int * sockets, int n_sockets)
 		           (struct sockaddr *)&sockname, sizeof(struct sockaddr_in));
 		if(n < 0)
 		{
-			syslog(LOG_ERR, "%s: sendto(s_udp=%d): %m",
-			       "SendNATPMPPublicAddressChangeNotification", sockets[j]);
+			syslog(LOG_ERR, "%s: sendto(s_udp=%d, port=%d): %m",
+			       "SendNATPMPPublicAddressChangeNotification", sockets[j], NATPMP_PORT);
 			return;
 		}
 		/* Port to use in 2008 version of the NAT-PMP specification */
@@ -476,8 +476,8 @@ void SendNATPMPPublicAddressChangeNotification(int * sockets, int n_sockets)
 		           (struct sockaddr *)&sockname, sizeof(struct sockaddr_in));
 		if(n < 0)
 		{
-			syslog(LOG_ERR, "%s: sendto(s_udp=%d): %m",
-			       "SendNATPMPPublicAddressChangeNotification", sockets[j]);
+			syslog(LOG_ERR, "%s: sendto(s_udp=%d, port=%d): %m",
+			       "SendNATPMPPublicAddressChangeNotification", sockets[j], NATPMP_NOTIF_PORT);
 			return;
 		}
 	}

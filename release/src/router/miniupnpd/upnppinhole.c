@@ -1,7 +1,7 @@
-/* $Id: upnppinhole.c,v 1.8 2016/01/19 10:03:30 nanard Exp $ */
+/* $Id: upnppinhole.c,v 1.13 2018/03/13 10:49:13 nanard Exp $ */
 /* MiniUPnP project
  * http://miniupnp.free.fr/ or http://miniupnp.tuxfamily.org/
- * (c) 2006-2016 Thomas Bernard
+ * (c) 2006-2018 Thomas Bernard
  * This software is subject to the conditions detailed
  * in the LICENCE file provided within the distribution */
 
@@ -23,6 +23,7 @@
 #include "upnpredirect.h"
 #include "upnpglobalvars.h"
 #include "upnpevents.h"
+#include "upnputils.h"
 #include "upnppinhole.h"
 #ifdef __APPLE__
 /* XXX - Apple version of PF API seems to differ from what
@@ -130,22 +131,18 @@ upnp_add_inboundpinhole(const char * raddr,
 		       AF_INET6, iaddr, &address);
 		return -4;
 	}
-	current = time(NULL);
+	current = upnp_time();
 	timestamp = current + leasetime;
 	r = 0;
 
-#if 0
-	if(r == 1 && strcmp(iaddr, iaddr_old)==0 && iport==iport_old)
-	{
-		syslog(LOG_INFO, "Pinhole for inbound traffic from [%s]:%hu to [%s]:%hu with protocol %s already done. Updating it.", raddr, rport, iaddr_old, iport_old, protocol);
-		t = upnp_update_inboundpinhole(idfound, leaseTime);
-		*uid = atoi(idfound);
-		return t;
+	*uid = upnp_find_inboundpinhole(raddr, rport, iaddr, iport, proto, NULL, 0, NULL);
+	if(*uid >= 0) {
+		syslog(LOG_INFO, "Pinhole for inbound traffic from [%s]:%hu to [%s]:%hu with proto %d found uid=%d. Updating it.", raddr, rport, iaddr, iport, proto, *uid);
+		r = upnp_update_inboundpinhole(*uid, timestamp);
+		return (r >= 0) ? 1 : r;
 	}
-	else
-#endif
 #if defined(USE_PF) || defined(USE_NETFILTER)
-	*uid = add_pinhole (0/*ext_if_name*/, raddr, rport,
+	*uid = add_pinhole (ext_if_name, raddr, rport,
 	                    iaddr, iport, proto, desc, timestamp);
 	return *uid >= 0 ? 1 : -1;
 #else
@@ -256,7 +253,7 @@ upnp_get_pinhole_info(unsigned short uid,
 	if(r >= 0) {
 		if(leasetime) {
 			time_t current_time;
-			current_time = time(NULL);
+			current_time = upnp_time();
 			if(timestamp > (unsigned int)current_time)
 				*leasetime = timestamp - current_time;
 			else
@@ -293,7 +290,7 @@ upnp_update_inboundpinhole(unsigned short uid, unsigned int leasetime)
 #if defined(USE_PF) || defined(USE_NETFILTER)
 	unsigned int timestamp;
 
-	timestamp = time(NULL) + leasetime;
+	timestamp = upnp_time() + leasetime;
 	return update_pinhole(uid, timestamp);
 #else
 	UNUSED(uid); UNUSED(leasetime);
@@ -335,7 +332,7 @@ upnp_check_pinhole_working(const char * uid,
 	/* TODO : to be implemented */
 #if 0
 	FILE * fd;
-	time_t expire = time(NULL);
+	time_t expire = upnp_time();
 	char buf[1024], filename[] = "/var/log/kern.log", expire_time[32]="";
 	int res = -4, str_len;
 

@@ -1,7 +1,8 @@
-/* $Id: upnpglobalvars.h,v 1.42 2016/02/09 09:37:44 nanard Exp $ */
-/* MiniUPnP project
- * http://miniupnp.free.fr/ or http://miniupnp.tuxfamily.org/
- * (c) 2006-2016 Thomas Bernard
+/* $Id: upnpglobalvars.h,v 1.46 2018/02/22 13:18:58 nanard Exp $ */
+/* vim: tabstop=4 shiftwidth=4 noexpandtab
+ * MiniUPnP project
+ * http://miniupnp.free.fr/ or https://miniupnp.tuxfamily.org/
+ * (c) 2006-2018 Thomas Bernard
  * This software is subject to the conditions detailed
  * in the LICENCE file provided within the distribution */
 
@@ -13,7 +14,7 @@
 #include "miniupnpdtypes.h"
 #include "config.h"
 
-/* name of the network interface used to acces internet */
+/* name of the network interface used to access internet */
 extern const char * ext_if_name;
 
 /* file to store all leases */
@@ -31,6 +32,10 @@ extern unsigned long upstream_bitrate;
 
 /* statup time */
 extern time_t startup_time;
+#if defined(ENABLE_NATPMP) || defined(ENABLE_PCP)
+/* origin for "epoch time" sent into NATPMP and PCP responses */
+extern time_t epoch_origin;
+#endif /*  defined(ENABLE_NATPMP) || defined(ENABLE_PCP) */
 
 extern unsigned long int min_lifetime;
 extern unsigned long int max_lifetime;
@@ -59,6 +64,9 @@ extern int runtime_flags;
 #endif
 #ifdef ENABLE_PCP
 #define PCP_ALLOWTHIRDPARTYMASK	0x0400
+#endif
+#ifdef IGD_V2
+#define FORCEIGDDESCV1MASK 0x0800
 #endif
 
 #define SETFLAG(mask)	runtime_flags |= mask
@@ -144,7 +152,7 @@ extern char ipv6_addr_for_http_with_brackets[64];
 /* address used to bind local services */
 extern struct in6_addr ipv6_bind_addr;
 
-#endif
+#endif /* ENABLE_IPV6 */
 
 extern const char * minissdpdsocketpath;
 
@@ -152,5 +160,9 @@ extern const char * minissdpdsocketpath;
 extern unsigned int upnp_bootid;
 extern unsigned int upnp_configid;
 
-#endif
+#ifdef RANDOMIZE_URLS
+#define RANDOM_URL_MAX_LEN (16)
+extern char random_url[];
+#endif /* RANDOMIZE_URLS */
 
+#endif /* UPNPGLOBALVARS_H_INCLUDED */

@@ -1,7 +1,8 @@
-/* $Id: miniupnpd.c,v 1.216 2016/03/07 12:26:00 nanard Exp $ */
-/* MiniUPnP project
+/* $Id: miniupnpd.c,v 1.229 2018/05/03 08:27:42 nanard Exp $ */
+/* vim: tabstop=4 shiftwidth=4 noexpandtab
+ * MiniUPnP project
  * http://miniupnp.free.fr/ or http://miniupnp.tuxfamily.org/
- * (c) 2006-2015 Thomas Bernard
+ * (c) 2006-2018 Thomas Bernard
  * This software is subject to the conditions detailed
  * in the LICENCE file provided within the distribution */
 
@@ -111,6 +112,9 @@ int get_udp_dst_port (char *payload);
 /* variables used by signals */
 static volatile sig_atomic_t quitting = 0;
 volatile sig_atomic_t should_send_public_address_change_notif = 0;
+#if !defined(TOMATO) && defined(ENABLE_LEASEFILE) && defined(LEASEFILE_USE_REMAINING_TIME)
+volatile sig_atomic_t should_rewrite_leasefile = 0;
+#endif /* !TOMATO && ENABLE_LEASEFILE && LEASEFILE_USE_REMAINING_TIME */
 
 #ifdef TOMATO
 #if 1
@@ -322,6 +326,7 @@ OpenAndConfHTTPSocket(unsigned short * port)
 		syslog(LOG_WARNING, "socket(PF_INET6, ...) failed with EAFNOSUPPORT, disabling IPv6");
 		SETFLAG(IPV6DISABLEDMASK);
 		ipv6 = 0;
+		/* Try again with IPv4 */
 		s = socket(PF_INET, SOCK_STREAM, 0);
 	}
 #endif
@@ -630,7 +635,7 @@ static int nfqueue_cb(
 
 					/* printf("pkt found %s\n",dd);*/
 					ProcessSSDPData (sudp, dd, size - x,
-					                 &sendername, (unsigned short) 5555);
+					                 &sendername, -1, (unsigned short) 5555);
 				}
 			}
 		}
@@ -790,45 +795,51 @@ sigusr1(int sig)
 	should_send_public_address_change_notif = 1;
 }
 
+#if !defined(TOMATO) && defined(ENABLE_LEASEFILE) && defined(LEASEFILE_USE_REMAINING_TIME)
+/* Handler for the SIGUSR2 signal to request rewrite of lease_file */
+static void
+sigusr2(int sig)
+{
+	UNUSED(sig);
+	should_rewrite_leasefile = 1;
+}
+#endif /* !TOMATO && ENABLE_LEASEFILE && LEASEFILE_USE_REMAINING_TIME */
+
 /* record the startup time, for returning uptime */
 static void
-set_startup_time(int sysuptime)
+set_startup_time(void)
 {
-	startup_time = time(NULL);
+	startup_time = upnp_time();
 #ifdef USE_TIME_AS_BOOTID
-	if(startup_time > 60*60*24 && upnp_bootid == 1) {
-		/* We know we are not January the 1st 1970 */
-		upnp_bootid = (unsigned int)startup_time;
+	if(upnp_bootid == 1) {
+		upnp_bootid = (unsigned int)time(NULL);
 		/* from UDA v1.1 :
 		 * A convenient mechanism is to set this field value to the time
 		 * that the device sends its initial announcement, expressed as
 		 * seconds elapsed since midnight January 1, 1970; */
 	}
 #endif /* USE_TIME_AS_BOOTID */
-	if(sysuptime)
+	if(GETFLAG(SYSUPTIMEMASK))
 	{
 		/* use system uptime instead of daemon uptime */
 #if defined(__linux__)
-		char buff[64];
-		int uptime = 0, fd;
-		fd = open("/proc/uptime", O_RDONLY);
-		if(fd < 0)
+		unsigned long uptime = 0;
+		FILE * f = fopen("/proc/uptime", "r");
+		if(f == NULL)
 		{
-			syslog(LOG_ERR, "open(\"/proc/uptime\" : %m");
+			syslog(LOG_ERR, "fopen(\"/proc/uptime\") : %m");
 		}
 		else
 		{
-			memset(buff, 0, sizeof(buff));
-			if(read(fd, buff, sizeof(buff) - 1) < 0)
+			if(fscanf(f, "%lu", &uptime) != 1)
 			{
-				syslog(LOG_ERR, "read(\"/proc/uptime\" : %m");
+				syslog(LOG_ERR, "fscanf(\"/proc/uptime\") : %m");
 			}
 			else
 			{
-				uptime = atoi(buff);
-				syslog(LOG_INFO, "system uptime is %d seconds", uptime);
+				syslog(LOG_INFO, "system uptime is %lu seconds", uptime);
 			}
-			close(fd);
+			fclose(f);
 			startup_time -= uptime;
 		}
 #elif defined(SOLARIS_KSTATS)
@@ -983,7 +994,6 @@ parselanaddr(struct lan_addr_s * lan_addr, const char * str)
 		}
 	}
 #endif
-#ifdef ENABLE_IPV6
 	if(lan_addr->ifname[0] != '\0')
 	{
 		lan_addr->index = if_nametoindex(lan_addr->ifname);
@@ -991,12 +1001,18 @@ parselanaddr(struct lan_addr_s * lan_addr, const char * str)
 			fprintf(stderr, "Cannot get index for network interface %s",
 			        lan_addr->ifname);
 	}
+#ifdef ENABLE_IPV6
 	else
 	{
 		fprintf(stderr,
 		        "Error: please specify LAN network interface by name instead of IPv4 address : %s\n",
 		        str);
 		return -1;
+	}
+#else
+	else
+	{
+		syslog(LOG_NOTICE, "it is advised to use network interface name instead of %s", str);
 	}
 #endif
 	return 0;
@@ -1292,6 +1308,15 @@ init(int argc, char * * argv, struct runtime_vars * v)
 			case UPNPMINISSDPDSOCKET:
 				minissdpdsocketpath = ary_options[i].value;
 				break;
+#ifdef IGD_V2
+			case UPNPFORCEIGDDESCV1:
+				if (strcmp(ary_options[i].value, "yes") == 0)
+					SETFLAG(FORCEIGDDESCV1MASK);
+				else if (strcmp(ary_options[i].value, "no") != 0 ) {
+					fprintf(stderr, "force_igd_desc_v1 can only be yes or no\n");
+				}
+				break;
+#endif
 			default:
 				fprintf(stderr, "Unknown option in file %s\n",
 				        optionsfile);
@@ -1317,6 +1342,11 @@ init(int argc, char * * argv, struct runtime_vars * v)
 		}
 		else switch(argv[i][1])
 		{
+#ifdef IGD_V2
+		case '1':
+			SETFLAG(FORCEIGDDESCV1MASK);
+			break;
+#endif
 		case 'b':
 			if(i+1 < argc) {
 				upnp_bootid = (unsigned int)strtoul(argv[++i], NULL, 10);
@@ -1616,7 +1646,7 @@ init(int argc, char * * argv, struct runtime_vars * v)
 	syslog(LOG_NOTICE, "version " MINIUPNPD_VERSION " started");
 #endif /* TOMATO */
 
-	set_startup_time(GETFLAG(SYSUPTIMEMASK));
+	set_startup_time();
 
 	/* presentation url */
 	if(presurl)
@@ -1661,9 +1691,19 @@ init(int argc, char * * argv, struct runtime_vars * v)
 	{
 		syslog(LOG_NOTICE, "Failed to set %s handler", "SIGUSR1");
 	}
+#if !defined(TOMATO) && defined(ENABLE_LEASEFILE) && defined(LEASEFILE_USE_REMAINING_TIME)
+	sa.sa_handler = sigusr2;
+	if(sigaction(SIGUSR2, &sa, NULL) < 0)
+	{
+		syslog(LOG_NOTICE, "Failed to set %s handler", "SIGUSR2");
+	}
+#endif /* !TOMATO && ENABLE_LEASEFILE && LEASEFILE_USE_REMAINING_TIME */
 
 	/* initialize random number generator */
 	srandom((unsigned int)time(NULL));
+#ifdef RANDOMIZE_URLS
+	snprintf(random_url, RANDOM_URL_MAX_LEN, "%08lx", random());
+#endif /* RANDOMIZE_URLS */
 
 	/* initialize redirection engine (and pinholes) */
 	if(init_redirect() < 0)
@@ -1728,7 +1768,11 @@ print_usage:
 #ifdef ENABLE_NFQUEUE
                         "\t\t[-Q queue] [-n name]\n"
 #endif
-			"\t\t[-A \"permission rule\"] [-b BOOTID]\n"
+			"\t\t[-A \"permission rule\"] [-b BOOTID]"
+#ifdef IGD_V2
+			" [-1]"
+#endif
+			"\n"
 	        "\nNotes:\n\tThere can be one or several listening_ips.\n"
 	        "\tNotify interval is in seconds. Default is 30 seconds.\n"
 			"\tDefault pid file is '%s'.\n"
@@ -1759,6 +1803,9 @@ print_usage:
 			"\t  \"allow 1024-65535 192.168.1.0/24 1024-65535\"\n"
 			"\t  \"deny 0-65535 0.0.0.0/0 0-65535\"\n"
 			"\t-b sets the value of BOOTID.UPNP.ORG SSDP header\n"
+#ifdef IGD_V2
+			"\t-1 force reporting IGDv1 in rootDesc *use with care*\n"
+#endif
 			"\t-h prints this help and quits.\n"
 	        "", argv[0], pidfilename, DEFAULT_CONFIG);
 	return 1;
@@ -1854,9 +1901,11 @@ main(int argc, char * * argv)
 
 	if(
 #ifdef ENABLE_NATPMP
-        !GETFLAG(ENABLENATPMPMASK) &&
+	   !GETFLAG(ENABLENATPMPMASK) && !GETFLAG(ENABLEUPNPMASK)
+#else
+	   !GETFLAG(ENABLEUPNPMASK)
 #endif
-        !GETFLAG(ENABLEUPNPMASK) ) {
+	   ) {
 		syslog(LOG_ERR, "Why did you run me anyway?");
 		return 0;
 	}
@@ -1927,16 +1976,18 @@ main(int argc, char * * argv)
 #endif /* V6SOCKETS_ARE_V6ONLY */
 #endif /* ENABLE_HTTPS */
 #ifdef ENABLE_IPV6
-		if(find_ipv6_addr(lan_addrs.lh_first ? lan_addrs.lh_first->ifname : NULL,
-		                  ipv6_addr_for_http_with_brackets, sizeof(ipv6_addr_for_http_with_brackets)) > 0) {
-			syslog(LOG_NOTICE, "HTTP IPv6 address given to control points : %s",
-			       ipv6_addr_for_http_with_brackets);
-		} else {
-			memcpy(ipv6_addr_for_http_with_brackets, "[::1]", 6);
-			syslog(LOG_WARNING, "no HTTP IPv6 address, disabling IPv6");
-			SETFLAG(IPV6DISABLEDMASK);
+		if(!GETFLAG(IPV6DISABLEDMASK)) {
+			if(find_ipv6_addr(lan_addrs.lh_first ? lan_addrs.lh_first->ifname : NULL,
+			                  ipv6_addr_for_http_with_brackets, sizeof(ipv6_addr_for_http_with_brackets)) > 0) {
+				syslog(LOG_NOTICE, "HTTP IPv6 address given to control points : %s",
+				       ipv6_addr_for_http_with_brackets);
+			} else {
+				memcpy(ipv6_addr_for_http_with_brackets, "[::1]", 6);
+				syslog(LOG_WARNING, "no HTTP IPv6 address, disabling IPv6");
+				SETFLAG(IPV6DISABLEDMASK);
+			}
 		}
-#endif
+#endif	/* ENABLE_IPV6 */
 
 		/* open socket for SSDP connections */
 		sudp = OpenAndConfSSDPReceiveSocket(0);
@@ -2004,7 +2055,9 @@ main(int argc, char * * argv)
 #endif
 
 #if defined(ENABLE_IPV6) && defined(ENABLE_PCP)
-	spcp_v6 = OpenAndConfPCPv6Socket();
+	if(!GETFLAG(IPV6DISABLEDMASK)) {
+		spcp_v6 = OpenAndConfPCPv6Socket();
+	}
 #endif
 
 	/* for miniupnpdctl */
@@ -2031,11 +2084,20 @@ main(int argc, char * * argv)
 	/* main loop */
 	while(!quitting)
 	{
+#ifdef USE_TIME_AS_BOOTID
 		/* Correct startup_time if it was set with a RTC close to 0 */
-		if((startup_time<60*60*24) && (time(NULL)>60*60*24))
+		if((upnp_bootid<60*60*24) && (time(NULL)>60*60*24))
 		{
-			set_startup_time(GETFLAG(SYSUPTIMEMASK));
+			upnp_bootid = time(NULL);
 		}
+#endif
+#if !defined(TOMATO) && defined(ENABLE_LEASEFILE) && defined(LEASEFILE_USE_REMAINING_TIME)
+		if(should_rewrite_leasefile)
+		{
+			lease_file_rewrite();
+			should_rewrite_leasefile = 0;
+		}
+#endif /* !TOMATO && ENABLE_LEASEFILE && LEASEFILE_USE_REMAINING_TIME */
 		/* send public address change notifications if needed */
 		if(should_send_public_address_change_notif)
 		{
@@ -2050,11 +2112,21 @@ main(int argc, char * * argv)
 				upnp_event_var_change_notify(EWanIPC);
 			}
 #endif
+#ifdef ENABLE_PCP
+			if(GETFLAG(ENABLENATPMPMASK))
+			{
+#ifdef ENABLE_IPV6
+				PCPPublicAddressChanged(snatpmp, addr_count, spcp_v6);
+#else /* IPv4 only */
+				PCPPublicAddressChanged(snatpmp, addr_count);
+#endif
+			}
+#endif
 			should_send_public_address_change_notif = 0;
 		}
 		/* Check if we need to send SSDP NOTIFY messages and do it if
 		 * needed */
-		if(gettimeofday(&timeofday, 0) < 0)
+		if(upnp_gettimeofday(&timeofday) < 0)
 		{
 			syslog(LOG_ERR, "gettimeofday(): %m");
 			timeout.tv_sec = v.notify_interval;
@@ -2578,6 +2650,9 @@ shutdown:
 #ifdef TOMATO
 	tomato_save("/etc/upnp/data");
 #endif	/* TOMATO */
+#if defined(ENABLE_LEASEFILE) && defined(LEASEFILE_USE_REMAINING_TIME)
+	lease_file_rewrite();
+#endif /* ENABLE_LEASEFILE && LEASEFILE_USE_REMAINING_TIME */
 	/* close out open sockets */
 	while(upnphttphead.lh_first != NULL)
 	{

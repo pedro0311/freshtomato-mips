@@ -973,6 +973,7 @@ miniupnpd-config:
 
 miniupnpd: iptables miniupnpd-config
 	@$(SEP)
+	$(call patch_files,miniupnpd)
 	$(MAKE) -C miniupnpd miniupnpd -f Makefile.linux CC=$(CC) \
 		CFLAGS="-Wall -Os -D_GNU_SOURCE $(EXTRACFLAGS) -I$(TOP)/iptables/include" \
 		LDFLAGS="-L$(TOP)/iptables -liptc" LIBS="" $(PARALLEL_BUILD)
@@ -980,6 +981,7 @@ miniupnpd: iptables miniupnpd-config
 miniupnpd-clean:
 	-@$(MAKE) -C miniupnpd -f Makefile.linux clean
 	@rm -f miniupnpd/config.h
+	$(call unpatch_files,miniupnpd)
 
 miniupnpd-install:
 	install -D miniupnpd/miniupnpd $(INSTALLDIR)/miniupnpd/usr/sbin/miniupnpd
