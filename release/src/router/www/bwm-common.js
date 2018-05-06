@@ -288,7 +288,7 @@ function loadData()
 				else if (nvram.wan2_iface == i) t = 'WAN2 <small>(' + i + ')<\/small>';
 /* MULTIWAN-BEGIN */
 				else if (nvram.wan3_iface == i) t = 'WAN3 <small>(' + i + ')<\/small>';
-				else if (nvram.wan4_iface == i) t = 'WAN4 <small>(' + i + ')</\small>';
+				else if (nvram.wan4_iface == i) t = 'WAN4 <small>(' + i + ')<\/small>';
 /* MULTIWAN-END */
 			}
 			/* WAN label (for wan_ifname) */

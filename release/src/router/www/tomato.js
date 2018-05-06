@@ -480,7 +480,7 @@ function fixIP(ip, x)
 {
 	var a, n, i;
         a = ip;
-        i = a.indexOf("<br>");
+        i = a.indexOf("<br />");
         if (i > 0)
                 a = a.slice(0,i);
 
@@ -1606,7 +1606,7 @@ TomatoGrid.prototype = {
 					for (var k = 0; k < f.options.length; ++k) {
 						a = f.options[k];
 						if (which == 'edit') {
-							s += '<option value="' + a[0] + '"' + ((a[0] == values[vi]) ? ' selected>' : '>') + a[1] + '</option>';
+							s += '<option value="' + a[0] + '"' + ((a[0] == values[vi]) ? ' selected="selected">' : '>') + a[1] + '</option>';
 						}
 						else {
 							s += '<option value="' + a[0] + '">' + a[1] + '</option>';
@@ -1616,7 +1616,7 @@ TomatoGrid.prototype = {
 					break;
 				case 'checkbox':
 					s += '<input type="checkbox"' + common + attrib;
-					if ((which == 'edit') && (values[vi])) s += ' checked';
+					if ((which == 'edit') && (values[vi])) s += ' checked="checked"';
 					s += '>';
 					break;
 				case 'textarea':
@@ -2139,9 +2139,11 @@ TomatoRefresh.prototype = {
 		b = (mode != 'stop') && (this.refreshTime > 0);
 		if ((e = E('refresh-button')) != null) {
 			e.value = b ? 'Stop' : 'Refresh';
-			e.disabled = ((mode == 'start') && (!b));
+			((mode == 'start') && (!b) ? e.setAttribute("disabled", "disabled") : e.removeAttribute("disabled"));
 		}
-		if ((e = E('refresh-time')) != null) e.disabled = b;
+
+		if ((e = E('refresh-time')) != null)
+			(b == 0 ? e.removeAttribute("disabled") : e.setAttribute("disabled", "disabled"));
 		if ((e = E('refresh-spinner')) != null) e.style.visibility = b ? 'visible' : 'hidden';
 	},
 
@@ -2198,7 +2200,7 @@ function genStdTimeList(id, zero, min)
 function genStdRefresh(spin, min, exec)
 {
 	W('<div style="text-align:right">');
-	if (spin) W('<img src="spin.gif" id="refresh-spinner"> ');
+	if (spin) W('<img src="spin.gif" id="refresh-spinner" alt=""> ');
 	genStdTimeList('refresh-time', 'Auto Refresh', min);
 	W('<input type="button" value="Refresh" onclick="' + (exec ? exec : 'refreshClick()') + '" id="refresh-button"></div>');
 }
@@ -2370,7 +2372,7 @@ function timeString(mins)
 
 function features(s)
 {
-	var features = ['ses','brau','aoss','wham','hpamp','!nve','11n','1000et'];
+	var features = ['ses','brau','aoss','wham','hpamp','!nve','11n','1000et','11ac'];
 	var i;
 
 	for (i = features.length - 1; i >= 0; --i) {
@@ -2393,7 +2395,7 @@ function nothing()
 function show_notice1(s)
 {
 // ---- !!TB - USB Support: multi-line notices
-	if (s.length) document.write('<div id="notice1">' + s.replace(/\n/g, '<br>') + '</div><br style="clear:both">');
+	if (s.length) document.write('<div id="notice1">' + s.replace(/\n/g, '<br />') + '</div><br style="clear:both">');
 }
 
 // -----------------------------------------------------------------------------
@@ -2595,7 +2597,7 @@ REMOVE-END */
 	for (i = 0; i < menu.length; ++i) {
 		var m = menu[i];
 		if (!m) {
-			buf.push("<br>");
+			buf.push("<br />");
 			continue;
 		}
 		if (m.length == 2) {
@@ -2656,7 +2658,7 @@ function createFieldTable(flags, desc)
 		var v = desc[desci];
 
 		if (!v) {
-			buf.push('<tr><td colspan=2 class="spacer">&nbsp;</td></tr>');
+			buf.push('<tr><td colspan="2" class="spacer">&nbsp;</td></tr>');
 			continue;
 		}
 
@@ -2672,7 +2674,7 @@ function createFieldTable(flags, desc)
 				buf.push('<td class="title indent' + (v.indent || 1) + '">' + v.title + '</td><td class="content">' + v.text + '</td></tr>');
 			}
 			else {
-				buf.push('<td colspan=2>' + v.text + '</td></tr>');
+				buf.push('<td colspan="2">' + v.text + '</td></tr>');
 			}
 			continue;
 		}
@@ -2699,10 +2701,10 @@ function createFieldTable(flags, desc)
 
 			switch (f.type) {
 			case 'checkbox':
-				buf2.push('<input type="checkbox"' + name + (f.value ? ' checked' : '') + ' onclick="verifyFields(this, 1)"' + common + '>');
+				buf2.push('<input type="checkbox"' + name + (f.value ? ' checked="checked"' : '') + ' onclick="verifyFields(this, 1)"' + common + '>');
 				break;
 			case 'radio':
-				buf2.push('<input type="radio"' + name + (f.value ? ' checked' : '') + ' onclick="verifyFields(this, 1)"' + common + '>');
+				buf2.push('<input type="radio"' + name + (f.value ? ' checked="checked"' : '') + ' onclick="verifyFields(this, 1)"' + common + '>');
 				break;
 			case 'password':
 				if (f.peekaboo) {
@@ -2730,7 +2732,7 @@ function createFieldTable(flags, desc)
 				for (i = 0; i < f.options.length; ++i) {
 					a = f.options[i];
 					if (a.length == 1) a.push(a[0]);
-					buf2.push('<option value="' + a[0] + '"' + ((a[0] == f.value) ? ' selected' : '') + '>' + a[1] + '</option>');
+					buf2.push('<option value="' + a[0] + '"' + ((a[0] == f.value) ? ' selected="selected"' : '') + '>' + a[1] + '</option>');
 				}
 				buf2.push('</select>');
 				break;
