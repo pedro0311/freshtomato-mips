@@ -248,7 +248,11 @@ static void shutdn(int rb)
 	sleep(1);
 	sync();
 
-	umount("/jffs");	// may hang if not
+	// umount("/jffs");	// may hang if not
+	// routers without JFFS will never reboot
+	// with above call on presseed reset,
+	// let's try eval code here
+	eval("umount", "-f", "/jffs");
 	sleep(1);
 
 	if (rb != -1) {
@@ -910,6 +914,7 @@ static void check_bootnv(void)
 		nvram_commit();
 REBOOT:	// do a simple reboot
 		sync();
+		dbg("Reboot after check NV params / set VLANS...\n");
 		reboot(RB_AUTOBOOT);
 		exit(0);
 	}
@@ -925,7 +930,7 @@ static int init_nvram(void)
 	char s[256];
 	unsigned long bf;
 	unsigned long n;
-	
+
 	model = get_model();
 	sprintf(s, "%d", model);
 	nvram_set("t_model", s);
@@ -1150,11 +1155,11 @@ static int init_nvram(void)
 		mfr = "Dell";
 		name = "TrueMobile 2300";
 		break;
-	
+
 	/*
-	
+
 	  ...
-	
+
 	*/
 
 #ifndef WL_BSS_INFO_VERSION
@@ -3608,7 +3613,7 @@ static int init_nvram(void)
 	//nvram_set("wl_country_code", "JP");
 	nvram_set("wan_get_dns", "");
 	nvram_set("wan_get_domain", "");
-	nvram_set("wan_ppp_get_ip", "");
+	nvram_set("wan_ppp_get_ip", "0.0.0.0");
 	nvram_set("action_service", "");
 	nvram_set("jffs2_format", "0");
 	nvram_set("rrules_radio", "-1");

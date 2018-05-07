@@ -203,7 +203,7 @@ const defaults_t defaults[] = {
 	{ "dhcp3_lease",		"1440"				},
 
 #ifdef TCONFIG_USB
-	// 3G Modem
+	// 3G/4G Modem
 	{ "wan_modem_pin",		""				},
 	{ "wan_modem_dev",		"ttyUSB0"			},
 	{ "wan_modem_init",		"*99#"				},
@@ -634,6 +634,14 @@ const defaults_t defaults[] = {
 	{ "dr_lan3_rx",			"0"				},	// Dynamic-Routing LAN in
 	{ "dr_wan_tx",			"0"				},	// Dynamic-Routing WAN out
 	{ "dr_wan_rx",			"0"				},	// Dynamic-Routing WAN in
+	{ "dr_wan2_tx",			"0"				},	// Dynamic-Routing WAN out
+	{ "dr_wan2_rx",			"0"				},	// Dynamic-Routing WAN in
+#ifdef TCONFIG_MULTIWAN
+	{ "dr_wan3_tx",			"0"				},	// Dynamic-Routing WAN out
+	{ "dr_wan3_rx",			"0"				},	// Dynamic-Routing WAN in
+	{ "dr_wan4_tx",			"0"				},	// Dynamic-Routing WAN out
+	{ "dr_wan4_rx",			"0"				},	// Dynamic-Routing WAN in
+#endif
 #endif
 
 // advanced-vlan
@@ -939,9 +947,7 @@ const defaults_t defaults[] = {
 	{ "smbd_cset",			"utf8"				},
 	{ "smbd_custom",		""				},
 	{ "smbd_autoshare",		"2"				},
-	{ "smbd_shares",
-		"jffs</jffs<JFFS<1<0>root$</<Hidden Root<0<1"
-	},
+	{ "smbd_shares",		"jffs</jffs<JFFS<1<0>root$</<Hidden Root<0<1"	},
 	{ "smbd_user",			"nas"				},
 	{ "smbd_passwd",		""				},
 	{ "smbd_ifnames",		"br0"				},
@@ -1003,192 +1009,193 @@ const defaults_t defaults[] = {
 
 #ifdef TCONFIG_OPENVPN
 // vpn
-	{ "vpn_debug",            "0"             },
-	{ "vpn_server_eas",       ""              },
-	{ "vpn_server_dns",       ""              },
-	{ "vpn_server1_poll",     "0"             },
-	{ "vpn_server1_if",       "tun"           },
-	{ "vpn_server1_proto",    "udp"           },
-	{ "vpn_server1_port",     "1194"          },
-	{ "vpn_server1_firewall", "auto"          },
-	{ "vpn_server1_crypt",    "tls"           },
-	{ "vpn_server1_comp",     "adaptive"      },
-	{ "vpn_server1_cipher",   "AES-128-CBC"   },
-	{ "vpn_server1_ncp_enable", "1"           },
-	{ "vpn_server1_ncp_ciphers","AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC" },
-	{ "vpn_server1_digest",   "default"       },
-	{ "vpn_server1_dhcp",     "1"             },
-	{ "vpn_server1_r1",       "192.168.1.50"  },
-	{ "vpn_server1_r2",       "192.168.1.55"  },
-	{ "vpn_server1_sn",       "10.6.0.0"      },
-	{ "vpn_server1_nm",       "255.255.255.0" },
-	{ "vpn_server1_local",    "10.6.0.1"      },
-	{ "vpn_server1_remote",   "10.6.0.2"      },
-	{ "vpn_server1_reneg",    "-1"            },
-	{ "vpn_server1_hmac",     "-1"            },
-	{ "vpn_server1_plan",     "1"             },
-	{ "vpn_server1_ccd",      "0"             },
-	{ "vpn_server1_c2c",      "0"             },
-	{ "vpn_server1_ccd_excl", "0"             },
-	{ "vpn_server1_ccd_val",  ""              },
-	{ "vpn_server1_pdns",     "0"             },
-	{ "vpn_server1_rgw",      "0"             },
-	{ "vpn_server1_custom",   ""              },
-	{ "vpn_server1_static",   ""              },
-	{ "vpn_server1_ca",       ""              },
-	{ "vpn_server1_crt",      ""              },
-	{ "vpn_server1_key",      ""              },
-	{ "vpn_server1_dh",       ""              },
-	{ "vpn_server1_br",       "br0"           },
-	{ "vpn_server1_route"     "0"             },
-	{ "vpn_server1_routing_val", ""           },
-	{ "vpn_server2_poll",     "0"             },
-	{ "vpn_server2_if",       "tun"           },
-	{ "vpn_server2_proto",    "udp"           },
-	{ "vpn_server2_port",     "1195"          },
-	{ "vpn_server2_firewall", "auto"          },
-	{ "vpn_server2_crypt",    "tls"           },
-	{ "vpn_server2_comp",     "adaptive"      },
-	{ "vpn_server2_cipher",   "AES-128-CBC"   },
-	{ "vpn_server2_ncp_enable", "1"           },
-	{ "vpn_server2_ncp_ciphers","AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC" },
-	{ "vpn_server2_digest",   "default"       },
-	{ "vpn_server2_dhcp",     "1"             },
-	{ "vpn_server2_r1",       "192.168.1.50"  },
-	{ "vpn_server2_r2",       "192.168.1.55"  },
-	{ "vpn_server2_sn",       "10.7.0.0"      },
-	{ "vpn_server2_nm",       "255.255.255.0" },
-	{ "vpn_server2_local",    "10.7.0.1"      },
-	{ "vpn_server2_remote",   "10.7.0.2"      },
-	{ "vpn_server2_reneg",    "-1"            },
-	{ "vpn_server2_hmac",     "-1"            },
-	{ "vpn_server2_plan",     "1"             },
-	{ "vpn_server2_ccd",      "0"             },
-	{ "vpn_server2_c2c",      "0"             },
-	{ "vpn_server2_ccd_excl", "0"             },
-	{ "vpn_server2_ccd_val",  ""              },
-	{ "vpn_server2_pdns",     "0"             },
-	{ "vpn_server2_rgw",      "0"             },
-	{ "vpn_server2_custom",   ""              },
-	{ "vpn_server2_static",   ""              },
-	{ "vpn_server2_ca",       ""              },
-	{ "vpn_server2_crt",      ""              },
-	{ "vpn_server2_key",      ""              },
-	{ "vpn_server2_dh",       ""              },
-	{ "vpn_server2_br",       "br0"           },
-	{ "vpn_server2_route"     "0"             },
-	{ "vpn_server2_routing_val", ""           },
-	{ "vpn_client_eas",       ""              },
-	{ "vpn_client1_poll",     "0"             },
-	{ "vpn_client1_if",       "tun"           },
-	{ "vpn_client1_bridge",   "1"             },
-	{ "vpn_client1_nat",      "1"             },
-	{ "vpn_client1_proto",    "udp"           },
-	{ "vpn_client1_addr",     ""              },
-	{ "vpn_client1_port",     "1194"          },
-	{ "vpn_client1_retry",    "30"            },
-	{ "vpn_client1_rg",       "0"             },
-	{ "vpn_client1_firewall", "auto"          },
-	{ "vpn_client1_crypt",    "tls"           },
-	{ "vpn_client1_comp",     "adaptive"      },
-	{ "vpn_client1_cipher",   "default"       },
-	{ "vpn_client1_ncp_enable", "1"           },
-	{ "vpn_client1_ncp_ciphers","AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC" },
-	{ "vpn_client1_digest",   "default"       },
-	{ "vpn_client1_local",    "10.8.0.2"      },
-	{ "vpn_client1_remote",   "10.8.0.1"      },
-	{ "vpn_client1_nm",       "255.255.255.0" },
-	{ "vpn_client1_reneg",    "-1"            },
-	{ "vpn_client1_hmac",     "-1"            },
-	{ "vpn_client1_adns",     "0"             },
-	{ "vpn_client1_rgw",      "0"             },
-	{ "vpn_client1_gw",       ""              },
-	{ "vpn_client1_custom",   ""              },
-	{ "vpn_client1_static",   ""              },
-	{ "vpn_client1_ca",       ""              },
-	{ "vpn_client1_crt",      ""              },
-	{ "vpn_client1_key",      ""              },
-	{ "vpn_client1_br",       "br0"           },
-	{ "vpn_client1_nopull",   "0"             },
-	{ "vpn_client1_noexec",   "0"             },
-	{ "vpn_client1_nobind",   "1"             },
-	{ "vpn_client1_route"     "0"             },
-	{ "vpn_client1_routing_val", ""           },
-	{ "vpn_client2_poll",     "0"             },
-	{ "vpn_client2_if",       "tun"           },
-	{ "vpn_client2_bridge",   "1"             },
-	{ "vpn_client2_nat",      "1"             },
-	{ "vpn_client2_proto",    "udp"           },
-	{ "vpn_client2_addr",     ""              },
-	{ "vpn_client2_port",     "1194"          },
-	{ "vpn_client2_retry",    "30"            },
-	{ "vpn_client2_rg",       "0"             },
-	{ "vpn_client2_firewall", "auto"          },
-	{ "vpn_client2_crypt",    "tls"           },
-	{ "vpn_client2_comp",     "adaptive"      },
-	{ "vpn_client2_cipher",   "default"       },
-	{ "vpn_client2_ncp_enable", "1"           },
-	{ "vpn_client2_ncp_ciphers","AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC" },
-	{ "vpn_client2_digest",   "default"       },
-	{ "vpn_client2_local",    "10.9.0.2"      },
-	{ "vpn_client2_remote",   "10.9.0.1"      },
-	{ "vpn_client2_nm",       "255.255.255.0" },
-	{ "vpn_client2_reneg",    "-1"            },
-	{ "vpn_client2_hmac",     "-1"            },
-	{ "vpn_client2_adns",     "0"             },
-	{ "vpn_client2_rgw",      "0"             },
-	{ "vpn_client2_gw",       ""              },
-	{ "vpn_client2_custom",   ""              },
-	{ "vpn_client2_static",   ""              },
-	{ "vpn_client2_ca",       ""              },
-	{ "vpn_client2_crt",      ""              },
-	{ "vpn_client2_key",      ""              },
-	{ "vpn_client2_br",       "br0"           },
-	{ "vpn_client2_nopull",   "0"             },
-	{ "vpn_client2_noexec",   "0"             },
-	{ "vpn_client2_nobind",   "1"             },
-	{ "vpn_client2_route"     "0"             },
-	{ "vpn_client2_routing_val", ""           },
+	{ "vpn_debug",			"0"				},
+	{ "vpn_server_eas",		""				},
+	{ "vpn_server_dns",		""				},
+	{ "vpn_server1_poll",		"0"				},
+	{ "vpn_server1_if",		"tun"				},
+	{ "vpn_server1_proto",		"udp"				},
+	{ "vpn_server1_port",		"1194"				},
+	{ "vpn_server1_firewall",	"auto"				},
+	{ "vpn_server1_crypt",		"tls"				},
+	{ "vpn_server1_comp",		"adaptive"			},
+	{ "vpn_server1_cipher",		"AES-128-CBC"			},
+	{ "vpn_server1_ncp_enable",	"1"				},
+	{ "vpn_server1_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC" },
+	{ "vpn_server1_digest",		"default"			},
+	{ "vpn_server1_dhcp",		"1"				},
+	{ "vpn_server1_r1",		"192.168.1.50"			},
+	{ "vpn_server1_r2",		"192.168.1.55"			},
+	{ "vpn_server1_sn",		"10.6.0.0"			},
+	{ "vpn_server1_nm",		"255.255.255.0"			},
+	{ "vpn_server1_local",		"10.6.0.1"			},
+	{ "vpn_server1_remote",		"10.6.0.2"			},
+	{ "vpn_server1_reneg",		"-1"				},
+	{ "vpn_server1_hmac",		"-1"				},
+	{ "vpn_server1_plan",		"1"				},
+	{ "vpn_server1_ccd",		"0"				},
+	{ "vpn_server1_c2c",		"0"				},
+	{ "vpn_server1_ccd_excl",	"0"				},
+	{ "vpn_server1_ccd_val",	""				},
+	{ "vpn_server1_pdns",		"0"				},
+	{ "vpn_server1_rgw",		"0"				},
+	{ "vpn_server1_custom",		""				},
+	{ "vpn_server1_static",		""				},
+	{ "vpn_server1_ca",		""				},
+	{ "vpn_server1_crt",		""				},
+	{ "vpn_server1_key",		""				},
+	{ "vpn_server1_dh",		""				},
+	{ "vpn_server1_br",		"br0"				},
+	{ "vpn_server1_route"		"0"				},
+	{ "vpn_server1_routing_val",	""				},
+	{ "vpn_server2_poll",		"0"				},
+	{ "vpn_server2_if",		"tun"				},
+	{ "vpn_server2_proto",		"udp"				},
+	{ "vpn_server2_port",		"1195"				},
+	{ "vpn_server2_firewall",	"auto"				},
+	{ "vpn_server2_crypt",		"tls"				},
+	{ "vpn_server2_comp",		"adaptive"			},
+	{ "vpn_server2_cipher",		"AES-128-CBC"			},
+	{ "vpn_server2_ncp_enable",	"1"				},
+	{ "vpn_server2_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC" },
+	{ "vpn_server2_digest",		"default"			},
+	{ "vpn_server2_dhcp",		"1"				},
+	{ "vpn_server2_r1",		"192.168.1.50"			},
+	{ "vpn_server2_r2",		"192.168.1.55"			},
+	{ "vpn_server2_sn",		"10.7.0.0"			},
+	{ "vpn_server2_nm",		"255.255.255.0"			},
+	{ "vpn_server2_local",		"10.7.0.1"			},
+	{ "vpn_server2_remote",		"10.7.0.2"			},
+	{ "vpn_server2_reneg",		"-1"				},
+	{ "vpn_server2_hmac",		"-1"				},
+	{ "vpn_server2_plan",		"1"				},
+	{ "vpn_server2_ccd",		"0"				},
+	{ "vpn_server2_c2c",		"0"				},
+	{ "vpn_server2_ccd_excl",	"0"				},
+	{ "vpn_server2_ccd_val",	""				},
+	{ "vpn_server2_pdns",		"0"				},
+	{ "vpn_server2_rgw",		"0"				},
+	{ "vpn_server2_custom",		""				},
+	{ "vpn_server2_static",		""				},
+	{ "vpn_server2_ca",		""				},
+	{ "vpn_server2_crt",		""				},
+	{ "vpn_server2_key",		""				},
+	{ "vpn_server2_dh",		""				},
+	{ "vpn_server2_br",		"br0"				},
+	{ "vpn_server2_route"		"0"				},
+	{ "vpn_server2_routing_val",	""				},
+	{ "vpn_client_eas",		""				},
+	{ "vpn_client1_poll",		"0"				},
+	{ "vpn_client1_if",		"tun"				},
+	{ "vpn_client1_bridge",		"1"				},
+	{ "vpn_client1_nat",		"1"				},
+	{ "vpn_client1_proto",		"udp"				},
+	{ "vpn_client1_addr",		""				},
+	{ "vpn_client1_port",		"1194"				},
+	{ "vpn_client1_retry",		"30"				},
+	{ "vpn_client1_rg",		"0"				},
+	{ "vpn_client1_firewall",	"auto"				},
+	{ "vpn_client1_crypt",		"tls"				},
+	{ "vpn_client1_comp",		"adaptive"			},
+	{ "vpn_client1_cipher",		"default"			},
+	{ "vpn_client1_ncp_enable",	"1"				},
+	{ "vpn_client1_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC" },
+	{ "vpn_client1_digest",		"default"			},
+	{ "vpn_client1_local",		"10.8.0.2"			},
+	{ "vpn_client1_remote",		"10.8.0.1"			},
+	{ "vpn_client1_nm",		"255.255.255.0"			},
+	{ "vpn_client1_reneg",		"-1"				},
+	{ "vpn_client1_hmac",		"-1"				},
+	{ "vpn_client1_adns",		"0"				},
+	{ "vpn_client1_rgw", 		"0"				},
+	{ "vpn_client1_gw",		""				},
+	{ "vpn_client1_custom",		""				},
+	{ "vpn_client1_static",		""				},
+	{ "vpn_client1_ca",		""				},
+	{ "vpn_client1_crt",		""				},
+	{ "vpn_client1_key",		""				},
+	{ "vpn_client1_br",		"br0"				},
+	{ "vpn_client1_nopull",		"0"				},
+	{ "vpn_client1_noexec",		"0"				},
+	{ "vpn_client1_nobind",		"1"				},
+	{ "vpn_client1_route",		"0"				},
+	{ "vpn_client1_routing_val",	""				},
+	{ "vpn_client2_poll",		"0"				},
+	{ "vpn_client2_if",		"tun"				},
+	{ "vpn_client2_bridge",		"1"				},
+	{ "vpn_client2_nat",		"1"				},
+	{ "vpn_client2_proto",		"udp"				},
+	{ "vpn_client2_addr",		""				},
+	{ "vpn_client2_port",		"1194"				},
+	{ "vpn_client2_retry",		"30"				},
+	{ "vpn_client2_rg",		"0"				},
+	{ "vpn_client2_firewall",	"auto"				},
+	{ "vpn_client2_crypt",		"tls"				},
+	{ "vpn_client2_comp",		"adaptive"			},
+	{ "vpn_client2_cipher",		"default"			},
+	{ "vpn_client2_ncp_enable",	"1"				},
+	{ "vpn_client2_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC" },
+	{ "vpn_client2_digest",		"default"			},
+	{ "vpn_client2_local",		"10.9.0.2"			},
+	{ "vpn_client2_remote",		"10.9.0.1"			},
+	{ "vpn_client2_nm",		"255.255.255.0"			},
+	{ "vpn_client2_reneg",		"-1"				},
+	{ "vpn_client2_hmac",		"-1"				},
+	{ "vpn_client2_adns",		"0"				},
+	{ "vpn_client2_rgw",		"0"				},
+	{ "vpn_client2_gw",		""				},
+	{ "vpn_client2_custom",		""				},
+	{ "vpn_client2_static",		""				},
+	{ "vpn_client2_ca",		""				},
+	{ "vpn_client2_crt",		""				},
+	{ "vpn_client2_key",		""				},
+	{ "vpn_client2_br",		"br0"				},
+	{ "vpn_client2_nopull",		"0"				},
+	{ "vpn_client2_noexec",		"0"				},
+	{ "vpn_client2_nobind",		"1"				},
+	{ "vpn_client2_route",		"0"				},
+	{ "vpn_client2_routing_val",	""				},
 #endif	// vpn
 #ifdef TCONFIG_PPTPD
-	{ "pptp_client_enable",   "0"             },
-	{ "pptp_client_peerdns",  "0"             },
-	{ "pptp_client_mtuenable","0"             },
-	{ "pptp_client_mtu",      "1450"          },
-	{ "pptp_client_mruenable","0"             },
-	{ "pptp_client_mru",      "1450"          },
-	{ "pptp_client_nat",      "0"             },
-	{ "pptp_client_srvip",    ""              },
-	{ "pptp_client_srvsub",   "10.0.0.0"      },
-	{ "pptp_client_srvsubmsk","255.0.0.0"     },
-	{ "pptp_client_username", ""              },
-	{ "pptp_client_passwd",   ""              },
-	{ "pptp_client_crypt",    "0"             },
-	{ "pptp_client_custom",   ""              },
-	{ "pptp_client_dfltroute","0"             },
+	{ "pptp_client_enable",		"0"				},
+	{ "pptp_client_usewan",		"wan"				},
+	{ "pptp_client_peerdns",	"0"				},
+	{ "pptp_client_mtuenable",	"0"				},
+	{ "pptp_client_mtu",		"1450"				},
+	{ "pptp_client_mruenable",	"0"				},
+	{ "pptp_client_mru",		"1450"				},
+	{ "pptp_client_nat",		"0"				},
+	{ "pptp_client_srvip",		""				},
+	{ "pptp_client_srvsub",		"10.0.0.0"			},
+	{ "pptp_client_srvsubmsk",	"255.0.0.0"			},
+	{ "pptp_client_username",	""				},
+	{ "pptp_client_passwd",		""				},
+	{ "pptp_client_crypt",		"0"				},
+	{ "pptp_client_custom",		""				},
+	{ "pptp_client_dfltroute",	"0"				},
 #endif
 
 #ifdef TCONFIG_TINC
-	{"tinc_wanup",			"0"		},
-	{"tinc_name",			""		},
-	{"tinc_devicetype",		"tun"		}, // tun, tap
-	{"tinc_mode",			"switch"	}, // switch, hub
-	{"tinc_vpn_netmask",		"255.255.0.0"	},
-	{"tinc_private_rsa",		""		},
-	{"tinc_private_ed25519",	""		},
-	{"tinc_custom",			""		},
-	{"tinc_hosts",			""		},
-	{"tinc_manual_firewall",	""		},
-	{"tinc_manual_tinc_up",		"0"		},
-	{"tinc_poll",			"0"		},
+	{"tinc_wanup",			"0"				},
+	{"tinc_name",			""				},
+	{"tinc_devicetype",		"tun"				},	// tun, tap
+	{"tinc_mode",			"switch"			},	// switch, hub
+	{"tinc_vpn_netmask",		"255.255.0.0"			},
+	{"tinc_private_rsa",		""				},
+	{"tinc_private_ed25519",	""				},
+	{"tinc_custom",			""				},
+	{"tinc_hosts",			""				},
+	{"tinc_manual_firewall",	""				},
+	{"tinc_manual_tinc_up",		"0"				},
+	{"tinc_poll",			"0"				},
 	// scripts
-	{"tinc_tinc_up",		""		},
-	{"tinc_tinc_down",		""		},
-	{"tinc_host_up",		""		},
-	{"tinc_host_down",		""		},
-	{"tinc_subnet_up",		""		},
-	{"tinc_subnet_down",		""		},
-	{"tinc_firewall",		""		},
+	{"tinc_tinc_up",		""				},
+	{"tinc_tinc_down",		""				},
+	{"tinc_host_up",		""				},
+	{"tinc_host_down",		""				},
+	{"tinc_subnet_up",		""				},
+	{"tinc_subnet_down",		""				},
+	{"tinc_firewall",		""				},
 #endif
 
 #ifdef TCONFIG_BT
@@ -1347,8 +1354,8 @@ const defaults_t defaults[] = {
 	{ "new_qoslimit_ibw",			""			},
 	{ "new_qoslimit_rules",			""			},
 	{ "qosl_enable",			"0"			},
-	{ "qosl_tcp",				"0"			},//unlimited
-	{ "qosl_udp",				"0"			},//unlimited
+	{ "qosl_tcp",				"0"			},	//unlimited
+	{ "qosl_udp",				"0"			},	//unlimited
 	{ "qosl_dlc",				""			},
 	{ "qosl_ulc",				""			},
 	{ "qosl_dlr",				""			},
@@ -1376,7 +1383,7 @@ const defaults_t defaults[] = {
 
 // NoCatSplash. !!Victek
 #ifdef TCONFIG_NOCAT
-	{ "NC_enable",				"0"			}, // enable NoCatSplash
+	{ "NC_enable",				"0"			},	// enable NoCatSplash
 	{ "NC_Verbosity",			"2"			},
 	{ "NC_GatewayName",			"Tomato Captive Portal"	},
 	{ "NC_GatewayPort",			"5280"			},
@@ -1396,52 +1403,52 @@ const defaults_t defaults[] = {
 
 //Tomato RAF - NGINX
 #ifdef TCONFIG_NGINX
-	{"nginx_enable",		"0"				}, // NGinX enabled
-	{"nginx_php",			"0"				}, // PHP enabled
-	{"nginx_keepconf",		"0"				}, // Enable/disable keep configuration files unmodified in /etc/nginx
-	{"nginx_docroot",		"/www"				}, // path for server files
-	{"nginx_port",			"85"				}, // port to listen
-	{"nginx_remote",		"0"				}, // open port from WAN site
-	{"nginx_fqdn",			"Tomato"			}, // server name
-	{"nginx_upload",		"100"				}, // upload file size limit
-	{"nginx_priority",		"10"				}, // server priority = worker_priority
-	{"nginx_custom",		""				}, // additional lines for nginx.conf
-	{"nginx_httpcustom",		""				}, // additional lines for nginx.conf
-	{"nginx_servercustom",		""				}, // additional lines for nginx.conf
-	{"nginx_phpconf",		""				}, // additional lines for php.ini
-	{"nginx_user",			"root"				}, // user/group
-	{"nginx_override",		"0"				}, // additional lines for php.ini
-	{"nginx_overridefile",		"/path/to/nginx.conf"		}, // user/group
+	{"nginx_enable",		"0"				},	// NGinX enabled
+	{"nginx_php",			"0"				},	// PHP enabled
+	{"nginx_keepconf",		"0"				},	// Enable/disable keep configuration files unmodified in /etc/nginx
+	{"nginx_docroot",		"/www"				},	// path for server files
+	{"nginx_port",			"85"				},	// port to listen
+	{"nginx_remote",		"0"				},	// open port from WAN site
+	{"nginx_fqdn",			"Tomato"			},	// server name
+	{"nginx_upload",		"100"				},	// upload file size limit
+	{"nginx_priority",		"10"				},	// server priority = worker_priority
+	{"nginx_custom",		""				},	// additional lines for nginx.conf
+	{"nginx_httpcustom",		""				},	// additional lines for nginx.conf
+	{"nginx_servercustom",		""				},	// additional lines for nginx.conf
+	{"nginx_phpconf",		""				},	// additional lines for php.ini
+	{"nginx_user",			"root"				},	// user/group
+	{"nginx_override",		"0"				},	// additional lines for php.ini
+	{"nginx_overridefile",		"/path/to/nginx.conf"		},	// user/group
 
 // bwq518 - MySQL
-        { "mysql_enable",                               "0"                     },
-        { "mysql_sleep",                                "2"                     },
-        { "mysql_check",                                "1"                     },
-        { "mysql_check_time",                           "1"                     },
-        { "mysql_binary",                               "internal"              },
-        { "mysql_binary_custom",                        "/mnt/sda1/mysql/bin"   },
-        { "mysql_usb_enable",                           "1"                     },
-        { "mysql_dlroot",                               ""                      },
-        { "mysql_datadir",                              "data"                  },
-        { "mysql_tmpdir",                               "tmp"                   },
-        { "mysql_server_custom",                        ""                      },
-        { "mysql_port",                                 "3306"                  },
-        { "mysql_allow_anyhost",                        "0"                     },
-        { "mysql_init_rootpass",                        "0"                     },
-        { "mysql_username",                             "root"                  },      // mysqladmin username
-        { "mysql_passwd",                               "admin"                 },      // mysqladmin password
-        { "mysql_key_buffer",                           "16"                    }, //KB
-        { "mysql_max_allowed_packet",                   "4"                     }, //MB
-        { "mysql_thread_stack",                         "128"                   }, //KB
-        { "mysql_thread_cache_size",                    "8"                     },
-        { "mysql_init_priv",                            "0"                     },
-        { "mysql_table_open_cache",                     "4"                     },
-        { "mysql_sort_buffer_size",                     "128"                   }, //KB
-        { "mysql_read_buffer_size",                     "128"                   }, //KB
-        { "mysql_query_cache_size",                     "16"                    }, //MB
-        { "mysql_read_rnd_buffer_size",                 "256"                   }, //KB
-        { "mysql_net_buffer_length",                    "2"                     }, //K
-        { "mysql_max_connections",                      "1000"                  },
+	{ "mysql_enable",		"0"				},
+	{ "mysql_sleep",		"2"				},
+	{ "mysql_check",		"1"				},
+	{ "mysql_check_time",		"1"				},
+	{ "mysql_binary",		"internal"			},
+	{ "mysql_binary_custom",	"/mnt/sda1/mysql/bin"		},
+	{ "mysql_usb_enable",		"1"				},
+	{ "mysql_dlroot",		""				},
+	{ "mysql_datadir",		"data"				},
+	{ "mysql_tmpdir",		"tmp"				},
+	{ "mysql_server_custom",	""				},
+	{ "mysql_port",			"3306"				},
+	{ "mysql_allow_anyhost",	"0"				},
+	{ "mysql_init_rootpass",	"0"				},
+	{ "mysql_username",		"root"				},	// mysqladmin username
+	{ "mysql_passwd",		"admin"				},	// mysqladmin password
+	{ "mysql_key_buffer",		"16"				},	// KB
+	{ "mysql_max_allowed_packet",	"4"				},	// MB
+	{ "mysql_thread_stack",		"128"				},	// KB
+	{ "mysql_thread_cache_size",	"8"				},
+	{ "mysql_init_priv",		"0"				},
+	{ "mysql_table_open_cache",	"4"				},
+	{ "mysql_sort_buffer_size",	"128"				},	// KB
+	{ "mysql_read_buffer_size",	"128"				},	// KB
+	{ "mysql_query_cache_size",	"16"				},	// MB
+	{ "mysql_read_rnd_buffer_size",	"256"				},	// KB
+	{ "mysql_net_buffer_length",	"2"				},	// K
+	{ "mysql_max_connections",	"1000"				},
 #endif
 
 #ifdef TCONFIG_TOR
