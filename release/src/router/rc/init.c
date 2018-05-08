@@ -914,7 +914,6 @@ static void check_bootnv(void)
 		nvram_commit();
 REBOOT:	// do a simple reboot
 		sync();
-		dbg("Reboot after check NV params / set VLANS...\n");
 		reboot(RB_AUTOBOOT);
 		exit(0);
 	}
