@@ -8,7 +8,7 @@ PL: https://openlinksys.info/forum/
 
 EN: https://www.linksysinfo.org/index.php
 
-This is my personal fork, If anyone wants to pick up my changes and merge them to your repository, feel free and go ahead. That's the reason Tomato is an open-source project.
+This is a FreshTomato fork, If anyone wants to pick up changes and merge them to your repository, feel free and go ahead. That's the reason Tomato is an open-source project.
 
 **Source code**: https://bitbucket.org/pedro311/freshtomato-mips
 
