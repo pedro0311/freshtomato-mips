@@ -398,7 +398,7 @@ int fpm_unix_init_child(struct fpm_worker_pool_s *wp) /* {{{ */
 	}
 
 #ifdef HAVE_PRCTL
-	if (0 > prctl(PR_SET_DUMPABLE, 1, 0, 0, 0)) {
+	if (wp->config->process_dumpable && 0 > prctl(PR_SET_DUMPABLE, 1, 0, 0, 0)) {
 		zlog(ZLOG_SYSERROR, "[pool %s] failed to prctl(PR_SET_DUMPABLE)", wp->config->name);
 	}
 #endif
@@ -477,7 +477,7 @@ int fpm_unix_init_main() /* {{{ */
 		 * The parent process has then to wait for the master
 		 * process to initialize to return a consistent exit
 		 * value. For this pupose, the master process will
-		 * send \"1\" into the pipe if everything went well 
+		 * send \"1\" into the pipe if everything went well
 		 * and \"0\" otherwise.
 		 */
 
