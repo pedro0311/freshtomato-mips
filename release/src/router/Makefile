@@ -1934,8 +1934,7 @@ php/stamp-h1: pcre zlib libiconv sqlite libxml2 libpng jpeg libcurl
 	--without-mcrypt \
 	--without-openssl \
 	--disable-pcntl \
-	--without-mysqli \
-	--with-mysql \
+	--with-mysqli \
 	--with-mysql-sock="/var/run/mysqld.sock" \
 	--with-pdo-mysql \
 	--without-pdo-pgsql \
@@ -2604,7 +2603,7 @@ tor/stamp-h1: openssl zlib libevent
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	$(CONFIGURE) --prefix=/usr --with-libevent-dir=$(TOP)/libevent/staged/usr/local \
 		--with-openssl-dir=$(TOP)/openssl --with-zlib-dir=$(TOP)/zlib \
-		--disable-asciidoc --disable-tool-name-check --disable-unittests
+		--disable-asciidoc --disable-tool-name-check --disable-unittests --disable-lzma
 	touch tor/stamp-h1
 
 tor: tor/stamp-h1
