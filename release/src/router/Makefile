@@ -965,11 +965,11 @@ libnfnetlink-install:
 		ln -sf libnfnetlink.so.0.2.0 libnfnetlink.so
 
 miniupnpd-config:
-#ifeq ($(TCONFIG_IPV6),y)
-#	@cd miniupnpd && ./genconfig.sh --leasefile --ipv6
-#else
+ifeq ($(TCONFIG_IPV6),y)
+	@cd miniupnpd && ./genconfig.sh --leasefile --ipv6 --vendorcfg --portinuse
+else
 	@cd miniupnpd && ./genconfig.sh --leasefile --vendorcfg --portinuse
-#endif
+endif
 
 miniupnpd: iptables miniupnpd-config
 	@$(SEP)
