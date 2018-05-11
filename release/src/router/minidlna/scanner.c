@@ -27,7 +27,6 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/resource.h>
-#include <sys/statfs.h>
 
 #include "config.h"
 
@@ -65,40 +64,6 @@ struct virtual_item
 	char parentID[64];
 	char name[256];
 };
-
-// Tomato
-static int
-is_external_path(const char * path)
-{
-	struct statfs sf;
-
-	if (statfs(path, &sf) == 0)
-	{
-		/* if it returns squashfs or tmpfs type, assume it's not mounted */
-		return (sf.f_type != 0x73717368 && sf.f_type != 0x1021994);
-	}
-	else
-	{
-		return -1;
-	}
-}
-
-/* This could be a directory in tmpfs.
- * Mounting a USB drive on this directory can take some time,
- * so let's wait up to 5 seconds and hope that mount will complete.
- * If not, just proceed with scanning - after all we may not mount
- * anything on this directory.
- */
-int
-wait_for_mount(const char * path)
-{
-	int r, n = 50;
-	while ( ((r = is_external_path(path)) == 0) && (n-- > 0) )
-	{
-		usleep(100 * 1000);
-	}
-	return r;
-}
 
 int64_t
 get_next_available_id(const char *table, const char *parentID)
@@ -758,9 +723,6 @@ ScanDirectory(const char *dir, const char *parent, media_types dir_types)
 	static long long unsigned int fileno = 0;
 	enum file_types type;
 
-	if ( wait_for_mount(dir) < 0 )
-		return;
-
 	DPRINTF(parent?E_INFO:E_WARN, L_SCANNER, _("Scanning %s\n"), dir);
 	switch( dir_types )
 	{
@@ -854,6 +816,26 @@ ScanDirectory(const char *dir, const char *parent, media_types dir_types)
 	}
 }
 
+static void
+_notify_start(void)
+{
+#ifdef READYNAS
+	FILE *flag = fopen("/ramfs/.upnp-av_scan", "w");
+	if( flag )
+		fclose(flag);
+#endif
+}
+
+static void
+_notify_stop(void)
+{
+#ifdef READYNAS
+	if( access("/ramfs/.rescan_done", F_OK) == 0 )
+		system("/bin/sh /ramfs/.rescan_done");
+	unlink("/ramfs/.upnp-av_scan");
+#endif
+}
+
 void
 start_scanner()
 {
@@ -862,8 +844,7 @@ start_scanner()
 
 	if (setpriority(PRIO_PROCESS, 0, 15) == -1)
 		DPRINTF(E_WARN, L_INOTIFY,  "Failed to reduce scanner thread priority\n");
-
-	begin_scan();
+	_notify_start();
 
 	setlocale(LC_COLLATE, "");
 
@@ -891,9 +872,7 @@ start_scanner()
 		ScanDirectory(media_path->path, parent, media_path->types);
 		sql_exec(db, "INSERT into SETTINGS values (%Q, %Q)", "media_dir", media_path->path);
 	}
-
-	end_scan();
-
+	_notify_stop();
 	/* Create this index after scanning, so it doesn't slow down the scanning process.
 	 * This index is very useful for large libraries used with an XBox360 (or any
 	 * client that uses UPnPSearch on large containers). */

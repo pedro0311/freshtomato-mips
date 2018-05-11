@@ -17,6 +17,8 @@ OBJS += $(TOP)/busybox/util-linux/volume_id/ntfs.o
 OBJS += $(TOP)/busybox/util-linux/volume_id/linux_swap.o
 endif
 
+OBJS += ifaddrs.o
+
 all: libshared.so libshared.a
 
 ifeq ($(CONFIG_BCMWL5),y)

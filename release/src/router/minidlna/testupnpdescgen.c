@@ -26,16 +26,12 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "config.h"
-#include "getifaddr.h"
 #include "upnpdescgen.h"
-#include "minidlnapath.h"
-#include "upnpglobalvars.h"
-#include "upnpdescstrings.h"
 
 char uuidvalue[] = "uuid:12345678-0000-0000-0000-00000000abcd";
 char friendly_name[] = "localhost: system_type";
