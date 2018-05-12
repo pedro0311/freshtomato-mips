@@ -61,31 +61,23 @@ Disclaimer: I am not responsible for any bricked routers, nor do I encourage oth
     sudo apt-get update  
     sudo apt-get install libelf1:i386 libelf-dev:i386  
 
-10. If installed version of bison is 3.0 or higher you have to install older one. PHP supports only < 3.0:  
-    sudo apt-get remove bison libbison-dev  
-    wget http://launchpadlibrarian.net/140087283/libbison-dev_2.7.1.dfsg-1_amd64.deb  
-    wget http://launchpadlibrarian.net/140087282/bison_2.7.1.dfsg-1_amd64.deb  
-    sudo dpkg -i libbison-dev_2.7.1.dfsg-1_amd64.deb  
-    sudo dpkg -i bison_2.7.1.dfsg-1_amd64.deb  
-    sudo apt-mark hold libbison-dev bison  
-
-11. Clone/download repository:  
+10. Clone/download repository:  
     git clone https://pedro311@bitbucket.org/pedro311/freshtomato-mips.git <chosen-subdir>  
 
-12. Edit profile file, add:  
+11. Edit profile file, add:  
     PATH="$PATH:/home/<username>/<chosen-subdir>/tools/brcm/hndtools-mipsel-linux/bin"  
     PATH="$PATH:/home/<username>/<chosen-subdir>/tools/brcm/hndtools-mipsel-uclibc/bin"  
     PATH="$PATH:/bin:/sbin:/usr/bin:/usr/X11R6/bin"  
 
-13. Reboot system  
+12. Reboot system  
 
-14. Add your email to git config:  
+13. Add your email to git config:  
     git config --global user.email "<email-address>"  
    or  
     git config user.email "<email-address>"  
    for a single repo  
 
-15. Add your username to git config:  
+14. Add your username to git config:  
     git config --global user.name <name>  
   
 **You're ready**
