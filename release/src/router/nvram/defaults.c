@@ -554,7 +554,7 @@ const defaults_t defaults[] = {
 	{ "nf_ttl",				"0"				},
 	{ "nf_l7in",			"1"				},
 #ifdef LINUX26
-	{ "nf_sip",			"1"				},
+	{ "nf_sip",			"0"				},
 	{ "ct_hashsize",		"2048"				},
 #endif
 #ifdef LINUX26
