@@ -3,12 +3,64 @@ FreshTomato-MIPS Changelog
 
 
 
-2018.1.0xx-beta XXXX-XX-XX
+2018.2          2018.05.13
 --------------------------
+not public
 
+- kernel: ip6_tunnel: get the min mtu properly in ip6_tnl_xmit
 - Add Netgear WNDR3400v3 support
 - Add/Update Belkin F5D/F7D/F9K support
-
+- igmpproxy: update to 0.2.1
+- usb_modeswitch: update to 2.52, and data package to 2017-08-06
+- xl2tpd: update to 1.3.11
+- tinc: update to 1.1pre15
+- miniupnpd: update to 2.0.20180503
+- OpenVPN: update to 2.4.6
+- nginx: update to 1.13.8 Mainline version (from 1.10.3 Legacy version)
+- php: update to 7.2.5
+- nettle: update to 3.4
+- minidlna: clean sources 1.1.6, add patch instead
+- dropbear: update to 2018.76
+- dnscrypt-proxy: change update-resolvers script to process v2 resolvers format
+- dnscrypt-proxy: update local copy of dnscrypt-resolvers.csv file
+- dnscrypt-proxy: added possibility to enable in GUI ephemeral-keys option
+- libid3tag: fix build/link error on Ubuntu + some additional fixes
+- dnsmasq: cosmetics
+- GUI: fix BWM/IPT graphs
+- GUI: Wireless Filter: add ability to choose filtering method on every physical and virtual wifi interface separately
+- GUI: Virtual Wireless Interfaces: fixed lack of 80MHz bandwith for the 5GHz band in drop down list
+- GUI: www: default theme - original 'usbblue'
+- GUI: add possibility to change default IP (198.51.100.1) where DNS queries send to trigger connect-on-demand
+- GUI: basic-network.asp: LCP Echo (Interval|Link fail limit) is used also with PPTP, L2TP and PPP3G so let's make it possible to modify.
+- A collection of patches and fixes to make it to work pppoe, pptp_client, PPTP server, wan, mwan, etc (@tsynik)
+- adblock: add NoCoin list to adblock (cryptomining)
+- adblock: fix issue with too short field for blacklist url (90 -> 130 chars)
+- adblock: fix logic of parsing downloaded blacklist files
+- allow IGMPv3 for LAN
+- IGMP proxy: add the possiblity for a custom config (instead of the tomato default)
+- Static IPv6 configuration changes/improvements
+- www/qos-settings.asp: fixed issue #11 - QoS bandwidth calculation is missing since v132
+- Improvements to 'sysinfo' script
+- WL: wireless survey rework
+- httpd/tomato.c: cleanup
+- others/switch4g: add B8 (900 MHz) LTE band to choose from
+- others/watchdog: increase curl timeout from 3 to 5 seconds in ckcurl function
+- rc: usb.c/init.c fixed old typos
+- rc/misc.c: FTP data connection fails from WAN side when port is not 21
+- rc/redial.c: re-connection problems have been resolved with Keep Alive mode on PPPoE/PPTP/L2TP
+- rc/services.c: miniupnpd - changed the coding to use an interface name for the listening_ip= value instead of an IP/netmask to prevent log flood
+- rc/services.c: fixes issues with httpd
+- rc/services.c: Connect On Demand could no longer work as designed, due to address 1.1.1.1 becoming a legit recursive DNS server, so a different IP address was chosen for this purpose.
+- rc/wan.c: fixed shutdown of the 4g/lte modem during router restart
+- rc/wan.c: cosmetics + preparation for upcoming changes in switch3g
+- rc/wan.c: removed "bump wan state file on connect (don't wait watchdog result)"
+- router/wan.c: cleanup (some addtions to chat file; add: ppp_debug also switch on debbuging mode in chat)
+- busybox: change uname
+- Multiwan: rc/nvram/defaults: add forgotten "wanX_ppp_redialperiod" default values for wans 2-4
+- patches: cosmetics in php patch
+- Makefile: Fix TOR build on some systems
+- Makefile: --with-mysql option is no longer supported in PHP7. You need to use mysqli extension for this.
+- router/Makefile: enabled mini-gmp, saves 4KB
 
 
 2018.1.066-beta 2018-04-27
