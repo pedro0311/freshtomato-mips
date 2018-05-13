@@ -441,6 +441,8 @@ main ()
   case 0x000a: puts ("powerpc604e"); break;  /* 604ev5 */
   case 0x000c: puts ("powerpc7400"); break;
   case 0x0041: puts ("powerpc630");  break;
+  case 0x003f: puts ("power7");      break;
+  case 0x004b: puts ("power8");      break;
   case 0x0050: puts ("powerpc860");  break;
   case 0x8000: puts ("powerpc7450"); break;
   case 0x8001: puts ("powerpc7455"); break;
@@ -451,35 +453,6 @@ main ()
   return 0;
 }
 EOF
-  if ($CC_FOR_BUILD $dummy.c -o $dummy) >/dev/null 2>&1; then
-    # This style construct is needed on AIX 4.3 to suppress the SIGILL error
-    # from (*fun)().  Using $SHELL -c $dummy 2>/dev/null doesn't work.
-    { x=`$dummy`; } 2>/dev/null
-    if test -n "$x"; then
-      exact_cpu=$x
-    fi
-  fi
-
-  # Grep the linux kernel /proc/cpuinfo pseudo-file.
-  # Anything unrecognised is ignored, since of course we mustn't spit out
-  # a cpu type config.sub doesn't know.
-  if test -z "$exact_cpu" && test -f /proc/cpuinfo; then
-    x=`grep "^cpu[ 	]" /proc/cpuinfo | head -n 1`
-    x=`echo $x | sed -n 's/^cpu[ 	]*:[ 	]*\([A-Za-z0-9]*\).*/\1/p'`
-    x=`echo $x | sed 's/PPC//'`
-    case $x in
-      601)     exact_cpu="power" ;;
-      603ev)   exact_cpu="powerpc603e" ;;
-      604ev5)  exact_cpu="powerpc604e" ;;
-      970??)   exact_cpu="powerpc970" ;;
-      603 | 603e | 604 | 604e | 750 | 821 | 860)
-        exact_cpu="powerpc$x" ;;
-      POWER[4-9]*)
-        exact_cpu=`echo $x | sed -e "s;POWER;power;" -e "s;[a-zA-Z]*$;;"` ;;
-    esac
-  fi
-
-=======
     if ($CC_FOR_BUILD $dummy.c -o $dummy) >/dev/null 2>&1; then
       # This style construct is needed on AIX 4.3 to suppress the SIGILL error
       # from (*fun)().  Using $SHELL -c $dummy 2>/dev/null doesn't work.
@@ -490,7 +463,6 @@ EOF
     fi
   fi
 
->>>>>>> e097b38... gmp: updated to 6.1.2
   if test -z "$exact_cpu"; then
     # On AIX, try looking at _system_configuration.  This is present in
     # version 4 at least.
