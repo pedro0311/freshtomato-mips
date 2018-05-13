@@ -991,11 +991,11 @@ libnfnetlink-install:
 		ln -sf libnfnetlink.so.0.2.0 libnfnetlink.so
 
 miniupnpd-config:
-#ifeq ($(TCONFIG_IPV6),y)
-#	@cd miniupnpd && ./genconfig.sh --leasefile --ipv6
-#else
+ifeq ($(TCONFIG_IPV6),y)
+	@cd miniupnpd && ./genconfig.sh --leasefile --ipv6 --vendorcfg --portinuse
+else
 	@cd miniupnpd && ./genconfig.sh --leasefile --vendorcfg --portinuse
-#endif
+endif
 
 miniupnpd: iptables miniupnpd-config
 	@$(SEP)
@@ -1797,7 +1797,8 @@ nocat-install:
 #Tomato RAF
 pcre/stamp-h1:
 	$(SEP)
-	cd pcre && autoreconf && \
+	cd pcre && \
+	autoreconf -fsi && \
 	CC=$(CC) CXX=$(HOST)-g++ AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
 	$(CONFIGURE) --prefix=/usr --disable-dependency-tracking --enable-utf8 --enable-unicode-properties --disable-cpp
 	@touch pcre/stamp-h1
@@ -2366,8 +2367,9 @@ btgui-install:
 	install -D patches/transmission/btcheck $(INSTALLDIR)/btgui/usr/bin/btcheck
 
 libnfsidmap/stamp-h1:
-	cd libnfsidmap && autoreconf -fvi && \
+	cd libnfsidmap && \
 	CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
+	autoreconf -fsi && \
 	ac_cv_func_malloc_0_nonnull=yes \
 	ac_cv_func_realloc_0_nonnull=yes \
 	$(CONFIGURE) --prefix=/usr --enable-shared --enable-static
