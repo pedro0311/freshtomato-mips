@@ -764,6 +764,7 @@ OPENSSL_CIPHERS:=no-dh no-idea no-rc2 no-rc5 no-engine no-aes192 no-cast
 endif
 
 openssl/stamp-h1:
+	$(call patch_files,openssl)
 	cd openssl && \
 	./Configure linux-mipsel --openssldir=/etc --cross-compile-prefix=' ' \
 	-ffunction-sections -fdata-sections -Wl,--gc-sections \
@@ -775,6 +776,13 @@ openssl/stamp-h1:
 	no-dtls1 no-store no-psk no-md2 no-mdc2 no-ts
 
 	@$(MAKE) -C openssl clean
+	cd openssl && mkdir -p include/openssl && \
+	ln -sf ../../crypto/camellia/camellia.h include/openssl/camellia.h && \
+	ln -sf ../../crypto/krb5/krb5_asn.h include/openssl/krb5_asn.h && \
+	ln -sf ../../crypto/mdc2/mdc2.h include/openssl/mdc2.h && \
+	ln -sf ../../crypto/ripemd/ripemd.h include/openssl/ripemd.h && \
+	ln -sf ../../crypto/seed/seed.h include/openssl/seed.h && \
+	ln -sf ../../crypto/ts/ts.h include/openssl/ts.h
 	@touch openssl/stamp-h1
 
 openssl: openssl/stamp-h1
@@ -784,6 +792,7 @@ openssl: openssl/stamp-h1
 openssl-clean:
 	-@$(MAKE) -C openssl clean
 	@rm -f openssl/stamp-h1
+	$(call unpatch_files,openssl)
 
 openssl-install:
 	install -D openssl/libcrypto.so.1.0.0 $(INSTALLDIR)/openssl/usr/lib/libcrypto.so.1.0.0
