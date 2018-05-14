@@ -306,10 +306,6 @@ client6_init()
 		    gai_strerror(error));
 		exit(1);
 	}
-#ifdef __linux__
-	/* Force socket to be closed on execve */
-	res->ai_socktype |= SOCK_CLOEXEC;
-#endif
 	sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	if (sock < 0) {
 		dprintf(LOG_ERR, FNAME, "socket");
