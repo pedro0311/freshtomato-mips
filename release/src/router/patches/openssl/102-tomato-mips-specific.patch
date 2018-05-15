@@ -412,7 +412,7 @@
  libclean:
  	rm -f *.map *.so *.so.* *.dylib *.dll engines/*.so engines/*.dll engines/*.dylib *.a engines/*.a */lib */*/lib
  
-@@ -532,7 +526,7 @@ dist:
+@@ -540,7 +534,7 @@ dist:
  	@$(MAKE) SDIRS='$(SDIRS)' clean
  	@$(MAKE) TAR='$(TAR)' TARFLAGS='$(TARFLAGS)' $(DISTTARVARS) tar
  
