@@ -1,30 +1,14 @@
---- miniupnpd/genconfig.sh	2016-02-11 11:35:12.000000000 +0100
-+++ miniupnpd/genconfig.sh	2018-04-02 00:24:49.000000000 +0200
-@@ -85,6 +85,12 @@ if [ -f ./os.openwrt ]; then
- 	OS_VERSION=$(cat ./os.openwrt)
+--- miniupnpd/genconfig.sh	2018-05-21 23:16:44.294686204 +0200
++++ miniupnpd/genconfig.sh	2018-05-21 23:21:15.000000000 +0200
+@@ -94,7 +94,7 @@ fi
+ # Tomato USB special case
+ if [ -f ../shared/tomato_version ]; then
+ 	OS_NAME=Tomato
+-	TOMATO_VER=`cat ../shared/tomato_version | cut -d' ' -f2,3`
++	TOMATO_VER=`cat ../shared/tomato_version`
+ 	OS_VERSION="Tomato $TOMATO_VER"
  fi
  
-+# Tomato USB special case
-+if [ -f ../shared/tomato_version ]; then
-+	OS_NAME=Tomato
-+	OS_VERSION="Tomato $(cat ../shared/tomato_version)"
-+fi
-+
- # AstLinux special case
- if [ -f ./os.astlinux ]; then
- 	OS_NAME=AstLinux
-@@ -318,11 +318,6 @@ case $OS_NAME in
- 		echo "#define USE_IFACEWATCHER 1" >> ${CONFIGFILE}
- 		FW=netfilter
- 		;;
--	AstLinux)
--		OS_URL=http://www.astlinux.org/
--		echo "#define USE_IFACEWATCHER 1" >> ${CONFIGFILE}
--		FW=netfilter
--		;;
- 	Tomato)
- 		OS_NAME=UPnP
- 		OS_URL=http://tomatousb.org/
 --- miniupnpd/linux/ifacewatcher.c	2015-03-07 16:56:51.000000000 +0100
 +++ miniupnpd/linux/ifacewatcher.c	2018-04-02 00:24:49.000000000 +0200
 @@ -35,6 +35,11 @@

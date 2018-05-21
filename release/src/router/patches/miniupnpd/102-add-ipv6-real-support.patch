@@ -1,0 +1,27 @@
+--- miniupnpd/Makefile.linux	2018-04-06 12:53:32.000000000 +0200
++++ miniupnpd/Makefile.linux	2018-05-17 18:11:30.504486000 +0200
+@@ -110,7 +110,13 @@ TEST := $(shell [ $(IPTVER1) -gt 1 ] ||
+ LDLIBS = $(IPTABLESPATH)/libiptc/.libs/libip4tc.o
+ #LDLIBS = $(IPTABLESPATH)/libiptc/.libs/libiptc.a
+ else # ifeq ($(TEST), 1)
++# Tomato - check IPv6 support
++ifeq ($(TCONFIG_IPV6),y)
++LDLIBS = $(IPTABLESPATH)/libiptc/libiptc.a
++LDLIBS += $(IPTABLESPATH)/libiptc/libip6tc.a
++else # ($(TCONFIG_IPV6),y)
+ LDLIBS = $(IPTABLESPATH)/libiptc/libiptc.a
++endif # ($(TCONFIG_IPV6),y)
+ endif # ifeq ($(TEST), 1)
+ else # ($(TARGET_OPENWRT),)
+ # openWRT :
+--- miniupnpd/netfilter/iptpinhole.c	2018-05-21 23:16:44.302686318 +0200
++++ miniupnpd/netfilter/iptpinhole.c	2018-05-21 23:26:09.000000000 +0200
+@@ -20,7 +20,7 @@
+ 
+ #ifdef ENABLE_UPNPPINHOLE
+ 
+-#include <xtables.h>
++#include <iptables.h>
+ #include <libiptc/libip6tc.h>
+ #include "tiny_nf_nat.h"
+ 
