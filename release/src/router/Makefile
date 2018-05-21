@@ -245,9 +245,13 @@ endif
 
 obj-y += wanuptime
 
+
+# Specify iptables path for miniupnpd
+IPTABLESPATH=$(TOP)/iptables
+export IPTABLESPATH
+
 obj-clean := $(foreach obj, $(obj-y) $(obj-n) $(obj-), $(obj)-clean)
 obj-install := $(foreach obj,$(obj-y),$(obj)-install)
-
 
 
 #
