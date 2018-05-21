@@ -7,7 +7,7 @@
 	Tomato GUI
 	Copyright (C) 2006-2007 Jonathan Zarate
 	http://www.polarcloud.com/tomato/
-	
+
 	Tomato VLAN update and bug correction
 	Copyright (C) 2011-2012 Vicente Soriano
 	http://tomatoraf.com
@@ -20,7 +20,7 @@
 	June 2014 Tvlz
 	https://bitbucket.org/tvlz/tvlz-advanced-vlan/
 
-	** Last Updated - Aug 10 2016 - Tvlz **
+	** Last Updated - Apr 16 2018 - Tvlz **
 
 	For use with Tomato Firmware only.
 	No part of this file may be used without permission.
@@ -81,7 +81,7 @@ if(nvram['boardflags'] & 0x0100) { // BFL_ENETVLAN = this board has vlan capabil
 // http://wiki.openwrt.org/toh/asus/start
 // http://wiki.openwrt.org/toh/linksys/start
 // http://wiki.openwrt.org/toh/start
-switch(nvram['t_model_name']) { //Added by Tvlz, June 2014
+switch(nvram['t_model_name']) {
 	case 'vlan-testid0':
 	case 'Belkin Share N300 (F7D3302/F7D7302) v1':
 	case 'Belkin Play N600 (F7D4302/F7D8302) v1':
@@ -98,11 +98,9 @@ switch(nvram['t_model_name']) { //Added by Tvlz, June 2014
 	case 'Linksys E2500 v1/v2/v3':
 	case 'Linksys E3200 v1.0':
 	case 'Linksys E4200 v1':
-//	case 'Netgear WNDR3700v3':
-//	case 'Netgear WNDR4000':
+	case 'Netgear WNDR4000':
 	case 'Netgear WNDR4500 V1':
-//	case 'Netgear WNDR4500 V2':
-//	case 'Netgear R6300 V1':
+	case 'Netgear WNDR4500 V2':
 		COL_P0N = '0';
 		COL_P1N = '1';
 		COL_P2N = '2';
@@ -110,7 +108,7 @@ switch(nvram['t_model_name']) { //Added by Tvlz, June 2014
 		COL_P4N = '4';
 	break;
 	case 'vlan-testid1':
-	case 'Asus RT-N10U':
+	case 'Asus RT-AC66U':
 	case 'Asus RT-N66U':
 	case 'Belkin N F5D8235-4 v3':
 //	case 'Buffalo WZR-D1100H':
@@ -146,9 +144,11 @@ switch(nvram['t_model_name']) { //Added by Tvlz, June 2014
 	case 'Belkin Share Max N300 (F7D3301/F7D7301) v1':
 	case 'Belkin Play Max / N600 HD (F7D4301/F7D8301) v1':
 	case 'Netcore NR235W': //NOT in Shibby Firmware - https://github.com/Jackysi/advancedtomato/pull/142
-//	case 'Netgear WNDR3400':
-//	case 'Netgear WNDR3400v2':
-//	case 'Netgear WNDR3400v3':
+	case 'Netgear WNDR3400':
+	case 'Netgear WNDR3400v2':
+	case 'Netgear WNDR3400v3':
+	case 'Netgear WNDR3700v3':
+	case 'Netgear R6300 V1':
 		COL_P0N = '3';
 		COL_P1N = '2';
 		COL_P2N = '1';
@@ -156,8 +156,8 @@ switch(nvram['t_model_name']) { //Added by Tvlz, June 2014
 		COL_P4N = '4';
 	break;
 	case 'vlan-testid3':
+	case 'Asus RT-N10U':
 	case 'Asus RT-N16': //invert port order=checked
-	case 'Asus RT-AC66U':
 	case 'Catchtech CW-5358U':
 //	case 'ChinaNet RG200E-CA':
 	case 'Netgear WNR2000 v2':
@@ -463,7 +463,7 @@ REMOVE-END */
 /* MULTIWAN-BEGIN */
     bridged[parseInt(nvram['wan3_ifnameX'].replace('vlan',''))] = '8';
     bridged[parseInt(nvram['wan4_ifnameX'].replace('vlan',''))] = '9';
-/* MULTIWAN-END
+/* MULTIWAN-END */
 
 // go thru all possible VLANs
     for (var i = 0 ; i <= MAX_VLAN_ID ; i++) {
@@ -540,7 +540,7 @@ REMOVE-END */
   {
     return this.countElem(COL_BRI,9);
   }
-/* MULTIWAN-END
+/* MULTIWAN-END */
 
   vlg.countLan = function(l)
   {
@@ -687,7 +687,7 @@ REMOVE-END */
     } else {
       ferror.clear(f[COL_BRI]);
     }
-/* MULTIWAN-END
+/* MULTIWAN-END */
 
     for(var i=0; i<4; i++) {
       if ((this.countLan(i) > 0) && (f[COL_BRI].selectedIndex == (i+2))) {
@@ -717,8 +717,8 @@ REMOVE-END */
     (data[COL_VID_DEF].toString() != '0') ? '*' : '',
     ['', 'WAN', 'LAN (br0)', 'LAN1 (br1)', 'LAN2 (br2)', 'LAN3 (br3)', 'WAN2'
 /* MULTIWAN-BEGIN */
-        , 'WAN3', 'WAN4'
-/* MULTIWAN-END
+	, 'WAN3', 'WAN4'
+/* MULTIWAN-END */
     ][data[COL_BRI] - 1]];
   }
 
@@ -950,10 +950,10 @@ function earlyInit() {
 <input type='hidden' name='vlan15hwname'>
 <input type='hidden' name='wan_ifnameX'>
 <input type='hidden' name='wan2_ifnameX'>
-/* MULTIWAN-BEGIN */
+<!-- MULTIWAN-BEGIN -->
 <input type='hidden' name='wan3_ifnameX'>
 <input type='hidden' name='wan4_ifnameX'>
-/* MULTIWAN-END
+<!-- MULTIWAN-END -->
 <input type='hidden' name='manual_boot_nv'>
 <input type='hidden' name='lan_ifnames'>
 <input type='hidden' name='lan1_ifnames'>
@@ -1025,7 +1025,7 @@ if(port_vlan_supported) vlg.setup();
 </div>
 
 <div class='section-title'>Notes <small><i><a href='javascript:toggleVisibility("notes");'><span id='sesdiv_notes_showhide'>(Click here to hide)</span></a></i></small></div>
-<div class='section' id='sesdiv_notes' style='display:none'>
+<div class='section' id='sesdiv_notes' style='display:'>
 <ul>
 <li>If you notice that the order of the Lan Ports are incorrectly mapped, <a href='http://www.linksysinfo.org/index.php?threads/can-vlan-gui-port-order-be-corrected.70160/#post-247634/'> <b>Please Follow these Instructions to get it corrected.</b></a></li>
 <br>
