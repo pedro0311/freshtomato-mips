@@ -630,7 +630,7 @@ SendResp_presentation(struct upnphttp * h)
 		"<tr><td>Image files</td><td>%d</td></tr>"
 		"</table>", a, v, p);
 
-	if (scanning)
+	if (GETFLAG(SCANNING_MASK))
 		strcatf(&str,
 			"<br><i>* Media scan in progress</i><br>");
 
@@ -827,12 +827,6 @@ ProcessHttpQuery_upnphttp(struct upnphttp * h)
 	HttpCommand[i] = '\0';
 	while(*p==' ')
 		p++;
-	if(strncmp(p, "http://", 7) == 0)
-	{
-		p = p+7;
-		while(*p!='/')
-			p++;
-	}
 	for(i = 0; i<511 && *p && *p != ' ' && *p != '\r'; i++)
 		HttpUrl[i] = *(p++);
 	HttpUrl[i] = '\0';
@@ -1366,7 +1360,7 @@ _open_file(const char *orig_path)
 			if (strncmp(path, media_path->path, strlen(media_path->path)) == 0)
 				break;
 		}
-               if (!media_path && strncmp(path, db_path, strlen(db_path)))
+		if (!media_path && strncmp(path, db_path, strlen(db_path)))
 		{
 			DPRINTF(E_ERROR, L_HTTP, "Rejecting wide link %s -> %s\n",
 						orig_path, path);
