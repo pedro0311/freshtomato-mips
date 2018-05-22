@@ -13,6 +13,7 @@
 
 #define _GNU_SOURCE 1
 
+#include "config.h"
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
@@ -34,6 +35,9 @@
 #endif
 #if HAVE_SYS_MKDEV_H
 #include <sys/mkdev.h>
+#endif
+#ifdef HAVE_SYS_SYSMACROS_H
+#include <sys/sysmacros.h>
 #endif
 #include <time.h>
 
@@ -90,8 +94,6 @@ blkid_dev blkid_get_dev(blkid_cache cache, const char *devname, int flags)
 		 */
 		list_for_each_safe(p, pnext, &cache->bic_devs) {
 			blkid_dev dev2;
-			if (!p)
-				break;
 			dev2 = list_entry(p, struct blkid_struct_dev, bid_devs);
 			if (dev2->bid_flags & BLKID_BID_FL_VERIFIED)
 				continue;
@@ -229,7 +231,8 @@ static void probe_one(blkid_cache cache, const char *ptname,
 		    dev->bid_devno == devno)
 			goto set_pri;
 
-		if (stat(device, &st) == 0 && S_ISBLK(st.st_mode) &&
+		if (stat(device, &st) == 0 &&
+		    blkidP_is_disk_device(st.st_mode) &&
 		    st.st_rdev == devno) {
 			devname = blkid_strdup(device);
 			goto get_dev;
@@ -395,7 +398,7 @@ static int probe_all(blkid_cache cache, int only_if_new)
 {
 	FILE *proc;
 	char line[1024];
-	char ptname0[128], ptname1[128], *ptname = 0;
+	char ptname0[129], ptname1[129], *ptname = 0;
 	char *ptnames[2];
 	dev_t devs[2];
 	int ma, mi;

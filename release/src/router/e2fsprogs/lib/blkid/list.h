@@ -1,8 +1,16 @@
-#if !defined(_BLKID_LIST_H) && !defined(LIST_HEAD)
+#if !defined(_BLKID_LIST_H) && !defined(LIST_HEAD_INIT)
 #define _BLKID_LIST_H
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h>
+#else
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
 #endif
 
 #ifdef __GNUC__
@@ -26,9 +34,6 @@ struct list_head {
 };
 
 #define LIST_HEAD_INIT(name) { &(name), &(name) }
-
-#define LIST_HEAD(name) \
-	struct list_head name = LIST_HEAD_INIT(name)
 
 #define INIT_LIST_HEAD(ptr) do { \
 	(ptr)->next = (ptr); (ptr)->prev = (ptr); \
@@ -149,7 +154,7 @@ _INLINE_ void list_splice(struct list_head *list, struct list_head *head)
  * @member:	the name of the list_struct within the struct.
  */
 #define list_entry(ptr, type, member) \
-	((type *)((char *)(ptr)-(unsigned long)(&((type *)0)->member)))
+	((type *)((char *)(ptr)-(unsigned long)(intptr_t)(&((type *)0)->member)))
 
 /**
  * list_for_each - iterate over elements in a list

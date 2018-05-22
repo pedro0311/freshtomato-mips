@@ -5,8 +5,10 @@
  *                           Laboratoire MASI, Institut Blaise Pascal
  *                           Universite Pierre et Marie Curie (Paris VI)
  *
- * This file can be redistributed under the terms of the GNU Library General
- * Public License
+ * %Begin-Header%
+ * This file may be redistributed under the terms of the GNU Library
+ * General Public License, version 2.
+ * %End-Header%
  */
 
 /*
@@ -14,10 +16,13 @@
  * 93/10/30	- Creation
  */
 
+#include "config.h"
 #if HAVE_ERRNO_H
 #include <errno.h>
 #endif
+#if HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
+#endif
 
 #include "e2p.h"
 
@@ -28,7 +33,7 @@ int getversion (int fd, unsigned long * version)
 
 	r = ioctl (fd, EXT2_IOC_GETVERSION, &ver);
 	*version = ver;
-	return 0;
+	return r;
 #else /* ! HAVE_EXT2_IOCTLS */
 	extern int errno;
 	errno = EOPNOTSUPP;

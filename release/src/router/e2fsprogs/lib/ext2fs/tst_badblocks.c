@@ -4,11 +4,12 @@
  * Copyright (C) 1996 by Theodore Ts'o.
  *
  * %Begin-Header%
- * This file may be redistributed under the terms of the GNU Public
- * License.
+ * This file may be redistributed under the terms of the GNU Library
+ * General Public License, version 2.
  * %End-Header%
  */
 
+#include "config.h"
 #include <stdio.h>
 #include <string.h>
 #if HAVE_UNISTD_H
@@ -29,11 +30,11 @@
 #define DEL_BLK	0x0002
 
 blk_t test1[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0 };
-blk_t test2[] = { 11, 10, 9, 8, 7, 6, 5, 4, 3, 3, 2, 1 };
+blk_t test2[] = { 11, 10, 9, 8, 7, 6, 5, 4, 3, 3, 2, 1, 0 };
 blk_t test3[] = { 3, 1, 4, 5, 9, 2, 7, 10, 5, 6, 10, 8, 0 };
 blk_t test4[] = { 20, 50, 12, 17, 13, 2, 66, 23, 56, 0 };
 blk_t test4a[] = {
- 	20, 1,
+	20, 1,
 	50, 1,
 	3, 0,
 	17, 1,
@@ -200,6 +201,7 @@ int file_test(badblocks_list bb)
 		printf("Block bitmap NOT matched.\n");
 		test_fail++;
 	}
+	ext2fs_badblocks_list_free(new_bb);
 	return 0;
 }
 
@@ -214,7 +216,7 @@ static void invalid_proc(ext2_filsys fs, blk_t blk)
 	}
 }
 
-int file_test_invalid(badblocks_list bb)
+void file_test_invalid(badblocks_list bb)
 {
 	badblocks_list new_bb = 0;
 	errcode_t	retval;
@@ -227,18 +229,20 @@ int file_test_invalid(badblocks_list bb)
 	fs->super = malloc(SUPERBLOCK_SIZE);
 	memset(fs->super, 0, SUPERBLOCK_SIZE);
 	fs->super->s_first_data_block = 1;
-	fs->super->s_blocks_count = 100;
+	ext2fs_blocks_count_set(fs->super, 100);
 
 	f = tmpfile();
 	if (!f) {
 		fprintf(stderr, "Error opening temp file: %s\n",
 			error_message(errno));
-		return 1;
+		test_fail++;
+		goto out;
 	}
 	retval = ext2fs_write_bb_FILE(bb, 0, f);
 	if (retval) {
 		com_err("file_test", retval, "while writing bad blocks");
-		return 1;
+		test_fail++;
+		goto out;
 	}
 	fprintf(f, "34500\n");
 
@@ -247,7 +251,8 @@ int file_test_invalid(badblocks_list bb)
 	retval = ext2fs_read_bb_FILE(fs, f, &new_bb, invalid_proc);
 	if (retval) {
 		com_err("file_test", retval, "while reading bad blocks");
-		return 1;
+		test_fail++;
+		goto out;
 	}
 	fclose(f);
 	if (!test_expected_fail) {
@@ -262,7 +267,10 @@ int file_test_invalid(badblocks_list bb)
 		printf("Block bitmap NOT matched.\n");
 		test_fail++;
 	}
-	return 0;
+	ext2fs_badblocks_list_free(new_bb);
+out:
+	free(fs->super);
+	free(fs);
 }
 
 int main(int argc, char **argv)
@@ -270,6 +278,8 @@ int main(int argc, char **argv)
 	badblocks_list bb1, bb2, bb3, bb4, bb5;
 	int	equal;
 	errcode_t	retval;
+
+	add_error_table(&et_ext2_error_table);
 
 	bb1 = bb2 = bb3 = bb4 = bb5 = 0;
 
@@ -351,6 +361,8 @@ int main(int argc, char **argv)
 		ext2fs_badblocks_list_free(bb3);
 	if (bb4)
 		ext2fs_badblocks_list_free(bb4);
+	if (bb5)
+		ext2fs_badblocks_list_free(bb5);
 
 	return test_fail;
 

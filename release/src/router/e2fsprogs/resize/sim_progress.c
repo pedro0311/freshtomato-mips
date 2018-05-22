@@ -4,7 +4,7 @@
  * Copyright (C) 1997, 1998 by Theodore Ts'o and
  * 	PowerQuest, Inc.
  *
- * Copyright (C) 1999, 2000 by Theosore Ts'o
+ * Copyright (C) 1999, 2000 by Theodore Ts'o
  *
  * %Begin-Header%
  * This file may be redistributed under the terms of the GNU Public
@@ -12,6 +12,7 @@
  * %End-Header%
  */
 
+#include "config.h"
 #include "resize2fs.h"
 
 struct ext2_sim_progress {
