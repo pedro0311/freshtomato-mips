@@ -14,6 +14,7 @@ Copyright (C) 1995 Gadi Oxman
 
 */
 
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -56,7 +57,7 @@ int init (void)
 
 	general_commands.last_command=-1;	/* No commands whatsoever meanwhile */
 	ext2_commands.last_command=-1;
-	add_general_commands ();		/* Add the general commands, aviable always */
+	add_general_commands ();		/* Add the general commands, available always */
 	device_handle=NULL;			/* Notice that our device is still not set up */
 	device_offset=-1;
 	current_type=NULL;			/* No filesystem specific types yet */
@@ -79,8 +80,8 @@ void add_general_commands (void)
 	add_user_command (&general_commands,"help","EXT2ED help system",help);
 	add_user_command (&general_commands,"set","Changes a variable in the current object",set);
 	add_user_command (&general_commands,"setdevice","Selects the filesystem block device (e.g. /dev/hda1)",set_device);
-	add_user_command (&general_commands,"setoffset","Moves asynchronicly in the filesystem",set_offset);
-	add_user_command (&general_commands,"settype","Tells EXT2ED how to interpert the current object",set_type);
+	add_user_command (&general_commands,"setoffset","Moves asynchronously in the filesystem",set_offset);
+	add_user_command (&general_commands,"settype","Tells EXT2ED how to interpret the current object",set_type);
 	add_user_command (&general_commands,"show","Displays the current object",show);
 	add_user_command (&general_commands,"pgup","Scrolls data one page up",pgup);
 	add_user_command (&general_commands,"pgdn","Scrolls data one page down",pgdn);
@@ -315,7 +316,7 @@ Set specific type user commands.
 	}
 
 	if (strcmp ((ptr->name),"ext2_group_desc")==0) {
-		add_user_command (&ptr->type_commands,"next","Pass to the next block group decriptor",type_ext2_group_desc___next);
+		add_user_command (&ptr->type_commands,"next","Pass to the next block group descriptor",type_ext2_group_desc___next);
 		add_user_command (&ptr->type_commands,"prev","Pass to the previous group descriptor",type_ext2_group_desc___prev);
 		add_user_command (&ptr->type_commands,"entry","Pass to a specific group descriptor",type_ext2_group_desc___entry);
 		add_user_command (&ptr->type_commands,"show","Shows the current group descriptor",type_ext2_group_desc___show);
@@ -370,13 +371,6 @@ void add_user_command (struct struct_commands *ptr,char *name,char *description,
 	ptr->callback [num]=callback;
 }
 
-static unsigned int div_ceil(unsigned int a, unsigned int b)
-{
-	if (!a)
-		return 0;
-	return ((a - 1) / b) + 1;
-}
-
 int set_file_system_info (void)
 
 {
@@ -422,13 +416,13 @@ int set_file_system_info (void)
 			file_system_info.first_group_desc_offset=2*EXT2_MIN_BLOCK_SIZE;
 		else
 			file_system_info.first_group_desc_offset=file_system_info.block_size;
-		file_system_info.groups_count = div_ceil(sb->s_blocks_count,
+		file_system_info.groups_count = ext2fs_div64_ceil(ext2fs_blocks_count(sb),
 						 sb->s_blocks_per_group);
 
 		file_system_info.inodes_per_block=file_system_info.block_size/sizeof (struct ext2_inode);
 		file_system_info.blocks_per_group=sb->s_inodes_per_group/file_system_info.inodes_per_block;
 		file_system_info.no_blocks_in_group=sb->s_blocks_per_group;
-		file_system_info.file_system_size=(sb->s_blocks_count-1)*file_system_info.block_size;
+		file_system_info.file_system_size=(ext2fs_blocks_count(sb)-1)*file_system_info.block_size;
 	}
 
 	else {
@@ -494,7 +488,7 @@ int process_configuration_file (void)
 	char option [80],value [80];
 	FILE *fp;
 
-	strcpy (buffer, ETC_DIR);
+	strcpy (buffer, ROOT_SYSCONFDIR);
 	strcat (buffer,"/ext2ed.conf");
 
 	if ((fp=fopen (buffer,"rt"))==NULL) {

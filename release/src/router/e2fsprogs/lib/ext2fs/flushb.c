@@ -5,11 +5,12 @@
  * Copyright (C) 2000 Theodore Ts'o.
  *
  * %Begin-Header%
- * This file may be redistributed under the terms of the GNU Public
- * License.
+ * This file may be redistributed under the terms of the GNU Library
+ * General Public License, version 2.
  * %End-Header%
  */
 
+#include "config.h"
 #include <stdio.h>
 #if HAVE_ERRNO_H
 #include <errno.h>
@@ -57,26 +58,31 @@ errcode_t ext2fs_sync_device(int fd, int flushb)
 	 * still is a race condition for those kernels, but this
 	 * reduces it greatly.)
 	 */
+#if defined(HAVE_FSYNC)
 	if (fsync (fd) == -1)
 		return errno;
+#endif
 
 	if (flushb) {
+		errcode_t	retval = 0;
 
 #ifdef BLKFLSBUF
 		if (ioctl (fd, BLKFLSBUF, 0) == 0)
 			return 0;
-#else
-#ifdef __GNUC__
- #warning BLKFLSBUF not defined
-#endif /* __GNUC__ */
+		retval = errno;
+#elif defined(__linux__)
+#warning BLKFLSBUF not defined
 #endif
 #ifdef FDFLUSH
-		ioctl (fd, FDFLUSH, 0);   /* In case this is a floppy */
-#else
-#ifdef __GNUC__
- #warning FDFLUSH not defined
-#endif /* __GNUC__ */
+		/* In case this is a floppy */
+		if (ioctl(fd, FDFLUSH, 0) == 0)
+			return 0;
+		if (retval == 0)
+			retval = errno;
+#elif defined(__linux__)
+#warning FDFLUSH not defined
 #endif
+		return retval;
 	}
 	return 0;
 }

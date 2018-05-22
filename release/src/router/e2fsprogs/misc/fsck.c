@@ -27,9 +27,9 @@
 
 #define _XOPEN_SOURCE 600 /* for inclusion of sa_handler in Solaris */
 
+#include "config.h"
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <sys/signal.h>
 #include <sys/stat.h>
 #include <limits.h>
 #include <stdio.h>
@@ -59,7 +59,7 @@
 #endif
 
 #include "../version.h"
-#include "nls-enable.h"
+#include "support/nls-enable.h"
 #include "fsck.h"
 #include "blkid/blkid.h"
 
@@ -97,32 +97,32 @@ static const char *really_wanted[] = {
 /*
  * Global variables for options
  */
-char *devices[MAX_DEVICES];
-char *args[MAX_ARGS];
-int num_devices, num_args;
+static char *devices[MAX_DEVICES];
+static char *args[MAX_ARGS];
+static int num_devices, num_args;
 
-int verbose = 0;
-int doall = 0;
-int noexecute = 0;
-int serialize = 0;
-int skip_root = 0;
-int ignore_mounted = 0;
-int notitle = 0;
-int parallel_root = 0;
-int progress = 0;
-int progress_fd = 0;
-int force_all_parallel = 0;
-int num_running = 0;
-int max_running = 0;
-volatile int cancel_requested = 0;
-int kill_sent = 0;
-char *progname;
-char *fstype = NULL;
-struct fs_info *filesys_info = NULL, *filesys_last = NULL;
-struct fsck_instance *instance_list;
-const char *fsck_prefix_path = "/sbin:/sbin/fs.d:/sbin/fs:/etc/fs:/etc";
-char *fsck_path = 0;
-blkid_cache cache = NULL;
+static int verbose = 0;
+static int doall = 0;
+static int noexecute = 0;
+static int serialize = 0;
+static int skip_root = 0;
+static int ignore_mounted = 0;
+static int notitle = 0;
+static int parallel_root = 0;
+static int progress = 0;
+static int progress_fd = 0;
+static int force_all_parallel = 0;
+static int num_running = 0;
+static int max_running = 0;
+static volatile int cancel_requested = 0;
+static int kill_sent = 0;
+static char *progname;
+static char *fstype = NULL;
+static struct fs_info *filesys_info = NULL, *filesys_last = NULL;
+static struct fsck_instance *instance_list;
+static const char *fsck_prefix_path = "/sbin:/sbin/fs.d:/sbin/fs:/etc/fs:/etc";
+static char *fsck_path = 0;
+static blkid_cache cache = NULL;
 
 static char *string_copy(const char *s)
 {
@@ -365,7 +365,8 @@ static void load_fs_info(const char *filename)
 	fclose(f);
 
 	if (old_fstab && filesys_info) {
-		fputs(_("\007\007\007"
+		fputs("\007\007\007", stderr);
+		fputs(_(
 		"WARNING: Your /etc/fstab does not contain the fsck passno\n"
 		"	field.  I will kludge around things for you, but you\n"
 		"	should fix your /etc/fstab file as soon as you can.\n\n"), stderr);
@@ -407,7 +408,8 @@ static char *find_fsck(char *type)
   tpl = (strncmp(type, "fsck.", 5) ? "%s/fsck.%s" : "%s/%s");
 
   for(s = strtok(p, ":"); s; s = strtok(NULL, ":")) {
-	sprintf(prog, tpl, s, type);
+	if (snprintf(prog, sizeof(prog), tpl, s, type) >= sizeof(prog))
+		continue;
 	if (stat(prog, &st) == 0) break;
   }
   free(p);
@@ -434,17 +436,19 @@ static int progress_active(NOARGS)
 static int execute(const char *type, const char *device, const char *mntpt,
 		   int interactive)
 {
-	char *s, *argv[80], prog[80];
+	char *s, *argv[80], prog[256];
 	int  argc, i;
 	struct fsck_instance *inst, *p;
 	pid_t	pid;
+
+	if (snprintf(prog, sizeof(prog), "fsck.%s", type) >= sizeof(prog))
+		return EINVAL;
 
 	inst = malloc(sizeof(struct fsck_instance));
 	if (!inst)
 		return ENOMEM;
 	memset(inst, 0, sizeof(struct fsck_instance));
 
-	sprintf(prog, "fsck.%s", type);
 	argv[0] = string_copy(prog);
 	argc = 1;
 
@@ -727,7 +731,7 @@ static void fsck_device(struct fs_info *fs, int interactive)
 /*
  * Deal with the fsck -t argument.
  */
-struct fs_type_compile {
+static struct fs_type_compile {
 	char **list;
 	int *type;
 	int  negate;
@@ -996,7 +1000,7 @@ static int check_all(NOARGS)
 	}
 	/*
 	 * This is for the bone-headed user who enters the root
-	 * filesystem twice.  Skip root will skep all root entries.
+	 * filesystem twice.  Skip root will skip all root entries.
 	 */
 	if (skip_root)
 		for (fs = filesys_info; fs; fs = fs->next)
@@ -1173,14 +1177,14 @@ static void PRS(int argc, char *argv[])
 						progress_fd = 0;
 					else
 						goto next_arg;
-				} else if ((i+1) < argc &&
-					   !strncmp(argv[i+1], "-", 1) == 0) {
+				} else if (argc > i + 1 &&
+					   argv[i + 1][0] != '-') {
 					progress_fd = string_to_int(argv[i]);
 					if (progress_fd < 0)
 						progress_fd = 0;
 					else {
+						++i;
 						goto next_arg;
-						i++;
 					}
 				}
 				break;

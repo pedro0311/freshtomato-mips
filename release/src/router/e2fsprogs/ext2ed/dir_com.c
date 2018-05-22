@@ -28,6 +28,7 @@ Copyright (C) 1995 Gadi Oxman
 
 */
 
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -538,7 +539,7 @@ void type_dir___remember (char *command_line)
 
 /*
 
-This is overrided here because we don't remember a directory - It is too complicated. Instead, we remember the
+This is overridden here because we don't remember a directory - It is too complicated. Instead, we remember the
 inode of the current directory.
 
 */

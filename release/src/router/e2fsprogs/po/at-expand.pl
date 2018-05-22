@@ -21,10 +21,13 @@ my @translator_help = (
  "#. on.  A table of these expansions can be found below.  Note that\n",
  "#. %-expressions that begin with \"%D\" and \"%I\" are two-character\n",
  "#. expansions; so for example, \"%Iu\" expands to the inode's user id\n",
- "#. ownership field (inode->i_uid).\n",
+ "#. ownership field (inode->i_uid).  Also the \"%B\" expansion is special:\n",
+ "#. it can expand to either the string \"indirect block\" (possibly preceded\n",
+ "#. by the word \"double\" or \"triple\"), or the string \"block #\" immediately\n",
+ "#. followed by an integer indicating a block sequence number.\n",
  "#.  \n",
  "#.	%b	<blk>			block number\n",
- "#.	%B	<blkcount>		integer\n",
+ "#.	%B	\"indirect block\" | \"block #\"<blkcount>	string | string+integer\n",
  "#.	%c	<blk2>			block number\n",
  "#.	%Di	<dirent> -> ino		inode number\n",
  "#.	%Dn	<dirent> -> name	string\n",
@@ -42,9 +45,10 @@ my @translator_help = (
  "#.	%IM	<inode> -> i_mtime\n",
  "#.	%IF	<inode> -> i_faddr\n",
  "#.	%If	<inode> -> i_file_acl\n",
- "#.	%Id	<inode> -> i_dir_acl\n",
+ "#.	%Id	<inode> -> i_size_high\n",
  "#.	%Iu	<inode> -> i_uid\n",
  "#.	%Ig	<inode> -> i_gid\n",
+ "#.	%It	<str>			file type\n",
  "#.	%j	<ino2>			inode number\n",
  "#.	%m	<com_err error message>\n",
  "#.	%N	<num>\n",
@@ -91,6 +95,7 @@ sub do_expand {
     $msg =~ s/\@n/invalid/g;
     $msg =~ s/\@o/orphaned/g;
     $msg =~ s/\@p/problem in/g;
+    $msg =~ s/\@q/quota/g;
     $msg =~ s/\@r/root inode/g;
     $msg =~ s/\@s/should be/g;
     $msg =~ s/\@S/superblock/g;
