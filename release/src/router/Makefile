@@ -767,7 +767,11 @@ endif
 openssl/stamp-h1:
 	$(call patch_files,openssl)
 	cd openssl && \
-	./Configure linux-mipsel --openssldir=/etc --cross-compile-prefix=' ' \
+	CC=$(CC:$(CROSS_COMPILE)%=%) \
+	AR=$(AR:$(CROSS_COMPILE)%=%) \
+	NM=$(NM:$(CROSS_COMPILE)%=%) \
+	RANLIB=$(RANLIB:$(CROSS_COMPILE)%=%) \
+	./Configure linux-mipsel --openssldir=/etc \
 	-ffunction-sections -fdata-sections -Wl,--gc-sections \
 	shared $(OPENSSL_CIPHERS) \
 	no-sha0 no-smime no-camellia no-krb5 no-rmd160 no-ripemd \
@@ -791,7 +795,7 @@ openssl: openssl/stamp-h1
 	@$(MAKE) -C openssl $(PARALLEL_BUILD)
 
 openssl-clean:
-	-@$(MAKE) -C openssl clean
+	-@$(MAKE) -C openssl clean depend
 	@rm -f openssl/stamp-h1
 	$(call unpatch_files,openssl)
 
