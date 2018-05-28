@@ -2388,12 +2388,15 @@ portmap-install:
 e2fsprogs/stamp-h1:
 	cd e2fsprogs && \
 	CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
-	$(CONFIGURE) --prefix=$(TOP)/e2fsprogs/staged --enable-libblkid --enable-symlink-build --disable-defrag --disable-nls --without-libiconv-prefix --without-libintl-prefix
+	$(CONFIGURE) --prefix=$(TOP)/e2fsprogs/staged --disable-debugfs --disable-imager --disable-resizer --disable-uuidd --disable-nls
 	touch e2fsprogs/stamp-h1
 
 e2fsprogs: e2fsprogs/stamp-h1
 	@$(SEP)
-	$(MAKE) -C e2fsprogs $(PARALLEL_BUILD)
+	$(MAKE) -C e2fsprogs libs # $(PARALLEL_BUILD)
+
+e2fsprogs-install: e2fsprogs
+	$(MAKE) -C e2fsprogs install-libs
 
 e2fsprogs-clean:
 	-@$(MAKE) -C e2fsprogs clean
