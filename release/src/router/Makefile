@@ -2459,11 +2459,13 @@ tinc/stamp-h1: openssl zlib lzo
 
 tinc: tinc/stamp-h1
 	@$(SEP)
+	$(call patch_files,tinc)
 	@$(MAKE) -C tinc LIBS="-lcrypto $(TOP)/zlib/libz.a -llzo2 -lm" $(PARALLEL_BUILD)
 
 tinc-clean:
 	-@$(MAKE) -C tinc clean
 	@rm -f tinc/stamp-h1
+	$(call unpatch_files,tinc)
 
 tinc-install:
 	install -D tinc/src/tinc $(INSTALLDIR)/tinc/usr/sbin/tinc
