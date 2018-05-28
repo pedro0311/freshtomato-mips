@@ -793,7 +793,11 @@ endif
 openssl/stamp-h1:
 	$(call patch_files,openssl)
 	cd openssl && \
-	./Configure linux-mipsel --openssldir=/etc --cross-compile-prefix=' ' \
+	CC=$(CC:$(CROSS_COMPILE)%=%) \
+	AR=$(AR:$(CROSS_COMPILE)%=%) \
+	NM=$(NM:$(CROSS_COMPILE)%=%) \
+	RANLIB=$(RANLIB:$(CROSS_COMPILE)%=%) \
+	./Configure linux-mipsel --openssldir=/etc \
 	-ffunction-sections -fdata-sections -Wl,--gc-sections \
 	shared $(OPENSSL_CIPHERS) \
 	no-sha0 no-smime no-camellia no-krb5 no-rmd160 no-ripemd \
@@ -817,7 +821,7 @@ openssl: openssl/stamp-h1
 	@$(MAKE) -C openssl $(PARALLEL_BUILD)
 
 openssl-clean:
-	-@$(MAKE) -C openssl clean
+	-@$(MAKE) -C openssl clean depend
 	@rm -f openssl/stamp-h1
 	$(call unpatch_files,openssl)
 
@@ -900,7 +904,7 @@ nettle-clean:
 	@rm -rf nettle/include nettle/lib nettle/bin nettle/share
 
 gmp/stamp-h1:
-	@cd gmp && CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) \
+	@cd gmp && autoreconf -fvi && CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) \
 	CFLAGS="-Os -Wall $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
 	$(CONFIGURE)
@@ -908,11 +912,13 @@ gmp/stamp-h1:
 
 gmp: gmp/stamp-h1
 	@$(SEP)
-	@$(MAKE) -C gmp
+	$(call patch_files,gmp)
+	@$(MAKE) -C gmp $(PARALLEL_BUILD)
 
 gmp-clean:
 	@$(MAKE) -C gmp clean
 	@rm -f gmp/stamp-h1
+	$(call unpatch_files,gmp)
 
 iptables:
 ifeq ($(CONFIG_LINUX26),y)
@@ -2323,7 +2329,7 @@ libiconv-install:
 
 transmission/stamp-h1: openssl libcurl libevent zlib
 	cd transmission && CC=$(CC) STRIP=$(CROSS_COMPILE)strip \
-		autoreconf && \
+		autoreconf -f && \
 		CFLAGS="-Os -Wall -fno-delete-null-pointer-checks -funit-at-a-time \
 			--param large-function-growth=800 --param max-inline-insns-single=3000 \
 			-ffunction-sections -fdata-sections" \
@@ -2331,7 +2337,7 @@ transmission/stamp-h1: openssl libcurl libevent zlib
 			-L$(TOP)/zlib -L$(TOP)/openssl -L$(TOP)/libcurl/lib/.libs -L$(TOP)/libevent/.libs" \
 		HAVE_CXX=yes \
 		$(CONFIGURE) --target=$(HOST) --host=$(HOST) --build=x86_64-linux-gnu --prefix=/usr --disable-nls \
-			--enable-lightweight --enable-largefile --enable-utp --without-gtk \
+			--enable-lightweight --enable-largefile --enable-utp --without-gtk --disable-cli --without-systemd-daemon \
 			LIBCURL_CFLAGS="-I$(TOP)/libcurl/include" \
 			LIBCURL_LDFLAGS="-L$(TOP)/libcurl/lib/.libs/" \
 			LIBCURL_LIBS="-lcurl" \
@@ -2348,23 +2354,18 @@ transmission/stamp-h1: openssl libcurl libevent zlib
 
 transmission: transmission/stamp-h1
 	@$(SEP)
+	$(call patch_files,transmission)
 	$(MAKE) -C transmission $(PARALLEL_BUILD)
 
 transmission-clean:
 	-@$(MAKE) -C transmission clean
 	@rm -f transmission/stamp-h1 transmission/Makefile
+	$(call unpatch_files,transmission)
 
 transmission-install:
 	$(MAKE) -C transmission DESTDIR=$(INSTALLDIR)/transmission install-strip
 	@rm -rf $(INSTALLDIR)/transmission/usr/share/man
-	@rm -rf $(INSTALLDIR)/transmission/usr/bin/transmission-cli
-	@rm -rf $(INSTALLDIR)/transmission/usr/bin/transmission-show
-	@rm -rf $(INSTALLDIR)/transmission/usr/bin/transmission-edit
-	@rm -rf $(INSTALLDIR)/transmission/usr/bin/transmission-create
-	$(STRIP) -s $(INSTALLDIR)/transmission/usr/bin/transmission-daemon
-ifeq ($(TCONFIG_TR_EXTRAS),y)
-	$(STRIP) -s $(INSTALLDIR)/transmission/usr/bin/transmission-remote
-else
+ifneq ($(TCONFIG_TR_EXTRAS),y)
 	@rm -rf $(INSTALLDIR)/transmission/usr/bin/transmission-remote
 endif
 
@@ -2419,12 +2420,15 @@ portmap-install:
 e2fsprogs/stamp-h1:
 	cd e2fsprogs && \
 	CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
-	$(CONFIGURE) --prefix=$(TOP)/e2fsprogs/staged --enable-libblkid --enable-symlink-build --disable-defrag --disable-nls --without-libiconv-prefix --without-libintl-prefix
+	$(CONFIGURE) --prefix=$(TOP)/e2fsprogs/staged --disable-debugfs --disable-imager --disable-resizer --disable-uuidd --disable-nls
 	touch e2fsprogs/stamp-h1
 
 e2fsprogs: e2fsprogs/stamp-h1
 	@$(SEP)
-	$(MAKE) -C e2fsprogs $(PARALLEL_BUILD)
+	$(MAKE) -C e2fsprogs libs # $(PARALLEL_BUILD)
+
+e2fsprogs-install: e2fsprogs
+	$(MAKE) -C e2fsprogs install-libs
 
 e2fsprogs-clean:
 	-@$(MAKE) -C e2fsprogs clean
@@ -2490,11 +2494,13 @@ tinc/stamp-h1: openssl zlib lzo
 
 tinc: tinc/stamp-h1
 	@$(SEP)
+	$(call patch_files,tinc)
 	@$(MAKE) -C tinc LIBS="-lcrypto $(TOP)/zlib/libz.a -llzo2 -lm" $(PARALLEL_BUILD)
 
 tinc-clean:
 	-@$(MAKE) -C tinc clean
 	@rm -f tinc/stamp-h1
+	$(call unpatch_files,tinc)
 
 tinc-install:
 	install -D tinc/src/tinc $(INSTALLDIR)/tinc/usr/sbin/tinc
@@ -2652,7 +2658,7 @@ udpxy-install:
 	$(STRIP) -s $(INSTALLDIR)/udpxy/bin/udpxy
 
 mdadm:
-	$(MAKE) -C mdadm $(PARALLEL_BUILD)
+	$(MAKE) -C mdadm mdadm $(PARALLEL_BUILD)
 
 mdadm-install:
 	install -D mdadm/mdadm $(INSTALLDIR)/mdadm/usr/sbin/mdadm
