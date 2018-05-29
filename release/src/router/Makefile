@@ -813,7 +813,13 @@ openssl/stamp-h1:
 	ln -sf ../../crypto/mdc2/mdc2.h include/openssl/mdc2.h && \
 	ln -sf ../../crypto/ripemd/ripemd.h include/openssl/ripemd.h && \
 	ln -sf ../../crypto/seed/seed.h include/openssl/seed.h && \
-	ln -sf ../../crypto/ts/ts.h include/openssl/ts.h
+	ln -sf ../../crypto/ts/ts.h include/openssl/ts.h && \
+	ln -sf ../../crypto/engine/engine.h include/openssl/engine.h && \
+	ln -sf ../../crypto/rsa/rsa.h include/openssl/rsa.h && \
+	ln -sf ../../crypto/dh/dh.h include/openssl/dh.h && \
+	ln -sf ../../crypto/idea/idea.h include/openssl/idea.h && \
+	ln -sf ../../crypto/rc2/rc2.h include/openssl/rc2.h && \
+	ln -sf ../../crypto/cast/cast.h include/openssl/cast.h
 	@touch openssl/stamp-h1
 
 openssl: openssl/stamp-h1
