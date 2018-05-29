@@ -1922,7 +1922,7 @@ static int save_variables(int write)
 	char *p;
 	int n;
 	int ok;
-	char s[256];
+	char s[256], t[256];
 	int dirty;
 	static const char *msgf = "The field \"%s\" is invalid. Please report this problem.";
 	nv_list_t nv;
@@ -1972,7 +1972,9 @@ static int save_variables(int write)
 		sprintf(s, "rrule%d", n);
 		if ((p = webcgi_get(s)) != NULL) {
 			if (strlen(p) > 2048) {
-				sprintf(s, msgf, s);
+				memset(t,0,sizeof(t));
+				strncpy(t,s,sizeof(s));
+				sprintf(s, msgf, t);
 				resmsg_set(s);
 				return 0;
 			}
