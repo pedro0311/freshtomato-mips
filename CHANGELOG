@@ -3,6 +3,66 @@ FreshTomato-MIPS Changelog
 
 
 
+2018.3.006-beta 2018.06.01
+--------------------------
+
+- kernel: usb: qmi_wwan: add support for Netgear Fuse (Aircard 779S)
+- kernel: IGMP: resolve potential for divide by 0, allowing remote attackers to cause a denial of service via IGMP packets (CVE-2012-0207)
+- nano: update to 2.9.6
+- transmission: update to 2.94
+- miniupnpd: update to 2.1
+- openssl: clean sources 1.0.2k, add patches instead
+- openssl: update to 1.0.2o
+- minidlna: update to 1.2.1
+- e2fsprogs: update to 1.44.2 (fix toolchain to support it)
+- nano: update to 2.9.7
+- bridge-utils: update to 1.6 (plus commits in master as at May 7, 2018)
+- samba: ported Samba 3.6.25 (SMB1 + SMB2 support) from asuswrt-merlin with all patches, deleted old Samba 3.0.37
+- ntpd: transition from using ntpclient/ntpc to Busybox ntpd
+- snmpd: update to v5.8.rc2
+- php: update to 7.2.6
+- tor: update to 0.3.3.6
+- btools/libfoo.pl: there's no library to optimize in Samba 3.6.x, Makefile build Samba with static libraries
+- BWL: Manipulate waniface only if QoS is Disabled
+- Delete unnecessary /router/samba folder
+- dhcpv6: incorporating and bringing inline against the below... Several fixes (router/dhcpv6/dhcp6c.c)
+- dhcpv6: remove from commit 9274c3f fix: "dhcpv6: close file descriptors on exec", because it breaks compilation on mips
+- dhcpv6: fixing use of memset. It was noted in this ticket, though no fix upstream. https://sourceforge.net/p/wide-dhcpv6/bugs/35/
+- dhcpv6: no need for sizeoff(char) (in router/dhcpv6/dhcp6c.c)
+- dhcpv6: fix dhcp6 parallel build failure with poudriere on FreeBSD, by implementing patch from bug 38
+- dhcpv6: patch #1 from: https://sourceforge.net/p/wide-dhcpv6/bugs/36/ Resolve bind(control sock): Address already in use error
+- dhcpv6: patch #2 from https://sourceforge.net/p/wide-dhcpv6/bugs/36/ Resolves bind(control sock): Address already in use issue
+- dhcpv6: fix bad memset in auth.c
+- dhcpv6: fix a number of resource/memory leaks
+- httpd: fix potential FILE * resource leak
+- httpd: allow for NULL termination on variable partname by increasing its size from 16 to 17
+- httpd: rework save_variables procedure so that sprintf is not writing to the same variable, in which case the results are considered undefined
+- miniupnpd: add real ipv6 support
+- ntpd: clean ups in ntp start proc
+- router/Makefile: e2fsprogs: fix e2fsprogs build; tune configure options, disable parallel makefile due errors, build only libraries needed by nfs (tomato uses e2fs tools from busybox)
+- router/Makefile: openssl: make proper call to openssl Configure script
+- router/Makefile: tinc: don't build doc and GUI
+- router/Makefile: transmission: don't build cli tools
+- router/Makefile: change "autoreconf" to "autoreconf -fsi" for pcre (sync with ARM branch)
+- router/Makefile: change "autoreconf -fvi" to "autoreconf -fsi" for libnfsidmap (sync with ARM branch)
+- router/Makefile: mdadm: skip building mdadm man pages
+- router/Makefile: gmp: optimize gmp build; fix compilation with different autotools version, allow parallel make, don't build demos and doc
+- router/Makefile: add "--ipv6" to miniupnpd-config
+- router/Makefile: delete unnecessary code, after Samba 3.0.x and Samba 3.5.x
+- router/Makefile: openssl: fix build break for "f" and "r2f" targets
+- router/shared/defaults.c: disable "nf_sip" by default (GUI @ Tracking / NAT Helpers SIP - Option Off)
+- samba: improve performance
+- samba: chain code can return uninitialized memory when talloc buffer is grown (CVE-2017-15275)
+- samba: Prevent client short SMB1 write from writing server memory to file (CVE-2017-12163)
+- samba: only fallback to anonymous if authentication was not requested (CVE-2017-12150)
+- www: Modified Bandwidth Limiter warnings
+- www: advanced-vlan.asp: update to the newest version (Apr 16 2018)
+- www: default theme - original 'usbblue'
+- www: tools-wol.asp: WOL bugfix
+- www: advanced-firewall.asp: fix typo at IGMP proxy notes section (wrong example value for downstream threshold)
+- www: Makefile: cleanup comments more aggressively 
+
+
 2018.2          2018.05.13
 --------------------------
 not public
