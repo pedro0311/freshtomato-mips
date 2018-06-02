@@ -47,6 +47,8 @@ endif
 
 PPTPD ?= "n"
 
+KERN_SIZE_OPT ?= y
+
 ifeq ($(NVRAM_SIZE),)
 NVRAM_SIZE = 0
 endif
@@ -68,10 +70,8 @@ lowercase_B = $(shell echo $(B) | tr A-Z a-z)
 
 ifeq ($(CONFIG_LINUX26),y)
 mips_rev = $(if $(filter $(MIPS32),r2),MIPSR2,MIPSR1)
-KERN_SIZE_OPT ?= n
 else
 mips_rev =
-KERN_SIZE_OPT ?= y
 endif
 
 beta = $(if $(filter $(TOMATO_EXPERIMENTAL),1),-beta,)
