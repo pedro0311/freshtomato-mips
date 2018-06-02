@@ -1219,10 +1219,10 @@ r2m:
 
 ## Belkin
 f5d:
-	@$(MAKE) bin MIPS32=r2 NO_JFFS=y NO_CIFS=y NO_ZEBRA=y B=V NFS=y MEDIASRV=y PPTPD=y OPENVPN=y USB="USB" IPV6SUPP=y NVRAM_64K=y BELKIN_F5D=y BUILD_DESC="IPv6-$(VPN)"
+	@$(MAKE) bin MIPS32=r2 NO_JFFS=y NO_CIFS=y NO_ZEBRA=y B=V NFS=y PPTPD=y OPENVPN=y USB="USB" IPV6SUPP=y NVRAM_64K=y BELKIN_F5D=y BUILD_DESC="IPv6-$(VPN)"
 
 f7d:
-	@$(MAKE) bin MIPS32=r2 NO_JFFS=y NO_CIFS=y NO_ZEBRA=y B=V NFS=y MEDIASRV=y USB="USB" IPV6SUPP=y NVRAM_SIZE=32 BELKIN_F7D=y BUILD_DESC="IPv6-$(VPN)"
+	@$(MAKE) bin MIPS32=r2 NO_JFFS=y NO_CIFS=y NO_ZEBRA=y B=V NFS=y USB="USB" IPV6SUPP=y NVRAM_SIZE=32 BELKIN_F7D=y BUILD_DESC="IPv6-$(VPN)"
 
 
 ## Linksys E-series witk 60K NVRAM builds
@@ -1334,10 +1334,10 @@ e3200:
 	@$(MAKE) r2o USBAP=y NVRAM_SIZE=32 LINKSYS_E3200=y
 
 wndr64:
-	@$(MAKE) bin MIPS32=r2 BBEXTRAS=y USBEXTRAS=y EBTABLES=y IPV6SUPP=y B=E BUILD_DESC="MiniIPv6" USB="USB" NTFS=y MEDIASRV=y USBAP=y NVRAM_SIZE=64 WNDR=y NO_XXTP=y NO_JFFS=y NO_HTTPS=y NO_ZEBRA=y NO_CIFS=y KERN_SIZE_OPT=y
+	@$(MAKE) bin MIPS32=r2 BBEXTRAS=y USBEXTRAS=y EBTABLES=y IPV6SUPP=y B=E BUILD_DESC="MiniIPv6" USB="USB" NTFS=y USBAP=y NVRAM_SIZE=64 WNDR=y NO_XXTP=y NO_JFFS=y NO_HTTPS=y NO_ZEBRA=y NO_CIFS=y KERN_SIZE_OPT=y
 
 wndr64-vpn:
-	@$(MAKE) bin MIPS32=r2 BBEXTRAS=y USBEXTRAS=y EBTABLES=y IPV6SUPP=y B=E BUILD_DESC="$(VPN)" USB="USB" NTFS=y OPENVPN=y DNSCRYPT=y USBAP=y NVRAM_SIZE=64 WNDR=y NO_XXTP=y NO_ZEBRA=y NO_CIFS=y KERN_SIZE_OPT=y
+	@$(MAKE) bin MIPS32=r2 BBEXTRAS=y USBEXTRAS=y EBTABLES=y IPV6SUPP=y B=E BUILD_DESC="$(VPN)" USB="USB" NTFS=y OPENVPN=y DNSCRYPT=y NO_SAMBA=y USBAP=y NVRAM_SIZE=64 WNDR=y NO_XXTP=y NO_ZEBRA=y NO_CIFS=y KERN_SIZE_OPT=y
 
 n6:
 	@$(MAKE) bin MIPS32=r2 OPENVPN=y BBEXTRAS=y EBTABLES=y IPV6SUPP=y B=E BUILD_DESC="TendaN6" USB="USB" TOR=y NOCAT=y DNSCRYPT=y PPTPD=y USBAP=y NO_USBAPP=y
@@ -1519,8 +1519,8 @@ ifeq ($(CONFIG_LINUX26),y)
 	@echo "r2f          MIPS Release 2 Mini (for netgear)"
 	@echo ""
 	@echo "       Belkin F5D/F7D Series with 8MB Flash"
-	@echo "f5d          Belkin F5D8235v3 MIPSr2 Mini w/ USB, IPv6, VPN"
-	@echo "f7d          Belkin F7D3301/3302/4302 MIPSr2 Mini w/ USB, IPv6, VPN"
+	@echo "f5d          Belkin F5D8235v3 MIPSr2 Mini w/ USB, IPv6, VPN w/o minidlna"
+	@echo "f7d          Belkin F7D3301/3302/4302 MIPSr2 Mini w/ USB, IPv6, VPN w/o minidlna"
 	@echo ""
 	@echo "       Linksys E-Series with 4MB Flash (E1000v2/v2.1/E1200v1)"
 	@echo "e1000v2f     Linksys E1000v2-v2.1/Cisco M10v2 Mini"
@@ -1561,8 +1561,8 @@ ifeq ($(CONFIG_LINUX26),y)
 	@echo "e3200        Linksys E3200/E2500v3 with wl_high module (dualband support) / max 16MB"
 	@echo "n6           Tenda N6 with wl_high module (dualband support)"
 	@echo "n60          Tenda N60 with wl_high module (dualband support)"
-	@echo "wndr64       Netgear WNDR3400/v2/v3/3700v3 miniIPv6 with wl_high module (dualband support)"
-	@echo "wndr64-vpn   Netgear WNDR3400/v2/v3/3700v3 VPN with wl_high module (dualband support)"
+	@echo "wndr64       Netgear WNDR3400/v2/v3/3700v3 miniIPv6 with wl_high module (dualband support) w/o minidlna"
+	@echo "wndr64-vpn   Netgear WNDR3400/v2/v3/3700v3 VPN with wl_high module (dualband support) w/o Samba"
 #	@echo "l600n        Rosewill L600N Build with wl_high module (dualband support)"
 	@echo ""
 	@echo "       Netgear WNR3500L v2 builds (128MB Flash)"
