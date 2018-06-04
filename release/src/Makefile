@@ -53,8 +53,6 @@ endif
 
 PPTPD ?= "n"
 
-KERN_SIZE_OPT ?= y
-
 ifeq ($(NVRAM_SIZE),)
 NVRAM_SIZE = 0
 endif
@@ -97,8 +95,10 @@ lowercase_B = $(shell echo $(B) | tr A-Z a-z)
 
 ifeq ($(CONFIG_LINUX26),y)
 mips_rev = $(if $(filter $(MIPS32),r2),MIPSR2,MIPSR1)
+KERN_SIZE_OPT ?= n
 else
 mips_rev =
+KERN_SIZE_OPT ?= y
 endif
 
 beta = $(if $(filter $(TOMATO_EXPERIMENTAL),1),-beta,)
@@ -1219,10 +1219,10 @@ r2m:
 
 ## Belkin
 f5d:
-	@$(MAKE) bin MIPS32=r2 NO_JFFS=y NO_CIFS=y NO_ZEBRA=y B=V NFS=y PPTPD=y OPENVPN=y USB="USB" IPV6SUPP=y NVRAM_64K=y BELKIN_F5D=y BUILD_DESC="IPv6-$(VPN)"
+	@$(MAKE) bin MIPS32=r2 NO_JFFS=y NO_CIFS=y NO_ZEBRA=y B=V NFS=y PPTPD=y OPENVPN=y USB="USB" IPV6SUPP=y NVRAM_64K=y BELKIN_F5D=y BUILD_DESC="IPv6-$(VPN)" KERN_SIZE_OPT=y
 
 f7d:
-	@$(MAKE) bin MIPS32=r2 NO_JFFS=y NO_CIFS=y NO_ZEBRA=y B=V NFS=y USB="USB" IPV6SUPP=y NVRAM_SIZE=32 BELKIN_F7D=y BUILD_DESC="IPv6-$(VPN)"
+	@$(MAKE) bin MIPS32=r2 NO_JFFS=y NO_CIFS=y NO_ZEBRA=y B=V NFS=y USB="USB" IPV6SUPP=y NVRAM_SIZE=32 BELKIN_F7D=y BUILD_DESC="IPv6-$(VPN)" KERN_SIZE_OPT=y
 
 
 ## Linksys E-series witk 60K NVRAM builds
@@ -1349,7 +1349,7 @@ n60init:
 	@$(MAKE) bin MIPS32=r2 B=E BUILD_DESC="TendaN60-init" USB="" NO_JFFS=y NO_CIFS=y NO_HTTPS=y NO_XXTP=y NO_ZEBRA=y NO_SSH=y
 
 f9k:
-	@$(MAKE) bin MIPS32=r2 NO_JFFS=y NO_CIFS=y NO_ZEBRA=y B=V NFS=y PPTPD=y OPENVPN=y USB="USB" USBAP=y IPV6SUPP=y NVRAM_64K=y BUILD_DESC="F9K1102" USBEXTRAS=y
+	@$(MAKE) bin MIPS32=r2 NO_JFFS=y NO_CIFS=y NO_ZEBRA=y B=V NFS=y PPTPD=y OPENVPN=y USB="USB" USBAP=y IPV6SUPP=y NVRAM_64K=y BUILD_DESC="F9K1102" USBEXTRAS=y KERN_SIZE_OPT=y
 
 
 # it`s not possible to flash tomato on this router. Maybe in the future.
