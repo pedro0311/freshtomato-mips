@@ -1219,10 +1219,10 @@ r2m:
 
 ## Belkin
 f5d:
-	@$(MAKE) bin MIPS32=r2 NO_JFFS=y NO_CIFS=y NO_ZEBRA=y B=V NFS=y PPTPD=y OPENVPN=y USB="USB" IPV6SUPP=y NVRAM_64K=y BELKIN_F5D=y BUILD_DESC="IPv6-$(VPN)" KERN_SIZE_OPT=y
+	@$(MAKE) bin MIPS32=r2 NO_JFFS=y NO_CIFS=y NO_ZEBRA=y B=V NFS=y MEDIASRV=y PPTPD=y OPENVPN=y USB="USB" IPV6SUPP=y NVRAM_64K=y BELKIN_F5D=y BUILD_DESC="IPv6-$(VPN)" KERN_SIZE_OPT=y
 
 f7d:
-	@$(MAKE) bin MIPS32=r2 NO_JFFS=y NO_CIFS=y NO_ZEBRA=y B=V NFS=y USB="USB" IPV6SUPP=y NVRAM_SIZE=32 BELKIN_F7D=y BUILD_DESC="IPv6-$(VPN)" KERN_SIZE_OPT=y
+	@$(MAKE) bin MIPS32=r2 NO_JFFS=y NO_CIFS=y NO_ZEBRA=y B=V NFS=y MEDIASRV=y USB="USB" IPV6SUPP=y NVRAM_SIZE=32 BELKIN_F7D=y BUILD_DESC="IPv6-$(VPN)" KERN_SIZE_OPT=y
 
 
 ## Linksys E-series witk 60K NVRAM builds
@@ -1519,8 +1519,8 @@ ifeq ($(CONFIG_LINUX26),y)
 	@echo "r2f          MIPS Release 2 Mini (for netgear)"
 	@echo ""
 	@echo "       Belkin F5D/F7D Series with 8MB Flash"
-	@echo "f5d          Belkin F5D8235v3 MIPSr2 Mini w/ USB, IPv6, VPN w/o minidlna"
-	@echo "f7d          Belkin F7D3301/3302/4302 MIPSr2 Mini w/ USB, IPv6, VPN w/o minidlna"
+	@echo "f5d          Belkin F5D8235v3 MIPSr2 Mini w/ USB, IPv6, VPN"
+	@echo "f7d          Belkin F7D3301/3302/4302 MIPSr2 Mini w/ USB, IPv6, VPN"
 	@echo ""
 	@echo "       Linksys E-Series with 4MB Flash (E1000v2/v2.1/E1200v1)"
 	@echo "e1000v2f     Linksys E1000v2-v2.1/Cisco M10v2 Mini"
