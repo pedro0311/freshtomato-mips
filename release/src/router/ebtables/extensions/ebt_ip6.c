@@ -27,8 +27,9 @@
 #define IP_PROTO  '4'
 #define IP_SPORT  '5'
 #define IP_DPORT  '6'
+#define IP_ICMP6  '7'
 
-static struct option opts[] =
+static const struct option opts[] =
 {
 	{ "ip6-source"           , required_argument, 0, IP_SOURCE },
 	{ "ip6-src"              , required_argument, 0, IP_SOURCE },
@@ -42,7 +43,47 @@ static struct option opts[] =
 	{ "ip6-sport"            , required_argument, 0, IP_SPORT  },
 	{ "ip6-destination-port" , required_argument, 0, IP_DPORT  },
 	{ "ip6-dport"            , required_argument, 0, IP_DPORT  },
+	{ "ip6-icmp-type"	 , required_argument, 0, IP_ICMP6  },
 	{ 0 }
+};
+
+
+static const struct ebt_icmp_names icmpv6_codes[] = {
+	{ "destination-unreachable", 1, 0, 0xFF },
+	{ "no-route", 1, 0, 0 },
+	{ "communication-prohibited", 1, 1, 1 },
+	{ "address-unreachable", 1, 3, 3 },
+	{ "port-unreachable", 1, 4, 4 },
+
+	{ "packet-too-big", 2, 0, 0xFF },
+
+	{ "time-exceeded", 3, 0, 0xFF },
+	/* Alias */ { "ttl-exceeded", 3, 0, 0xFF },
+	{ "ttl-zero-during-transit", 3, 0, 0 },
+	{ "ttl-zero-during-reassembly", 3, 1, 1 },
+
+	{ "parameter-problem", 4, 0, 0xFF },
+	{ "bad-header", 4, 0, 0 },
+	{ "unknown-header-type", 4, 1, 1 },
+	{ "unknown-option", 4, 2, 2 },
+
+	{ "echo-request", 128, 0, 0xFF },
+	/* Alias */ { "ping", 128, 0, 0xFF },
+
+	{ "echo-reply", 129, 0, 0xFF },
+	/* Alias */ { "pong", 129, 0, 0xFF },
+
+	{ "router-solicitation", 133, 0, 0xFF },
+
+	{ "router-advertisement", 134, 0, 0xFF },
+
+	{ "neighbour-solicitation", 135, 0, 0xFF },
+	/* Alias */ { "neighbor-solicitation", 135, 0, 0xFF },
+
+	{ "neighbour-advertisement", 136, 0, 0xFF },
+	/* Alias */ { "neighbor-advertisement", 136, 0, 0xFF },
+
+	{ "redirect", 137, 0, 0xFF },
 };
 
 /* transform a protocol and service name into a port number */
@@ -108,7 +149,11 @@ static void print_help()
 "--ip6-tclass [!] tclass        : ipv6 traffic class specification\n"
 "--ip6-proto  [!] protocol      : ipv6 protocol specification\n"
 "--ip6-sport  [!] port[:port]   : tcp/udp source port or port range\n"
-"--ip6-dport  [!] port[:port]   : tcp/udp destination port or port range\n");
+"--ip6-dport  [!] port[:port]   : tcp/udp destination port or port range\n"
+"--ip6-icmp-type [!] type[[:type]/code[:code]] : ipv6-icmp type/code or type/code range\n");
+
+	printf("\nValid ICMPv6 Types:\n");
+	ebt_print_icmp_types(icmpv6_codes, ARRAY_SIZE(icmpv6_codes));
 }
 
 static void init(struct ebt_entry_match *match)
@@ -117,6 +162,10 @@ static void init(struct ebt_entry_match *match)
 
 	ipinfo->invflags = 0;
 	ipinfo->bitmask = 0;
+	memset(ipinfo->saddr.s6_addr, 0, sizeof(ipinfo->saddr.s6_addr));
+	memset(ipinfo->smsk.s6_addr, 0, sizeof(ipinfo->smsk.s6_addr));
+	memset(ipinfo->daddr.s6_addr, 0, sizeof(ipinfo->daddr.s6_addr));
+	memset(ipinfo->dmsk.s6_addr, 0, sizeof(ipinfo->dmsk.s6_addr));
 }
 
 #define OPT_SOURCE 0x01
@@ -168,6 +217,17 @@ static int parse(int c, char **argv, int argc, const struct ebt_u_entry *entry,
 			parse_port_range(NULL, optarg, ipinfo->sport);
 		else
 			parse_port_range(NULL, optarg, ipinfo->dport);
+		break;
+
+	case IP_ICMP6:
+		ebt_check_option2(flags, EBT_IP6_ICMP6);
+		ipinfo->bitmask |= EBT_IP6_ICMP6;
+		if (ebt_check_inverse2(optarg))
+			ipinfo->invflags |= EBT_IP6_ICMP6;
+		if (ebt_parse_icmp(icmpv6_codes, ARRAY_SIZE(icmpv6_codes),
+				   optarg, ipinfo->icmpv6_type,
+				   ipinfo->icmpv6_code))
+			return 0;
 		break;
 
 	case IP_TCLASS:
@@ -223,6 +283,12 @@ static void final_check(const struct ebt_u_entry *entry,
 		ebt_print_error("For port filtering the IP protocol must be "
 				"either 6 (tcp), 17 (udp), 33 (dccp) or "
 				"132 (sctp)");
+	if ((ipinfo->bitmask & EBT_IP6_ICMP6) &&
+	  (!(ipinfo->bitmask & EBT_IP6_PROTO) ||
+	     ipinfo->invflags & EBT_IP6_PROTO ||
+	     ipinfo->protocol != IPPROTO_ICMPV6))
+		ebt_print_error("For ipv6-icmp filtering the IP protocol must be "
+				"58 (ipv6-icmp)");
 }
 
 static void print(const struct ebt_u_entry *entry,
@@ -235,14 +301,14 @@ static void print(const struct ebt_u_entry *entry,
 		if (ipinfo->invflags & EBT_IP6_SOURCE)
 			printf("! ");
 		printf("%s", ebt_ip6_to_numeric(&ipinfo->saddr));
-		printf("/%s ", ebt_ip6_to_numeric(&ipinfo->smsk));
+		printf("%s ", ebt_ip6_mask_to_string(&ipinfo->smsk));
 	}
 	if (ipinfo->bitmask & EBT_IP6_DEST) {
 		printf("--ip6-dst ");
 		if (ipinfo->invflags & EBT_IP6_DEST)
 			printf("! ");
 		printf("%s", ebt_ip6_to_numeric(&ipinfo->daddr));
-		printf("/%s ", ebt_ip6_to_numeric(&ipinfo->dmsk));
+		printf("%s ", ebt_ip6_mask_to_string(&ipinfo->dmsk));
 	}
 	if (ipinfo->bitmask & EBT_IP6_TCLASS) {
 		printf("--ip6-tclass ");
@@ -274,6 +340,13 @@ static void print(const struct ebt_u_entry *entry,
 		if (ipinfo->invflags & EBT_IP6_DPORT)
 			printf("! ");
 		print_port_range(ipinfo->dport);
+	}
+	if (ipinfo->bitmask & EBT_IP6_ICMP6) {
+		printf("--ip6-icmp-type ");
+		if (ipinfo->invflags & EBT_IP6_ICMP6)
+			printf("! ");
+		ebt_print_icmp_type(icmpv6_codes, ARRAY_SIZE(icmpv6_codes),
+				    ipinfo->icmpv6_type, ipinfo->icmpv6_code);
 	}
 }
 
@@ -315,6 +388,13 @@ static int compare(const struct ebt_entry_match *m1,
 	if (ipinfo1->bitmask & EBT_IP6_DPORT) {
 		if (ipinfo1->dport[0] != ipinfo2->dport[0] ||
 		   ipinfo1->dport[1] != ipinfo2->dport[1])
+			return 0;
+	}
+	if (ipinfo1->bitmask & EBT_IP6_ICMP6) {
+		if (ipinfo1->icmpv6_type[0] != ipinfo2->icmpv6_type[0] ||
+		    ipinfo1->icmpv6_type[1] != ipinfo2->icmpv6_type[1] ||
+		    ipinfo1->icmpv6_code[0] != ipinfo2->icmpv6_code[0] ||
+		    ipinfo1->icmpv6_code[1] != ipinfo2->icmpv6_code[1])
 			return 0;
 	}
 	return 1;

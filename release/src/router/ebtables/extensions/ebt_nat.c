@@ -9,9 +9,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <netinet/ether.h>
 #include <getopt.h>
 #include "../include/ebtables_u.h"
+#include <netinet/ether.h>
 #include <linux/netfilter_bridge/ebt_nat.h>
 
 static int to_source_supplied, to_dest_supplied;
@@ -21,7 +21,7 @@ static int to_source_supplied, to_dest_supplied;
 #define NAT_S_TARGET '2'
 #define NAT_D_TARGET '2'
 #define NAT_S_ARP '3'
-static struct option opts_s[] =
+static const struct option opts_s[] =
 {
 	{ "to-source"     , required_argument, 0, NAT_S },
 	{ "to-src"        , required_argument, 0, NAT_S },
@@ -30,7 +30,7 @@ static struct option opts_s[] =
 	{ 0 }
 };
 
-static struct option opts_d[] =
+static const struct option opts_d[] =
 {
 	{ "to-destination", required_argument, 0, NAT_D },
 	{ "to-dst"        , required_argument, 0, NAT_D },

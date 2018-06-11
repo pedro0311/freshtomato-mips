@@ -1,4 +1,4 @@
-.TH EBTABLES 8  "June 2009"
+.TH EBTABLES 8  "$(DATE)"
 .\"
 .\" Man page written by Bart De Schuymer <bdschuym@pandora.be>
 .\" It is based on the iptables man page.
@@ -24,7 +24,7 @@
 .\"     
 .\"
 .SH NAME
-ebtables (v2.0.9-2) \- Ethernet bridge frame table administration
+ebtables (v$(VERSION)) \- Ethernet bridge frame table administration
 .SH SYNOPSIS
 .BR "ebtables " [ -t " table ] " - [ ACDI "] chain rule specification [match extensions] [watcher extensions] target"
 .br
@@ -404,6 +404,9 @@ is setting the
 When talking to the kernel, use this
 .I program
 to try to automatically load missing kernel modules.
+.TP
+.B --concurrent
+Use a file lock to support concurrent scripts updating the ebtables kernel tables.
 
 .SS
 RULE SPECIFICATIONS
@@ -700,6 +703,17 @@ If
 The flag
 .B --ip6-dport
 is an alias for this option.
+.TP
+.BR "--ip6-icmp-type " "[!] {\fItype\fP[:\fItype\fP]/\fIcode\fP[:\fIcode\fP]|\fItypename\fP}"
+Specify ipv6\-icmp type and code to match.
+Ranges for both type and code are supported. Type and code are
+separated by a slash. Valid numbers for type and range are 0 to 255.
+To match a single type including all valid codes, symbolic names can
+be used instead of numbers. The list of known type names is shown by the command
+.nf
+  ebtables \-\-help ip6
+.fi
+This option is only valid for \-\-ip6-prococol ipv6-icmp.
 .SS limit
 This module matches at a limited rate using a token bucket filter.
 A rule using this extension will match until this limit is reached.
@@ -796,6 +810,26 @@ The hello time timer (0-65535) range.
 .TP
 .BR "--stp-forward-delay " "[!] [\fIdelay\fP][:\fIdelay\fP]"
 The forward delay timer (0-65535) range.
+.SS string
+This module matches on a given string using some pattern matching strategy.
+.TP
+.BR "--string-algo " "\fIalgorithm\fP"
+The pattern matching strategy. (bm = Boyer-Moore, kmp = Knuth-Pratt-Morris)
+.TP
+.BR "--string-from " "\fIoffset\fP"
+The lowest offset from which a match can start. (default: 0)
+.TP
+.BR "--string-to " "\fIoffset\fP"
+The highest offset from which a match can start. (default: size of frame)
+.TP
+.BR "--string " "[!] \fIpattern\fP"
+Matches the given pattern.
+.TP
+.BR "--string-hex " "[!] \fIpattern\fP"
+Matches the given pattern in hex notation, e.g. '|0D 0A|', '|0D0A|', 'www|09|netfilter|03|org|00|'
+.TP
+.BR "--string-icase"
+Ignore case when searching.
 .SS vlan
 Specify 802.1Q Tag Control Information fields.
 The protocol must be specified as
@@ -1089,11 +1123,12 @@ arp message and the hardware address length in the arp header is 6 bytes.
 .br
 .SH FILES
 .I /etc/ethertypes
+.I $(LOCKFILE)
 .SH ENVIRONMENT VARIABLES
 .I EBTABLES_ATOMIC_FILE
 .SH MAILINGLISTS
-.I ebtables-user@lists.sourceforge.net
-.br
-.I ebtables-devel@lists.sourceforge.net
+.BR "" "See " http://netfilter.org/mailinglists.html
 .SH SEE ALSO
 .BR iptables "(8), " brctl "(8), " ifconfig "(8), " route (8)
+.PP
+.BR "" "See " http://ebtables.sf.net

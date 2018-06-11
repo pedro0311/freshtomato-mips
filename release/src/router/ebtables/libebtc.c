@@ -31,7 +31,11 @@
 #include "include/ethernetdb.h"
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/file.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <errno.h>
 
 static void decrease_chain_jumps(struct ebt_u_replace *replace);
 static int iterate_entries(struct ebt_u_replace *replace, int type);
@@ -130,15 +134,49 @@ void ebt_list_extensions()
 	}
 }
 
+#ifndef LOCKFILE
+#define LOCKDIR "/var/lib/ebtables"
+#define LOCKFILE LOCKDIR"/lock"
+#endif
+int use_lockfd;
+/* Returns 0 on success, -1 when the file is locked by another process
+ * or -2 on any other error. */
+static int lock_file()
+{
+	int fd, try = 0;
+
+retry:
+	fd = open(LOCKFILE, O_CREAT, 00600);
+	if (fd < 0) {
+		if (try == 1 || mkdir(LOCKDIR, 00700))
+			return -2;
+		try = 1;
+		goto retry;
+	}
+	return flock(fd, LOCK_EX);
+}
+
 /* Get the table from the kernel or from a binary file
  * init: 1 = ask the kernel for the initial contents of a table, i.e. the
  *           way it looks when the table is insmod'ed
  *       0 = get the current data in the table */
 int ebt_get_kernel_table(struct ebt_u_replace *replace, int init)
 {
+	int ret;
+
 	if (!ebt_find_table(replace->name)) {
 		ebt_print_error("Bad table name '%s'", replace->name);
 		return -1;
+	}
+	while (use_lockfd && (ret = lock_file())) {
+		if (ret == -2) {
+			/* if we get an error we can't handle, we exit. This
+			 * doesn't break backwards compatibility since using
+			 * this file locking is disabled by default. */
+			ebt_print_error2("Unable to create lock file "LOCKFILE);
+		}
+		fprintf(stderr, "Trying to obtain lock %s\n", LOCKFILE);
+		sleep(1);
 	}
 	/* Get the kernel's information */
 	if (ebt_get_table(replace, init)) {
@@ -234,6 +272,7 @@ void ebt_reinit_extensions()
 			if (!m->m)
 				ebt_print_memory();
 			strcpy(m->m->u.name, m->name);
+			m->m->u.revision = m->revision;
 			m->m->match_size = EBT_ALIGN(m->size);
 			m->used = 0;
 		}
@@ -406,8 +445,8 @@ void ebt_delete_cc(struct ebt_cntchanges *cc)
 		cc->prev->next = cc->next;
 		cc->next->prev = cc->prev;
 		free(cc);
-	}
-	cc->type = CNT_DEL;
+	} else
+		cc->type = CNT_DEL;
 }
 
 void ebt_empty_chain(struct ebt_u_entries *entries)
@@ -512,8 +551,10 @@ int ebt_check_rule_exists(struct ebt_u_replace *replace,
 		while (m_l) {
 			m = (struct ebt_u_match *)(m_l->m);
 			m_l2 = u_e->m_list;
-			while (m_l2 && strcmp(m_l2->m->u.name, m->m->u.name))
+			while (m_l2 && (strcmp(m_l2->m->u.name, m->m->u.name) ||
+			       m_l2->m->u.revision != m->m->u.revision)) {
 				m_l2 = m_l2->next;
+			}
 			if (!m_l2 || !m->compare(m->m, m_l2->m))
 				goto letscontinue;
 			j++;
@@ -1031,7 +1072,7 @@ void ebt_check_for_loops(struct ebt_u_replace *replace)
 			/* check if we've dealt with this chain already */
 			if (entries2->hook_mask & (1<<i))
 				goto letscontinue;
-			entries2->hook_mask |= entries->hook_mask;
+			entries2->hook_mask |= entries->hook_mask & ~(1 << NF_BR_NUMHOOKS);
 			/* Jump to the chain, make sure we know how to get back */
 			stack[sp].chain_nr = chain_nr;
 			stack[sp].n = j;
@@ -1171,6 +1212,7 @@ void ebt_register_match(struct ebt_u_match *m)
 	if (!m->m)
 		ebt_print_memory();
 	strcpy(m->m->u.name, m->name);
+	m->m->u.revision = m->revision;
 	m->m->match_size = EBT_ALIGN(m->size);
 	m->init(m->m);
 

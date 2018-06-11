@@ -10,16 +10,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <netinet/ether.h>
 #include <getopt.h>
 #include "../include/ebtables_u.h"
+#include <netinet/ether.h>
 #include <linux/netfilter_bridge/ebt_arpreply.h>
 
 static int mac_supplied;
 
 #define REPLY_MAC '1'
 #define REPLY_TARGET '2'
-static struct option opts[] =
+static const struct option opts[] =
 {
 	{ "arpreply-mac" ,    required_argument, 0, REPLY_MAC    },
 	{ "arpreply-target" , required_argument, 0, REPLY_TARGET },
