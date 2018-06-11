@@ -722,8 +722,8 @@ static const nvset_t nvset_list[] = {
 	{ "wan4_modem_init",		V_LENGTH(0,25)			},
 	{ "wan4_modem_apn",		V_LENGTH(0,25)			},
 	{ "wan4_modem_speed",		V_LENGTH(0,6)			},
-	{ "wan3_modem_band",		V_LENGTH(0, 16)			},	// all - 7FFFFFFFFFFFFFFF, 800MHz - 80000, 1800MHz - 4, 2100MHz - 1, 2600MHz - 40
-	{ "wan3_modem_roam",		V_RANGE(0, 3)			},	// 0 - not supported, 1 - supported, 2 - no change, 3 - roam only
+	{ "wan4_modem_band",		V_LENGTH(0, 16)			},	// all - 7FFFFFFFFFFFFFFF, 800MHz - 80000, 1800MHz - 4, 2100MHz - 1, 2600MHz - 40
+	{ "wan4_modem_roam",		V_RANGE(0, 3)			},	// 0 - not supported, 1 - supported, 2 - no change, 3 - roam only
 #endif
 #endif
 

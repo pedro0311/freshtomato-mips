@@ -1,7 +1,7 @@
 #! /usr/bin/make
 
 #EXT_FUNC+=802_3 nat arp arpreply ip ip6 standard log redirect vlan mark_m mark \
-#          pkttype stp among limit ulog nflog
+#          pkttype stp among limit ulog nflog string
 EXT_FUNC+=nat arp arpreply ip standard log redirect vlan mark \
           pkttype stp limit
 ifeq ($(DO_IPV6), 1)
