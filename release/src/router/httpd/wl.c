@@ -430,10 +430,8 @@ static int get_scan_results(int idx, int unit, int subunit, void *param)
 	// format for javascript
 
 	int i;
-	int j;
 	int k;
 	int left;
-	char c;
 	char macstr[18];
 	NDIS_802_11_NETWORK_TYPE NetWorkType;
 	unsigned char *bssidp;
