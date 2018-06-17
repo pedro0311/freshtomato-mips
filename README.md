@@ -62,7 +62,7 @@ Disclaimer: I am not responsible for any bricked routers, nor do I encourage oth
     sudo apt-get install libelf1:i386 libelf-dev:i386  
 
 10. Clone/download repository:  
-    git clone https://pedro311@bitbucket.org/pedro311/freshtomato-mips.git <chosen-subdir>  
+    git clone https://bitbucket.org/pedro311/freshtomato-mips.git <chosen-subdir>  
 
 11. Edit profile file, add:  
     PATH="$PATH:/home/<username>/<chosen-subdir>/tools/brcm/hndtools-mipsel-linux/bin"  

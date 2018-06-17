@@ -169,7 +169,7 @@
      port = htons (port);
      hp = gethostbyname (host);
      if (!hp)
-@@ -1896,3 +1907,96 @@ int main (int argc, char *argv[])
+@@ -1910,3 +1921,96 @@ int main (int argc, char *argv[])
      return 0;
  }
  
