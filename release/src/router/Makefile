@@ -2425,7 +2425,7 @@ e2fsprogs/stamp-h1:
 
 e2fsprogs: e2fsprogs/stamp-h1
 	@$(SEP)
-	$(MAKE) -C e2fsprogs libs # $(PARALLEL_BUILD)
+	$(MAKE) -C e2fsprogs libs $(PARALLEL_BUILD)
 
 e2fsprogs-install: e2fsprogs
 	$(MAKE) -C e2fsprogs install-libs

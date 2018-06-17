@@ -333,7 +333,7 @@ static int invalid_mac(const char *mac)
 static int get_mac_from_mt0(unsigned long address)
 {
 	FILE *fp;
-	unsigned char m[6], s[18];
+	char m[6], s[18];
 
 	sprintf(s, MTD_DEV(%dro), 0);
 	if ((fp = fopen(s, "rb"))) {
