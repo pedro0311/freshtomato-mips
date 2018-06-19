@@ -739,19 +739,21 @@ const defaults_t defaults[] = {
 #endif
 
 // admin-access
-	{ "http_username",		""			},	// Username
-	{ "http_passwd",		"admin"			},	// Password
-	{ "remote_management",	"0"				},	// Remote Management [1|0]
-	{ "remote_mgt_https",	"0"				},	// Remote Management use https [1|0]
-	{ "http_wanport",		"8080"			},	// WAN port to listen on
-	{ "http_lanport",		"80"			},	// LAN port to listen on
-	{ "https_lanport",		"443"			},	// LAN port to listen on
+	{ "http_username",		""				},	// Username
+	{ "http_passwd",		"admin"				},	// Password
+	{ "remote_management",		"0"				},	// Remote Management [1|0]
+	{ "http_wanport",		"8080"				},	// WAN port to listen on
+	{ "http_lanport",		"80"				},	// LAN port to listen on
 	{ "http_enable",		"1"				},	// HTTP server enable/disable
+#ifdef TCONFIG_HTTPS
+	{ "remote_mgt_https",		"0"				},	// Remote Management use https [1|0]
+	{ "https_lanport",		"443"				},	// LAN port to listen on
 	{ "https_enable",		"0"				},	// HTTPS server enable/disable
 	{ "https_crt_save",		"0"				},
 	{ "https_crt_cn",		""				},
 	{ "https_crt_file",		""				},
-	{ "https_crt",			""				},
+	{ "https_crt_gen",		""				},
+#endif
 	{ "http_root",			"1"				},	// 0 - deny, 1 - Allow
 	{ "web_wl_filter",		"0"				},	// Allow/Deny Wireless Access Web
 	{ "web_css",			"default"			},
