@@ -871,10 +871,11 @@ dnsmasq: $(if $(TCONFIG_DNSSEC),nettle,)
 	@$(SEP)
 	$(call patch_files,dnsmasq)
 	@$(MAKE) -C dnsmasq $(PARALLEL_BUILD) \
+	CFLAGS="-Os $(EXTRACFLAGS)" \
 	COPTS="$(if $(TCONFIG_DNSSEC),-I$(TOP)/nettle/include -I$(TOP)/gmp -DHAVE_DNSSEC -DHAVE_DNSSEC_STATIC,) \
 		$(if $(TCONFIG_IPV6),-DUSE_IPV6,-DNO_IPV6) \
 		$(if $(CONFIG_LINUX26),-DUSE_IPSET,-DNO_IPSET) \
-		-DNO_INOTIFY -DHAVE_BROKEN_RTC -DHAVE_TOMATO $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+		-DNO_INOTIFY -DHAVE_BROKEN_RTC -DHAVE_TOMATO -DNO_DUMPFILE $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 	LDFLAGS="$(if $(TCONFIG_DNSSEC),-L$(TOP)/nettle/lib -L$(TOP)/gmp/.libs,) -ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
 	$(if $(TCONFIG_DNSSEC),PKG_CONFIG_PATH="$(TOP)/nettle/lib/pkgconfig",)
 
@@ -2187,7 +2188,7 @@ lzo-install:
 openvpn/.conf: openssl lzo
 	$(call patch_files,openvpn)
 	cd openvpn && autoreconf && \
-	CFLAGS="-O3 -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 	LDFLAGS="-L$(TOP)/openssl -L$(TOP)/lzo/src/.libs -ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	CPPFLAGS="-I$(TOP)/lzo/include -I$(TOP)/openssl/include" \
 	$(CONFIGURE) --prefix= \
