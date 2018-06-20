@@ -1095,14 +1095,16 @@ static const nvset_t nvset_list[] = {
 
 // admin-access
 	{ "http_enable",		V_01				},
+#ifdef TCONFIG_HTTPS
 	{ "https_enable",		V_01				},
 	{ "https_crt_save",		V_01				},
 	{ "https_crt_cn",		V_LENGTH(0, 64)			},
 	{ "https_crt_gen",		V_TEMP				},
-	{ "remote_management",		V_01				},
-	{ "remote_mgt_https",		V_01				},
-	{ "http_lanport",		V_PORT				},
 	{ "https_lanport",		V_PORT				},
+	{ "remote_mgt_https",		V_01				},
+#endif
+	{ "remote_management",		V_01				},
+	{ "http_lanport",		V_PORT				},
 	{ "web_wl_filter",		V_01				},
 	{ "web_css",			V_LENGTH(1, 32)			},
 	{ "web_dir",			V_LENGTH(1, 32)			},

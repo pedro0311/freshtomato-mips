@@ -119,6 +119,9 @@ typedef unsigned long long u64;
 #include <net/if_arp.h>
 #include <netinet/in_systm.h>
 #include <netinet/ip.h>
+#ifdef HAVE_IPV6
+#include <netinet/ip6.h>
+#endif
 #include <netinet/ip_icmp.h>
 #include <sys/uio.h>
 #include <syslog.h>
@@ -241,7 +244,7 @@ struct event_desc {
 #define OPT_DNSSEC_VALID   45
 #define OPT_DNSSEC_TIME    46
 #define OPT_DNSSEC_DEBUG   47
-#define OPT_DNSSEC_NO_SIGN 48 
+#define OPT_DNSSEC_IGN_NS  48 
 #define OPT_LOCAL_SERVICE  49
 #define OPT_LOOP_DETECT    50
 #define OPT_EXTRALOG       51
@@ -250,7 +253,8 @@ struct event_desc {
 #define OPT_MAC_B64        54
 #define OPT_MAC_HEX        55
 #define OPT_TFTP_APREF_MAC 56
-#define OPT_LAST           57
+#define OPT_RAPID_COMMIT   57
+#define OPT_LAST           58
 
 /* extra flags for my_syslog, we use a couple of facilities since they are known 
    not to occupy the same bits as priorities, no matter how syslog.h is set up. */
@@ -267,7 +271,11 @@ struct all_addr {
     /* for log_query */
     struct {
       unsigned short keytag, algo, digest;
-    } log; 
+    } log;
+    /* for log_query */
+    struct {
+      unsigned int rcode;
+    } rcode;
     /* for cache_insert of DNSKEY, DS */
     struct {
       unsigned short class, type;
@@ -458,6 +466,7 @@ struct crec {
 #define F_IPSET     (1u<<26)
 #define F_NOEXTRA   (1u<<27)
 #define F_SERVFAIL  (1u<<28)
+#define F_RCODE     (1u<<29)
 
 /* Values of uid in crecs with F_CONFIG bit set. */
 #define SRC_INTERFACE 0
@@ -505,7 +514,7 @@ struct serverfd {
   int fd;
   union mysockaddr source_addr;
   char interface[IF_NAMESIZE+1];
-  unsigned int ifindex, used;
+  unsigned int ifindex, used, preallocated;
   struct serverfd *next;
 };
 
@@ -591,6 +600,16 @@ struct hostsfile {
 #endif
   unsigned int index; /* matches to cache entries for logging */
 };
+
+/* packet-dump flags */
+#define DUMP_QUERY     0x0001
+#define DUMP_REPLY     0x0002
+#define DUMP_UP_QUERY  0x0004
+#define DUMP_UP_REPLY  0x0008
+#define DUMP_SEC_QUERY 0x0010
+#define DUMP_SEC_REPLY 0x0020
+#define DUMP_BOGUS     0x0040
+#define DUMP_SEC_BOGUS 0x0080
 
 
 /* DNSSEC status values. */
@@ -1014,14 +1033,14 @@ extern struct daemon {
   unsigned int duid_enterprise, duid_config_len;
   unsigned char *duid_config;
   char *dbus_name;
+  char *dump_file;
+  int dump_mask;
   unsigned long soa_sn, soa_refresh, soa_retry, soa_expiry;
 #ifdef OPTION6_PREFIX_CLASS 
   struct prefix_class *prefix_classes;
 #endif
 #ifdef HAVE_DNSSEC
   struct ds_config *ds;
-  int dnssec_no_time_check;
-  int back_to_the_future;
   char *timestamp_file;
 #endif
 
@@ -1034,6 +1053,8 @@ extern struct daemon {
   char *workspacename; /* ditto */
   char *rr_status; /* flags for individual RRs */
   int rr_status_sz;
+  int dnssec_no_time_check;
+  int back_to_the_future;
 #endif
   unsigned int local_answer, queries_forwarded, auth_answer;
   struct frec *frec_list;
@@ -1088,6 +1109,10 @@ extern struct daemon {
   char *addrbuff;
   char *addrbuff2; /* only allocated when OPT_EXTRALOG */
 
+#ifdef HAVE_DUMPFILE
+  /* file for packet dumps. */
+  int dumpfd;
+#endif
 } *daemon;
 
 /* cache.c */
@@ -1582,3 +1607,9 @@ int check_source(struct dns_header *header, size_t plen, unsigned char *pseudohe
 /* arp.c */
 int find_mac(union mysockaddr *addr, unsigned char *mac, int lazy, time_t now);
 int do_arp_script_run(void);
+
+/* dump.c */
+#ifdef HAVE_DUMPFILE
+void dump_init(void);
+void dump_packet(int mask, void *packet, size_t len, union mysockaddr *src, union mysockaddr *dst);
+#endif

@@ -99,6 +99,7 @@ function verifyFields(focused, quiet)
 	elem.display(PR('_http_lanport'), (a.value == 1) || (a.value == 3));
 
 	c = (a.value == 2) || (a.value == 3);
+/* HTTPS-BEGIN */
 	elem.display(PR('_https_lanport'), 'row_sslcert', PR('_https_crt_cn'), PR('_f_https_crt_save'), PR('_f_https_crt_gen'), c);
 
 	if (c) {
@@ -106,8 +107,13 @@ function verifyFields(focused, quiet)
 		a.value = a.value.replace(/(,+|\s+)/g, ' ').trim();
 		if (a.value != nvram.https_crt_cn) E('_f_https_crt_gen').checked = 1;
 	}
+/* HTTPS-END */
 
-	if ((!v_port('_http_lanport', quiet || !ok)) || (!v_port('_https_lanport', quiet || !ok))) ok = 0;
+	if ((!v_port('_http_lanport', quiet || !ok))
+/* HTTPS-BEGIN */
+		|| (!v_port('_https_lanport', quiet || !ok))
+/* HTTPS-END */
+	) ok = 0;
 
 	b = b != 0;
 	a = E('_http_wanport');
@@ -173,8 +179,10 @@ function save()
 		fom._nextpage.value = 'about:blank';
 	}
 	fom.http_enable.value = (a & 1) ? 1 : 0;
+/* HTTPS-BEGIN */
 	fom.https_enable.value = (a & 2) ? 1 : 0;
-	
+/* HTTPS-END */
+
 	nvram.lan_ipaddr = location.hostname;
 	if ((a != 0) && (location.hostname == nvram.lan_ipaddr)) {
 		if (location.protocol == 'https:') {
@@ -198,7 +206,9 @@ function save()
 
 	a = E('_f_http_remote').value;
 	fom.remote_management.value = (a != 0) ? 1 : 0;
+/* HTTPS-BEGIN */
 	fom.remote_mgt_https.value = (a == 2) ? 1 : 0;
+/* HTTPS-END */
 /*
 	if ((a != 0) && (location.hostname != nvram.lan_ipaddr)) {
 		if (location.protocol == 'https:') {
@@ -209,8 +219,10 @@ function save()
 		}
 	}
 */
+/* HTTPS-BEGIN */
 	fom.https_crt_gen.value = E('_f_https_crt_gen').checked ? 1 : 0;
 	fom.https_crt_save.value = E('_f_https_crt_save').checked ? 1 : 0;
+/* HTTPS-END */
 	fom.http_root.value = E('_f_http_root').checked ? 1 : 0;
 
 	fom.web_wl_filter.value = E('_f_http_wireless').checked ? 0 : 1;
@@ -262,12 +274,14 @@ function init()
 <input type='hidden' name='_service' value='admin-restart'>
 
 <input type='hidden' name='http_enable'>
+/* HTTPS-BEGIN */
 <input type='hidden' name='https_enable'>
 <input type='hidden' name='https_crt_save'>
 <input type='hidden' name='https_crt_gen'>
-<input type='hidden' name='http_root'>
-<input type='hidden' name='remote_management'>
 <input type='hidden' name='remote_mgt_https'>
+/* HTTPS-END */
+<input type='hidden' name='remote_management'>
+<input type='hidden' name='http_root'>
 <input type='hidden' name='web_wl_filter'>
 <input type='hidden' name='telnetd_eas'>
 <input type='hidden' name='sshd_eas'>
@@ -283,17 +297,36 @@ function init()
 <div class='section'>
 <script type='text/javascript'>
 var m = [
-	{ title: 'Local Access', name: 'f_http_local', type: 'select', options: [[0,'Disabled'],[1,'HTTP'],[2,'HTTPS'],[3,'HTTP &amp; HTTPS']],
-		value: ((nvram.https_enable != 0) ? 2 : 0) | ((nvram.http_enable != 0) ? 1 : 0) },
+	{ title: 'Local Access', name: 'f_http_local', type: 'select', options: [[0,'Disabled'],[1,'HTTP']
+/* HTTPS-BEGIN */
+			,[2,'HTTPS']
+			,[3,'HTTP &amp; HTTPS']
+/* HTTPS-END */
+		],
+		value:
+/* HTTPS-BEGIN */
+		((nvram.https_enable != 0) ? 2 : 0) | 
+/* HTTPS-END */
+		((nvram.http_enable != 0) ? 1 : 0) },
 	{ title: 'HTTP Port', indent: 2, name: 'http_lanport', type: 'text', maxlen: 5, size: 7, value: fixPort(nvram.http_lanport, 80) },
+/* HTTPS-BEGIN */
 	{ title: 'HTTPS Port', indent: 2, name: 'https_lanport', type: 'text', maxlen: 5, size: 7, value: fixPort(nvram.https_lanport, 443) },
 	{ title: 'SSL Certificate', rid: 'row_sslcert' },
 	{ title: 'Common Name (CN)', indent: 2, name: 'https_crt_cn', type: 'text', maxlen: 64, size: 64, value: nvram.https_crt_cn,
 		suffix: '&nbsp;<small>(optional; space separated)</small>' },
 	{ title: 'Regenerate', indent: 2, name: 'f_https_crt_gen', type: 'checkbox', value: 0 },
 	{ title: 'Save In NVRAM', indent: 2, name: 'f_https_crt_save', type: 'checkbox', value: nvram.https_crt_save == 1 },
-	{ title: 'Remote Access', name: 'f_http_remote', type: 'select', options: [[0,'Disabled'],[1,'HTTP'],[2,'HTTPS']],
-		value:  (nvram.remote_management == 1) ? ((nvram.remote_mgt_https == 1) ? 2 : 1) : 0 },
+/* HTTPS-END */
+	{ title: 'Remote Access', name: 'f_http_remote', type: 'select', options: [[0,'Disabled'],[1,'HTTP']
+/* HTTPS-BEGIN */
+			,[2,'HTTPS']
+/* HTTPS-END */
+		],
+		value: (nvram.remote_management == 1) ? (
+/* HTTPS-BEGIN */
+		(nvram.remote_mgt_https == 1) ? 2 : 
+/* HTTPS-END */
+		1) : 0 },
 	{ title: 'Port', indent: 2, name: 'http_wanport', type: 'text', maxlen: 5, size: 7, value:  fixPort(nvram.http_wanport, 8080) },
 	{ title: 'Allow Wireless Access', name: 'f_http_wireless', type: 'checkbox', value:  nvram.web_wl_filter == 0 },
 	null,

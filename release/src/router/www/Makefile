@@ -289,6 +289,11 @@ else
 	sed -i $(INSTALLDIR)/www/about.asp -e "/DNSCRYPT-BEGIN/,/DNSCRYPT-END/d"
 endif
 
+# Only include the https option if it is compiled in
+ifneq ($(TCONFIG_HTTPS),y)
+	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/HTTPS-BEGIN/,/HTTPS-END/d"
+endif
+
 # clean up
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp *.js *.jsx *.html); do \
@@ -325,6 +330,7 @@ endif
 		-e "/TINC-BEGIN/d"	-e "/TINC-END/d"\
 		-e "/MULTIWAN-BEGIN/d"	-e "/MULTIWAN-END/d"\
 		-e "/DUALWAN-BEGIN/d"	-e "/DUALWAN-END/d"\
+		-e "/HTTPS-BEGIN/d"	-e "/HTTPS-END/d"\
 		|| true; \
 	done
 
