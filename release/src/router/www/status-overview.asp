@@ -239,10 +239,10 @@ function ethstates()
 function anon_update()
 {
 	update = anonupdate.update;
-	if (update == "no") { return 0; }
+	if (update == "no" || update == "") { return 0; }
 
 	var code = '<div class="section-title"><center>!! Attention !!</center></div>';
-	code += '<div class="fields"><center>Tomato by Shibby ' + update + ' is now available. <a target="_blank" href="http://tomato.groov.pl/">Click here to read more</a>.</center></div>';
+	code += '<div class="fields" style="text-align:center">Newer version of FreshTomato ' + update + ' is now available. <a target="_blank" href="http://freshtomato.org/">Click here to download<\/a>.<\/div>';
 	code += '<br></div>';
 	E("nversion").innerHTML = code;
 }
