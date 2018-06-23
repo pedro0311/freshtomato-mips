@@ -52,7 +52,9 @@ static int config_pppd(int wan_proto, int num, char *prefix)
 	TRACE_PT("begin\n");
 
 	FILE *fp;
+#ifdef TCONFIG_USB
 	FILE *cfp;
+#endif
 	char *p;
 	int demand;
 	char tmp[100];
@@ -1245,9 +1247,10 @@ void start_wan_done(char *wan_ifname, char *prefix)
 	wanup = check_wanup(prefix);
 
 	if (is_primary) {
+#ifdef TCONFIG_ZEBRA
 		stop_zebra();
 		start_zebra();
-
+#endif
 		if ((wanup) || (time(0) < Y2K)) {
 			stop_ntpc();
 			start_ntpc();

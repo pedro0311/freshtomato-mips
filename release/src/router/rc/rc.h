@@ -213,8 +213,10 @@ extern void start_cron(void);
 extern void stop_cron(void);
 extern void start_adblock(void);
 extern void stop_adblock(void);
+#ifdef TCONFIG_ZEBRA
 extern void start_zebra(void);
 extern void stop_zebra(void);
+#endif
 extern void start_upnp(void);
 extern void stop_upnp(void);
 extern void start_syslog(void);

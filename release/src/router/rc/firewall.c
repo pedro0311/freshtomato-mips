@@ -787,7 +787,10 @@ static void nat_table(void)
 	char dst[64];
 	char src[64];
 	char t[512];
-	char *p, *c, *torports;
+	char *p, *c;
+#ifdef TCONFIG_TOR
+	char *torports;
+#endif
 	int i;
 
 	ipt_write("*nat\n"

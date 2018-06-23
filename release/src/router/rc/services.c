@@ -1251,9 +1251,9 @@ void stop_hotplug2(void)
 // -----------------------------------------------------------------------------
 
 // Written by Sparq in 2002/07/16
+#ifdef TCONFIG_ZEBRA
 void start_zebra(void)
 {
-#ifdef TCONFIG_ZEBRA
 	if (getpid() != 1) {
 		start_service("zebra");
 		return;
@@ -1361,12 +1361,10 @@ void start_zebra(void)
 
 	xstart("zebra", "-d");
 	xstart("ripd",  "-d");
-#endif
 }
 
 void stop_zebra(void)
 {
-#ifdef TCONFIG_ZEBRA
 	if (getpid() != 1) {
 		stop_service("zebra");
 		return;
@@ -1377,8 +1375,8 @@ void stop_zebra(void)
 
 	unlink("/etc/zebra.conf");
 	unlink("/etc/ripd.conf");
-#endif
 }
+#endif
 
 // -----------------------------------------------------------------------------
 
@@ -2564,7 +2562,9 @@ void start_services(void)
 	}
 //	start_syslog();
 	start_nas();
+#ifdef TCONFIG_ZEBRA
 	start_zebra();
+#endif
 #ifdef TCONFIG_SDHC
 	start_mmc();
 #endif
@@ -2652,7 +2652,9 @@ void stop_services(void)
 	stop_cifs();
 	stop_httpd();
 	stop_dnsmasq();
+#ifdef TCONFIG_ZEBRA
 	stop_zebra();
+#endif
 	stop_nas();
 //	stop_syslog();
 }
@@ -2949,7 +2951,9 @@ TOP:
 			restart_nas_services(1, 0);	// stop Samba, FTP and Media Server
 			stop_jffs2();
 //			stop_cifs();
+#ifdef TCONFIG_ZEBRA
 			stop_zebra();
+#endif
 			stop_cron();
 			stop_ntpc();
 			stop_upnp();
@@ -2989,11 +2993,13 @@ TOP:
 	}
 #endif
 
+#ifdef TCONFIG_ZEBRA
 	if (strcmp(service, "zebra") == 0) {
 		if (action & A_STOP) stop_zebra();
 		if (action & A_START) start_zebra();
 		goto CLEAR;
 	}
+#endif
 
 #ifdef TCONFIG_SDHC
 	if (strcmp(service, "mmc") == 0) {
@@ -3005,7 +3011,9 @@ TOP:
 
 	if (strcmp(service, "routing") == 0) {
 		if (action & A_STOP) {
+#ifdef TCONFIG_ZEBRA
 			stop_zebra();
+#endif
 			do_static_routes(0);	// remove old '_saved'
 			eval("brctl", "stp", nvram_safe_get("lan_ifname"), "0");
 			if(strcmp(nvram_safe_get("lan1_ifname"),"")!=0)
@@ -3019,7 +3027,9 @@ TOP:
 		start_firewall();
 		if (action & A_START) {
 			do_static_routes(1);	// add new
+#ifdef TCONFIG_ZEBRA
 			start_zebra();
+#endif
 			eval("brctl", "stp", nvram_safe_get("lan_ifname"), nvram_safe_get("lan_stp"));
 			if(strcmp(nvram_safe_get("lan1_ifname"),"")!=0)
 				eval("brctl", "stp", nvram_safe_get("lan1_ifname"), nvram_safe_get("lan1_stp"));
