@@ -110,7 +110,7 @@
 //	<% nvram("qos_classnames,qos_enable,qos_orules"); %>
 
 
-var abc = nvram.qos_classnames.split(' ');		// Toastman - configurable class names
+var abc = nvram.qos_classnames.split(' ');	/* Toastman - configurable class names */
 
 
 var ipp2p = [
@@ -145,7 +145,7 @@ function dscpClass(v)
 
 	s = '';
 	if (v != '') {
-		for (i = 1; i < dscp.length - 1; ++i)	// skip 1st and last elements
+		for (i = 1; i < dscp.length - 1; ++i)	/* skip 1st and last elements */
 			if (dscp[i][0] * 1 == v * 1) {
 				s = dscp[i][1];
 				break;
@@ -335,7 +335,7 @@ qosg.setup = function() {
 		if ((i != 6) && (i != 17)) a.push([i, protocols[i] || i]);
 	}
 
-	// what a mess...
+	/* what a mess... */
 	this.init('qg', 'move', 80, [
 		{ multi: [
 			{ type: 'select', options: [[0,'Any Address'],[1,'Dst IP'],[2,'Src IP'],[3,'Src MAC']],
@@ -363,18 +363,18 @@ qosg.setup = function() {
 
 	this.headerSet(['Match Rule', 'Class', 'Description', '#']);
 
-// addr_type < addr < proto < port_type < port < ipp2p < L7 < bcount < dscp < class < desc
+/* addr_type < addr < proto < port_type < port < ipp2p < L7 < bcount < dscp < class < desc */
 
 	a = nvram.qos_orules.split('>');
 	for (i = 0; i < a.length; ++i) {
 		b = a[i].split('<');
 
 		if (b.length == 9) {
-			// fixup < 0.08		!!! temp
+			/* fixup < 0.08		!!! temp */
 			b.splice(7, 0, '', '');
 		}
 		else if (b.length == 10) {
-			// fixup < 1.28.xx55
+			/* fixup < 1.28.xx55 */
 			b.splice(8, 0, '');
 		}
 

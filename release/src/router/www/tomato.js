@@ -2236,10 +2236,11 @@ function tabHigh(id)
 // -----------------------------------------------------------------------------
 
 var cookie = {
-	// The value 2147483647000 is ((2^31)-1)*1000, which is the number of
-	// milliseconds (minus 1 second) which correlates with the year 2038 counter
-	// rollover. This effectively makes the cookie never expire.
-
+/*
+	The value 2147483647000 is ((2^31)-1)*1000, which is the number of
+	milliseconds (minus 1 second) which correlates with the year 2038 counter
+	rollover. This effectively makes the cookie never expire.
+*/
 	set: function(key, value, days) {
 		document.cookie = 'tomato_' + encodeURIComponent(key) + '=' + encodeURIComponent(value) + '; expires=' +
 		new Date(2147483647000).toUTCString() + '; path=/';

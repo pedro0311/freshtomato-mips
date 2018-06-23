@@ -51,38 +51,40 @@
 var port_vlan_supported = 0;
 var trunk_vlan_supported = 0;
 
-// does not seem to be strictly necessary for boardflags as it's supposed to be a bitmap
+/* does not seem to be strictly necessary for boardflags as it's supposed to be a bitmap */
 nvram['boardflags'] = ((nvram['boardflags'].toLowerCase().indexOf('0x') != -1) ? '0x' : '') + String('0000' + ((nvram['boardflags'].toLowerCase()).replace('0x',''))).slice(-4);
-// but the contents of router/shared/id.c seem to indicate string formatting/padding might be required for some models as we check if strings match
+/* but the contents of router/shared/id.c seem to indicate string formatting/padding might be required for some models as we check if strings match */
 nvram['boardtype'] = ((nvram['boardtype'].toLowerCase().indexOf('0x') != -1) ? '0x' : '') + String('0000' + ((nvram['boardtype'].toLowerCase()).replace('0x',''))).slice(-4);
 
-// see http://www.dd-wrt.com/wiki/index.php/Hardware#Boardflags and router/shared/id.c
+/* see http://www.dd-wrt.com/wiki/index.php/Hardware#Boardflags and router/shared/id.c */
 if(nvram['boardflags'] & 0x0100) { // BFL_ENETVLAN = this board has vlan capability
   port_vlan_supported = 1;
 }
 
-// TESTED ONLY ON WRT54G v2 (boardtype 0x0101) and WRT54GL v1.1 (boardtype 0x0467)
+/* TESTED ONLY ON WRT54G v2 (boardtype 0x0101) and WRT54GL v1.1 (boardtype 0x0467)
 // attempt of cross-referencing boardtypes/routers mentioned on id.c and the wiki page above
+*/
 switch(nvram['boardtype']) {
-  case '0x0467':  // WRT54GL 1.x, WRT54GS 3.x/4.x
-  case '0x048e':  // WL-520GU, WL-500G Premium v2
-  case '0x04ef':  // WRT320N/E2000
-  case '0x04cf':  // WRT610Nv2/E3000, RT-N16
-  case '0xf52c':  // E4200v1
+  case '0x0467':  /* WRT54GL 1.x, WRT54GS 3.x/4.x */
+  case '0x048e':  /* WL-520GU, WL-500G Premium v2 */
+  case '0x04ef':  /* WRT320N/E2000 */
+  case '0x04cf':  /* WRT610Nv2/E3000, RT-N16 */
+  case '0xf52c':  /* E4200v1 */
     trunk_vlan_supported = 1;
     break;
   default:
     break;
 }
 
-// TESTED ONLY ON WRT54G v2 (boardtype 0x0101),WRT54GL v1.1 (boardtype 0x0467) and WNR3500L (boardtype 0x04cf)
+/* TESTED ONLY ON WRT54G v2 (boardtype 0x0101),WRT54GL v1.1 (boardtype 0x0467) and WNR3500L (boardtype 0x04cf)
 // info on some of these boardtypes/routers obtained from 
 // http://wiki.openwrt.org/toh/asus/start
 // http://wiki.openwrt.org/toh/linksys/start
 // http://wiki.openwrt.org/toh/start
+*/
 switch(nvram['boardtype']) {
-  case '0x0467':  // WRT54GL 1.x, WRT54GS 3.x/4.x
-    if (nvram['boardrev'] == '0x13') {  // WHR-G54S
+  case '0x0467':  /* WRT54GL 1.x, WRT54GS 3.x/4.x */
+    if (nvram['boardrev'] == '0x13') {  /* WHR-G54S */
       COL_P0N = '1';
       COL_P1N = '2';
       COL_P2N = '3';
@@ -90,8 +92,8 @@ switch(nvram['boardtype']) {
       COL_P4N = '0';
       break;
     }
-  case '0xa4cf':  // Belkin F7D3301
-    if (nvram['boardrev'] == '0x1100'){ //Belkin F5D8235-4 v3
+  case '0xa4cf':  /* Belkin F7D3301 */
+    if (nvram['boardrev'] == '0x1100'){ /* Belkin F5D8235-4 v3 */
       COL_P0N = '1';
       COL_P1N = '2';
       COL_P2N = '3';
@@ -99,30 +101,30 @@ switch(nvram['boardtype']) {
       COL_P4N = '0';
       break;
     }
-  case '0xd4cf':  // Belkin F7D4301
-  case '0x048e':  // WL-520GU, WL-500G Premium v2
+  case '0xd4cf':  /* Belkin F7D4301 */
+  case '0x048e':  /* WL-520GU, WL-500G Premium v2 */
     COL_P0N = '3';
     COL_P1N = '2';
     COL_P2N = '1';
     COL_P3N = '0';
     COL_P4N = '4';
     break;
-  case '0x04ef':  // WRT320N/E2000
-  case '0x04cf':  // WRT610Nv2/E3000, RT-N16, WNR3500L
+  case '0x04ef':  /* WRT320N/E2000 */
+  case '0x04cf':  /* WRT610Nv2/E3000, RT-N16, WNR3500L */
     COL_P0N = '4';
     COL_P1N = '3';
     COL_P2N = '2';
     COL_P3N = '1';
     COL_P4N = '0';
     break;
-  case '0xf52c':  // E4200v1
+  case '0xf52c':  /* E4200v1 */
     COL_P0N = '0';
     COL_P1N = '1';
     COL_P2N = '2';
     COL_P3N = '3';
     COL_P4N = '4';
     break;
-// should work on WRT54G v2/v3, WRT54GS v1/v2 and others
+/* should work on WRT54G v2/v3, WRT54GS v1/v2 and others */
   default:
     COL_P0N = '1';
     COL_P1N = '2';
@@ -149,9 +151,9 @@ var COL_BRI = 13;
 
 var vlt = nvram.vlan0tag | '0';
 
-// set to either 5 or 8 when nvram settings are read (FastE or GigE routers)
+/* set to either 5 or 8 when nvram settings are read (FastE or GigE routers) */
 var SWITCH_INTERNAL_PORT=0;
-// option made available for experimental purposes on routers known to support port-based VLANs, but not confirmed to support 801.11q trunks
+/* option made available for experimental purposes on routers known to support port-based VLANs, but not confirmed to support 801.11q trunks */
 var PORT_VLAN_SUPPORT_OVERRIDE = ((nvram['trunk_vlan_so'] == '1') ? 1 : 0);
 
 function verifyFields(focused, quiet){
@@ -184,7 +186,7 @@ function save() {
 
   var fom = E('_fom');
   fom.trunk_vlan_so.value = (E('_f_trunk_vlan_so').checked ? 1 : 0);
-// wipe out relevant fields just in case this is not the first time we try to submit
+/* wipe out relevant fields just in case this is not the first time we try to submit */
   for (var i = 0 ; i <= MAX_VLAN_ID ; i++) {
     fom['vlan' + i + 'ports'].value = '';
     fom['vlan' + i + 'hwname'].value = '';
@@ -228,7 +230,7 @@ function save() {
 
     p += (d[i][COL_VID_DEF].toString() != '0') ? (SWITCH_INTERNAL_PORT + '*') : SWITCH_INTERNAL_PORT;
 
-// arrange port numbers in ascending order just to be safe (not sure if this is really needed... mostly, cosmetics?)
+/* arrange port numbers in ascending order just to be safe (not sure if this is really needed... mostly, cosmetics?) */
     p = p.split(" ");
     p = p.sort(cmpInt);
     p = p.join(" ");
@@ -368,7 +370,7 @@ if(port_vlan_supported) { // aka if(supported_hardware) block
   vlg.populate = function() {
     vlg.removeAllData();
 
-// find out which vlans are supposed to be bridged to each LAN
+/* find out which vlans are supposed to be bridged to each LAN */
     var bridged = [];
 
     for (var i = 0 ; i <= MAX_BRIDGE_ID ; i++) {
@@ -399,7 +401,7 @@ REMOVE-END */
       }
     }
 
-// WAN port
+/* WAN port */
     bridged[parseInt(nvram['wan_ifnameX'].replace('vlan',''))] = '2';
     bridged[parseInt(nvram['wan2_ifnameX'].replace('vlan',''))] = '7';
 /* MULTIWAN-BEGIN */
@@ -407,17 +409,17 @@ REMOVE-END */
     bridged[parseInt(nvram['wan4_ifnameX'].replace('vlan',''))] = '9';
 /* MULTIWAN-END
 
-// go thru all possible VLANs
+/* go thru all possible VLANs */
     for (var i = 0 ; i <= MAX_VLAN_ID ; i++) {
       var port = [];
       var tagged = [];
       if ((nvram['vlan' + i + 'hwname'].length > 0) || (nvram['vlan' + i + 'ports'].length > 0)) {
-// (re)initialize our bitmap for this particular iteration
+/* (re)initialize our bitmap for this particular iteration */
         for (var j=0; j <= MAX_PORT_ID ; j++) {
           port[j] = '0';
           tagged[j] = '0';
         }
-// which ports are members of this VLAN?
+/* which ports are members of this VLAN? */
         var m=nvram['vlan' + i + 'ports'].split(' ');
         for (var j = 0; j < (m.length) ; j++) {
           port[parseInt(m[j].charAt(0))] = '1';
@@ -806,7 +808,7 @@ REMOVE-END */
     f[COL_BRI].selectedIndex = 0;
     ferror.clearAll(fields.getAll(this.newEditor));
   }
-} // end of the so-called if(supported_device) block
+} /* end of the so-called if(supported_device) block */
 
 function init() {
 	if(port_vlan_supported) {

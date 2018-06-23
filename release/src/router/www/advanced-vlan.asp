@@ -66,21 +66,22 @@ var port_vlan_supported = 0;
 var trunk_vlan_supported = 1; //Enable on all routers
 var unknown_router = 0;
 
-// does not seem to be strictly necessary for boardflags as it's supposed to be a bitmap
+/* does not seem to be strictly necessary for boardflags as it's supposed to be a bitmap */
 nvram['boardflags'] = ((nvram['boardflags'].toLowerCase().indexOf('0x') != -1) ? '0x' : '') + String('0000' + ((nvram['boardflags'].toLowerCase()).replace('0x',''))).slice(-4);
-// but the contents of router/shared/id.c seem to indicate string formatting/padding might be required for some models as we check if strings match
+/* but the contents of router/shared/id.c seem to indicate string formatting/padding might be required for some models as we check if strings match */
 nvram['boardtype'] = ((nvram['boardtype'].toLowerCase().indexOf('0x') != -1) ? '0x' : '') + String('0000' + ((nvram['boardtype'].toLowerCase()).replace('0x',''))).slice(-4);
 
-// see http://www.dd-wrt.com/wiki/index.php/Hardware#Boardflags and router/shared/id.c
+/* see http://www.dd-wrt.com/wiki/index.php/Hardware#Boardflags and router/shared/id.c */
 if(nvram['boardflags'] & 0x0100) { // BFL_ENETVLAN = this board has vlan capability
   port_vlan_supported = 1;
 }
 
-// TESTED ONLY ON WRT54G v2 (boardtype 0x0101),WRT54GL v1.1 (boardtype 0x0467) and WNR3500L (boardtype 0x04cf)
+/* TESTED ONLY ON WRT54G v2 (boardtype 0x0101),WRT54GL v1.1 (boardtype 0x0467) and WNR3500L (boardtype 0x04cf)
 // info on some of these boardtypes/routers obtained from 
 // http://wiki.openwrt.org/toh/asus/start
 // http://wiki.openwrt.org/toh/linksys/start
 // http://wiki.openwrt.org/toh/start
+*/
 switch(nvram['t_model_name']) {
 	case 'vlan-testid0':
 	case 'Belkin Share N300 (F7D3302/F7D7302) v1':
@@ -142,7 +143,7 @@ switch(nvram['t_model_name']) {
 	case 'Asus RT-N53 A1':
 	case 'Belkin Share Max N300 (F7D3301/F7D7301) v1':
 	case 'Belkin Play Max / N600 HD (F7D4301/F7D8301) v1':
-	case 'Netcore NR235W': //NOT in Shibby Firmware - https://github.com/Jackysi/advancedtomato/pull/142
+	case 'Netcore NR235W': /* NOT in Shibby Firmware - https://github.com/Jackysi/advancedtomato/pull/142 */
 	case 'Netgear WNDR3400':
 	case 'Netgear WNDR3400v2':
 	case 'Netgear WNDR3400v3':
@@ -208,7 +209,7 @@ var COL_BRI = 13;
 
 var vlt = nvram.vlan0tag | '0';
 
-// set to either 5 or 8 when nvram settings are read (FastE or GigE routers)
+/* set to either 5 or 8 when nvram settings are read (FastE or GigE routers) */
 var SWITCH_INTERNAL_PORT=0;
 
 function verifyFields(focused, quiet){
@@ -239,7 +240,7 @@ function save() {
   if (vlg.isEditing()) return;
 
   var fom = E('_fom');
-// wipe out relevant fields just in case this is not the first time we try to submit
+/* wipe out relevant fields just in case this is not the first time we try to submit */
   for (var i = 0 ; i <= MAX_VLAN_ID ; i++) {
     fom['vlan' + i + 'ports'].value = '';
     fom['vlan' + i + 'hwname'].value = '';
@@ -283,7 +284,7 @@ function save() {
 
     p += (d[i][COL_VID_DEF].toString() != '0') ? (SWITCH_INTERNAL_PORT + '*') : SWITCH_INTERNAL_PORT;
 
-// arrange port numbers in ascending order just to be safe (not sure if this is really needed... mostly, cosmetics?)
+/* arrange port numbers in ascending order just to be safe (not sure if this is really needed... mostly, cosmetics?) */
     p = p.split(" ");
     p = p.sort(cmpInt);
     p = p.join(" ");
@@ -344,7 +345,7 @@ REMOVE-END */
 //        'lan3_ifnames=' + fom['lan3_ifnames'].value);
 REMOVE-END */
 
-  fom['manual_boot_nv'].value = 1 //Prevent vlan reset to default
+  fom['manual_boot_nv'].value = 1 /* Prevent vlan reset to default */
 
   var e = E('footer-msg');
 
@@ -390,7 +391,7 @@ function trailingSpace(s)
   return ((s.length>0)&&(s.charAt(s.length-1) != ' ')) ? ' ' : '';
 }
 
-if(port_vlan_supported) { // aka if(supported_hardware) block
+if(port_vlan_supported) { /* aka if(supported_hardware) block */
   var vlg = new TomatoGrid();
   vlg.setup = function() {
     this.init('vlan-grid', '', (MAX_VLAN_ID + 1), [
@@ -425,7 +426,7 @@ if(port_vlan_supported) { // aka if(supported_hardware) block
   vlg.populate = function() {
     vlg.removeAllData();
 
-// find out which vlans are supposed to be bridged to each LAN
+/* find out which vlans are supposed to be bridged to each LAN */
     var bridged = [];
 
     for (var i = 0 ; i <= MAX_BRIDGE_ID ; i++) {
@@ -447,7 +448,7 @@ REMOVE-END */
           else
             bridged[parseInt(l[k].replace('vlan',''))] = '1';
         }
-        // WLAN
+        /* WLAN */
         for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
           if(l[k].indexOf(wl_ifaces[uidx][0]) != -1) {
             E('_f_bridge_wlan'+wl_fface(uidx)+'_to').selectedIndex=i;
@@ -456,7 +457,7 @@ REMOVE-END */
       }
     }
 
-// WAN port
+/* WAN port */
     bridged[parseInt(nvram['wan_ifnameX'].replace('vlan',''))] = '2';
     bridged[parseInt(nvram['wan2_ifnameX'].replace('vlan',''))] = '7';
 /* MULTIWAN-BEGIN */
@@ -464,17 +465,17 @@ REMOVE-END */
     bridged[parseInt(nvram['wan4_ifnameX'].replace('vlan',''))] = '9';
 /* MULTIWAN-END */
 
-// go thru all possible VLANs
+/* go thru all possible VLANs */
     for (var i = 0 ; i <= MAX_VLAN_ID ; i++) {
       var port = [];
       var tagged = [];
       if ((nvram['vlan' + i + 'hwname'].length > 0) || (nvram['vlan' + i + 'ports'].length > 0)) {
-// (re)initialize our bitmap for this particular iteration
+/* (re)initialize our bitmap for this particular iteration */
         for (var j=0; j <= MAX_PORT_ID ; j++) {
           port[j] = '0';
           tagged[j] = '0';
         }
-// which ports are members of this VLAN?
+/* which ports are members of this VLAN? */
         var m=nvram['vlan' + i + 'ports'].split(' ');
         for (var j = 0; j < (m.length) ; j++) {
           port[parseInt(m[j].charAt(0))] = '1';
@@ -597,7 +598,7 @@ REMOVE-END */
       f[COL_P4T].checked=0;
     }
 
-// Modifications to enable Native VLAN support(allow one untagged vlan per port) by default
+/* Modifications to enable Native VLAN support(allow one untagged vlan per port) by default */
     if ((f[COL_P0].checked == 1) && (this.countElem(COL_P0,1)>0)) {
       if (((this.countElem(COL_P0,1)-1) >= this.countElem(COL_P0T,1)) && (f[COL_P0T].checked==0)) {
           ferror.set(f[COL_P0T], 'Only one untagged VLAN per port is allowed(Native VLAN)', quiet);
@@ -864,7 +865,7 @@ REMOVE-END */
     f[COL_BRI].selectedIndex = 0;
     ferror.clearAll(fields.getAll(this.newEditor));
   }
-} // end of the so-called if(supported_device) block
+} /* end of the so-called if(supported_device) block */
 
 function init() {
 	if(port_vlan_supported) {
