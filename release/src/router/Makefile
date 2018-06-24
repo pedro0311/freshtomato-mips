@@ -2648,7 +2648,7 @@ mdadm-clean:
 	-@$(MAKE) -C mdadm clean
 
 ipset:
-	$(MAKE) -C ipset binaries
+	$(MAKE) -C ipset binaries COPT_FLAGS="-Os"
 
 ipset-install:
 	install -D ipset/ipset $(INSTALLDIR)/ipset/usr/sbin/ipset
