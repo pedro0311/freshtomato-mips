@@ -1,6 +1,6 @@
 include ../common.mak
 
-CFLAGS = -O2 -Wall $(EXTRACFLAGS) -fPIC
+CFLAGS = -Os -Wall $(EXTRACFLAGS) -fPIC
 CFLAGS += -I$(TOP)/shared -I$(SRCBASE)/include -I.
 ifeq ($(STATIC),1)
 CFLAGS += -static
