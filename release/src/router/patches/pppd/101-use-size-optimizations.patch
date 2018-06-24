@@ -1,0 +1,11 @@
+--- pppd/pppd/Makefile.linux	2018-06-24 09:33:51.000000000 +0200
++++ pppd/pppd/Makefile.linux	2018-06-24 09:33:06.000000000 +0200
+@@ -32,7 +32,7 @@ endif
+ 
+ # CC = gcc
+ #
+-COPTS = -O2 -pipe -Wall -g
++COPTS = -Os -pipe -Wall -g
+ LIBS =
+ 
+ # Uncomment the next 2 lines to include support for Microsoft's
