@@ -131,14 +131,14 @@ float: left;
 		f[5].value, f[5].selectedIndex ? f[6].value : '',	(dir != 'a') ? f[7].value : '',
 		f[8].value, f[9].value];
 	}
-	// Reset Editor
+	/* Reset Editor */
 	pbr.resetNewEditor = function() {
 		var f = fields.getAll(this.newEditor);
-		//Enable
+		/* Enable */
 		f[0].checked = 1;
-		//Protocol
+		/* Protocol */
 		f[1].selectedIndex = 0;
-		//From
+		/* From */
 		f[2].selectedIndex = 0;
 		f[3].value = '';
 		f[4].value = '';
@@ -150,11 +150,11 @@ float: left;
 				f[3].value = c[0];
 			}
 		}
-		//To
+		/* To */
 		f[5].selectedIndex = 0;
 		f[6].value = '';
 		f[7].value = '';
-		//Interface
+		/* Interface */
 		f[8].selectedIndex = 0;
 		f[9].value = '';
 		this.enDiFields(this.newEditor);
@@ -170,15 +170,15 @@ float: left;
 	pbr.enDiFields = function(row) {
 		var f = fields.getAll(row);
 		var x;
-		//Enable
-		//Protocol
+		/* Enable */
+		/* Protocol */
 		x = f[1].value;
 		x = ((x != -1) && (x != 6) && (x != 17));
 		f[4].disabled = x;
 		f[7].disabled = x;
-		//From
+		/* From */
 		f[3].disabled = (f[2].selectedIndex == 0);
-		//To
+		/* To */
 		f[6].disabled = (f[5].selectedIndex == 0);
 	}
 	pbr.verifyFields = function(row, quiet) {
@@ -186,17 +186,17 @@ float: left;
 		var a, b, e;
 		this.enDiFields(row);
 		ferror.clearAll(f);
-		//valid saddr
+		/* valid saddr */
 		a = f[2].value * 1;
 		if (a == 1) {
 			if (!v_iptip(f[3], quiet)) return 0;
 		}
 		else if ((a == 2) && (!v_mac(f[3], quiet))) return 0;
-		//valid sport & dport
+		/* valid sport & dport */
 		b = f[1].selectedIndex;
 		if ((b > 0) && (b <= 3) && (f[4].value != '') && (!v_iptport(f[4], quiet))) return 0;
 		if ((b > 0) && (b <= 3) && (f[7].value != '') && (!v_iptport(f[7], quiet))) return 0;
-		//valid daddr
+		/* valid daddr */
 		a = f[5].value * 1;
 		switch (a ) {
 			case 1: 
@@ -215,7 +215,7 @@ float: left;
 	pbr.setup = function() {
 		var i, a, b;
 		a = [[-2, 'All Protocols'],[-1,'TCP/UDP'],[6,'TCP'],[17,'UDP'],[2, 'ICMP']];
-		// what a mess...
+		/* what a mess... */
 		this.init('qg', 'move', 100, [
 			{ type: 'checkbox' },
 			{ type: 'select', prefix: '<div class="x2a">', suffix: '</div>', options: a },

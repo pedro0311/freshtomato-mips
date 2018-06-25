@@ -342,7 +342,7 @@ endif
 
 	chmod 0644 $(INSTALLDIR)/www/*
 
-# remove C-style comments from java files. All "control" comments have been processed by now.
-	for F in $(wildcard *.js *.jsx); do \
+# remove C-style comments from java, asp and css files. All "control" comments have been processed by now.
+	for F in $(wildcard *.js *.jsx *.asp *.css); do \
 		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/remcoms2.sh $(INSTALLDIR)/www/$$F c; \
 	done

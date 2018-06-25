@@ -966,7 +966,7 @@ ppp-%:
 
 rp-pppoe/src/stamp-h1: rp-pppoe/src/Makefile.in
 	$(call patch_files,rp-pppoe)
-	cd rp-pppoe/src && CFLAGS="-g -O2 $(EXTRACFLAGS)" \
+	cd rp-pppoe/src && CFLAGS="-g -Os $(EXTRACFLAGS)" \
 	$(CONFIGURE) --prefix=/usr --enable-plugin=$(TOP)/pppd \
 	ac_cv_linux_kernel_pppoe=yes rpppoe_cv_pack_bitfields=rev
 	@touch rp-pppoe/src/stamp-h1
@@ -1208,7 +1208,7 @@ accel-pptp: pppd accel-pptp/Makefile
 	@$(MAKE) -C accel-pptp
 
 accel-pptp/Makefile: accel-pptp/Makefile.in $(LINUXDIR)/include/linux/version.h
-	cd accel-pptp && CFLAGS="-g -O2 $(EXTRACFLAGS)" \
+	cd accel-pptp && CFLAGS="-g -Os $(EXTRACFLAGS)" \
 	$(CONFIGURE) --prefix=/usr KDIR=$(LINUXDIR) PPPDIR=$(TOP)/pppd
 
 accel-pptp-clean:
@@ -1244,6 +1244,7 @@ pptpd-clean:
 	$(call unpatch_files,pptpd)
 
 pppd/Makefile: pppd/linux/Makefile.top
+	$(call patch_files,pppd)
 	cd pppd && $(CONFIGURE) --prefix=/usr --sysconfdir=/tmp
 
 pppd: pppd/Makefile
@@ -1253,6 +1254,7 @@ pppd: pppd/Makefile
 pppd-clean:
 	-@$(MAKE) -C pppd clean
 	@rm -f pppd/Makefile
+	$(call unpatch_files,pppd)
 
 pppd-install:
 	install -D pppd/pppd/pppd $(INSTALLDIR)/pppd/usr/sbin/pppd
@@ -1352,14 +1354,17 @@ ntpc: nvram shared
 
 dropbear: dropbear/config.h
 	@$(SEP)
+ifeq ($(TCONFIG_ZEBRA),y)
 	@$(MAKE) -C dropbear PROGRAMS="dropbear dbclient dropbearkey scp" MULTI=1 $(PARALLEL_BUILD)
+else
+	@$(MAKE) -C dropbear PROGRAMS="dropbear dropbearkey scp" MULTI=1 $(PARALLEL_BUILD)
+endif
 
 dropbear-install:
 	install -D dropbear/dropbearmulti $(INSTALLDIR)/dropbear/usr/bin/dropbearmulti
 	$(STRIP) $(INSTALLDIR)/dropbear/usr/bin/dropbearmulti
 	cd $(INSTALLDIR)/dropbear/usr/bin && \
 	ln -sf dropbearmulti dropbear && \
-	ln -sf dropbearmulti dropbearconvert && \
 	ln -sf dropbearmulti dropbearkey && \
 	ln -sf dropbearmulti dbclient && \
 	ln -sf dropbearmulti ssh && \
@@ -2669,7 +2674,7 @@ mdadm-clean:
 	-@$(MAKE) -C mdadm clean
 
 ipset:
-	$(MAKE) -C ipset binaries
+	$(MAKE) -C ipset binaries COPT_FLAGS="-Os"
 
 ipset-install:
 	install -D ipset/ipset $(INSTALLDIR)/ipset/usr/sbin/ipset

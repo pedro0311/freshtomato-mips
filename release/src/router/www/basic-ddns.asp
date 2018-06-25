@@ -203,7 +203,7 @@ function verifyFields(focused, quiet)
 		}
 	}
 
-	// shouldn't do this twice, but...
+	/* shouldn't do this twice, but... */
 	if (E('_f_opendns0') == focused) E('_f_opendns1').checked = E('_f_opendns0').checked;
 	if (E('_f_opendns1') == focused) E('_f_opendns0').checked = E('_f_opendns1').checked;
 
@@ -312,7 +312,7 @@ REMOVE-END */
 			}
 		}
 		else {
-			// not set if partial, do not remove if partial
+			/* not set if partial, do not remove if partial */
 			if (opendnsInUse == opendns.length) {
 				a = nvram.wan_dns.split(/\s+/);
 				b = [];

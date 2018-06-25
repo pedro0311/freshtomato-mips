@@ -73,7 +73,7 @@ function save()
 	en = fom.f_dmz_enable.checked;
 	fom.dmz_enable.value = en ? 1 : 0;
 	if (en) {
-		// shorten it if possible to be more compatible with original
+		/* shorten it if possible to be more compatible with original */
 		s = fom.f_dmz_ipaddr.value;
 		fom.dmz_ipaddr.value = (s.indexOf(lipp) == 0) ? s.replace(lipp, '') : s;
 	}
