@@ -4,8 +4,8 @@
  
  AUTOMAKE_OPTIONS = gnu
  
--SUBDIRS =  src doc gui test systemd
-+SUBDIRS =  src test systemd # doc gui
+-SUBDIRS =  src doc test systemd
++SUBDIRS =  src test systemd # doc
  
  ACLOCAL_AMFLAGS = -I m4
  
