@@ -2535,7 +2535,8 @@ snmp-install:
 apcupsd/stamp-h1:
 	cd apcupsd && touch autoconf/variables.mak && CC=$(CC) STRIP=$(CROSS_COMPILE)strip \
 	$(MAKE) configure && \
-	CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
+	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+	CPPFLAGS="-Os -Wall -ffunction-sections -fdata-sections" \
 	LDFLAGS="-L$(TOOLCHAIN)/lib -ffunction-sections -fdata-sections" \
 	$(CONFIGURE) --prefix=/usr --without-x --enable-usb --disable-pcnet --enable-cgi \
 		--disable-lgd --enable-net --sysconfdir=/usr/local/apcupsd --bindir=/bin \
