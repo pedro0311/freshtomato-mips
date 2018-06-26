@@ -17,7 +17,7 @@ CFLAGS += -DLOCKFILE_DIR=\"/var/lock\"
 #CC = $(CROSS)gcc
 #STRIP = $(CROSS)strip
 
-CFLAGS += -O2  -Wall $(EXTRACFLAGS)
+CFLAGS += -Os -Wall $(EXTRACFLAGS)
 
 PROG = p910nd
 CONFIG = p910nd.conf

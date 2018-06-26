@@ -2173,7 +2173,7 @@ mysql-install:
 
 lzo/stamp-h1:
 	cd lzo && \
-	CFLAGS="-O3 -Wall -fPIC $(EXTRACFLAGS)" $(CONFIGURE) --enable-shared --enable-static
+	CFLAGS="-Os -Wall -fPIC $(EXTRACFLAGS)" $(CONFIGURE) --enable-shared --enable-static
 	touch lzo/stamp-h1
 
 lzo: lzo/stamp-h1
