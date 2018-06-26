@@ -2064,10 +2064,10 @@ mysql/stamp-h1: openssl zlib libncurses
 	@cp -f $(TOP)/patches/mysql/.host.tgz $(TOP)/mysql/ || true
 	$(call patch_files,mysql)
 	cd mysql && \
-	CFLAGS="-O2 -Wall -fno-delete-null-pointer-checks -funit-at-a-time --param large-function-growth=800 \
+	CFLAGS="-Os -Wall -fno-delete-null-pointer-checks -funit-at-a-time --param large-function-growth=800 \
 		--param max-inline-insns-single=3000 -ffunction-sections -fdata-sections -I$(TOP)/zlib \
 		-I$(TOP)/openssl/include -I$(TOP)/libncurses/include" \
-	CPPFLAGS="-O2 -Wall -fno-delete-null-pointer-checks -funit-at-a-time --param large-function-growth=800 \
+	CPPFLAGS="-Os -Wall -fno-delete-null-pointer-checks -funit-at-a-time --param large-function-growth=800 \
 		--param max-inline-insns-single=3000 -ffunction-sections -fdata-sections -I$(TOP)/zlib \
 		-I$(TOP)/openssl/include -I$(TOP)/libncurses/include" \
 	LDFLAGS="-L$(TOP)/openssl -L$(TOP)/zlib/staged/usr/lib -L$(TOP)/libncurses/lib -fPIC -EL" \
