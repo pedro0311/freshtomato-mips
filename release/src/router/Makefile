@@ -2383,13 +2383,12 @@ libnfsidmap-install:
 
 portmap/stamp-h1:
 	cd portmap \
-	CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
 	$(MAKE) -C portmap CC=$(CC) AR=$(AR) LD=$(LD) RANLIB=$(RANLIB) RPCUSER="nobody"
 	touch portmap/stamp-h1
 
 portmap: portmap/stamp-h1
 	@$(SEP)
-	$(MAKE) -C portmap $(PARALLEL_BUILD)
+	$(MAKE) -C portmap CFLAGS="-Os -Wall $(EXTRACFLAGS)" $(PARALLEL_BUILD)
 
 portmap-clean:
 	-@$(MAKE) -C portmap clean
