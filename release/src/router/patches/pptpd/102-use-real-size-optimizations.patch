@@ -1,0 +1,22 @@
+--- pptpd/Makefile.am	2018-06-29 11:16:23.000000000 +0200
++++ pptpd/Makefile.am	2018-06-29 19:15:41.000000000 +0200
+@@ -11,7 +11,7 @@ INCLUDES = -I.
+ ##  warning with -Wmissing-prototypes).
+ ## -Wmissing-prototypes removed (eg, Linux 2.2.6 headers
+ ##  aren't up to it).
+-CFLAGS = -O2 -fno-builtin -Wall -DSBINDIR='"$(sbindir)"'
++CFLAGS = -Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fno-builtin -DSBINDIR='"$(sbindir)"'
+ #CFLAGS = -O2 -fno-builtin -Wall -ansi -DSBINDIR='"$(sbindir)"'
+ #CFLAGS = -O2 -fno-builtin -Wall -ansi -pedantic -Wmissing-prototypes -Werror -DSBINDIR='"$(sbindir)"'
+ 
+--- pptpd/Makefile.in	2018-06-29 11:16:23.000000000 +0200
++++ pptpd/Makefile.in	2018-06-29 19:15:41.000000000 +0200
+@@ -153,7 +153,7 @@ AUTOMAKE = @AUTOMAKE@
+ AWK = @AWK@
+ CC = @CC@
+ CCDEPMODE = @CCDEPMODE@
+-CFLAGS = -O2 -fno-builtin -Wall -DSBINDIR='"$(sbindir)"'
++CFLAGS = -Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fno-builtin -DSBINDIR='"$(sbindir)"'
+ CPP = @CPP@
+ CPPFLAGS = @CPPFLAGS@
+ CYGPATH_W = @CYGPATH_W@
