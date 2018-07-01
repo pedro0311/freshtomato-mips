@@ -2793,7 +2793,6 @@ static int init_nvram(void)
 		/*
 		 * set router's extra parameters 
 		 */
-		struct nvram_tuple *basic_params = NULL;
 		struct nvram_tuple *extra_params = NULL;
 		extra_params = wndr4000_sb_1_params;
 		while (extra_params->name) {
