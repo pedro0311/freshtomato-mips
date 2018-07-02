@@ -1774,7 +1774,8 @@ spawn-fcgi-install:
 #Roadkill
 glib/stamp-h1:
 	@$(SEP)
-	@cd glib && $(CONFIGURE) --prefix=/usr glib_cv_prog_cc_ansi_proto=no glib_cv_has__inline=yes glib_cv_has__inline__=yes glib_cv_hasinline=yes \
+	@cd glib && CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
+	$(CONFIGURE) --prefix=/usr glib_cv_prog_cc_ansi_proto=no glib_cv_has__inline=yes glib_cv_has__inline__=yes glib_cv_hasinline=yes \
 		glib_cv_sane_realloc=yes glib_cv_va_copy=no glib_cv___va_copy=yes glib_cv_va_val_copy=yes glib_cv_rtldglobal_broken=no \
 		glib_cv_uscore=no glib_cv_func_pthread_mutex_trylock_posix=yes glib_cv_func_pthread_cond_timedwait_posix=yes glib_cv_sizeof_gmutex=24 \
 		glib_cv_byte_contents_gmutex="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0" glib_cv_sys_pthread_getspecific_posix=yes \
@@ -1795,7 +1796,7 @@ glib-install: glib
 nocat/stamp-h1: glib-install
 	@$(SEP)
 	@cd nocat && \
-	NC_CONF_PATH="/" \
+	NC_CONF_PATH="/" CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
 	$(CONFIGURE) --with-firewall=iptables --with-glib-prefix="$(INSTALLDIR)/glib/usr" --localstatedir=/var --sysconfdir=/etc
 	@$(MAKE) -C nocat
 
@@ -2029,7 +2030,7 @@ nginx/stamp-h1: openssl zlib pcre libatomic_ops
 		--with-libatomic="$(TOP)/libatomic_ops" \
 		--with-cc="$(CC)" \
 		--with-ld-opt="$(LDFLAGS) -L $(TOP)/pcre/.libs -L $(TOP)/zlib -L $(TOP)/openssl -L $(TOP)/libatomic_ops/src" \
-		--with-cc-opt="$(EXTRACFLAGS) $(CPPFLAGS) $(CFLAGS) -I $(TOP)/openssl/include -I $(TOP)/openssl/include/openssl -I $(TOP)/pcre -I $(TOP)/zlib -I $(TOP)/libatomic_ops/src/.libs" \
+		--with-cc-opt="-Os $(EXTRACFLAGS) $(CPPFLAGS) $(CFLAGS) -I $(TOP)/openssl/include -I $(TOP)/openssl/include/openssl -I $(TOP)/pcre -I $(TOP)/zlib -I $(TOP)/libatomic_ops/src/.libs" \
 		$(ADDITIONAL_MODULES)
 
 nginx: nginx/stamp-h1
