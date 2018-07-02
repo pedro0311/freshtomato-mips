@@ -1036,11 +1036,15 @@ shared: busybox
 
 vsftpd: $(if $(TCONFIG_FTP_SSL),openssl,)
 	@$(SEP)
+	$(call patch_files,vsftpd)
 	$(MAKE) -C vsftpd $(PARALLEL_BUILD)
 
 vsftpd-install:
 	install -D vsftpd/vsftpd $(INSTALLDIR)/vsftpd/usr/sbin/vsftpd
 	$(STRIP) -s $(INSTALLDIR)/vsftpd/usr/sbin/vsftpd
+
+vsftpd-clean:
+	$(call unpatch_files,vsftpd)
 
 ufsd: kernel_header kernel
 	@$(MAKE) -C ufsd all
