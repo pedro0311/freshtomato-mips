@@ -2004,7 +2004,7 @@ nginx/stamp-h1: openssl zlib pcre libatomic_ops
 		--with-libatomic="$(TOP)/libatomic_ops" \
 		--with-cc="$(CC)" \
 		--with-ld-opt="$(LDFLAGS) -L $(TOP)/pcre/.libs -L $(TOP)/zlib -L $(TOP)/openssl -L $(TOP)/libatomic_ops/src" \
-		--with-cc-opt="$(EXTRACFLAGS) $(CPPFLAGS) $(CFLAGS) -I $(TOP)/openssl/include -I $(TOP)/openssl/include/openssl -I $(TOP)/pcre -I $(TOP)/zlib -I $(TOP)/libatomic_ops/src/.libs" \
+		--with-cc-opt="-Os $(EXTRACFLAGS) $(CPPFLAGS) $(CFLAGS) -I $(TOP)/openssl/include -I $(TOP)/openssl/include/openssl -I $(TOP)/pcre -I $(TOP)/zlib -I $(TOP)/libatomic_ops/src/.libs" \
 		$(ADDITIONAL_MODULES)
 
 nginx: nginx/stamp-h1
