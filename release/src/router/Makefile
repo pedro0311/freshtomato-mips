@@ -1770,7 +1770,7 @@ glib-install: glib
 nocat/stamp-h1: glib-install
 	@$(SEP)
 	@cd nocat && \
-	NC_CONF_PATH="/" \
+	NC_CONF_PATH="/" CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
 	$(CONFIGURE) --with-firewall=iptables --with-glib-prefix="$(INSTALLDIR)/glib/usr" --localstatedir=/var --sysconfdir=/etc
 	@$(MAKE) -C nocat
 
