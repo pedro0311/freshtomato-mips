@@ -1268,8 +1268,7 @@ void start_wan_done(char *wan_ifname, char *prefix)
 #ifdef TCONFIG_IPV6
 		start_wan6_done(get_wan6face());
 #endif
-		stop_upnp();
-		start_upnp();
+
 		start_httpd();
 
 		if (wanup) {
@@ -1319,6 +1318,8 @@ void start_wan_done(char *wan_ifname, char *prefix)
 			start_pptp_client();
 #endif
 
+		stop_upnp();
+		start_upnp();
 		new_qoslimit_start();	/* !! RAF */
 	}
 

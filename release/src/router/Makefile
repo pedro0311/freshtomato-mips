@@ -2721,7 +2721,7 @@ uqmi-clean: libjson-c-clean
 	-@$(MAKE) -C uqmi clean
 
 comgt:
-	@$(MAKE) -C comgt CC=$(CC) CFLAGS="$(EXTRACFLAGS)" LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" comgt
+	@$(MAKE) -C comgt CC=$(CC) CFLAGS="-Os $(EXTRACFLAGS)" LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" comgt
 
 comgt-install:
 	install -D comgt/comgt $(INSTALLDIR)/comgt/usr/sbin/comgt
