@@ -2325,6 +2325,7 @@ transmission/stamp-h1: openssl libcurl libevent zlib
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC \
 			-L$(TOP)/zlib -L$(TOP)/openssl -L$(TOP)/libcurl/lib/.libs -L$(TOP)/libevent/.libs" \
 		HAVE_CXX=yes \
+		CXXFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 		$(CONFIGURE) --target=$(HOST) --host=$(HOST) --build=x86_64-linux-gnu --prefix=/usr --disable-nls \
 			--enable-lightweight --enable-largefile --enable-utp --without-gtk --disable-cli --without-systemd-daemon \
 			LIBCURL_CFLAGS="-I$(TOP)/libcurl/include" \
