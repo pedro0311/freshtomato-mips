@@ -3,6 +3,77 @@ FreshTomato-MIPS Changelog
 
 
 
+2018.3.082      2018.07.09
+--------------------------
+
+- kernel RT/RT-N: update netfilter_bridge headers, to fix compilation of ebtables
+- kernel: tweak input class modules, removing mouse/joystick support
+- libcurl: update to 7.60.0
+- sqlite: update to 3.24.0
+- nano: update to 2.9.8
+- ebtables: update to master-head as at May 25, 2018
+- tor: update to 0.3.3.7
+- xl2tpd: update to 1.3.12
+- dnsmasq: update to 2.80test2 (Tue, 12 Jun 2018 17:37:40 +0200)
+- libcurl: updated CA certificate bundle as of 2018-06-20
+- tinc: update to 1.1pre16
+- php: update to 7.2.7
+- Updated adminer from 4.6.2 to 4.6.3 2018-06-28
+- vsftpd: clean 3.0.3 sources, add patch instead; addtionally, change code optimization from -O2 to -Os to save some space
+- samba: enable PARALLEL_BUILD directive for components. Change code optimization to -Os to save some space
+- GUI: do not list HTTPS options on Admin Access page, if build with NO_HTTPS flag
+- GUI: only include curl as a connection checker, if it's built
+- GUI: openvpn: add AES-*-GCM ciphers to the available legacy ciphers
+- nas-ups: fix of annoying error when APCUPSD Deamon is down on router start
+- busybox: enable TEE command
+- dnscrypt-proxy: remove unneeded public-resolvers.md file from build
+- dnscrypt-proxy: define own timeout and number of tries for wget to use local copy of server list much quicker than with defaults
+- openssl: change code optimization from -O3 to -Os to save some space
+- pppd: change code optimization from -O2 to -Os to save some space
+- nvram: change code optimization from -O2 to -Os to save some space
+- et: change code optimization from -O2 to -Os to save some space
+- rp-pppoe: change code optimization from -O2 to -Os to save some space
+- accel-pptp: change code optimization from -O2 to -Os to save some space
+- ipset: change code optimization from -O2 to -Os to save some space
+- nettle: change code optimization from -O2 to -Os to save some space
+- igmproxy: change code optimization from -O2 to -Os to save some space
+- mysql: change code optimization from -O2 to -Os to save some space
+- p910nd: change code optimization from -O2 to -Os to save some space
+- lzo: change code optimization from -O3 to -Os to save some space
+- apcupsd: fix code optimization to -Os to save some space
+- portmap: fix code optimization to -Os to save some space
+- pptpd: fix code optimization to -Os to save some space
+- glib: fix code optimization to -Os to save some space
+- nocat: change code optimization from -O2 to -Os to save some space
+- nginx: change code optimization to -Os to save some space
+- comgt: change code optimization to -Os to save some space
+- transmission: add -Os flag also for g++ compiler to save same space
+- patches: dnsmasq: log packet resize reports at debug level instead of warning since they are too frequent
+- Makefile: Changes for wndr64* and f5d/f7d targets, due to the large image size; wndr64: remove minidlna; wndr64-vpn: remove samba; f5d/f7d: remove minidlna
+- Makefile: kernel: optimize for size (gcc -Os) also for K26 builds
+- Makefile: use kernel size optimization (gcc -Os) also for f5d, f7d and f9k targets, but remove as default behavour (added by one of merges from master branch)
+- Makefile: enable back on minidlna for f5d and f7d targets
+- router: httpd: tomato.c: fix typo
+- router: Makefile: fix the issue causing the huawei_ether.ko module to be added to the image even when building without USB support - saving 60kB
+- router: Makefile: cleanup
+- router: Makefile: add PARALLEL_BUILD directive to dhcpv6
+- router: Makefile: add PARALLEL_BUILD back to e2fsprogs
+- router: Makefile: add size optimization to dnsmasq and compile with NO_DUMPFILE
+- router: Makefile: add LOCKFILE/LOCKDIR to ebtables
+- router: Makefile: change code optimization for openvpn from -O3 to -Os to save some KBs
+- router: Makefile: remove dbclient from dropbear for f, i and j targets (Mini, MiniIPv6, MiniVPN), to save some space
+- router: Makefile: compile dnsmasq with NO_ID, NO_AUTH and NO_GMP directive + some cosmetics
+- router: rc: clean-up
+- router: rc: init.c: fix compiler warnings
+- router: rc: wan.c: start miniupnpd after httpd/later to avoid disabling IPv6 at miniupnpd startup (does happen sometimes with 2018-3) --> solves miniupnpd warning ("no HTTP IPv6 address, disabling IPv6") at reboot / restart
+- router: www: status-overview.asp: fix wireless show/hide state retension
+- router: www: advanced-tor.asp: fix search for specified words in Custom Configuration
+- router: www: advanced-tor.asp: allow to enter "SocksPort" also in Custom Configuration
+- router: www: basic-network.asp: fix a different URL to the VLAN page for MIPSR1 / MIPSR2
+- router: www: clean-up to save some space
+- router: httpd/rc: fix warnings in compiler
+
+
 2018.3.006-beta 2018.06.01
 --------------------------
 
