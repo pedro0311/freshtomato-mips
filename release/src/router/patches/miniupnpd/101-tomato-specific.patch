@@ -44,7 +44,7 @@
  CFLAGS += -Wall
  CFLAGS += -Wextra -Wstrict-prototypes -Wdeclaration-after-statement
  #CFLAGS += -Wno-missing-field-initializers
-@@ -153,7 +154,7 @@ LDLIBS += $(shell $(PKG_CONFIG) --static
+@@ -154,7 +155,7 @@ LDLIBS += $(shell $(PKG_CONFIG) --static
  LDLIBS += $(shell $(PKG_CONFIG) --static --libs-only-l libnetfilter_conntrack)
  endif # ($(TEST),1)
  
