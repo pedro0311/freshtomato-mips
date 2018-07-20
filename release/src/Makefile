@@ -37,13 +37,8 @@ include ./target.mak
 
 V1 ?= "--def"
 VPN ?= "VPN"
-ifeq ($(CONFIG_LINUX26),y)
 ND = "K26"
 RT_SUFFIX="_RT"
-else
-ND = "ND"
-RT_SUFFIX=""
-endif
 
 PPTPD ?= "n"
 
@@ -68,11 +63,7 @@ lowercase_N = $(shell echo $(N) | tr A-Z a-z)
 uppercase_B = $(shell echo $(B) | tr a-z  A-Z)
 lowercase_B = $(shell echo $(B) | tr A-Z a-z)
 
-ifeq ($(CONFIG_LINUX26),y)
 mips_rev = $(if $(filter $(MIPS32),r2),MIPSR2,MIPSR1)
-else
-mips_rev =
-endif
 
 beta = $(if $(filter $(TOMATO_EXPERIMENTAL),1),-beta,)
 
@@ -214,9 +205,6 @@ prepk:
 		ln -s config_base config_current ; \
 		cp -f config_current .config
 	$(MAKE) -C $(LINUXDIR) oldconfig
-ifneq ($(CONFIG_LINUX26),y)
-	$(MAKE) -C $(LINUXDIR) dep
-endif
 
 what:
 	@echo ""
@@ -244,36 +232,26 @@ what:
 
 define RouterOptions
 	@( \
-	if [ "$(CONFIG_LINUX26)" = "y" ] || [ "$(SAMBA3)" = "y" ]; then \
-		sed -i "/TCONFIG_SAMBA3/d" $(1); \
-		echo "TCONFIG_SAMBA3=y" >>$(1); \
-	fi; \
+	sed -i "/TCONFIG_SAMBA3/d" $(1); \
+	echo "TCONFIG_SAMBA3=y" >>$(1); \
 	sed -i "/TCONFIG_EMF/d" $(1); \
-	if [ "$(CONFIG_LINUX26)" = "y" ]; then \
-		if [ "$(SLIM)" = "y" ]; then \
-			echo "# TCONFIG_EMF is not set" >>$(1); \
-		else \
-			echo "TCONFIG_EMF=y" >>$(1); \
-		fi; \
-	else \
+	if [ "$(SLIM)" = "y" ]; then \
 		echo "# TCONFIG_EMF is not set" >>$(1); \
+	else \
+		echo "TCONFIG_EMF=y" >>$(1); \
 	fi; \
 	sed -i "/TCONFIG_JFFSV1/d" $(1); \
-	if [ "$(CONFIG_LINUX26)" = "y" ]; then \
-		if [ "$(JFFSv1)" = "y" ]; then \
-			echo "TCONFIG_JFFSV1=y" >>$(1); \
-		else \
-			echo "# TCONFIG_JFFSV1 is not set" >>$(1); \
-		fi; \
-	else \
+	if [ "$(JFFSv1)" = "y" ]; then \
 		echo "TCONFIG_JFFSV1=y" >>$(1); \
+	else \
+		echo "# TCONFIG_JFFSV1 is not set" >>$(1); \
 	fi; \
-	if [ "$(CONFIG_LINUX26)" = "y" ] && [ "$(IPSEC)" = "y" ]; then \
+	if [ "$(IPSEC)" = "y" ]; then \
 		echo "TCONFIG_IPSEC=y" >>$(1); \
 	else \
 		echo "# TCONFIG_IPSEC is not set" >>$(1); \
 	fi; \
-	if [ "$(CONFIG_LINUX26)" = "y" ] && [ "$(RAID)" = "y" ]; then \
+	if [ "$(RAID)" = "y" ]; then \
 		echo "TCONFIG_RAID=y" >>$(1); \
 	else \
 		echo "# TCONFIG_RAID is not set" >>$(1); \
@@ -365,10 +343,8 @@ define RouterOptions
 		echo "TCONFIG_LZO=y" >>$(1); \
 		sed -i "/TCONFIG_OPENVPN/d" $(1); \
 		echo "TCONFIG_OPENVPN=y" >>$(1); \
-		if [ "$(CONFIG_LINUX26)" = "y" ]; then \
-			sed -i "/TCONFIG_FTP_SSL/d" $(1); \
-			echo "TCONFIG_FTP_SSL=y" >>$(1); \
-		fi; \
+		sed -i "/TCONFIG_FTP_SSL/d" $(1); \
+		echo "TCONFIG_FTP_SSL=y" >>$(1); \
 	fi; \
 	if [ "$(PPTPD)" = "y" ]; then \
 		sed -i "/TCONFIG_PPTPD/d" $(1); \
@@ -441,23 +417,16 @@ endef
 
 define BusyboxOptions
 	@( \
-	if [ "$(CONFIG_LINUX26)" = "y" ]; then \
-		sed -i "/CONFIG_FEATURE_2_4_MODULES/d" $(1); \
-		echo "# CONFIG_FEATURE_2_4_MODULES is not set" >>$(1); \
-		sed -i "/CONFIG_FEATURE_LSMOD_PRETTY_2_6_OUTPUT/d" $(1); \
-		echo "CONFIG_FEATURE_LSMOD_PRETTY_2_6_OUTPUT=y" >>$(1); \
-		sed -i "/CONFIG_FEATURE_DEVFS/d" $(1); \
-		echo "# CONFIG_FEATURE_DEVFS is not set" >>$(1); \
-		sed -i "/CONFIG_MKNOD/d" $(1); \
-		echo "CONFIG_MKNOD=y" >>$(1); \
-		sed -i "/CONFIG_FEATURE_SYSLOGD_READ_BUFFER_SIZE/d" $(1); \
-		echo "CONFIG_FEATURE_SYSLOGD_READ_BUFFER_SIZE=512" >>$(1); \
-	else \
-		sed -i "/CONFIG_UDHCPC=y/d" $(1); \
-		sed -i "/CONFIG_UDHCPC_OLD/d" $(1); \
-		echo "CONFIG_UDHCPC_OLD=y" >>$(1); \
-		echo "# CONFIG_UDHCPC is not set" >>$(1); \
-	fi; \
+	sed -i "/CONFIG_FEATURE_2_4_MODULES/d" $(1); \
+	echo "# CONFIG_FEATURE_2_4_MODULES is not set" >>$(1); \
+	sed -i "/CONFIG_FEATURE_LSMOD_PRETTY_2_6_OUTPUT/d" $(1); \
+	echo "CONFIG_FEATURE_LSMOD_PRETTY_2_6_OUTPUT=y" >>$(1); \
+	sed -i "/CONFIG_FEATURE_DEVFS/d" $(1); \
+	echo "# CONFIG_FEATURE_DEVFS is not set" >>$(1); \
+	sed -i "/CONFIG_MKNOD/d" $(1); \
+	echo "CONFIG_MKNOD=y" >>$(1); \
+	sed -i "/CONFIG_FEATURE_SYSLOGD_READ_BUFFER_SIZE/d" $(1); \
+	echo "CONFIG_FEATURE_SYSLOGD_READ_BUFFER_SIZE=512" >>$(1); \
 	if [ "$(NO_CIFS)" = "y" ]; then \
 		sed -i "/CONFIG_FEATURE_MOUNT_CIFS/d" $(1); \
 		echo "# CONFIG_FEATURE_MOUNT_CIFS is not set" >>$(1); \
@@ -502,14 +471,12 @@ define BusyboxOptions
 			echo "CONFIG_TUNE2FS=y" >>$(1); \
 			sed -i "/CONFIG_E2LABEL/d" $(1); \
 			echo "CONFIG_E2LABEL=y" >>$(1); \
-			if [ "$(CONFIG_LINUX26)" = "y" ]; then \
-				sed -i "/CONFIG_LSUSB/d" $(1); \
-				echo "CONFIG_LSUSB=y" >>$(1); \
-				sed -i "/CONFIG_FEATURE_WGET_STATUSBAR/d" $(1); \
-				echo "CONFIG_FEATURE_WGET_STATUSBAR=y" >>$(1); \
-				sed -i "/CONFIG_FEATURE_VERBOSE_USAGE/d" $(1); \
-				echo "CONFIG_FEATURE_VERBOSE_USAGE=y" >>$(1); \
-			fi; \
+			sed -i "/CONFIG_LSUSB/d" $(1); \
+			echo "CONFIG_LSUSB=y" >>$(1); \
+			sed -i "/CONFIG_FEATURE_WGET_STATUSBAR/d" $(1); \
+			echo "CONFIG_FEATURE_WGET_STATUSBAR=y" >>$(1); \
+			sed -i "/CONFIG_FEATURE_VERBOSE_USAGE/d" $(1); \
+			echo "CONFIG_FEATURE_VERBOSE_USAGE=y" >>$(1); \
 		fi; \
 	else \
 		sed -i "/CONFIG_FEATURE_MOUNT_LOOP/d" $(1); \
@@ -540,10 +507,8 @@ define BusyboxOptions
 		echo "CONFIG_PING6=y" >>$(1); \
 		sed -i "/CONFIG_TRACEROUTE6/d" $(1); \
 		echo "CONFIG_TRACEROUTE6=y" >>$(1); \
-		if [ "$(CONFIG_LINUX26)" = "y" ]; then \
-			sed -i "/CONFIG_FEATURE_UDHCP_RFC5969/d" $(1); \
-			echo "CONFIG_FEATURE_UDHCP_RFC5969=y" >>$(1); \
-		fi; \
+		sed -i "/CONFIG_FEATURE_UDHCP_RFC5969/d" $(1); \
+		echo "CONFIG_FEATURE_UDHCP_RFC5969=y" >>$(1); \
 	fi; \
 	if [ "$(SLIM)" = "y" ]; then \
 		sed -i "/CONFIG_AWK/d" $(1); \
@@ -581,7 +546,7 @@ define KernelConfig
 	else \
 		echo "# CONFIG_CC_OPTIMIZE_FOR_SIZE is not set" >>$(1); \
 	fi; \
-	if [ "$(CONFIG_LINUX26)" = "y" ] && [ "$(MIPS32)" = "r2" ]; then \
+	if [ "$(MIPS32)" = "r2" ]; then \
 		sed -i "/CONFIG_CPU_MIPS32_R1/d" $(1); \
 		echo "# CONFIG_CPU_MIPS32_R1 is not set" >>$(1); \
 		sed -i "/CONFIG_CPU_MIPS32_R2/d" $(1); \
@@ -622,69 +587,40 @@ define KernelConfig
 		echo "CONFIG_IP6_NF_TARGET_REJECT=m" >>$(1); \
 		sed -i "/CONFIG_IP6_NF_MANGLE/d" $(1); \
 		echo "CONFIG_IP6_NF_MANGLE=m" >>$(1); \
-		if [ "$(CONFIG_LINUX26)" = "y" ]; then \
-			sed -i "/CONFIG_NF_CONNTRACK_IPV6/d" $(1); \
-			echo "CONFIG_NF_CONNTRACK_IPV6=m" >>$(1); \
-			sed -i "/CONFIG_NETFILTER_XT_MATCH_HL/d" $(1); \
-			echo "CONFIG_NETFILTER_XT_MATCH_HL=m" >>$(1); \
-			sed -i "/CONFIG_IPV6_ROUTER_PREF/d" $(1); \
-			echo "CONFIG_IPV6_ROUTER_PREF=y" >>$(1); \
-			sed -i "/CONFIG_IPV6_SIT/d" $(1); \
-			echo "CONFIG_IPV6_SIT=m" >>$(1); \
-			sed -i "/CONFIG_IPV6_SIT_6RD/d" $(1); \
-			echo "CONFIG_IPV6_SIT_6RD=y" >>$(1); \
-			sed -i "/CONFIG_IPV6_MULTIPLE_TABLES/d" $(1); \
-			echo "CONFIG_IPV6_MULTIPLE_TABLES=y" >>$(1); \
-			sed -i "/CONFIG_IP6_NF_RAW/d" $(1); \
-			echo "CONFIG_IP6_NF_RAW=m" >>$(1); \
-			sed -i "/CONFIG_IPV6_OPTIMISTIC_DAD/d" $(1); \
-			echo "CONFIG_IPV6_OPTIMISTIC_DAD=y" >>$(1); \
-			sed -i "/CONFIG_IPV6_MROUTE/d" $(1); \
-			echo "CONFIG_IPV6_MROUTE=y" >>$(1); \
-			sed -i "/CONFIG_IP6_NF_TARGET_ROUTE/d" $(1); \
-			echo "CONFIG_IP6_NF_TARGET_ROUTE=m" >>$(1); \
-			sed -i "/CONFIG_INET6_XFRM_TUNNEL/d" $(1); \
-			echo "CONFIG_INET6_XFRM_TUNNEL=m" >>$(1); \
-			sed -i "/CONFIG_INET6_AH/d" $(1); \
-			echo "CONFIG_INET6_AH=m" >>$(1); \
-			sed -i "/CONFIG_INET6_ESP/d" $(1); \
-			echo "CONFIG_INET6_ESP=m" >>$(1); \
-			sed -i "/CONFIG_INET6_IPCOMP/d" $(1); \
-			echo "CONFIG_INET6_IPCOMP=m" >>$(1); \
-			sed -i "/CONFIG_INET6_XFRM_MODE_TRANSPORT/d" $(1); \
-			echo "CONFIG_INET6_XFRM_MODE_TRANSPORT=m" >>$(1); \
-			sed -i "/CONFIG_INET6_XFRM_MODE_TUNNEL/d" $(1); \
-			echo "CONFIG_INET6_XFRM_MODE_TUNNEL=m" >>$(1); \
-			sed -i "/CONFIG_INET6_XFRM_MODE_BEET/d" $(1); \
-			echo "CONFIG_INET6_XFRM_MODE_BEET=m" >>$(1); \
-		else \
-			sed -i "/CONFIG_IP6_NF_CONNTRACK/d" $(1); \
-			echo "CONFIG_IP6_NF_CONNTRACK=m" >>$(1); \
-			sed -i "/CONFIG_IP6_NF_MATCH_HL/d" $(1); \
-			echo "CONFIG_IP6_NF_MATCH_HL=m" >>$(1); \
-			sed -i "/CONFIG_IP6_NF_FTP/d" $(1); \
-			echo "CONFIG_IP6_NF_FTP=m" >>$(1); \
-			sed -i "/CONFIG_IP6_NF_MATCH_LIMIT/d" $(1); \
-			echo "CONFIG_IP6_NF_MATCH_LIMIT=m" >>$(1); \
-			sed -i "/CONFIG_IP6_NF_MATCH_CONDITION/d" $(1); \
-			echo "CONFIG_IP6_NF_MATCH_CONDITION=m" >>$(1); \
-			sed -i "/CONFIG_IP6_NF_MATCH_MAC/d" $(1); \
-			echo "CONFIG_IP6_NF_MATCH_MAC=m" >>$(1); \
-			sed -i "/CONFIG_IP6_NF_MATCH_MULTIPORT/d" $(1); \
-			echo "CONFIG_IP6_NF_MATCH_MULTIPORT=m" >>$(1); \
-			sed -i "/CONFIG_IP6_NF_MATCH_MARK/d" $(1); \
-			echo "CONFIG_IP6_NF_MATCH_MARK=m" >>$(1); \
-			sed -i "/CONFIG_IP6_NF_MATCH_LENGTH/d" $(1); \
-			echo "CONFIG_IP6_NF_MATCH_LENGTH=m" >>$(1); \
-			sed -i "/CONFIG_IP6_NF_MATCH_STATE/d" $(1); \
-			echo "CONFIG_IP6_NF_MATCH_STATE=m" >>$(1); \
-			sed -i "/CONFIG_IP6_NF_TARGET_MARK/d" $(1); \
-			echo "CONFIG_IP6_NF_TARGET_MARK=m" >>$(1); \
-			sed -i "/CONFIG_IP6_NF_TARGET_TCPMSS/d" $(1); \
-			echo "CONFIG_IP6_NF_TARGET_TCPMSS=m" >>$(1); \
-			sed -i "/CONFIG_IP6_NF_TARGET_ROUTE/d" $(1); \
-			echo "CONFIG_IP6_NF_TARGET_ROUTE=m" >>$(1); \
-		fi; \
+		sed -i "/CONFIG_NF_CONNTRACK_IPV6/d" $(1); \
+		echo "CONFIG_NF_CONNTRACK_IPV6=m" >>$(1); \
+		sed -i "/CONFIG_NETFILTER_XT_MATCH_HL/d" $(1); \
+		echo "CONFIG_NETFILTER_XT_MATCH_HL=m" >>$(1); \
+		sed -i "/CONFIG_IPV6_ROUTER_PREF/d" $(1); \
+		echo "CONFIG_IPV6_ROUTER_PREF=y" >>$(1); \
+		sed -i "/CONFIG_IPV6_SIT/d" $(1); \
+		echo "CONFIG_IPV6_SIT=m" >>$(1); \
+		sed -i "/CONFIG_IPV6_SIT_6RD/d" $(1); \
+		echo "CONFIG_IPV6_SIT_6RD=y" >>$(1); \
+		sed -i "/CONFIG_IPV6_MULTIPLE_TABLES/d" $(1); \
+		echo "CONFIG_IPV6_MULTIPLE_TABLES=y" >>$(1); \
+		sed -i "/CONFIG_IP6_NF_RAW/d" $(1); \
+		echo "CONFIG_IP6_NF_RAW=m" >>$(1); \
+		sed -i "/CONFIG_IPV6_OPTIMISTIC_DAD/d" $(1); \
+		echo "CONFIG_IPV6_OPTIMISTIC_DAD=y" >>$(1); \
+		sed -i "/CONFIG_IPV6_MROUTE/d" $(1); \
+		echo "CONFIG_IPV6_MROUTE=y" >>$(1); \
+		sed -i "/CONFIG_IP6_NF_TARGET_ROUTE/d" $(1); \
+		echo "CONFIG_IP6_NF_TARGET_ROUTE=m" >>$(1); \
+		sed -i "/CONFIG_INET6_XFRM_TUNNEL/d" $(1); \
+		echo "CONFIG_INET6_XFRM_TUNNEL=m" >>$(1); \
+		sed -i "/CONFIG_INET6_AH/d" $(1); \
+		echo "CONFIG_INET6_AH=m" >>$(1); \
+		sed -i "/CONFIG_INET6_ESP/d" $(1); \
+		echo "CONFIG_INET6_ESP=m" >>$(1); \
+		sed -i "/CONFIG_INET6_IPCOMP/d" $(1); \
+		echo "CONFIG_INET6_IPCOMP=m" >>$(1); \
+		sed -i "/CONFIG_INET6_XFRM_MODE_TRANSPORT/d" $(1); \
+		echo "CONFIG_INET6_XFRM_MODE_TRANSPORT=m" >>$(1); \
+		sed -i "/CONFIG_INET6_XFRM_MODE_TUNNEL/d" $(1); \
+		echo "CONFIG_INET6_XFRM_MODE_TUNNEL=m" >>$(1); \
+		sed -i "/CONFIG_INET6_XFRM_MODE_BEET/d" $(1); \
+		echo "CONFIG_INET6_XFRM_MODE_BEET=m" >>$(1); \
 	fi; \
 	sed -i "/CONFIG_BCM57XX/d" $(1); \
 	if [ "$(BCM57)" = "y" ]; then \
@@ -692,7 +628,7 @@ define KernelConfig
 	else \
 		echo "# CONFIG_BCM57XX is not set" >>$(1); \
 	fi; \
-	if [ "$(CONFIG_LINUX26)" = "y" ] && [ "$(EBTABLES)" = "y" ]; then \
+	if [ "$(EBTABLES)" = "y" ]; then \
 		sed -i "/CONFIG_BRIDGE_NF_EBTABLES/d" $(1); \
 		echo "CONFIG_BRIDGE_NF_EBTABLES=m" >>$(1); \
 		if [ "$(IPV6SUPP)" = "y" ]; then \
@@ -722,86 +658,52 @@ endif
 
 
 
+#################################
 
-## mini-USB - K24 only
-ifneq ($(CONFIG_LINUX26),y)
-n:
-	@$(MAKE) bin BBEXTRAS=y USBEXTRAS=y B=E BUILD_DESC="mini-USB" USB="USB"
-endif
 
+## targets with USB support
 
 ## VPN
 e:
-ifeq ($(CONFIG_LINUX26),y)
 	@$(MAKE) bin OPENVPN=y NTFS=y BBEXTRAS=y USBEXTRAS=y MULTIWAN=y EBTABLES=y MEDIASRV=y IPV6SUPP=y B=E BUILD_DESC="$(VPN)" USB="USB" DNSCRYPT=y PPTPD=y
-else
-	@$(MAKE) bin OPENVPN=y NTFS=y BBEXTRAS=y USBEXTRAS=y B=E BUILD_DESC="$(VPN)" USB="USB" DNSCRYPT=y PPTPD=y
-endif
 
 
 ## BTgui-VPN
 c:
-ifeq ($(CONFIG_LINUX26),y)
 	@$(MAKE) bin NTFS=y OPENVPN=y BBEXTRAS=y USBEXTRAS=y MULTIWAN=y EBTABLES=y MEDIASRV=y IPV6SUPP=y B=M BUILD_DESC="BTgui-VPN" USB="USB" BTGUI=y DNSCRYPT=y PPTPD=y
-else
-	@$(MAKE) bin NTFS=y BBEXTRAS=y USBEXTRAS=y B=M BUILD_DESC="BTgui" USB="USB" BTGUI=y DNSCRYPT=y PPTPD=y
-endif
 
 
 ## miniVPN (small BTgui-VPN) for routers with 8MB flash like Netgear 3500L, RT-N10u or RT-N15U
-ifeq ($(CONFIG_LINUX26),y)
 a:
 	@$(MAKE) bin NTFS=y OPENVPN=y BBEXTRAS=y USBEXTRAS=y MULTIWAN=y EBTABLES=y MEDIASRV=y IPV6SUPP=y B=M BUILD_DESC="miniVPN" USB="USB" BTGUI=y PPTPD=y NO_JFFS=y
-endif
 
 
 ## Nocat-VPN
 d:
-ifeq ($(CONFIG_LINUX26),y)
 	@$(MAKE) bin NTFS=y BBEXTRAS=y USBEXTRAS=y EBTABLES=y MULTIWAN=y MEDIASRV=y IPV6SUPP=y B=M BUILD_DESC="Nocat-VPN" USB="USB" BTGUI=y NOCAT=y OPENVPN=y DNSCRYPT=y PPTPD=y
-else
-	@$(MAKE) bin NTFS=y BBEXTRAS=y USBEXTRAS=y B=M BUILD_DESC="Nocat-VPN" USB="USB" BTGUI=y NOCAT=y OPENVPN=y DNSCRYPT=y PPTPD=y
-endif
 
 
 ## TOR-VPN
 g:
-ifeq ($(CONFIG_LINUX26),y)
 	@$(MAKE) bin NTFS=y BBEXTRAS=y USBEXTRAS=y EBTABLES=y MULTIWAN=y MEDIASRV=y IPV6SUPP=y B=M BUILD_DESC="Tor-VPN" USB="USB" BTGUI=y TOR=y OPENVPN=y PPTPD=y NO_CIFS=y NO_JFFS=y
-else
-	@$(MAKE) bin NTFS=y BBEXTRAS=y USBEXTRAS=y B=M BUILD_DESC="Tor-VPN" USB="USB" BTGUI=y TOR=y OPENVPN=y PPTPD=y NO_CIFS=y NO_JFFS=y
-endif
 
 
 ## BT
 u:
-ifeq ($(CONFIG_LINUX26),y)
 	@$(MAKE) bin NTFS=y USBEXTRAS=y EBTABLES=y MEDIASRV=y MULTIWAN=y IPV6SUPP=y B=M BUILD_DESC="BT" USB="USB" BTCLIENT=y
-else
-	@$(MAKE) bin NTFS=y USBEXTRAS=y B=M BUILD_DESC="BT" USB="USB" BTCLIENT=y
-endif
 
 
 ## BT-VPN
 t:
-ifeq ($(CONFIG_LINUX26),y)
 	@$(MAKE) bin OPENVPN=y NTFS=y USBEXTRAS=y EBTABLES=y MULTIWAN=y MEDIASRV=y IPV6SUPP=y B=M BUILD_DESC="BT-VPN" USB="USB" BTCLIENT=y NO_JFFS=y PPTPD=y
-else
-	@$(MAKE) bin OPENVPN=y NTFS=y USBEXTRAS=y B=M BUILD_DESC="BT-VPN" USB="USB" BTCLIENT=y NO_JFFS=y PPTPD=y
-endif
 
 
 ## Big-VPN
 b:
-ifeq ($(CONFIG_LINUX26),y)
 	@$(MAKE) bin NTFS=y BBEXTRAS=y USBEXTRAS=y EBTABLES=y MULTIWAN=y MEDIASRV=y IPV6SUPP=y B=M BUILD_DESC="Big-VPN" USB="USB" BTGUI=y NFS=y NOCAT=y OPENVPN=y DNSCRYPT=y PPTPD=y NO_JFFS=y NO_CIFS=y
-else
-	@$(MAKE) bin NTFS=y BBEXTRAS=y USBEXTRAS=y B=M BUILD_DESC="Big-VPN" USB="USB" BTGUI=y NOCAT=y NFS=y OPENVPN=y DNSCRYPT=y PPTPD=y NO_JJFS=y NO_CIFS=y
-endif
 
 
 ## Mega-VPN
-ifeq ($(CONFIG_LINUX26),y)
 o:
 	@$(MAKE) bin OPENVPN=y NTFS=y BBEXTRAS=y USBEXTRAS=y MULTIWAN=y EBTABLES=y MEDIASRV=y IPV6SUPP=y B=E BUILD_DESC="Mega-VPN" USB="USB" NOCAT=y BTCLIENT=y DNSCRYPT=y SNMP=y UPS=y PPTPD=y TR_EXTRAS=y TOR=y IPSEC=y DNSSEC=y TINC=y NANO=y
 
@@ -809,14 +711,14 @@ o:
 ## All-In-One (AIO) MIPS1 - only for router with more than 8MB flash!! ZTE H618B
 z:
 	@$(MAKE) bin OPENVPN=y NTFS=y BBEXTRAS=y USBEXTRAS=y MULTIWAN=y EBTABLES=y MEDIASRV=y IPV6SUPP=y B=E BUILD_DESC="AIO" USB="USB" NOCAT=y BTCLIENT=y TR_EXTRAS=y NFS=y SNMP=y HFS=y DNSCRYPT=y UPS=y PPTPD=y TOR=y IPSEC=y NGINX=y DNSSEC=y TINC=y NANO=y
-endif
 
 
 #################################
 
 
+## targets with NO USB support
+
 ## Mini - targeted for Netgear routers
-ifeq ($(CONFIG_LINUX26),y)
 f:
 	@$(MAKE) bin JFFSv1=y NO_CIFS=y NO_ZEBRA=y B=F BUILD_DESC="Mini" USB="" MULTIWAN=y
 
@@ -829,31 +731,16 @@ i:
 ## MiniVPN - for 4MB routers
 j:
 	@$(MAKE) bin NO_JFFS=y NO_CIFS=y NO_ZEBRA=y B=V BUILD_DESC="MiniVPN" USB="" PPTPD=y OPENVPN=y MULTIWAN=y
-endif
 
 
-## VPN with no USB support (IPv6 in K26 build)
+## IPv6-VPN with no USB support
 v:
-ifeq ($(CONFIG_LINUX26),y)
 	@$(MAKE) bin OPENVPN=y NO_JFFS=y B=V BUILD_DESC="IPv6-$(VPN)" USB="" PPTPD=y IPV6SUPP=y MULTIWAN=y
-else
-	@$(MAKE) bin OPENVPN=y BBEXTRAS=y BCM57=y B=V BUILD_DESC="$(VPN)" USB="" PPTPD=y
-endif
 
 
 ## Max build for router with 8MB flash without USB Support (like WRT54GS v1)
 m:
-ifeq ($(CONFIG_LINUX26),y)
 	@$(MAKE) bin OPENVPN=y BBEXTRAS=y EBTABLES=y IPV6SUPP=y B=E BUILD_DESC="Max" USB="" NOCAT=y NFS=y SNMP=y DNSCRYPT=y PPTPD=y TOR=y IPSEC=y  MULTIWAN=y
-else
-	@$(MAKE) bin OPENVPN=y BBEXTRAS=y B=E BUILD_DESC="Max" USB="" NOCAT=y NFS=y SNMP=y DNSCRYPT=y PPTPD=y TOR=y
-endif
-
-## SD-VPN - K24 only
-ifneq ($(CONFIG_LINUX26),y)
-w:
-	@$(MAKE) bin OPENVPN=y BBEXTRAS=y BCM57=y B=V BUILD_DESC="SD-VPN" USB="" SDHC=y DNSCRYPT=y PPTPD=y
-endif
 
 
 
@@ -861,7 +748,6 @@ endif
 
 
 ## AIO MIPS2 for RT-N16 and E4200
-ifeq ($(CONFIG_LINUX26),y)
 r2z:
 	@$(MAKE) z MIPS32=r2
 
@@ -940,7 +826,6 @@ n60v:
 
 n60m:
 	@$(MAKE) r2m NVRAM_SIZE=60 LINKSYS_E=1
-endif
 
 setprofile:
 	echo '#ifndef TOMATO_PROFILE' > router/shared/tomato_profile.h
@@ -994,9 +879,6 @@ setprofile:
 	@$(MAKE) -C router oldconfig
 
 help:
-ifneq ($(CONFIG_LINUX26),y)
-	@echo "n            Mini-USB - for router with 4MB flash and USB port - K24 only"
-endif
 	@echo "e            VPN - (standard plus VPN, extra utilities and NTFS support)"
 	@echo "c            BTgui-VPN - (Ext plus BT gui)"
 	@echo "d            Nocat-VPN - (BTgui plus VPN plus Nocat)"
@@ -1004,22 +886,14 @@ endif
 	@echo "u            BT"
 	@echo "t            BT-VPN - (BT plus VPN)"
 	@echo "b            Big-VPN - (Big plus VPN)"
-ifeq ($(CONFIG_LINUX26),y)
 	@echo "o            Mega-VPN - (Mega plus VPN plus NOCAT minus NFS)"
 	@echo "z            MIPS Release 15F AIO (for routers +8MB flash)"
 	@echo "i            MiniIPv6 - (IPv6 with no USB support minus CIFS and RIPv1/2)"
 	@echo "j            MiniVPN - (VPN with no USB support minus CIFS and RIPv1/2)"
 	@echo "a            MiniVPN - (with USB support)"
 	@echo "f            Mini - (no USB support minus CIFS and RIPv1/2)"
-endif
-	@echo "v            VPN (no usb) - (VPN with no USB support) / in K26 with IPv6 support"
-ifeq ($(CONFIG_LINUX26),y)
+	@echo "v            IPv6-VPN (no usb) - (VPN with no USB support)"
 	@echo "m            Max (no usb) - (Max with IPv6 support and no USB)"
-endif
-ifneq ($(CONFIG_LINUX26),y)
-	@echo "w            SD-VPN (no usb) - (VPN with SD-MOD and no USB support) - K24 only"
-endif
-ifeq ($(CONFIG_LINUX26),y)
 	@echo ""
 	@echo "r2e          MIPS Release 2 VPN"
 	@echo "r2c          MIPS Release 2 BTgui-VPN"
@@ -1031,7 +905,7 @@ ifeq ($(CONFIG_LINUX26),y)
 	@echo "r2o          MIPS Release 2 Mega-VPN (for routers +8MB flash)"
 	@echo "r2z          MIPS Release 2 AIO (for routers +8MB flash)"
 	@echo "r2a          MIPS Release 2 MiniVPN (USB support)"
-	@echo "r2v          MIPS Release 2 VPN (no usb)"
+	@echo "r2v          MIPS Release 2 IPv6-VPN (no usb)"
 	@echo "r2m          MIPS Release 2 Max (no usb)"
 	@echo "r2i          MIPS Release 2 MiniIPv6 (for 4MB flash)"
 	@echo "r2j          MIPS Release 2 MiniVPN (for 4MB flash)"
@@ -1047,7 +921,6 @@ ifeq ($(CONFIG_LINUX26),y)
 	@echo "n60z         Linksys E-series build AIO"
 	@echo "n60v         Linksys E-series build IPv6-VPN for E2000"
 	@echo "n60m         Linksys E-series build Max for E2000"
-endif
 	@echo ""
 	@echo "..etc..      other build configs"
 	@echo "clean        -C router clean"
