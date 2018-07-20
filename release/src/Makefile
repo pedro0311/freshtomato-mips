@@ -984,7 +984,7 @@ c:
 
 ## miniVPN (small BTgui-VPN) for routers with 8MB flash like Netgear 3500L, RT-N10u or RT-N15U
 a:
-	@$(MAKE) bin NTFS=y OPENVPN=y BBEXTRAS=y USBEXTRAS=y MULTIWAN=y EBTABLES=y MEDIASRV=y IPV6SUPP=y B=M BUILD_DESC="miniVPN" USB="USB" BTGUI=y PPTPD=y NO_JFFS=y
+	@$(MAKE) bin NTFS=y OPENVPN=y BBEXTRAS=y USBEXTRAS=y MULTIWAN=y EBTABLES=y IPV6SUPP=y B=M BUILD_DESC="MiniVPN" USB="USB" BTGUI=y DNSCRYPT=y PPTPD=y
 
 
 ## Nocat-VPN
@@ -1384,7 +1384,7 @@ help:
 	@echo "r2b          MIPS Release 2 Big-VPN"
 	@echo "r2o          MIPS Release 2 Mega-VPN (for routers +8MB flash)"
 	@echo "r2z          MIPS Release 2 AIO (for routers +8MB flash)"
-	@echo "r2a          MIPS Release 2 MiniVPN (USB support)"
+	@echo "r2a          MIPS Release 2 MiniVPN (USB support) w/o minidlna"
 	@echo "r2v          MIPS Release 2 IPv6-VPN (no usb)"
 	@echo "r2m          MIPS Release 2 Max (no usb)"
 	@echo "r2i          MIPS Release 2 MiniIPv6 (for 4MB flash)"
