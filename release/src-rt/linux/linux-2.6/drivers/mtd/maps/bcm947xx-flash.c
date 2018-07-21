@@ -42,8 +42,6 @@ extern spinlock_t bcm947xx_sih_lock;
 extern struct mtd_partition * init_mtd_partitions(struct mtd_info *mtd, size_t size);
 #endif
 
-extern struct mutex *partitions_mutex_init(void);
-
 #define WINDOW_ADDR 0x1fc00000
 #define WINDOW_SIZE 0x400000
 #define BUSWIDTH 2
@@ -131,7 +129,6 @@ init_bcm947xx_map(void)
 	}
 
 	bcm947xx_mtd->owner = THIS_MODULE;
-	bcm947xx_mtd->mutex = partitions_mutex_init();
 
 	/* Allow size override for testing */
 	size = flash ? : bcm947xx_mtd->size;

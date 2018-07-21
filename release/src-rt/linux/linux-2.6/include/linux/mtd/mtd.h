@@ -128,10 +128,6 @@ struct mtd_info {
 	char *name;
 	int index;
 
-#ifdef CONFIG_BCM47XX
-	struct mutex *mutex;
-#endif
-
 	/* ecc layout structure pointer - read only ! */
 	struct nand_ecclayout *ecclayout;
 
