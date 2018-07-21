@@ -3,7 +3,26 @@ FreshTomato-MIPS Changelog
 
 
 
-2018.3.082      2018.07.09
+2018.3.106-beta 2018.07.22
+--------------------------
+
+- miniupnpd: update to 2.1.20180706
+- dnsmasq: update to 2.80test2 (Fri, 29 Jun 2018 15:39:41 +0200)
+- tor: update to 0.3.3.8
+- libjson-c: update to 0.13.1
+- dnscrypt-proxy: update resolvers csv to 20180709
+- WNR3500Lv2: add JFFS support
+- Fix JFFS2 formatting for non RT-AC
+- Increase the maximum size that is used when reading the ssh-host-key (to 4096 bits)
+- Makefile: clean-up; remove variable CONFIG_LINUX26, which is no longer used since 4 years
+- Makefile RT-AC: fix c (r2c) target; for unknown reasons, target c (r2c) was the same as a (r2a)
+- Makefile RT-AC: changes for a (r2a) target: remove minidlna because of the large image size, add dnscrypt-proxy and JFFS instead
+- Makefile RT-AC: add KERN_SIZE_OPT to f (r2f), i (r2i) and j (r2j) targets to save some space
+- Revert "WNR3500Lv2: add JFFS support"; causing issues
+- Revert "Fix JFFS2 formatting for non RT-AC"; causing issues
+
+
+2018.3.082-beta 2018.07.09
 --------------------------
 
 - kernel RT/RT-N: update netfilter_bridge headers, to fix compilation of ebtables
