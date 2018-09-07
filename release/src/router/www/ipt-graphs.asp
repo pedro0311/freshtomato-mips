@@ -84,6 +84,7 @@ var thistimestamp;
 var difftimestamp;
 var avgiptraffic = [];
 var lastiptraffic = iptraffic;
+var cstats_busy = 0;
 
 /* REMOVE-BEGIN */
 //hostnamecache = [];
