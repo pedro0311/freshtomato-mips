@@ -2260,7 +2260,9 @@ CACERT:=
 endif
 
 libcurl/stamp-h1: zlib openssl
+	$(call patch_files,libcurl)
 	cd libcurl && CC=$(CC) STRIP=$(CROSS_COMPILE)strip \
+		./buildconf && \
 		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -I$(TOP)/zlib" \
 		LDFLAGS="-L$(TOP)/zlib -ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
 		$(CONFIGURE) --prefix=$(TOP)/libcurl/staged --disable-thread --enable-shared --enable-static \
@@ -2283,6 +2285,7 @@ libcurl-clean:
 	-@$(MAKE) -C libcurl clean
 	@rm -f libcurl/stamp-h1 libcurl/Makefile
 	@rm -rf libcurl/staged
+	$(call unpatch_files,libcurl)
 
 libcurl-install:
 	install -d $(INSTALLDIR)/libcurl/usr/sbin

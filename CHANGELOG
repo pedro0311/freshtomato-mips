@@ -3,6 +3,32 @@ FreshTomato-MIPS Changelog
 
 
 
+2018.4          2018.09.10
+--------------------------
+
+- kernel: cifs: fix possible memory corruption in CIFSFindNext
+- kernel: netfilter: nf_conntrack: fix early_drop with reliable event delivery
+- kernel: netfilter: ebtables: fix wrong name length while copying to user-space
+- tor: update to 0.3.3.9
+- openssl: update to 1.0.2p
+- php: update to 7.2.9
+- e2fsprogs: update to 1.44.4
+- dnsmasq: update to 2.80test5
+- libcurl: update to 7.61.1
+- Makefile: changes for a (r2a) target: remove minidlna because of the large image size, add dnscrypt-proxy and JFFS instead
+- GUI: add a needed include file for code utilizing bwm-common.js
+- GUI: display quality as percentage in device list
+- GUI: ipt-graphs.asp: do not display graphs if monitoring has been disabled
+- Fixing the `uname -r` issue in readme
+- router: rc: transmission.c: sysctl binary is not included in TomatoUSB, write values directly instead
+- router: rc: firewall.c and rc.h: add function "enable_ndp_proxy()" - Enable NDP Proxy for IPv6 builds - add missing conditional compilation
+- radvd: remove leftovers at file router/rc/rc.h (Tomato uses dnsmasq)
+- OpenVPN: make IPv6 connection possible if IPv6 is enabled
+- OpenVPN: extend Server GUI functionality - add option to push LAN(br0)...LAN4(br3) (only if available) - push the suitable DNS Server LAN IP
+- Fix curl build failures
+- stealthmode: update to 0.11 (also resolves conflict caused by commit # 6857a6d)
+
+
 2018.3.106-beta 2018.07.22
 --------------------------
 
