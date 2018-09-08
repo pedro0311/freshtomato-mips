@@ -143,10 +143,6 @@ function earlyInit()
 function init()
 {
 	smg.recolor();
-
-	var elements = document.getElementsByClassName("new_window");
-	for (var i = 0; i < elements.length; i++) if (elements[i].nodeName.toLowerCase()==="a")
-		addEvent(elements[i], "click", function(e) { cancelDefaultAction(e); window.open(this,"_blank"); } );
 }
 </script>
 </head>
@@ -189,7 +185,7 @@ for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 <div class='section-title'>Notes</div>
 <div class='section'>
 	<ul>
-	<li>To specify how and on which interface this list should work, use the <a href="advanced-wlanvifs.asp" class="new_window">Virtual Wireless Interfaces</a> page.</li>
+	<li>To specify how and on which interface this list should work, use the <a href="advanced-wlanvifs.asp" target="_blank">Virtual Wireless Interfaces</a> page.</li>
 	</ul>
 </div>
 

@@ -533,10 +533,6 @@ function init() {
 	}
 
 	wlg.setup();
-
-	var elements = document.getElementsByClassName("new_window");
-	for (var i = 0; i < elements.length; i++) if (elements[i].nodeName.toLowerCase()==="a")
-		addEvent(elements[i], "click", function(e) { cancelDefaultAction(e); window.open(this,"_blank"); } );
 }
 
 function toggleVisibility(whichone) {
@@ -1434,11 +1430,11 @@ for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 <li><b>SSID</b> - Wireless Service Set Identifier.</li>
 <li><b>Mode</b> - Interface mode: Access Point, WDS, Wireless Client, etc...</li>
 <li><b>Bridge</b> - Which LAN bridge this VIF should be assigned.</li>
-	<li><b>WFilter</b> - <a href="basic-wfilter.asp" class="new_window">Wireless Filter</a>:
+	<li><b>WFilter</b> - <a href="basic-wfilter.asp" target="_blank">Wireless Filter</a>:
 		<ul>
 			<li><i>Disabled</i> - Disable filter on that interface.</li>
-			<li><i>Block</i> - Block clients from the <a href="basic-wfilter.asp" class="new_window">list</a> on that interface.</li>
-			<li><i>Permit</i> - Permit only clients from the <a href="basic-wfilter.asp" class="new_window">list</a> on that interface.</li>
+			<li><i>Block</i> - Block clients from the <a href="basic-wfilter.asp" target="_blank">list</a> on that interface.</li>
+			<li><i>Permit</i> - Permit only clients from the <a href="basic-wfilter.asp" target="_blank">list</a> on that interface.</li>
 		</ul>
 	</li>
 </ul>
@@ -1558,7 +1554,7 @@ for (var i = 1; i < tabs.length; ++i) {
 
 	f.push (
 		null,
-		{ title: '<a href="basic-wfilter.asp" class="new_window">Wireless Filter<\/a>', name: 'f_wl'+u+'_macmode', type: 'select',
+		{ title: '<a href="basic-wfilter.asp" target="_blank">Wireless Filter<\/a>', name: 'f_wl'+u+'_macmode', type: 'select',
 			options: [['disabled','Disable filter on that interface'],['deny','Block clients from the list on that interface'],['allow','Permit only clients from the list on that interface']],
 			value: nvram['wl'+u+'_macmode'] },
 		null,
