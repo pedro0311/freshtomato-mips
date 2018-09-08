@@ -17,7 +17,7 @@
 <meta name='robots' content='noindex,nofollow'>
 <title>[<% ident(); %>] IP/Range BW Limiter</title>
 <link rel='stylesheet' type='text/css' href='tomato.css'>
-<link rel='stylesheet' type='text/css' href='color.css'>
+<% css(); %>
 <script type='text/javascript' src='tomato.js'></script>
 
 <!-- / / / -->
@@ -166,7 +166,7 @@ qosg.verifyFields = function(row, quiet)
 	}
 
 	if (this.checkRate(f[1].value)) {
-	        ferror.set(f[1], 'DLRate must be between 1 and 99999999', quiet);
+		ferror.set(f[1], 'DLRate must be between 1 and 99999999', quiet);
 		ok = 0;
 	}
 
@@ -176,23 +176,23 @@ qosg.verifyFields = function(row, quiet)
 	}
 
 	if (this.checkRateCeil(f[1].value, f[2].value)) {
-               ferror.set(f[2], 'DLCeil must be greater than DLRate', quiet);
+		ferror.set(f[2], 'DLCeil must be greater than DLRate', quiet);
 		ok = 0;
 	}
 
 	if (this.checkRate(f[3].value)) {
-                ferror.set(f[3], 'ULRate must be between 1 and 99999999', quiet);
+		ferror.set(f[3], 'ULRate must be between 1 and 99999999', quiet);
 		ok = 0;
 	}
 
 	if (this.checkRate(f[4].value)) {
-                ferror.set(f[4], 'ULCeil must be between 1 and 99999999', quiet);
+		ferror.set(f[4], 'ULCeil must be between 1 and 99999999', quiet);
 		ok = 0;
 	}
 
 	if (this.checkRateCeil(f[3].value, f[4].value)) {
-                    ferror.set(f[4], 'ULCeil must be greater than ULRate', quiet);
-			ok = 0;
+		ferror.set(f[4], 'ULCeil must be greater than ULRate', quiet);
+		ok = 0;
 	}
 
 	return ok;
@@ -309,11 +309,11 @@ function init()
 		<script type='text/javascript'>
 			createFieldTable('', [
 			{ title: 'Enable Limiter', name: 'f_new_qoslimit_enable', type: 'checkbox', value: nvram.new_qoslimit_enable != '0' },
-			{ title: 'Max Available Download <br><small>(same as used in QoS)<\/small>', indent: 2, name: 'wan_qos_ibw', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.wan_qos_ibw },
-			{ title: 'Max Available Upload <br><small>(same as used in QoS)<\/small>', indent: 2, name: 'wan_qos_obw', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.wan_qos_obw }
+			{ title: 'Max Available Download <br /><small>(same as used in QoS)<\/small>', indent: 2, name: 'wan_qos_ibw', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.wan_qos_ibw },
+			{ title: 'Max Available Upload <br /><small>(same as used in QoS)<\/small>', indent: 2, name: 'wan_qos_obw', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s<\/small>', value: nvram.wan_qos_obw }
 			]);
 		</script>
-		<br>
+		<br />
 		<table class='tomato-grid' id='qosg-grid'></table>
 		<div>
 			<ul>
@@ -327,7 +327,7 @@ function init()
 		</div>
 	</div>
 
-	<br>
+	<br />
 
 	<div class='section-title'>Default Class for unlisted MAC / IP's in LAN (br0)</div>
 	<div class='section'>

@@ -231,16 +231,16 @@ REMOVE-END */
 
 	var theRules = document.styleSheets[document.styleSheets.length-1].cssRules;
 	switch (nvram['cstats_labels']) {
-		case '1':		/* show hostnames only */
+		case '1':		// show hostnames only
 			theRules[theRules.length-1].style.cssText = 'width: 140px; font-weight:bold;';
 /* REMOVE-BEGIN */
 //			document.styleSheets[2].deleteRule(theRules.length - 1);
 /* REMOVE-END */
 			break;
-		case '2':		/* show IPs only */
+		case '2':		// show IPs only
 			theRules[theRules.length-1].style.cssText = 'width: 140px; font-weight:bold;';
 			break;
-		case '0':		/* show hostnames + IPs */
+		case '0':		// show hostnames + IPs
 		default:
 /* REMOVE-BEGIN */
 //			theRules[theRules.length-1].style.cssText = 'width: 140px; height: 12px; font-size: 9px;';

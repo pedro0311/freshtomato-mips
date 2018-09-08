@@ -47,7 +47,7 @@
 <script type='text/javascript'>
 //	<% nvram('cstats_enable,lan_ipaddr,lan1_ipaddr,lan2_ipaddr,lan3_ipaddr,lan_netmask,lan1_netmask,lan2_netmask,lan3_netmask,dhcpd_static,web_svg'); %>
 
-// <% iptraffic(); %>
+//	<% iptraffic(); %>
 
 /* REMOVE-BEGIN */
 //	<% devlist(); %>
@@ -106,7 +106,7 @@ updateLabels();
 //	while (i < nfmarks.length){
 /* REMOVE-END */
 	i = 0;
-	while (i < 11){
+	while (i < 11) {
 		if (iptraffic[i] != null) {
 			nfmarks[i] = iptraffic[i][9] + iptraffic[i][10]; // TCP + UDP connections
 		} else {
@@ -140,7 +140,7 @@ function showData() {
 		n = nfmarks[i];
 		E('ccnt' + i).innerHTML = (abc[i] != '') ? n : '';
 		if (ct > 0) p = (n / ct) * 100;
-			else p = 0;
+		else p = 0;
 		E('cpct' + i).innerHTML = (abc[i] != '') ? p.toFixed(2) + '%' : '';
 	}
 	E('ccnt-total').innerHTML = ct;
@@ -150,7 +150,7 @@ function showData() {
 		E('bcnt' + i).innerHTML = (abc[i] != '') ? (n / 125).toFixed(2) : '';
 		E('bcntx' + i).innerHTML = (abc[i] != '') ? (n / 1024).toFixed(2) : '';
 		if (rt > 0) p = (n / rt) * 100;
-			else p = 0;
+		else p = 0;
 		E('bpct' + i).innerHTML = (abc[i] != '') ? p.toFixed(2) + '%' : '';
 	}
 	E('bcnt-total').innerHTML = (rt / 125).toFixed(2);
@@ -161,7 +161,7 @@ function showData() {
 		E('obcnt' + i).innerHTML = (abc[i] != '') ? (n / 125).toFixed(2) : '';
 		E('obcntx' + i).innerHTML = (abc[i] != '') ? (n / 1024).toFixed(2) : '';
 		if (ort > 0) p = (n / ort) * 100;
-			else p = 0;
+		else p = 0;
 		E('obpct' + i).innerHTML = (abc[i] != '') ? p.toFixed(2) + '%' : '';
 	}
 	E('obcnt-total').innerHTML = (ort / 125).toFixed(2);
@@ -213,6 +213,7 @@ ref.refresh = function(text) {
 		}
 
 		k = getArrayPosByElement(lastiptraffic, b[0], 0);
+
 		if (k == -1) {
 			k = lastiptraffic.length;
 			lastiptraffic[k] = b;
@@ -227,15 +228,15 @@ ref.refresh = function(text) {
 		avgiptraffic[j][10] = b[10];
 		lastiptraffic[k][9] = b[9];
 		lastiptraffic[k][10] = b[10];
-
 	}
 	-- lock;
 
 /* REMOVE-BEGIN */
 //updateLabels();
 /* REMOVE-END */
+
 	i = 0;
-	while (i < 11){
+	while (i < 11) {
 		if (iptraffic[i] != null) {
 			nfmarks[i] = avgiptraffic[i][9] + avgiptraffic[i][10]; // TCP + UDP connections
 			irates[i] = avgiptraffic[i][1]; // RX bytes
@@ -264,7 +265,7 @@ function checkSVG() {
 			e = E('svg' + i);
 			d = e.getSVGDocument();
 			if (d.defaultView) w = d.defaultView;
-				else w = e.getWindow();
+			else w = e.getWindow();
 			if (!w.ready) break;
 			if (i == 0) updateCD = w.updateSVG;
 			if (i == 1)	updateBD = w.updateSVG;
