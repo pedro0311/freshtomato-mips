@@ -15,10 +15,12 @@ FreshTomato-MIPS Changelog
 - e2fsprogs: update to 1.44.4
 - dnsmasq: update to 2.80test5
 - libcurl: update to 7.61.1
+- Preliminary support for stubby
 - Makefile: changes for a (r2a) target: remove minidlna because of the large image size, add dnscrypt-proxy and JFFS instead
 - GUI: add a needed include file for code utilizing bwm-common.js
 - GUI: display quality as percentage in device list
 - GUI: ipt-graphs.asp: do not display graphs if monitoring has been disabled
+- GUI: do not display bwm or ipt graphs if monitoring has been disabled
 - Fixing the `uname -r` issue in readme
 - router: rc: transmission.c: sysctl binary is not included in TomatoUSB, write values directly instead
 - router: rc: firewall.c and rc.h: add function "enable_ndp_proxy()" - Enable NDP Proxy for IPv6 builds - add missing conditional compilation
