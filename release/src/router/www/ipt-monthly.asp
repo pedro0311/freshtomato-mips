@@ -78,7 +78,7 @@ function genData() {
 }
 
 function getYMD(n) {
-	// [y,m,d]
+	/* [y,m,d] */
 	return [(((n >> 16) & 0xFF) + 1900), ((n >>> 8) & 0xFF), (n & 0xFF)];
 }
 
@@ -248,17 +248,17 @@ dg.sortCompare = function(a, b) {
 	var db = b.getRowData();
 	var r = 0;
 	switch (col) {
-	case 0:	// Date
+	case 0:	/* Date */
 		r = cmpText(da[col], db[col]);
 	break;
-	case 1: // Hostname
+	case 1: /* Hostname */
 		r = cmpIP(da[col], db[col]);
 		if (r == 0)
 			r = cmpText(da[col], db[col]);
 	break;
-	case 2:	// Download
-	case 3:	// Upload
-	case 4:	// Total
+	case 2:	/* Download */
+	case 3:	/* Upload */
+	case 4:	/* Total */
 		r = cmpFloat(da[col].replace(/,/g,""), db[col].replace(/,/g,""));
 	break;
 	}
@@ -417,7 +417,7 @@ function verifyFields(focused, quiet) {
 	scale = E('_f_scale').value * 1;
 	cookie.set('ipt_history_scale', E('_f_scale').value, 2);
 
-	//	cookie.set('ipt_history_subnet', (E('_f_subnet').checked ? '1' : '0'), 1);
+	/* cookie.set('ipt_history_subnet', (E('_f_subnet').checked ? '1' : '0'), 1); */
 
 	cookie.set('ipt_history_hostnames', (E('_f_hostnames').checked ? '1' : '0'), 1);
 

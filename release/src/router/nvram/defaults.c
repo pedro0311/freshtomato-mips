@@ -139,7 +139,7 @@ const defaults_t defaults[] = {
 #endif
 #ifdef TCONFIG_DNSCRYPT
 	{ "dnscrypt_proxy",		"0"			},
-	{ "dnscrypt_priority",		"1"			}, // 0=none, 1=strict-order, 2=no-resolv
+	{ "dnscrypt_priority",		"2"			}, // 0=none, 1=strict-order, 2=no-resolv
 	{ "dnscrypt_port",		"40"			}, // local port
 	{ "dnscrypt_resolver",		"opendns"		}, // default resolver
 	{ "dnscrypt_log",		"6"			}, // log level
@@ -151,7 +151,7 @@ const defaults_t defaults[] = {
 #endif
 #ifdef TCONFIG_STUBBY
 	{ "stubby_proxy",		"0"				},
-	{ "stubby_priority",		"1"				},	// 0=none, 1=strict-order, 2=no-resolv
+	{ "stubby_priority",		"2"				},	// 0=none, 1=strict-order, 2=no-resolv
 #endif
 	{ "wan_wins",			""				},	// x.x.x.x x.x.x.x ...
 	{ "wan_lease",			"86400"			},	// WAN lease time in seconds
