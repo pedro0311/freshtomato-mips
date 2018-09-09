@@ -243,26 +243,26 @@ grid.sortCompare = function(a, b) {
 	var r = 0;
 
 	switch (col) {
-		case 0:	// host
+		case 0:	/* host */
 			r = cmpText(da[col], db[col]);
 		break;
-		case 1:	// Download
-		case 2:	// Upload
+		case 1:	/* Download */
+		case 2:	/* Upload */
 			r = cmpFloat(da[col], db[col]);
 		break;
-		case 3:	// TCP pkts
+		case 3:	/* TCP pkts */
 			r = cmpInt(da[3]+da[4], db[3]+db[4]);
 		break;
-		case 4:	// UDP pkts
+		case 4:	/* UDP pkts */
 			r = cmpInt(da[5]+da[6], db[5]+db[6]);
 		break;
-		case 5:	// ICMP pkts
+		case 5:	/* ICMP pkts */
 			r = cmpInt(da[7]+da[8], db[7]+db[8]);
 		break;
-		case 6:	// TCP connections
+		case 6:	/* TCP connections */
 			r = cmpInt(da[9], db[9]);
 		break;
-		case 7:	// UDP connections
+		case 7:	/* UDP connections */
 			r = cmpInt(da[10], db[10]);
 		break;
 	}
@@ -288,9 +288,9 @@ function addExcludeList(n) {
 	if (E('_f_filter_ipe').value.length<6) {
 		E('_f_filter_ipe').value = avgiptraffic[n][0];
 	} else {
-	if (E('_f_filter_ipe').value.indexOf(avgiptraffic[n][0]) < 0) {
-		E('_f_filter_ipe').value = E('_f_filter_ipe').value + ',' + avgiptraffic[n][0];
-	}
+		if (E('_f_filter_ipe').value.indexOf(avgiptraffic[n][0]) < 0) {
+			E('_f_filter_ipe').value = E('_f_filter_ipe').value + ',' + avgiptraffic[n][0];
+		}
 	}
 	dofilter();
 }
