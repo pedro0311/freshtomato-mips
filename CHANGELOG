@@ -13,7 +13,7 @@ FreshTomato-MIPS Changelog
 - openssl: update to 1.0.2p
 - php: update to 7.2.9
 - e2fsprogs: update to 1.44.4
-- dnsmasq: update to 2.80test5
+- dnsmasq: update to 2.80test6
 - libcurl: update to 7.61.1
 - Preliminary support for stubby
 - Makefile: changes for a (r2a) target: remove minidlna because of the large image size, add dnscrypt-proxy and JFFS instead
