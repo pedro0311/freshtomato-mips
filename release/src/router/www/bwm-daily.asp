@@ -52,7 +52,7 @@ function genData()
 		t = getYMD(h[0]);
 		w.document.writeln([t[0], t[1] + 1, t[2], h[1], h[2]].join(','));
 	}
-	w.document.writeln('</pre>');
+	w.document.writeln('<\/pre>');
 	w.document.close();
 }
 
@@ -101,7 +101,7 @@ function redraw()
 		}
 	}
 
-	E('bwm-daily-grid').innerHTML = grid + '</table>';
+	E('bwm-daily-grid').innerHTML = grid + '<\/table>';
 
 	E('last-dn').innerHTML = rescale(lastd);
 	E('last-up').innerHTML = rescale(lastu);
@@ -131,7 +131,7 @@ function init()
 
 </head>
 <body onload='init()'>
-<form>
+<form action=''>
 <table id='container' cellspacing=0>
 <tr><td colspan=2 id='header'>
 	<div class='title'>Tomato</div>
@@ -144,38 +144,44 @@ function init()
 <!-- / / / -->
 
 <div class='section-title'>WAN Bandwidth - Daily</div>
-<div id='bwm-daily-grid' style='float:left'></div>
-<div style="float:right;text-align:right">
+<div id="rstats">
+	<div id='bwm-daily-grid' style='float:left'></div>
+	<div style="float:right;text-align:right">
 
+		<table class='tomato-grid' style='width:150px'>
+			<tr class='header'><td colspan=2 style='text-align:center'>Last 30 Days<br /><span style='font-weight:normal' id='last-dates'></span></td></tr>
+			<tr class='even'><td>Down</td><td id='last-dn'>-</td></tr>
+			<tr class='odd'><td>Up</td><td id='last-up'>-</td></tr>
+			<tr class='footer'><td>Total</td><td id='last-total'>-</td></tr>
+		</table>
 
-<table class='tomato-grid' style='width:150px'>
-<tr class='header'><td colspan=2 style='text-align:center'>Last 30 Days<br><span style='font-weight:normal' id='last-dates'></span></td></tr>
-<tr class='even'><td>Down</td><td id='last-dn'>-</td></tr>
-<tr class='odd'><td>Up</td><td id='last-up'>-</td></tr>
-<tr class='footer'><td>Total</td><td id='last-total'>-</td></tr>
-</table>
+		<br />
+		<hr style='height:1px'>
+		<br />
 
-<br>
-<hr size=1>
-<br>
+		<b>Date</b> <select onchange='changeDate(this, "ymd")' id='dafm'><option value=0>yyyy-mm-dd</option><option value=1>mm-dd-yyyy</option><option value=2>mmm dd, yyyy</option><option value=3>dd.mm.yyyy</option></select><br />
+		<b>Scale</b> <select onchange='changeScale(this)' id='scale'><option value=0>KB</option><option value=1>MB</option><option value=2 selected>GB</option></select><br />
+		<br />
+		&raquo; <a href="javascript:genData()">Data</a>
+		<br />
+		&raquo; <a href="admin-bwm.asp">Configure</a>
+		<br /><br /><br />
 
-<b>Date</b> <select onchange='changeDate(this, "ymd")' id='dafm'><option value=0>yyyy-mm-dd</option><option value=1>mm-dd-yyyy</option><option value=2>mmm dd, yyyy</option><option value=3>dd.mm.yyyy</option></select><br>
-<b>Scale</b> <select onchange='changeScale(this)' id='scale'><option value=0>KB</option><option value=1>MB</option><option value=2 selected>GB</option></select><br>
-<br>
-&raquo; <a href="javascript:genData()">Data</a>
-<br>
-&raquo; <a href="admin-bwm.asp">Configure</a>
-<br><br><br>
+	</div>
+
+	<br />
+
 </div>
-<br>
 
-</script>
+<!-- / / / -->
+
+<script type='text/javascript'>checkRstats();</script>
 
 <!-- / / / -->
 
 </td></tr>
 <tr><td id='footer' colspan=2>
-<input type='button' value='Refresh' onclick='reloadPage()'>
+	<input type='button' value='Refresh' id='refresh-button' onclick='reloadPage()'>
 </td></tr>
 </table>
 </form>

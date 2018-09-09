@@ -37,7 +37,6 @@
 <script type='text/javascript' src='wireless.jsx?_http_id=<% nv(http_id); %>'></script>
 <script type='text/javascript' src='bwm-hist.js'></script>
 <script type='text/javascript' src='bwm-common.js'></script>
-<script type='text/javascript' src='interfaces.js'></script>
 
 <script type='text/javascript'>
 

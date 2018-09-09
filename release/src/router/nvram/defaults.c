@@ -149,6 +149,10 @@ const defaults_t defaults[] = {
 	{ "dnscrypt_resolver_address",	""			}, // Set manual resolver address
 	{ "dnscrypt_ephemeral_keys",	"0"				}, // Set manual ephemeral keys
 #endif
+#ifdef TCONFIG_STUBBY
+	{ "stubby_proxy",		"0"				},
+	{ "stubby_priority",		"1"				},	// 0=none, 1=strict-order, 2=no-resolv
+#endif
 	{ "wan_wins",			""				},	// x.x.x.x x.x.x.x ...
 	{ "wan_lease",			"86400"			},	// WAN lease time in seconds
 	{ "wan_islan",			"0"				},
