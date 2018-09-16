@@ -92,7 +92,7 @@ all: tomato_ver
 
 	@rm -f image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).trx
 	@rm -f image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).bin
-ifeq ($(LINKSYS_E),1)
+ifeq ($(LINKSYS_E),$(filter $(LINKSYS_E),1 2))
 	@rm -f image/freshtomato-E??00$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).bin
 endif
 ifeq ($(BELKIN),y)
@@ -125,6 +125,12 @@ ifeq ($(LINKSYS_E),1)
 		-l 32XN,image/freshtomato-E2000$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).bin \
 		| tee -a fpkg.log
 else
+ifeq ($(LINKSYS_E),2)
+	# Linksys E-3000 build w/o minidlna
+	@btools/fpkg -i lzma-loader/loader.gz -i $(LINUXDIR)/arch/mips/brcm-boards/bcm947xx/compressed/vmlinuz -a 1024 -i router/mipsel-uclibc/target.image \
+		-l 61XN,image/freshtomato-E3000$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).bin \
+		| tee -a fpkg.log
+else
 ifeq ($(BELKIN),y)
 ifneq ($(NVRAM_SIZE),60)
 	# Create Belkin images
@@ -141,6 +147,7 @@ else
 	@btools/fpkg -i lzma-loader/loader.gz -i $(LINUXDIR)/arch/mips/brcm-boards/bcm947xx/compressed/vmlinuz -a 1024 -i router/mipsel-uclibc/target.image \
 		-t image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).trx \
 		| tee -a fpkg.log
+endif
 endif
 endif
 endif
@@ -672,9 +679,19 @@ e:
 	@$(MAKE) bin OPENVPN=y NTFS=y BBEXTRAS=y USBEXTRAS=y MULTIWAN=y EBTABLES=y MEDIASRV=y IPV6SUPP=y B=E BUILD_DESC="$(VPN)" USB="USB" DNSCRYPT=y PPTPD=y
 
 
+## VPN w/o mediaserver
+l:
+	@$(MAKE) bin OPENVPN=y NTFS=y BBEXTRAS=y USBEXTRAS=y MULTIWAN=y EBTABLES=y IPV6SUPP=y B=E BUILD_DESC="$(VPN)-noMS" USB="USB" DNSCRYPT=y PPTPD=y
+
+
 ## BTgui-VPN
 c:
 	@$(MAKE) bin NTFS=y OPENVPN=y BBEXTRAS=y USBEXTRAS=y MULTIWAN=y EBTABLES=y MEDIASRV=y IPV6SUPP=y B=M BUILD_DESC="BTgui-VPN" USB="USB" BTGUI=y DNSCRYPT=y PPTPD=y
+
+
+## BTgui-VPN w/o mediaserver
+h:
+	@$(MAKE) bin OPENVPN=y NTFS=y BBEXTRAS=y USBEXTRAS=y MULTIWAN=y EBTABLES=y IPV6SUPP=y B=M BUILD_DESC="BTgui-VPN-noMS" USB="USB" BTGUI=y DNSCRYPT=y PPTPD=y
 
 
 ## miniVPN (small BTgui-VPN) for routers with 8MB flash like Netgear 3500L, RT-N10u or RT-N15U
@@ -685,6 +702,11 @@ a:
 ## Nocat-VPN
 d:
 	@$(MAKE) bin NTFS=y BBEXTRAS=y USBEXTRAS=y EBTABLES=y MULTIWAN=y MEDIASRV=y IPV6SUPP=y B=M BUILD_DESC="Nocat-VPN" USB="USB" BTGUI=y NOCAT=y OPENVPN=y DNSCRYPT=y PPTPD=y
+
+
+## Nocat-VPN w/o mediaserver
+k:
+	@$(MAKE) bin NTFS=y BBEXTRAS=y USBEXTRAS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y B=M BUILD_DESC="Nocat-VPN-noMS" USB="USB" BTGUI=y NOCAT=y OPENVPN=y DNSCRYPT=y PPTPD=y
 
 
 ## TOR-VPN
@@ -758,11 +780,17 @@ r2z:
 r2e:
 	@$(MAKE) e MIPS32=r2
 
+r2l:
+	@$(MAKE) l MIPS32=r2
+
 r2a:
 	@$(MAKE) a MIPS32=r2
 
 r2c:
 	@$(MAKE) c MIPS32=r2
+
+r2h:
+	@$(MAKE) h MIPS32=r2
 
 r2u:
 	@$(MAKE) u MIPS32=r2
@@ -772,6 +800,9 @@ r2t:
 
 r2d:
 	@$(MAKE) d MIPS32=r2
+
+r2k:
+	@$(MAKE) k MIPS32=r2
 
 r2g:
 	@$(MAKE) g MIPS32=r2
@@ -804,8 +835,14 @@ n60z:
 n60e:
 	@$(MAKE) r2e NVRAM_SIZE=60 LINKSYS_E=1
 
+n60l:
+	@$(MAKE) r2l NVRAM_SIZE=60 LINKSYS_E=2
+
 n60c:
 	@$(MAKE) r2c NVRAM_SIZE=60 LINKSYS_E=1
+
+n60h:
+	@$(MAKE) r2h NVRAM_SIZE=60 LINKSYS_E=2
 
 n60u:
 	@$(MAKE) r2u NVRAM_SIZE=60 LINKSYS_E=1
@@ -818,6 +855,9 @@ n60b:
 
 n60d:
 	@$(MAKE) r2d NVRAM_SIZE=60 LINKSYS_E=1
+
+n60k:
+	@$(MAKE) r2k NVRAM_SIZE=60 LINKSYS_E=2
 
 n60g:
 	@$(MAKE) r2g NVRAM_SIZE=60 LINKSYS_E=1
@@ -923,6 +963,9 @@ help:
 	@echo "n60b         Linksys E-series build Big-VPN"
 	@echo "n60o         Linksys E-series build Mega-VPN"
 	@echo "n60z         Linksys E-series build AIO"
+	@echo "n60h         Linksys E-series build BTGui-VPN-noMS for E3000 (w/o minidlna)"
+	@echo "n60k         Linksys E-series build BTGui-VPN-noMS plus Nocat for E3000 (w/o minidlna)"
+	@echo "n60l         Linksys E-series build VPN-noMS for E3000 (w/o minidlna)"
 	@echo "n60v         Linksys E-series build IPv6-VPN for E2000"
 	@echo "n60m         Linksys E-series build Max for E2000"
 	@echo ""
