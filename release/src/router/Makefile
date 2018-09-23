@@ -409,7 +409,7 @@ endif
 ifeq ($(TCONFIG_BBT),y)
 	install $(LIBDIR)/librt-0.9.30.1.so $(TARGETDIR)/lib/librt.so.0
 endif
-ifeq ($(TCONFIG_NGINX),y)
+ifneq ($(TCONFIG_NGINX)$(TCONFIG_NANO),)
 	install $(LIBDIR)/libstdc++.so.6 $(TARGETDIR)/lib/libstdc++.so.6
 	cd $(TARGETDIR)/lib && ln -sf libstdc++.so.6 libstdc++.so
 	$(STRIP) $(TARGETDIR)/lib/libstdc++.so.6
