@@ -2992,9 +2992,6 @@ TOP:
 #ifdef TCONFIG_BT
 			stop_bittorrent();
 #endif
-#ifdef TCONFIG_ARUI
-			stop_aria2();
-#endif
 #ifdef TCONFIG_ANON
 			stop_tomatoanon();
 #endif
