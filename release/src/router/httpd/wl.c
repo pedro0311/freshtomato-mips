@@ -1167,7 +1167,7 @@ void asp_wlcountries(int argc, char **argv)
 				}
 			}
 		}
-		fclose(f);
+		pclose(f);
 	}
 	web_puts("];\n");
 }

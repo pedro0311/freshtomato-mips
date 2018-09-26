@@ -152,6 +152,7 @@ const defaults_t defaults[] = {
 #ifdef TCONFIG_STUBBY
 	{ "stubby_proxy",		"0"				},
 	{ "stubby_priority",		"2"				},	// 0=none, 1=strict-order, 2=no-resolv
+	{ "stubby_log",			"4"				},	// log level
 #endif
 	{ "wan_wins",			""				},	// x.x.x.x x.x.x.x ...
 	{ "wan_lease",			"86400"			},	// WAN lease time in seconds
