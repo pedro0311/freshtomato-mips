@@ -696,7 +696,7 @@ h:
 
 ## miniVPN (small BTgui-VPN) for routers with 8MB flash like Netgear 3500L, RT-N10u or RT-N15U
 a:
-	@$(MAKE) bin NTFS=y OPENVPN=y BBEXTRAS=y USBEXTRAS=y MULTIWAN=y EBTABLES=y IPV6SUPP=y B=M BUILD_DESC="MiniVPN" USB="USB" BTGUI=y DNSCRYPT=y PPTPD=y
+	@$(MAKE) bin NTFS=y OPENVPN=y BBEXTRAS=y USBEXTRAS=y MULTIWAN=y EBTABLES=y IPV6SUPP=y B=M BUILD_DESC="MiniVPN" USB="USB" BTGUI=y NFS=y DNSCRYPT=y PPTPD=y
 
 
 ## Nocat-VPN
@@ -934,7 +934,7 @@ help:
 	@echo "z            MIPS Release 15F AIO (for routers +8MB flash)"
 	@echo "i            MiniIPv6 - (IPv6 with no USB support minus CIFS and RIPv1/2)"
 	@echo "j            MiniVPN - (VPN with no USB support minus CIFS and RIPv1/2)"
-	@echo "a            MiniVPN - (with USB support)"
+	@echo "a            MiniVPN - (USB and NFS support) w/o minidlna"
 	@echo "f            Mini - (no USB support minus CIFS and RIPv1/2)"
 	@echo "v            IPv6-VPN (no usb) - (VPN with no USB support)"
 	@echo "m            Max (no usb) - (Max with IPv6 support and no USB)"
@@ -948,7 +948,7 @@ help:
 	@echo "r2b          MIPS Release 2 Big-VPN"
 	@echo "r2o          MIPS Release 2 Mega-VPN (for routers +8MB flash)"
 	@echo "r2z          MIPS Release 2 AIO (for routers +8MB flash)"
-	@echo "r2a          MIPS Release 2 MiniVPN (USB support) w/o minidlna"
+	@echo "r2a          MIPS Release 2 MiniVPN (USB and NFS support) w/o minidlna"
 	@echo "r2v          MIPS Release 2 IPv6-VPN (no usb)"
 	@echo "r2m          MIPS Release 2 Max (no usb)"
 	@echo "r2i          MIPS Release 2 MiniIPv6 (for 4MB flash)"
