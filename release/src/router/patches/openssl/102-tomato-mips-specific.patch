@@ -210,14 +210,6 @@
  };
 --- openssl/apps/x509.c	2017-01-26 14:22:03.000000000 +0100
 +++ openssl/apps/x509.c	2018-05-14 15:39:23.000000000 +0200
-@@ -169,6 +169,7 @@ static int reqfile = 0;
- #ifdef OPENSSL_SSL_DEBUG_BROKEN_PROTOCOL
- static int force_version = 2;
- #endif
-+static time_t setstartsecs=0;	/* Tomato */
- 
- int MAIN(int, char **);
- 
 @@ -218,7 +219,9 @@ int MAIN(int argc, char **argv)
      char *checkhost = NULL;
      char *checkemail = NULL;
@@ -228,19 +220,6 @@
  
      reqfile = 0;
  
-@@ -375,6 +378,12 @@ int MAIN(int argc, char **argv)
-                 goto bad;
-             alias = *(++argv);
-             trustout = 1;
-+        /* Tomato */
-+        } else if (strcmp(*argv,"-setstartsecs") == 0) {
-+            if (--argc < 1)
-+                goto bad;
-+            setstartsecs = atol(*(++argv));
-+        /* end Tomato */
-         } else if (strcmp(*argv, "-certopt") == 0) {
-             if (--argc < 1)
-                 goto bad;
 @@ -499,7 +508,10 @@ int MAIN(int argc, char **argv)
              BIO_printf(bio_err, "%s", *pp);
          goto end;
@@ -262,44 +241,6 @@
      if (passin)
          OPENSSL_free(passin);
      apps_shutdown();
-@@ -1226,11 +1240,33 @@ static int sign(X509 *x, EVP_PKEY *pkey,
- 
-     if (!X509_set_issuer_name(x, X509_get_subject_name(x)))
-         goto err;
--    if (X509_gmtime_adj(X509_get_notBefore(x), 0) == NULL)
--        goto err;
- 
--    if (X509_time_adj_ex(X509_get_notAfter(x), days, 0, NULL) == NULL)
--        goto err;
-+    /* Tomato */
-+    if(setstartsecs) {
-+        struct tm *tmnow;
-+        char buf[100];
-+
-+        tmnow = localtime(&setstartsecs);
-+        snprintf(buf, sizeof(buf), "%02d%02d%02d%02d%02d%02dZ",
-+                 tmnow->tm_year%100, tmnow->tm_mon+1, tmnow->tm_mday,
-+                 tmnow->tm_hour, tmnow->tm_min, tmnow->tm_sec);
-+       if (!ASN1_UTCTIME_set_string(X509_get_notBefore(x), buf))
-+           goto err;
-+
-+       if (X509_time_adj(X509_get_notAfter(x), (long)60*60*24*days, &setstartsecs) == NULL)
-+           goto err;
-+    } else {
-+        if (X509_gmtime_adj(X509_get_notBefore(x),0) == NULL)
-+            goto err;
-+
-+        /* Lets just make it 12:00am GMT, Jan 1 1970 */
-+        /* memcpy(x->cert_info->validity->notBefore,"700101120000Z",13); */
-+        /* 28 days to be certified */
-+
-+        if (X509_gmtime_adj(X509_get_notAfter(x),(long)60*60*24*days) == NULL)
-+            goto err;
-+    }
-+    /* end Tomato */
- 
-     if (!X509_set_pubkey(x, pkey))
-         goto err;
 --- openssl/Configure	2017-01-26 14:22:03.000000000 +0100
 +++ openssl/Configure	2018-05-14 00:49:03.262178829 +0200
 @@ -465,31 +465,32 @@ my %table=(
