@@ -34,6 +34,8 @@
 
 #define _dprintf(args...)	while (0) {}
 
+const char *allowedCiphers = "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:CAMELLIA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA:!3DES";
+
 typedef struct {
 	SSL* ssl;
 	int sd;
@@ -157,7 +159,7 @@ static const cookie_io_functions_t mssl = {
 
 static FILE *_ssl_fopen(int sd, int client)
 {
-	int r;
+	int r = 0;
 	mssl_cookie_t *kuki;
 	FILE *f;
 
@@ -169,20 +171,40 @@ static FILE *_ssl_fopen(int sd, int client)
 	}
 	kuki->sd = sd;
 
+	// Create new SSL object
 	if ((kuki->ssl = SSL_new(ctx)) == NULL) {
 		_dprintf("%s: SSL_new failed\n", __FUNCTION__);
 		goto ERROR;
 	}
 
+	// SSL structure for client authenticate after SSL_new()
 #ifdef USE_OPENSSL
 	SSL_set_verify(kuki->ssl, SSL_VERIFY_NONE, NULL);
 	SSL_set_mode(kuki->ssl, SSL_MODE_AUTO_RETRY);
-#endif
-	SSL_set_fd(kuki->ssl, kuki->sd);
 
-	r = client ? SSL_connect(kuki->ssl) : SSL_accept(kuki->ssl);
-	if (r <= 0) {
-		_dprintf("%s: SSL handshake failed\n", __FUNCTION__);
+	if (!client) {
+		// Enforce server cipher order
+		SSL_set_options(kuki->ssl, SSL_OP_CIPHER_SERVER_PREFERENCE);
+	}
+#endif
+	// Bind the socket to SSL structure
+	// kuki->ssl : SSL structure
+	// kuki->sd  : socket_fd
+
+	r = SSL_set_fd(kuki->ssl, kuki->sd);
+
+	if (!client) {
+		// Do the SSL Handshake
+		r = SSL_accept(kuki->ssl);
+	} else {
+		// Connect to the server, SSL layer
+		r = SSL_connect(kuki->ssl);
+	}
+
+	// r = 0 show unknown CA, but we don't have any CA, so ignore.
+	if (r < 0) {
+		// Check error in connect or accept
+		_dprintf(client ? "%s: SSL_connect failed\n" : "%s: SSL_accept failed\n", __FUNCTION__);
 		mssl_print_err(kuki->ssl);
 		goto ERROR;
 	}
@@ -223,28 +245,52 @@ int mssl_init(char *cert, char *priv)
 	int server = (cert != NULL);
 
 #ifdef USE_OPENSSL
+	// Register error strings for libcrypto and libssl functions
 	SSL_load_error_strings();
 	SSLeay_add_ssl_algorithms();
 #endif
 
-	ctx = SSL_CTX_new(server ? TLSv1_server_method() : TLSv1_client_method());
+	// Create the new CTX with the method 
+	// If server=1, use TLSv1_server_method() or SSLv23_server_method()
+	// else 	use TLSv1_client_method() or SSLv23_client_method()
+	ctx = SSL_CTX_new(server ? SSLv23_server_method() : SSLv23_client_method());
 	if (!ctx) {
 		_dprintf("SSL_CTX_new() failed\n");
 		mssl_print_err(NULL);
 		return 0;
 	}
 
-#ifndef USE_OPENSSL
 	SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
-#endif
 
+	// Setup EC support
+#ifdef NID_X9_62_prime256v1
+	EC_KEY *ecdh = NULL;
+	if ((ecdh = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1)) != NULL) {
+		SSL_CTX_set_tmp_ecdh(ctx, ecdh);
+		EC_KEY_free(ecdh);
+	}
+#endif
+ 	// Setup available ciphers
+	if (SSL_CTX_set_cipher_list(ctx, allowedCiphers) != 1) {
+		_dprintf("%s: SSL_CTX_set_cipher_list failed\n", __FUNCTION__);
+		mssl_cleanup(1);
+		return 0;
+	}
+#ifdef USE_OPENSSL
+ 	// Disable obsolete protocols
+	SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 |
+				 SSL_OP_NO_COMPRESSION |
+				 SSL_OP_SAFARI_ECDHE_ECDSA_BUG);
+#endif
 	if (server) {
-		_dprintf("SSL_CTX_use_certificate_file(%s)\n", cert);
-		if (SSL_CTX_use_certificate_file(ctx, cert, SSL_FILETYPE_PEM) <= 0) {
-			_dprintf("SSL_CTX_use_certificate_file() failed\n");
+		// Set the certificate to be used
+		_dprintf("SSL_CTX_use_certificate_chain_file(%s)\n", cert);
+		if (SSL_CTX_use_certificate_chain_file(ctx, cert) <= 0) {
+			_dprintf("SSL_CTX_use_certificate_chain_file() failed\n");
 			mssl_cleanup(1);
 			return 0;
 		}
+		// Indicate the key file to be used
 		_dprintf("SSL_CTX_use_PrivateKey_file(%s)\n", priv);
 		if (SSL_CTX_use_PrivateKey_file(ctx, priv, SSL_FILETYPE_PEM) <= 0) {
 			_dprintf("SSL_CTX_use_PrivateKey_file() failed\n");
@@ -252,6 +298,7 @@ int mssl_init(char *cert, char *priv)
 			return 0;
 		}
 #ifdef USE_OPENSSL
+		// Make sure the key and certificate file match
 		if (!SSL_CTX_check_private_key(ctx)) {
 			_dprintf("Private key does not match the certificate public key\n");
 			mssl_cleanup(0);
