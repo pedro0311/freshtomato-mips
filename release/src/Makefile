@@ -676,67 +676,68 @@ endif
 
 ## VPN
 e:
-	@$(MAKE) bin OPENVPN=y NTFS=y BBEXTRAS=y USBEXTRAS=y MULTIWAN=y EBTABLES=y MEDIASRV=y IPV6SUPP=y B=E BUILD_DESC="$(VPN)" USB="USB" DNSCRYPT=y PPTPD=y
-
-
-## VPN w/o mediaserver
-l:
-	@$(MAKE) bin OPENVPN=y NTFS=y BBEXTRAS=y USBEXTRAS=y MULTIWAN=y EBTABLES=y IPV6SUPP=y B=E BUILD_DESC="$(VPN)-noMS" USB="USB" DNSCRYPT=y PPTPD=y
+	@$(MAKE) bin USB="USB" B=E NTFS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y USBEXTRAS=y OPENVPN=y PPTPD=y \
+	    BBEXTRAS=y MEDIASRV=y DNSCRYPT=y BUILD_DESC="$(VPN)"
 
 
 ## BTgui-VPN
 c:
-	@$(MAKE) bin NTFS=y OPENVPN=y BBEXTRAS=y USBEXTRAS=y MULTIWAN=y EBTABLES=y MEDIASRV=y IPV6SUPP=y B=M BUILD_DESC="BTgui-VPN" USB="USB" BTGUI=y DNSCRYPT=y PPTPD=y
-
-
-## BTgui-VPN w/o mediaserver
-h:
-	@$(MAKE) bin OPENVPN=y NTFS=y BBEXTRAS=y USBEXTRAS=y MULTIWAN=y EBTABLES=y IPV6SUPP=y B=M BUILD_DESC="BTgui-VPN-noMS" USB="USB" BTGUI=y DNSCRYPT=y PPTPD=y
+	@$(MAKE) bin USB="USB" B=M NTFS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y USBEXTRAS=y OPENVPN=y PPTPD=y \
+	    BBEXTRAS=y BTGUI=y MEDIASRV=y DNSCRYPT=y BUILD_DESC="BTgui-VPN"
 
 
 ## miniVPN (small BTgui-VPN) for routers with 8MB flash like Netgear 3500L, RT-N10u or RT-N15U
 a:
-	@$(MAKE) bin NTFS=y OPENVPN=y BBEXTRAS=y USBEXTRAS=y MULTIWAN=y EBTABLES=y IPV6SUPP=y B=M BUILD_DESC="MiniVPN" USB="USB" BTGUI=y DNSCRYPT=y PPTPD=y
+	@$(MAKE) bin USB="USB" B=M NTFS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y USBEXTRAS=y OPENVPN=y PPTPD=y \
+	    BBEXTRAS=y BTGUI=y DNSCRYPT=y BUILD_DESC="MiniVPN"
 
 
 ## Nocat-VPN
 d:
-	@$(MAKE) bin NTFS=y BBEXTRAS=y USBEXTRAS=y EBTABLES=y MULTIWAN=y MEDIASRV=y IPV6SUPP=y B=M BUILD_DESC="Nocat-VPN" USB="USB" BTGUI=y NOCAT=y OPENVPN=y DNSCRYPT=y PPTPD=y
+	@$(MAKE) bin USB="USB" B=M NTFS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y USBEXTRAS=y OPENVPN=y PPTPD=y \
+	    BBEXTRAS=y BTGUI=y MEDIASRV=y DNSCRYPT=y NOCAT=y BUILD_DESC="Nocat-VPN"
 
 
-## Nocat-VPN w/o mediaserver
+## Nocat-MiniVPN w/o mediaserver
 k:
-	@$(MAKE) bin NTFS=y BBEXTRAS=y USBEXTRAS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y B=M BUILD_DESC="Nocat-VPN-noMS" USB="USB" BTGUI=y NOCAT=y OPENVPN=y DNSCRYPT=y PPTPD=y
+	@$(MAKE) bin USB="USB" B=M NTFS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y USBEXTRAS=y OPENVPN=y PPTPD=y \
+	    BBEXTRAS=y BTGUI=y DNSCRYPT=y NOCAT=y BUILD_DESC="Nocat-MiniVPN"
 
 
 ## TOR-VPN
 g:
-	@$(MAKE) bin NTFS=y BBEXTRAS=y USBEXTRAS=y EBTABLES=y MULTIWAN=y MEDIASRV=y IPV6SUPP=y B=M BUILD_DESC="Tor-VPN" USB="USB" BTGUI=y TOR=y OPENVPN=y PPTPD=y NO_CIFS=y NO_JFFS=y
+	@$(MAKE) bin USB="USB" B=M NTFS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y USBEXTRAS=y OPENVPN=y PPTPD=y \
+	    BBEXTRAS=y BTGUI=y MEDIASRV=y TOR=y NO_CIFS=y NO_JFFS=y BUILD_DESC="Tor-VPN"
 
 
 ## BT
 u:
-	@$(MAKE) bin NTFS=y USBEXTRAS=y EBTABLES=y MEDIASRV=y MULTIWAN=y IPV6SUPP=y B=M BUILD_DESC="BT" USB="USB" BTCLIENT=y
+	@$(MAKE) bin USB="USB" B=M NTFS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y USBEXTRAS=y \
+	    MEDIASRV=y BTCLIENT=y BUILD_DESC="BT"
 
 
 ## BT-VPN
 t:
-	@$(MAKE) bin OPENVPN=y NTFS=y USBEXTRAS=y EBTABLES=y MULTIWAN=y MEDIASRV=y IPV6SUPP=y B=M BUILD_DESC="BT-VPN" USB="USB" BTCLIENT=y NO_JFFS=y PPTPD=y
+	@$(MAKE) bin USB="USB" B=M NTFS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y USBEXTRAS=y OPENVPN=y PPTPD=y \
+	    MEDIASRV=y NO_JFFS=y BTCLIENT=y BUILD_DESC="BT-VPN"
 
 
 ## Big-VPN
 b:
-	@$(MAKE) bin NTFS=y BBEXTRAS=y USBEXTRAS=y EBTABLES=y MULTIWAN=y MEDIASRV=y IPV6SUPP=y B=M BUILD_DESC="Big-VPN" USB="USB" BTGUI=y NFS=y NOCAT=y OPENVPN=y DNSCRYPT=y PPTPD=y NO_JFFS=y NO_CIFS=y
+	@$(MAKE) bin USB="USB" B=M NTFS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y USBEXTRAS=y OPENVPN=y PPTPD=y \
+	    BBEXTRAS=y BTGUI=y MEDIASRV=y DNSCRYPT=y NOCAT=y NO_CIFS=y NO_JFFS=y NFS=y BUILD_DESC="Big-VPN"
 
 
 ## Mega-VPN
 o:
-	@$(MAKE) bin OPENVPN=y NTFS=y BBEXTRAS=y USBEXTRAS=y MULTIWAN=y EBTABLES=y MEDIASRV=y IPV6SUPP=y B=E BUILD_DESC="Mega-VPN" USB="USB" NOCAT=y BTCLIENT=y DNSCRYPT=y STUBBY=y SNMP=y UPS=y PPTPD=y TR_EXTRAS=y TOR=y IPSEC=y DNSSEC=y TINC=y NANO=y
+	@$(MAKE) bin USB="USB" B=E NTFS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y USBEXTRAS=y OPENVPN=y PPTPD=y \
+	    BBEXTRAS=y MEDIASRV=y DNSCRYPT=y STUBBY=y NOCAT=y TOR=y BTCLIENT=y SNMP=y UPS=y TR_EXTRAS=y IPSEC=y DNSSEC=y TINC=y NANO=y BUILD_DESC="Mega-VPN"
 
 
 ## All-In-One (AIO) MIPS1 - only for router with more than 8MB flash!! ZTE H618B
 z:
-	@$(MAKE) bin OPENVPN=y NTFS=y BBEXTRAS=y USBEXTRAS=y MULTIWAN=y EBTABLES=y MEDIASRV=y IPV6SUPP=y B=E BUILD_DESC="AIO" USB="USB" NOCAT=y BTCLIENT=y TR_EXTRAS=y NFS=y SNMP=y HFS=y DNSCRYPT=y STUBBY=y UPS=y PPTPD=y TOR=y IPSEC=y NGINX=y DNSSEC=y TINC=y NANO=y
+	@$(MAKE) bin USB="USB" B=E NTFS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y USBEXTRAS=y OPENVPN=y PPTPD=y \
+	    BBEXTRAS=y MEDIASRV=y DNSCRYPT=y STUBBY=y NOCAT=y TOR=y BTCLIENT=y NFS=y SNMP=y UPS=y TR_EXTRAS=y IPSEC=y DNSSEC=y TINC=y NANO=y HFS=y NGINX=y BUILD_DESC="AIO"
 
 
 #################################
@@ -746,27 +747,27 @@ z:
 
 ## Mini - targeted for Netgear routers
 f:
-	@$(MAKE) bin JFFSv1=y NO_CIFS=y NO_ZEBRA=y B=F BUILD_DESC="Mini" USB="" MULTIWAN=y
+	@$(MAKE) bin USB="" B=F MULTIWAN=y NO_CIFS=y JFFSv1=y NO_ZEBRA=y BUILD_DESC="Mini"
 
 
 ## MiniIPv6 - for 4MB routers
 i:
-	@$(MAKE) bin NO_JFFS=y NO_CIFS=y NO_ZEBRA=y IPV6SUPP=y B=I BUILD_DESC="MiniIPv6" USB="" NO_HTTPS=y MULTIWAN=y
+	@$(MAKE) bin USB="" B=I MULTIWAN=y NO_CIFS=y NO_ZEBRA=y NO_JFFS=y IPV6SUPP=y NO_HTTPS=y BUILD_DESC="MiniIPv6"
 
 
 ## MiniVPN - for 4MB routers
 j:
-	@$(MAKE) bin NO_JFFS=y NO_CIFS=y NO_ZEBRA=y B=V BUILD_DESC="MiniVPN" USB="" PPTPD=y OPENVPN=y MULTIWAN=y
+	@$(MAKE) bin USB="" B=V MULTIWAN=y NO_CIFS=y NO_ZEBRA=y NO_JFFS=y OPENVPN=y PPTPD=y BUILD_DESC="MiniVPN"
 
 
 ## IPv6-VPN with no USB support
 v:
-	@$(MAKE) bin OPENVPN=y NO_JFFS=y B=V BUILD_DESC="IPv6-$(VPN)" USB="" PPTPD=y IPV6SUPP=y MULTIWAN=y
+	@$(MAKE) bin USB="" B=V MULTIWAN=y NO_JFFS=y IPV6SUPP=y OPENVPN=y PPTPD=y BUILD_DESC="IPv6-$(VPN)"
 
 
 ## Max build for router with 8MB flash without USB Support (like WRT54GS v1)
 m:
-	@$(MAKE) bin OPENVPN=y BBEXTRAS=y EBTABLES=y IPV6SUPP=y B=E BUILD_DESC="Max" USB="" NOCAT=y NFS=y SNMP=y DNSCRYPT=y PPTPD=y TOR=y IPSEC=y  MULTIWAN=y
+	@$(MAKE) bin USB="" B=E MULTIWAN=y IPV6SUPP=y OPENVPN=y PPTPD=y NOCAT=y NFS=y SNMP=y DNSCRYPT=y TOR=y IPSEC=y BBEXTRAS=y EBTABLES=y BUILD_DESC="Max"
 
 
 
@@ -780,17 +781,11 @@ r2z:
 r2e:
 	@$(MAKE) e MIPS32=r2
 
-r2l:
-	@$(MAKE) l MIPS32=r2
-
 r2a:
 	@$(MAKE) a MIPS32=r2
 
 r2c:
 	@$(MAKE) c MIPS32=r2
-
-r2h:
-	@$(MAKE) h MIPS32=r2
 
 r2u:
 	@$(MAKE) u MIPS32=r2
@@ -835,14 +830,11 @@ n60z:
 n60e:
 	@$(MAKE) r2e NVRAM_SIZE=60 LINKSYS_E=1
 
-n60l:
-	@$(MAKE) r2l NVRAM_SIZE=60 LINKSYS_E=2
+n60a:
+	@$(MAKE) r2a NVRAM_SIZE=60 LINKSYS_E=2
 
 n60c:
 	@$(MAKE) r2c NVRAM_SIZE=60 LINKSYS_E=1
-
-n60h:
-	@$(MAKE) r2h NVRAM_SIZE=60 LINKSYS_E=2
 
 n60u:
 	@$(MAKE) r2u NVRAM_SIZE=60 LINKSYS_E=1
@@ -948,7 +940,7 @@ help:
 	@echo "r2b          MIPS Release 2 Big-VPN"
 	@echo "r2o          MIPS Release 2 Mega-VPN (for routers +8MB flash)"
 	@echo "r2z          MIPS Release 2 AIO (for routers +8MB flash)"
-	@echo "r2a          MIPS Release 2 MiniVPN (USB support) w/o minidlna"
+	@echo "r2a          MIPS Release 2 MiniVPN (USB support)"
 	@echo "r2v          MIPS Release 2 IPv6-VPN (no usb)"
 	@echo "r2m          MIPS Release 2 Max (no usb)"
 	@echo "r2i          MIPS Release 2 MiniIPv6 (for 4MB flash)"
@@ -963,9 +955,8 @@ help:
 	@echo "n60b         Linksys E-series build Big-VPN"
 	@echo "n60o         Linksys E-series build Mega-VPN"
 	@echo "n60z         Linksys E-series build AIO"
-	@echo "n60h         Linksys E-series build BTGui-VPN-noMS for E3000 (w/o minidlna)"
-	@echo "n60k         Linksys E-series build BTGui-VPN-noMS plus Nocat for E3000 (w/o minidlna)"
-	@echo "n60l         Linksys E-series build VPN-noMS for E3000 (w/o minidlna)"
+	@echo "n60a         Linksys E-series build MiniVPN for E3000"
+	@echo "n60k         Linksys E-series build Nocat-MiniVPN for E3000"
 	@echo "n60v         Linksys E-series build IPv6-VPN for E2000"
 	@echo "n60m         Linksys E-series build Max for E2000"
 	@echo ""
