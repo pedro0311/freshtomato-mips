@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.0//EN'>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <!--
 	Tomato GUI
 	Copyright (C) 2006-2010 Jonathan Zarate
@@ -13,16 +13,16 @@
 -->
 <html>
 <head>
-<meta http-equiv='content-type' content='text/html;charset=utf-8'>
-<meta name='robots' content='noindex,nofollow'>
+<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Status: Device List</title>
-<link rel='stylesheet' type='text/css' href='tomato.css'>
+<link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
-<script type='text/javascript' src='tomato.js'></script>
+<script type="text/javascript" src="tomato.js"></script>
 
 <!-- / / / -->
 
-<style type='text/css'>
+<style type="text/css">
 #dev-grid .co1 {
 	width: 8%;
 }
@@ -56,10 +56,10 @@
 }
 </style>
 
-<script type='text/javascript' src='debug.js'></script>
+<script type="text/javascript" src="debug.js"></script>
 
-<script type='text/javascript' src='wireless.jsx?_http_id=<% nv(http_id); %>'></script>
-<script type='text/javascript'>
+<script type="text/javascript" src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
+<script type="text/javascript">
 
 ipp = '<% lipp(); %>.';
 //<% nvram('lan_ifname,wl_ifname,wl_mode,wl_radio'); %>
@@ -67,8 +67,7 @@ ipp = '<% lipp(); %>.';
 
 list = [];
 
-function find(mac, ip)
-{
+function find(mac, ip) {
 	var e, i;
 
 	mac = mac.toUpperCase();
@@ -82,8 +81,7 @@ function find(mac, ip)
 	return null;
 }
 
-function get(mac, ip)
-{
+function get(mac, ip) {
 	var e, i;
 
 	mac = mac.toUpperCase();
@@ -110,13 +108,11 @@ function get(mac, ip)
 
 var xob = null;
 
-function _deleteLease(ip)
-{
+function _deleteLease(ip) {
 	form.submitHidden('dhcpd.cgi', { remove: ip });
 }
 
-function deleteLease(a, ip)
-{
+function deleteLease(a, ip) {
 	if (xob) return;
 	if ((xob = new XmlHttp()) == null) {
 		_deleteLease(ip);
@@ -137,22 +133,19 @@ function deleteLease(a, ip)
 	xob.post('dhcpd.cgi', 'remove=' + ip);
 }
 
-function addStatic(n)
-{
+function addStatic(n) {
 	var e = list[n];
 	cookie.set('addstatic', [e.mac, e.ip, e.name.split(',')[0]].join(','), 1);
 	location.href = 'basic-static.asp';
 }
 
-function addWF(n)
-{
+function addWF(n) {
 	var e = list[n];
 	cookie.set('addmac', [e.mac, e.name.split(',')[0]].join(','), 1);
 	location.href = 'basic-wfilter.asp';
 }
 
-function addbwlimit(n)
-{
+function addbwlimit(n) {
 	var e = list[n];
 	cookie.set('addbwlimit', [e.ip, e.name.split(',')[0]].join(','), 1);
 	location.href = 'bwlimit.asp';
@@ -160,8 +153,7 @@ function addbwlimit(n)
 
 var ref = new TomatoRefresh('update.cgi', 'exec=devlist', 0, 'status_devices_refresh');
 
-ref.refresh = function(text)
-{
+ref.refresh = function(text) {
 	eval(text);
 	dg.removeAllData();
 	dg.populate();
@@ -201,8 +193,7 @@ dg.sortCompare = function(a, b) {
 	return this.sortAscending ? r : -r;
 }
 
-dg.populate = function()
-{
+dg.populate = function() {
 	var i, j;
 	var a, b, c, e;
 
@@ -221,7 +212,7 @@ dg.populate = function()
 	for (i = dhcpd_lease.length - 1; i >= 0; --i) {
 		a = dhcpd_lease[i];
 		e = get(a[2], a[1]);
-		e.lease = '<small><a href="javascript:deleteLease(\'L' + i + '\',\'' + a[1] + '\')" title="Delete Lease" id="L' + i + '">' + a[3] + '</a></small>';
+		e.lease = '<small><a href="javascript:deleteLease(\'L' + i + '\',\'' + a[1] + '\')" title="Delete Lease" id="L' + i + '">' + a[3] + '<\/a><\/small>';
 		e.name = a[0];
 		e.ifname = '';
 	}
@@ -239,7 +230,7 @@ dg.populate = function()
 		e.rssi = a[2];
 
 		if ((a[3] >= 1000) || (a[4] >= 1000))
-		e.txrx = ((a[3] >= 1000) ? Math.round(a[3] / 1000) : '-') + ' / ' + ((a[4] >= 1000) ? Math.round(a[4] / 1000) : '-'); //+ '<br><small>Mbps</small>';
+		e.txrx = ((a[3] >= 1000) ? Math.round(a[3] / 1000) : '-') + ' / ' + ((a[4] >= 1000) ? Math.round(a[4] / 1000) : '-'); //+ '<br /><small>Mbps<\/small>';
 
 	}
 
@@ -285,15 +276,15 @@ dg.populate = function()
 
 		b = e.mac;
 		if (e.mac.match(/^(..):(..):(..)/)) {
-			b += '<br><small>' +
-				'<a href="http://api.macvendors.com/' + RegExp.$1 + '-' + RegExp.$2 + '-' + RegExp.$3 + '" target="_new" title="OUI Search">[oui]</a> ' +
-				'<a href="javascript:addStatic(' + i + ')" title="Static Lease...">[static]</a> ' +
-				'<a href="javascript:addbwlimit(' + i + ')" title="BW Limiter">[bwlimit]</a>';
+			b += '<br /><small>' +
+				'<a href="http://api.macvendors.com/' + RegExp.$1 + '-' + RegExp.$2 + '-' + RegExp.$3 + '" class="new_window" title="OUI Search">[oui]<\/a> ' +
+				'<a href="javascript:addStatic(' + i + ')" title="Static Lease...">[static]<\/a> ' +
+				'<a href="javascript:addbwlimit(' + i + ')" title="BW Limiter">[bwlimit]<\/a>';
 
 			if (e.rssi != '') {
-				b += ' <a href="javascript:addWF(' + i + ')" title="Wireless Filter...">[wfilter]</a>';
+				b += ' <a href="javascript:addWF(' + i + ')" title="Wireless Filter...">[wfilter]<\/a>';
 			}
-			b += '</small>';
+			b += '<\/small>';
 		}
 		else {
 			b = '';
@@ -317,49 +308,55 @@ dg.populate = function()
 
 		this.insert(-1, e, [
 			e.ifname, b, (e.ip == '-') ? '' : e.ip, e.name,
-			(e.rssi != 0) ? e.rssi + ' <small>dBm</small>' : '',
-			(e.qual < 0) ? '' : '<small>' + e.qual + '</small> <img src="bar' + MIN(MAX(Math.floor(e.qual / 10), 1), 6) + '.gif">',
+			(e.rssi != 0) ? e.rssi + ' <small>dBm<\/small>' : '',
+			(e.qual < 0) ? '' : '<small>' + e.qual + '<\/small> <img src="bar' + MIN(MAX(Math.floor(e.qual / 10), 1), 6) + '.gif">',
 			e.txrx,	e.lease], false);
 	}
 }
 
-dg.setup = function()
-{
+dg.setup = function() {
 	this.init('dev-grid', 'sort');
 	this.headerSet(['Interface', 'MAC Address', 'IP Address', 'Name', 'RSSI &nbsp; &nbsp; ', 'Quality', 'TX/RX Rate&nbsp;', 'Lease &nbsp; &nbsp; ']);
 	this.populate();
 	this.sort(2);
 }
 
-function earlyInit()
-{
+function earlyInit() {
 	dg.setup();
 }
 
-function init()
-{
+function init() {
+	new observer(InNewWindow).observe(E("dev-grid"), { childList: true, subtree: true, attributes: true });
 	dg.recolor();
 	ref.initPage(3000, 3);
 }
+
+var observer = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
+
+function InNewWindow () {
+	var elements = document.getElementsByClassName("new_window");
+	for (var i = 0; i < elements.length; i++) if (elements[i].nodeName.toLowerCase()==="a")
+		addEvent(elements[i], "click", function(e) { cancelDefaultAction(e); window.open(this,"_blank"); } );
+}
 </script>
 </head>
-<body onload='init()'>
-<table id='container' cellspacing=0>
-<tr><td colspan=2 id='header'>
-	<div class='title'>Tomato</div>
-	<div class='version'>Version <% version(); %></div>
+<body onload="init()">
+<table id="container" cellspacing="0">
+<tr><td colspan="2" id="header">
+	<div class="title">Tomato</div>
+	<div class="version">Version <% version(); %></div>
 </td></tr>
-<tr id='body'><td id='navi'><script type='text/javascript'>navi()</script></td>
-<td id='content'>
-<div id='ident'><% ident(); %></div>
+<tr id="body"><td id="navi"><script type="text/javascript">navi()</script></td>
+<td id="content">
+<div id="ident"><% ident(); %></div>
 
 <!-- / / / -->
 
-<div class='section-title'>Device List</div>
-<div class='section'>
-	<table id='dev-grid' class='tomato-grid' cellspacing=0></table>
+<div class="section-title">Device List</div>
+<div class="section">
+	<div id="dev-grid" class="tomato-grid"></div>
 
-<script type='text/javascript'>
+<script type="text/javascript">
 f = [];
 for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 	var u = wl_unit(uidx);
@@ -368,10 +365,10 @@ for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 			var a = '';
 			if ((nvram['wl'+u+'_mode'] == 'ap') || (nvram['wl'+u+'_mode'] == 'wds'))
 				a = '&nbsp;&nbsp;&nbsp; <input type="button" value="Measure" onclick="javascript:window.location=\'wlmnoise.cgi?_http_id=' + nvram.http_id + '&_wl_unit=' + u +'\'">';
-			f.push( { title: '<b>Noise Floor (' + wl_ifaces[uidx][0] + ')&nbsp;:</b>',
+			f.push( { title: '<b>Noise Floor (' + wl_ifaces[uidx][0] + ')&nbsp;:<\/b>',
 				prefix: '<span id="noise'+uidx+'">',
 				custom: wlnoise[uidx],
-				suffix: '</span>&nbsp;<small>dBm</small>' + a } );
+				suffix: '<\/span>&nbsp;<small>dBm<\/small>' + a } );
 		}
 	}
 }
@@ -383,9 +380,10 @@ createFieldTable('', f);
 <!-- / / / -->
 
 </td></tr>
-<tr><td id='footer' colspan=2><script type='text/javascript'>genStdRefresh(1,0,'ref.toggle()');</script></td></tr>
+<tr><td id="footer" colspan="2">
+	<script type="text/javascript">genStdRefresh(1,0,'ref.toggle()');</script>
+</td></tr>
 </table>
-<script type='text/javascript'>earlyInit();</script>
+<script type="text/javascript">earlyInit();</script>
 </body>
 </html>
-

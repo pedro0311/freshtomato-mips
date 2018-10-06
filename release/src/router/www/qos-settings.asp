@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.0//EN'>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <!--
 	Tomato GUI
 	Copyright (C) 2006-2010 Jonathan Zarate
@@ -9,17 +9,17 @@
 -->
 <html>
 <head>
-<meta http-equiv='content-type' content='text/html;charset=utf-8'>
-<meta name='robots' content='noindex,nofollow'>
+<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] QoS: Basic Settings</title>
-<link rel='stylesheet' type='text/css' href='tomato.css'>
+<link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
-<script type='text/javascript' src='tomato.js'></script>
+<script type="text/javascript" src="tomato.js"></script>
 
 <!-- / / / -->
-<script type='text/javascript' src='debug.js'></script>
+<script type="text/javascript" src="debug.js"></script>
 
-<script type='text/javascript'>
+<script type="text/javascript">
 
 /* REMOVE-BEGIN
 	!!TB - added qos_pfifo
@@ -34,25 +34,23 @@ for (i = 1; i <= 100; ++i) pctListin.push([i, i + '%']);
 pctListout = [[0, 'No Limit']];
 for (i = 1; i <= 100; ++i) pctListout.push([i, i + '%']);
 
-function scale(bandwidth, rate, ceil)
-{
+function scale(bandwidth, rate, ceil) {
 	if (bandwidth <= 0) return '';
 	if (rate <= 0) return '';
 
 	var s = comma(MAX(Math.floor((bandwidth * rate) / 100), 1));
 	if (ceil > 0) s += ' - ' + MAX(Math.round((bandwidth * ceil) / 100), 1);
-	return s + ' <small>kbit/s</small>';
+	return s + ' <small>kbit/s<\/small>';
 }
 
-function toggleFiltersVisibility(){
+function toggleFiltersVisibility() {
 	if(E('qosclassnames').style.display=='')
 		E('qosclassnames').style.display='none';
 	else
 		E('qosclassnames').style.display='';
 }
 
-function verifyClassCeilingAndRate(bandwidthString, rateString, ceilingString, resultsFieldName)
-{
+function verifyClassCeilingAndRate(bandwidthString, rateString, ceilingString, resultsFieldName) {
 	if (parseInt(ceilingString) >= parseInt(rateString))
 	{
 		elem.setInnerHTML(resultsFieldName, scale(bandwidthString, rateString, ceilingString));
@@ -66,8 +64,7 @@ function verifyClassCeilingAndRate(bandwidthString, rateString, ceilingString, r
 	return 1;
 }
 
-function verifyFields(focused, quiet)
-{
+function verifyFields(focused, quiet) {
 	var i, e, b, f;
 
 	for (var uidx = 1; uidx <= nvram.mwan_num; ++uidx) {
@@ -92,7 +89,7 @@ function verifyFields(focused, quiet)
 		}
 	}
 
-	f = E('_fom').elements;
+	f = E('t_fom').elements;
 	b = !E('_f_qos_enable').checked;
 	for (i = 0; i < f.length; ++i) {
 		if ((f[i].name.substr(0, 1) != '_') && (f[i].type != 'button') && (f[i].name.indexOf('enable') == -1) &&
@@ -112,9 +109,8 @@ function verifyFields(focused, quiet)
 	return 1;
 }
 
-function save()
-{
-	var fom = E('_fom');
+function save() {
+	var fom = E('t_fom');
 	var i, a, qos, c;
 
 
@@ -132,7 +128,7 @@ function save()
 		qos.push(E('_f_qos_' + (i - 1)).value);
 	}
 
-	fom = E('_fom');
+	fom = E('t_fom');
 	fom.qos_classnames.value = qos.join(' ');
 
 	a = [];
@@ -167,46 +163,46 @@ function save()
 
 </head>
 <body>
-<form id='_fom' method='post' action='tomato.cgi'>
-<table id='container' cellspacing=0>
-<tr><td colspan=2 id='header'>
-	<div class='title'>Tomato</div>
-	<div class='version'>Version <% version(); %></div>
+<form id="t_fom" method="post" action="tomato.cgi">
+<table id="container" cellspacing="0">
+<tr><td colspan="2" id="header">
+	<div class="title">Tomato</div>
+	<div class="version">Version <% version(); %></div>
 </td></tr>
-<tr id='body'><td id='navi'><script type='text/javascript'>navi()</script></td>
-<td id='content'>
-<div id='ident'><% ident(); %></div>
+<tr id="body"><td id="navi"><script type="text/javascript">navi()</script></td>
+<td id="content">
+<div id="ident"><% ident(); %></div>
 
 <!-- / / / -->
 
 
-<input type='hidden' name='_nextpage' value='qos-settings.asp'>
-<input type='hidden' name='_service' value='qos-restart'>
+<input type="hidden" name="_nextpage" value="qos-settings.asp">
+<input type="hidden" name="_service" value="qos-restart">
 
-<input type='hidden' name='qos_classnames'>
-<input type='hidden' name='qos_enable'>
-<input type='hidden' name='qos_ack'>
-<input type='hidden' name='qos_syn'>
-<input type='hidden' name='qos_fin'>
-<input type='hidden' name='qos_rst'>
-<input type='hidden' name='qos_icmp'>
-<input type='hidden' name='qos_udp'>
-<input type='hidden' name='qos_orates'>
-<input type='hidden' name='qos_irates'>
-<input type='hidden' name='qos_reset'>
-<input type='hidden' name='ne_vegas'>
+<input type="hidden" name="qos_classnames">
+<input type="hidden" name="qos_enable">
+<input type="hidden" name="qos_ack">
+<input type="hidden" name="qos_syn">
+<input type="hidden" name="qos_fin">
+<input type="hidden" name="qos_rst">
+<input type="hidden" name="qos_icmp">
+<input type="hidden" name="qos_udp">
+<input type="hidden" name="qos_orates">
+<input type="hidden" name="qos_irates">
+<input type="hidden" name="qos_reset">
+<input type="hidden" name="ne_vegas">
 
 
 
-<div class='section-title'>Basic Settings</div>
-<div class='section'>
-<script type='text/javascript'>
+<div class="section-title">Basic Settings</div>
+<div class="section">
+<script type="text/javascript">
 
 if ((nvram.qos_enable != '1') && (nvram.new_qoslimit_enable == '1')) {
         W('<div class="fields"><div class="about"><b>QoS is disabled. If QoS was recently disabled, Bandwidth Limiter needs to be restarted by clicking on "Save" button to apply Upload Limit rules.<\/b><\/div><\/div>');
 }
 if (nvram.qos_enable == '1') {
-	W('<div class="fields"><div class="about"><b>QoS is enabled. Upload Limit rules for host IP addresses will not be applied, and Outbound QoS rules will govern upload rates.</b><\/div><\/div>');
+	W('<div class="fields"><div class="about"><b>QoS is enabled. Upload Limit rules for host IP addresses will not be applied, and Outbound QoS rules will govern upload rates.<\/b><\/div><\/div>');
 }
 
 classList = [];
@@ -233,9 +229,9 @@ REMOVE-END */
 </script>
 </div>
 
-<div class='section-title'>Settings for DSL only</div>
-<div class='section'>
-<script type='text/javascript'>
+<div class="section-title">Settings for DSL only</div>
+<div class="section">
+<script type="text/javascript">
 
 createFieldTable('', [
 		{ title: 'DSL Overhead Value - ATM Encapsulation Type', multi:[
@@ -249,14 +245,14 @@ createFieldTable('', [
 </script>
 </div>
 
-<div class='section-title'>Outbound Rates / Limits</div>
-<div class='section'>
-<script type='text/javascript'>
+<div class="section-title">Outbound Rates / Limits</div>
+<div class="section">
+<script type="text/javascript">
 cc = nvram.qos_orates.split(/[,-]/);
 f = [];
 for (var uidx = 1; uidx <= nvram.mwan_num; ++uidx){
 	var u = (uidx >1) ? uidx : '';
-	f.push({ title: 'WAN '+uidx+'<br>Max Bandwidth Limit', name: 'wan'+u+'_qos_obw', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s </small>', value: nvram['wan'+u+'_qos_obw'] });
+	f.push({ title: 'WAN '+uidx+'<br />Max Bandwidth Limit', name: 'wan'+u+'_qos_obw', type: 'text', maxlen: 8, size: 8, suffix: ' <small>kbit/s <\/small>', value: nvram['wan'+u+'_qos_obw'] });
 }
 f.push(null);
 j = 0;
@@ -279,9 +275,9 @@ createFieldTable('', f);
 
 
 
-<div class='section-title'>Inbound Rates / Limits</div>
-<div class='section'>
-<script type='text/javascript'>
+<div class="section-title">Inbound Rates / Limits</div>
+<div class="section">
+<script type="text/javascript">
 allRates = nvram.qos_irates.split(',');
 f = [];
 for (var uidx = 1; uidx <= nvram.mwan_num; ++uidx) {
@@ -304,7 +300,6 @@ for (var uidx = 1; uidx <= nvram.mwan_num; ++uidx) {
 	splitRate = allRates[i].split('-');
 	incoming_rate = splitRate[0] || 1;
 	incoming_ceil = splitRate[1] || 100;
-
 	f.push(
 	    { title: classNames[i], multi: [
 	    { name: 'wan' + u + '_f_irate_' + i, type: 'select', options: pctListin, value: incoming_rate, suffix: ' ' },
@@ -319,19 +314,19 @@ createFieldTable('', f);
 
 
 
-<div class='section-title'>QoS Class Names <small><i><a href='javascript:toggleFiltersVisibility();'>(Toggle Visibility)</a></i></small></div>
-<div class='section' id='qosclassnames' style='display:none'>
-<script type='text/javascript'>
+<div class="section-title">QoS Class Names <small><i><a href="javascript:toggleFiltersVisibility();">(Toggle Visibility)</a></i></small></div>
+<div class="section" id="qosclassnames" style="display:none">
+<script type="text/javascript">
 
 if ((v = nvram.qos_classnames.match(/^(.+)\s+(.+)\s+(.+)\s+(.+)\s+(.+)\s+(.+)\s+(.+)\s+(.+)\s+(.+)\s+(.+)$/)) == null) {
 	v = ["-","Highest","High","Medium","Low","Lowest","A","B","C","D","E"];
 }
 titles = ['-','Priority Class 1', 'Priority Class 2', 'Priority Class 3', 'Priority Class 4', 'Priority Class 5', 'Priority Class 6', 'Priority Class 7', 'Priority Class 8', 'Priority Class 9', 'Priority Class 10'];
-f = [{ title: ' ', text: '<small>(Maximum 12 characters, no spaces)</small>' }];
+f = [{ title: ' ', text: '<small>(Maximum 12 characters, no spaces)<\/small>' }];
 for (i = 1; i < 11; ++i) {
 	f.push({ title: titles[i], name: ('f_qos_' + (i - 1)),
 		type: 'text', maxlen: 12, size: 15, value: v[i],
-		suffix: '<span id="count' + i + '"></span>' });
+		suffix: '<span id="count' + i + '"><\/span>' });
 }
 createFieldTable('', f);
 </script>
@@ -339,9 +334,9 @@ createFieldTable('', f);
 
 
 
-<div class='section-title'>TCP Vegas <small>(Network Congestion Control)</small></div>
-<div class='section'>
-<script type='text/javascript'>
+<div class="section-title">TCP Vegas <small>(Network Congestion Control)</small></div>
+<div class="section">
+<script type="text/javascript">
 createFieldTable('', [
 	{ title: 'Enable TCP Vegas', name: 'f_ne_vegas', type: 'checkbox', value: nvram.ne_vegas == '1' },
 	{ title: 'Alpha', name: 'ne_valpha', type: 'text', maxlen: 6, size: 8, value: nvram.ne_valpha },
@@ -354,13 +349,13 @@ createFieldTable('', [
 <!-- / / / -->
 
 </td></tr>
-<tr><td id='footer' colspan=2>
-	<span id='footer-msg'></span>
-	<input type='button' value='Save' id='save-button' onclick='save()'>
-	<input type='button' value='Cancel' id='cancel-button' onclick='reloadPage();'>
+<tr><td id="footer" colspan="2">
+	<span id="footer-msg"></span>
+	<input type="button" value="Save" id="save-button" onclick="save()">
+	<input type="button" value="Cancel" id="cancel-button" onclick="reloadPage();">
 </td></tr>
 </table>
 </form>
-<script type='text/javascript'>verifyFields(null, 1);</script>
+<script type="text/javascript">verifyFields(null, 1);</script>
 </body>
 </html>

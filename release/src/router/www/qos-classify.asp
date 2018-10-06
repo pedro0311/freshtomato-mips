@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.0//EN'>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <!--
 	Tomato GUI
 	Copyright (C) 2006-2010 Jonathan Zarate
@@ -9,22 +9,21 @@
 -->
 <html>
 <head>
-<meta http-equiv='content-type' content='text/html;charset=utf-8'>
-<meta name='robots' content='noindex,nofollow'>
+<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] QoS: Classification</title>
-<link rel='stylesheet' type='text/css' href='tomato.css'>
+<link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
-<script type='text/javascript' src='tomato.js'></script>
-<script type='text/javascript' src='protocols.js'></script>
+<script type="text/javascript" src="tomato.js"></script>
+<script type="text/javascript" src="protocols.js"></script>
 
 <!-- / / / -->
 
-<style type='text/css'>
+<style type="text/css">
 #qg div {
 	padding: 0 0 1px 0;
 	margin: 0;
 }
-
 #qg .co1 {
 	width: 370px;
 }
@@ -45,7 +44,6 @@
 	width: 66%;
 	float: left;
 }
-
 #qg .x2a {
 	width: 35%;
 	float: left;
@@ -59,7 +57,6 @@
 	width: 41%;
 	float: left;
 }
-
 #qg .x3a {
 	width: 40%;
 	float: left;
@@ -69,7 +66,6 @@
 	width: 60%;
 	float: left;
 }
-
 #qg .x4a {
 	width: 58%;
 	float: left;
@@ -84,7 +80,6 @@
 	clear: left;
 	width: 70px;
 }
-
 #qg .x5b {
 	float: left;
 	padding: 2px 8px 0 8px;
@@ -103,9 +98,9 @@
 
 </style>
 
-<script type='text/javascript' src='debug.js'></script>
+<script type="text/javascript" src="debug.js"></script>
 
-<script type='text/javascript'>
+<script type="text/javascript">
 
 //	<% nvram("qos_classnames,qos_enable,qos_orules"); %>
 
@@ -139,8 +134,7 @@ var ruleCounter = 0;
 
 var qosg = new TomatoGrid();
 
-function dscpClass(v)
-{
+function dscpClass(v) {
 	var s, i;
 
 	s = '';
@@ -190,10 +184,10 @@ qosg.dataToView = function(data) {
 	}
 
 	if (data[7] != '') {
-		b.push('Transferred: ' + data[7] + ((data[8] == '') ? '<small>KB+</small>' : (' - ' + data[8] + '<small>KB</small>')));
+		b.push('Transferred: ' + data[7] + ((data[8] == '') ? '<small>KB+<\/small>' : (' - ' + data[8] + '<small>KB<\/small>')));
 	}
 
-	return [b.join('<br>'), class1[(data[10] * 1) + 1][1], escapeHTML(data[11]), (ruleCounter >= 0) ? ''+ ++ruleCounter : ''];
+	return [b.join('<br />'), class1[(data[10] * 1) + 1][1], escapeHTML(data[11]), (ruleCounter >= 0) ? ''+ ++ruleCounter : ''];
 }
 
 qosg.fieldValuesToData = function(row) {
@@ -263,8 +257,7 @@ qosg.enDiFields = function(row) {
 	f[8].disabled = (f[7].value != '*');
 }
 
-function v_dscp(e, quiet)
-{
+function v_dscp(e, quiet) {
 	if ((e = E(e)) == null) return 0;
 	var v = e.value;
 	if ((!v.match(/^ *(0x)?[0-9A-Fa-f]+ *$/)) || (v < 0) || (v > 63)) {
@@ -339,22 +332,22 @@ qosg.setup = function() {
 	this.init('qg', 'move', 80, [
 		{ multi: [
 			{ type: 'select', options: [[0,'Any Address'],[1,'Dst IP'],[2,'Src IP'],[3,'Src MAC']],
-				prefix: '<div class="x1a">', suffix: '</div>' },
-			{ type: 'text', prefix: '<div class="x1b">', suffix: '</div>' },
+				prefix: '<div class="x1a">', suffix: '<\/div>' },
+			{ type: 'text', maxlen: 32, prefix: '<div class="x1b">', suffix: '<\/div>' },
 
-			{ type: 'select', prefix: '<div class="x2a">', suffix: '</div>', options: a },
-			{ type: 'select', prefix: '<div class="x2b">', suffix: '</div>',
+			{ type: 'select', prefix: '<div class="x2a">', suffix: '<\/div>', options: a },
+			{ type: 'select', prefix: '<div class="x2b">', suffix: '<\/div>',
 				options: [['a','Any Port'],['d','Dst Port'],['s','Src Port'],['x','Src or Dst']] },
-			{ type: 'text', prefix: '<div class="x2c">', suffix: '</div>' },
+			{ type: 'text', maxlen: 5, prefix: '<div class="x2c">', suffix: '<\/div>' },
 
-			{ type: 'select', prefix: '<div class="x3a">', suffix: '</div>', options: ipp2p },
-			{ type: 'select', prefix: '<div class="x3b">', suffix: '</div>', options: layer7 },
+			{ type: 'select', prefix: '<div class="x3a">', suffix: '<\/div>', options: ipp2p },
+			{ type: 'select', prefix: '<div class="x3b">', suffix: '<\/div>', options: layer7 },
 
-			{ type: 'select', prefix: '<div class="x4a">', suffix: '</div>', options: dscp },
-			{ type: 'text', prefix: '<div class="x4b">', suffix: '</div>' },
+			{ type: 'select', prefix: '<div class="x4a">', suffix: '<\/div>', options: dscp },
+			{ type: 'text', maxlen: 4, prefix: '<div class="x4b">', suffix: '<\/div>' },
 
-			{ type: 'text', prefix: '<div class="x5a">', suffix: '</div>' },
-			{ type: 'text', prefix: '<div class="x5b"> - </div><div class="x5c">', suffix: '</div><div class="x5d">KB Transferred</div>' }
+			{ type: 'text', maxlen: 10, prefix: '<div class="x5a">', suffix: '<\/div>' },
+			{ type: 'text', maxlen: 10, prefix: '<div class="x5b"> - <\/div><div class="x5c">', suffix: '<\/div><div class="x5d">KB Transferred<\/div>' }
 		] },
 		{ type: 'select', options: class1, vtop: 1 },
 		{ type: 'text', maxlen: 32, vtop: 1 },
@@ -393,16 +386,14 @@ qosg.setup = function() {
 	this.resetNewEditor();
 }
 
-function verifyFields(focused, quiet)
-{
+function verifyFields(focused, quiet) {
 	return 1;
 }
 
-function save()
-{
+function save() {
 	if (qosg.isEditing()) return;
 
-	var fom = E('_fom');
+	var fom = E('t_fom');
 	var i, a, b, c;
 
 	c = qosg.getAllData();
@@ -419,55 +410,53 @@ function save()
 	form.submit(fom, 0);
 }
 
-function init()
-{
+function init() {
 	qosg.recolor();
 }
 </script>
 
 </head>
-<body onload='init()'>
-<form id='_fom' method='post' action='tomato.cgi'>
-<table id='container' cellspacing=0>
-<tr><td colspan=2 id='header'>
-	<div class='title'>Tomato</div>
-	<div class='version'>Version <% version(); %></div>
+<body onload="init()">
+<form id="t_fom" method="post" action="tomato.cgi">
+<table id="container" cellspacing="0">
+<tr><td colspan="2" id="header">
+	<div class="title">Tomato</div>
+	<div class="version">Version <% version(); %></div>
 </td></tr>
-<tr id='body'><td id='navi'><script type='text/javascript'>navi()</script></td>
-<td id='content'>
-<div id='ident'><% ident(); %></div>
+<tr id="body"><td id="navi"><script type="text/javascript">navi()</script></td>
+<td id="content">
+<div id="ident"><% ident(); %></div>
 
 <!-- / / / -->
 
-<input type='hidden' name='_nextpage' value='qos-classify.asp'>
-<input type='hidden' name='_service' value='qos-restart'>
-<input type='hidden' name='qos_orules'>
+<input type="hidden" name="_nextpage" value="qos-classify.asp">
+<input type="hidden" name="_service" value="qos-restart">
+<input type="hidden" name="qos_orules">
 
-<div class='section-title'>Outbound Direction</div>
-<div class='section'>
-	<table class='tomato-grid' cellspacing=1 id='qg'></table>
-</div>
+<div class="section-title">Outbound Direction</div>
 
-<br>
-<script type='text/javascript'>
+<script type="text/javascript">
 if (nvram.qos_enable != '1') {
-	W('<div class="note-disabled"><b>QoS disabled.</b> &nbsp; <a href="qos-settings.asp">Enable &raquo;</a></div>');
-}
-else {
+	W('<div class="note-disabled"><b>QoS disabled.<\/b><br /><br /><a href="qos-settings.asp">Enable &raquo;<\/a><\/div>');
+} else {
 	show_notice1('<% notice("iptables"); %>');
 }
 </script>
 
+<div class="section">
+	<div class="tomato-grid" id="qg"></div>
+</div>
+
 <!-- / / / -->
 
 </td></tr>
-<tr><td id='footer' colspan=2>
-	<span id='footer-msg'></span>
-	<input type='button' value='Save' id='save-button' onclick='save()'>
-	<input type='button' value='Cancel' id='cancel-button' onclick='reloadPage();'>
+<tr><td id="footer" colspan="2">
+	<span id="footer-msg"></span>
+	<input type="button" value="Save" id="save-button" onclick="save()">
+	<input type="button" value="Cancel" id="cancel-button" onclick="reloadPage();">
 </td></tr>
 </table>
 </form>
-<script type='text/javascript'>qosg.setup();</script>
+<script type="text/javascript">qosg.setup();</script>
 </body>
 </html>

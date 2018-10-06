@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.0//EN'>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <!--
 	Tomato GUI
 	Copyright (C) 2006-2010 Jonathan Zarate
@@ -13,16 +13,16 @@
 -->
 <html>
 <head>
-<meta http-equiv='content-type' content='text/html;charset=utf-8'>
-<meta name='robots' content='noindex,nofollow'>
+<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] IP Traffic: Details</title>
-<link rel='stylesheet' type='text/css' href='tomato.css'>
+<link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
-<script type='text/javascript' src='tomato.js'></script>
+<script type="text/javascript" src="tomato.js"></script>
 
 <!-- / / / -->
 
-<style type='text/css'>
+<style type="text/css">
 #grid .co2,
 #grid .co3,
 #grid .co4,
@@ -34,13 +34,13 @@
 }
 </style>
 
-<script type='text/javascript' src='debug.js'></script>
-<script type='text/javascript' src='protocols.js'></script>
-<script type='text/javascript' src='bwm-hist.js'></script>
-<script type='text/javascript' src='bwm-common.js'></script>
-<script type='text/javascript' src='interfaces.js'></script>
+<script type="text/javascript" src="debug.js"></script>
+<script type="text/javascript" src="protocols.js"></script>
+<script type="text/javascript" src="bwm-hist.js"></script>
+<script type="text/javascript" src="bwm-common.js"></script>
+<script type="text/javascript" src="interfaces.js"></script>
 
-<script type='text/javascript'>
+<script type="text/javascript">
 //	<% nvram('cstats_enable,lan_ipaddr,lan1_ipaddr,lan2_ipaddr,lan3_ipaddr,lan_netmask,lan1_netmask,lan2_netmask,lan3_netmask,dhcpd_static'); %>
 
 //	<% devlist(); %>
@@ -48,7 +48,7 @@
 var cstats_busy = 0;
 
 try {
-// <% iptraffic(); %>
+//	<% iptraffic(); %>
 }
 catch (ex) {
 	iptraffic = [];
@@ -437,31 +437,32 @@ function toggleVisibility(whichone) {
 </script>
 
 </head>
-<body onload='init()'>
-<form id='_fom' action='javascript:{}'>
-<table id='container' cellspacing=0>
-<tr><td colspan=2 id='header'>
-	<div class='title'>Tomato</div>
-	<div class='version'>Version <% version(); %></div>
+<body onload="init()">
+<form id="t_fom" action="javascript:{}">
+<table id="container" cellspacing="0">
+<tr><td colspan="2" id="header">
+	<div class="title">Tomato</div>
+	<div class="version">Version <% version(); %></div>
 </td></tr>
-<tr id='body'><td id='navi'><script type='text/javascript'>navi()</script></td>
-<td id='content'>
-<div id='ident'><% ident(); %></div>
+<tr id="body"><td id="navi"><script type="text/javascript">navi()</script></td>
+<td id="content">
+<div id="ident"><% ident(); %></div>
 
 <!-- / / / -->
 
-<div class='section-title'>IP Traffic - Transfer Rates</div>
-<div id='cstats'>
-	<div class='section'>
-		<table id='grid' class='tomato-grid' style="float:left" cellspacing=1></table>
-		<div id='loading'><br /><b>Loading...</b></div>
+<div class="section-title">IP Traffic - Transfer Rates</div>
+<div id="cstats">
+	<div class="section">
+		<div id="grid" class="tomato-grid" style="float:left"></div>
+
+		<div id="loading"><br/><b>Loading...</b></div>
 	</div>
 
 <!-- / / / -->
 
-	<div class='section-title'>Options <small><i><a href='javascript:toggleVisibility("options");'><span id='sesdivoptionsshowhide'>(Click here to show)</span></a></i></small></div>
-	<div class='section' id='sesdivoptions' style='display:none'>
-		<script type='text/javascript'>
+	<div class="section-title">Options <small><i><a href='javascript:toggleVisibility("options");'><span id="sesdivoptionsshowhide">(Click here to show)</span></a></i></small></div>
+	<div class="section" id="sesdivoptions" style="display:none">
+		<script type="text/javascript">
 		var c;
 		c = [];
 		c.push({ title: 'Only these IPs', name: 'f_filter_ip', size: 50, maxlen: 255, type: 'text', suffix: ' <small>(Comma separated list)<\/small>' });
@@ -477,19 +478,19 @@ function toggleVisibility(whichone) {
 		</div>
 	</div>
 
-	<br />
+	<br/>
 
 </div>
 
 <!-- / / / -->
 
-<script type='text/javascript'>checkCstats();</script>
+<script type="text/javascript">checkCstats();</script>
 
 <!-- / / / -->
 
 </td></tr>
-<tr><td id='footer' colspan=2>
-	<script type='text/javascript'>genStdRefresh(1,1,'ref.toggle()');</script>
+<tr><td id="footer" colspan="2">
+	<script type="text/javascript">genStdRefresh(1,1,'ref.toggle()');</script>
 </td></tr>
 </table>
 </form>

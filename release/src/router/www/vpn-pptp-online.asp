@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.0//EN'>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <!--
 	Tomato PPTPd GUI
 	Copyright (C) 2012 Augusto Bott
@@ -12,37 +12,37 @@
 -->
 <html>
 <head>
-<meta http-equiv='content-type' content='text/html;charset=utf-8'>
-<meta name='robots' content='noindex,nofollow'>
+<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] VPN：PPTP Online</title>
-<link rel='stylesheet' type='text/css' href='tomato.css'>
+<link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
-<script type='text/javascript' src='tomato.js'></script>
-<style type='text/css'>
+<script type="text/javascript" src="tomato.js"></script>
+<style type="text/css">
 #dev-grid .co1 {
-width: 10%;
+	width: 10%;
 }
 #dev-grid .co2 {
-width: 18%;
+	width: 18%;
 }
 #dev-grid .co3 {
-width: 12%;
+	width: 12%;
 }
 #dev-grid .co4 {
-width: 12%;
+	width: 12%;
 }
 #dev-grid .co5 {
-width: 18%;
+	width: 18%;
 }
 #dev-grid .co6 {
-width: 10%;
-text-align: center;
+	width: 10%;
+	text-align: center;
 }
 #dev-grid .header {
-text-align: left;
+	text-align: left;
 }
 </style>
-<script type='text/javascript'>
+<script type="text/javascript">
 //	<% nvram(''); %>	// http_id
 //	<% pptpd_userol(); %>
 
@@ -171,7 +171,7 @@ dg.populate = function() {
 
 	for (i = list.length - 1; i >= 0; --i) {
 		e = list[i];
-		hangup = '<div id="div_'+e.pid+'"><a href="javascript:disconnect(\'div_'+e.pid + '\',' + e.pid + ')" title="Disconnect" id="pid_' + e.pid + '">Disconnect</a></div>';
+		hangup = '<div id="div_'+e.pid+'"><a href="javascript:disconnect(\'div_'+e.pid + '\',' + e.pid + ')" title="Disconnect" id="pid_' + e.pid + '">Disconnect<\/a><\/div>';
 /* REMOVE-BEGIN */
 //		this.insert(-1, e, [
 //			e.ifname, e.username, e.uptime, e.ip, e.sourceip, hangup], false);
@@ -225,25 +225,25 @@ function init() {
 }
 </script>
 </head>
-<body onload='init()'>
-<table id='container' cellspacing=0>
-<tr><td colspan=2 id='header'>
-  <div class='title'>Tomato</div>
-  <div class='version'>Version <% version(); %></div>
+<body onload="init()">
+<table id="container" cellspacing="0">
+<tr><td colspan="2" id="header">
+	<div class="title">Tomato</div>
+	<div class="version">Version <% version(); %></div>
 </td></tr>
-<tr id='body'><td id='navi'><script type='text/javascript'>navi()</script></td>
-<td id='content'>
-<div id='ident'><% ident(); %></div>
-<div class='section-title'>PPTP Users Online</div>
-<div class='section'>
-<table id='dev-grid' class='tomato-grid' cellspacing=0></table>
+<tr id="body"><td id="navi"><script type="text/javascript">navi()</script></td>
+<td id="content">
+<div id="ident"><% ident(); %></div>
+<div class="section-title">PPTP Users Online</div>
+<div class="section">
+	<div id="dev-grid" class="tomato-grid"></div>
 </div>
 <div style="float:right;text-align:right">
 &raquo; <a href="vpn-pptp-server.asp">Configure</a>
 </div>
 </td></tr>
-<tr><td id='footer' colspan=2><script type='text/javascript'>genStdRefresh(1,1,'ref.toggle()');</script></td></tr>
+<tr><td id="footer" colspan="2"><script type="text/javascript">genStdRefresh(1,1,'ref.toggle()');</script></td></tr>
 </table>
-<script type='text/javascript'>earlyInit();</script>
+<script type="text/javascript">earlyInit();</script>
 </body>
 </html>

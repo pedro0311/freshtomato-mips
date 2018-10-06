@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.0//EN'>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <!--
 	Tomato GUI
 	Copyright (C) 2006-2010 Jonathan Zarate
@@ -9,15 +9,15 @@
 -->
 <html>
 <head>
-<meta http-equiv='content-type' content='text/html;charset=utf-8'>
-<meta name='robots' content='noindex,nofollow'>
+<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Advanced: Routing</title>
-<link rel='stylesheet' type='text/css' href='tomato.css'>
+<link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
-<script type='text/javascript' src='tomato.js'></script>
+<script type="text/javascript" src="tomato.js"></script>
 
 <!-- / / / -->
-<style type='text/css'>
+<style type="text/css">
 #ara-grid .co1, #ara-grid .co2, #ara-grid .co3 {
 	width: 20%;
 }
@@ -42,11 +42,11 @@
 }
 </style>
 
-<script type='text/javascript' src='debug.js'></script>
+<script type="text/javascript" src="debug.js"></script>
 
-<script type='text/javascript'>
-// <% nvram("wk_mode,dr_setting,lan_stp,routes_static,dhcp_routes,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,wan_ifname,wan_iface,wan2_ifname,wan2_iface,wan3_ifname,wan3_iface,wan4_ifname,wan4_iface,emf_enable,dr_lan_rx,dr_lan1_rx,dr_lan2_rx,dr_lan3_rx,dr_wan_rx,dr_wan2_rx,dr_wan3_rx,dr_wan4_rx,wan_proto,wan2_proto,wan3_proto,wan4_proto,mwan_num"); %>
-// <% activeroutes(); %>
+<script type="text/javascript">
+//	<% nvram("wk_mode,dr_setting,lan_stp,routes_static,dhcp_routes,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,wan_ifname,wan_iface,wan2_ifname,wan2_iface,wan3_ifname,wan3_iface,wan4_ifname,wan4_iface,emf_enable,dr_lan_rx,dr_lan1_rx,dr_lan2_rx,dr_lan3_rx,dr_wan_rx,dr_wan2_rx,dr_wan3_rx,dr_wan4_rx,wan_proto,wan2_proto,wan3_proto,wan4_proto,mwan_num"); %>
+//	<% activeroutes(); %>
 
 var ara = new TomatoGrid();
 
@@ -135,8 +135,7 @@ ars.resetNewEditor = function() {
 	try { if (e.length) e[0].focus(); } catch (er) { }
 }
 
-function verifyFields(focused, quiet)
-{
+function verifyFields(focused, quiet) {
 	E('_f_dr_lan').disabled = (nvram.lan_ifname.length < 1);
 	if (E('_f_dr_lan').disabled)
 		E('_f_dr_lan').checked = false;
@@ -162,18 +161,16 @@ function verifyFields(focused, quiet)
 	return 1;
 }
 
-function save()
-{
+function save() {
 	if (ars.isEditing()) return;
 
-	var fom = E('_fom');
+	var fom = E('t_fom');
 	var data = ars.getAllData();
 	var r = [];
 	for (var i = 0; i < data.length; ++i) r.push(data[i].join('<'));
 	fom.routes_static.value = r.join('>');
 
 /* ZEBRA-BEGIN */
-
 	fom.dr_lan_tx.value = fom.dr_lan_rx.value = (E('_f_dr_lan').checked) ? '1 2' : '0';
 	fom.dr_lan1_tx.value = fom.dr_lan1_rx.value = (E('_f_dr_lan1').checked) ? '1 2' : '0';
 	fom.dr_lan2_tx.value = fom.dr_lan2_rx.value = (E('_f_dr_lan2').checked) ? '1 2' : '0';
@@ -184,7 +181,6 @@ function save()
 	fom.dr_wan3_tx.value = fom.dr_wan3_rx.value = (E('_f_dr_wan3').checked) ? '1 2' : '0';
 	fom.dr_wan4_tx.value = fom.dr_wan4_rx.value = (E('_f_dr_wan4').checked) ? '1 2' : '0';
 /* MULTIWAN-END */
-
 /* ZEBRA-END */
 
 	fom.dhcp_routes.value = E('_f_dhcp_routes').checked ? '1' : '0';
@@ -198,75 +194,71 @@ function save()
 	form.submit(fom, 1);
 }
 
-function submit_complete()
-{
+function submit_complete() {
 	reloadPage();
 }
 
-function earlyInit()
-{
+function earlyInit() {
 	ara.setup();
 	ars.setup();
 }
 
-function init()
-{
+function init() {
 	ara.recolor();
 	ars.recolor();
 }
 </script>
 </head>
-<body onload='init()'>
-<form id='_fom' method='post' action='tomato.cgi'>
-<table id='container' cellspacing=0>
-<tr><td colspan=2 id='header'>
-	<div class='title'>Tomato</div>
-	<div class='version'>Version <% version(); %></div>
+<body onload="init()">
+<form id="t_fom" method="post" action="tomato.cgi">
+<table id="container" cellspacing="0">
+<tr><td colspan="2" id="header">
+	<div class="title">Tomato</div>
+	<div class="version">Version <% version(); %></div>
 </td></tr>
-<tr id='body'><td id='navi'><script type='text/javascript'>navi()</script></td>
-<td id='content'>
-<div id='ident'><% ident(); %></div>
+<tr id="body"><td id="navi"><script type="text/javascript">navi()</script></td>
+<td id="content">
+<div id="ident"><% ident(); %></div>
 
 <!-- / / / -->
 
-<input type='hidden' name='_nextpage' value='advanced-routing.asp'>
-<input type='hidden' name='_service' value='routing-restart'>
-
-<input type='hidden' name='routes_static'>
-<input type='hidden' name='dhcp_routes'>
-<input type='hidden' name='emf_enable'>
-<input type='hidden' name='dr_lan_tx'>
-<input type='hidden' name='dr_lan_rx'>
-<input type='hidden' name='dr_lan1_tx'>
-<input type='hidden' name='dr_lan1_rx'>
-<input type='hidden' name='dr_lan2_tx'>
-<input type='hidden' name='dr_lan2_rx'>
-<input type='hidden' name='dr_lan3_tx'>
-<input type='hidden' name='dr_lan3_rx'>
-<input type='hidden' name='dr_wan_tx'>
-<input type='hidden' name='dr_wan_rx'>
-<input type='hidden' name='dr_wan2_tx'>
-<input type='hidden' name='dr_wan2_rx'>
+<input type="hidden" name="_nextpage" value="advanced-routing.asp">
+<input type="hidden" name="_service" value="routing-restart">
+<input type="hidden" name="routes_static">
+<input type="hidden" name="dhcp_routes">
+<input type="hidden" name="emf_enable">
+<input type="hidden" name="dr_lan_tx">
+<input type="hidden" name="dr_lan_rx">
+<input type="hidden" name="dr_lan1_tx">
+<input type="hidden" name="dr_lan1_rx">
+<input type="hidden" name="dr_lan2_tx">
+<input type="hidden" name="dr_lan2_rx">
+<input type="hidden" name="dr_lan3_tx">
+<input type="hidden" name="dr_lan3_rx">
+<input type="hidden" name="dr_wan_tx">
+<input type="hidden" name="dr_wan_rx">
+<input type="hidden" name="dr_wan2_tx">
+<input type="hidden" name="dr_wan2_rx">
 /* MULTIWAN-BEGIN */
-<input type='hidden' name='dr_wan3_tx'>
-<input type='hidden' name='dr_wan3_rx'>
-<input type='hidden' name='dr_wan4_tx'>
-<input type='hidden' name='dr_wan4_rx'>
+<input type="hidden" name="dr_wan3_tx">
+<input type="hidden" name="dr_wan3_rx">
+<input type="hidden" name="dr_wan4_tx">
+<input type="hidden" name="dr_wan4_rx">
 /* MULTIWAN-END */
 
-<div class='section-title'>Current Routing Table</div>
-<div class='section'>
-	<table class='tomato-grid' id='ara-grid'></table>
+<div class="section-title">Current Routing Table</div>
+<div class="section">
+	<div class="tomato-grid" id="ara-grid"></div>
 </div>
 
-<div class='section-title'>Static Routing Table</div>
-<div class='section'>
-	<table class='tomato-grid' id='ars-grid'></table>
+<div class="section-title">Static Routing Table</div>
+<div class="section">
+	<div class="tomato-grid" id="ars-grid"></div>
 </div>
 
-<div class='section-title'>Miscellaneous</div>
-<div class='section'>
-<script type='text/javascript'>
+<div class="section-title">Miscellaneous</div>
+<div class="section">
+<script type="text/javascript">
 createFieldTable('', [
 	{ title: 'Mode', name: 'wk_mode', type: 'select', options: [['gateway','Gateway'],['router','Router']], value: nvram.wk_mode },
 /* ZEBRA-BEGIN */
@@ -281,7 +273,6 @@ createFieldTable('', [
 	{ title: 'WAN3', indent: 2, name: 'f_dr_wan3', type: 'checkbox', value: ((nvram.dr_wan3_rx != '0') && (nvram.dr_wan3_rx != '')) },
 	{ title: 'WAN4', indent: 2, name: 'f_dr_wan4', type: 'checkbox', value: ((nvram.dr_wan4_rx != '0') && (nvram.dr_wan4_rx != '')) },
 /* MULTIWAN-END */
-
 /* ZEBRA-END */
 /* EMF-BEGIN */
 	{ title: 'Efficient Multicast Forwarding (IGMP Snooping)', name: 'f_emf', type: 'checkbox', value: nvram.emf_enable != '0' },
@@ -295,14 +286,13 @@ createFieldTable('', [
 <!-- / / / -->
 
 </td></tr>
-<tr><td id='footer' colspan=2>
-	<span id='footer-msg'></span>
-	<input type='button' value='Save' id='save-button' onclick='save()'>
-	<input type='button' value='Cancel' id='cancel-button' onclick='reloadPage();'>
+<tr><td id="footer" colspan="2">
+	<span id="footer-msg"></span>
+	<input type="button" value="Save" id="save-button" onclick="save()">
+	<input type="button" value="Cancel" id="cancel-button" onclick="reloadPage();">
 </td></tr>
 </table>
 </form>
-<script type='text/javascript'>earlyInit(); verifyFields(null, 1);</script>
+<script type="text/javascript">earlyInit(); verifyFields(null, 1);</script>
 </body>
 </html>
-

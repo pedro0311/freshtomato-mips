@@ -11,7 +11,7 @@ install:
 
 	cp *.gif *.png *.ico *.html *.php robots.txt $(INSTALLDIR)/www
 
-# squish some of the files by trimming whitespace...
+# Squish some of the files by trimming whitespace...
 
 	for F in $(wildcard *.js *.jsx); do \
 		sed '/^\/\*\s*$$/,/\*\//! { s/^\s\+//; s/\s\+$$//; /^\/\/ --\+\s*/d; /^$$/d }' < $$F > $(INSTALLDIR)/www/$$F; \
@@ -21,7 +21,7 @@ install:
 		sed '/^\/\*\s*$$/,/\*\//! { s/\s\+/ /g; s/^\s\+//; s/\s\+$$//; /^$$/d }' < $$F > $(INSTALLDIR)/www/$$F; \
 	done
 
-# remove "debug.js" references, convert color.css, remove comments
+# Remove "debug.js" references, convert color.css, remove comments
 # in between REMOVE-BEGIN and REMOVE-END, and compress whitespace
 
 	for F in $(wildcard *.asp *.svg); do \
@@ -51,13 +51,13 @@ else
 	done
 endif
 
-#only include  MultiWAN options if MULTIWAN is configured in.
+# Only include  MultiWAN options if MULTIWAN is configured in.
 ifneq ($(TCONFIG_MULTIWAN),y)
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp *.js *.jsx); do \
 		sed -i $$F -e "/MULTIWAN-BEGIN/,/MULTIWAN-END/d"; \
 	done
-# or remove dualwan options
+# Or remove dualwan options
 else
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp *.js *.jsx); do \
@@ -311,7 +311,7 @@ ifneq ($(TCONFIG_HTTPS),y)
 	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/HTTPS-BEGIN/,/HTTPS-END/d"
 endif
 
-# clean up
+# Clean-up compiler directives
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp *.js *.jsx *.html); do \
 		[ -f $(INSTALLDIR)/www/$$F ] && sed -i $$F \
@@ -354,7 +354,7 @@ endif
 		|| true; \
 	done
 
-# make sure old and debugging crap is gone
+# Make sure old and debugging crap is gone
 	@rm -f $(INSTALLDIR)/www/debug.js
 	@rm -f $(INSTALLDIR)/www/*-x.*
 	@rm -f $(INSTALLDIR)/www/*-old.*
@@ -362,7 +362,7 @@ endif
 
 	chmod 0644 $(INSTALLDIR)/www/*
 
-# remove C-style comments from java, asp and css files. All "control" comments have been processed by now.
+# Remove C-style comments from java, asp and css files. All "control" comments have been processed by now.
 	for F in $(wildcard *.js *.jsx *.asp *.css); do \
 		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/remcoms2.sh $(INSTALLDIR)/www/$$F c; \
 	done

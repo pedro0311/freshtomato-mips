@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.0//EN'>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <!--
 	Tomato GUI
 	Copyright (C) 2006-2010 Jonathan Zarate
@@ -9,16 +9,16 @@
 -->
 <html>
 <head>
-<meta http-equiv='content-type' content='text/html;charset=utf-8'>
-<meta name='robots' content='noindex,nofollow'>
+<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Forwarding: UPnP / NAT-PMP</title>
-<link rel='stylesheet' type='text/css' href='tomato.css'>
+<link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
-<script type='text/javascript' src='tomato.js'></script>
+<script type="text/javascript" src="tomato.js"></script>
 
 <!-- / / / -->
 
-<style type='text/css'>
+<style type="text/css">
 #upnp-grid .co1, #upnp-grid .co2 {
 	width: 12%;
 }
@@ -33,9 +33,9 @@
 }
 </style>
 
-<script type='text/javascript' src='debug.js'></script>
+<script type="text/javascript" src="debug.js"></script>
 
-<script type='text/javascript'>
+<script type="text/javascript">
 
 /* REMOVE-BEGIN
 	!!TB - additional miniupnp settings
@@ -47,16 +47,14 @@ REMOVE-END */
 nvram.upnp_enable = fixInt(nvram.upnp_enable, 0, 3, 0);
 
 
-function submitDelete(proto, eport)
-{
+function submitDelete(proto, eport) {
 	form.submitHidden('upnp.cgi', {
 		remove_proto: proto,
 		remove_eport: eport,
 		_redirect: 'forward-upnp.asp' });
 }
 
-function deleteData(data)
-{
+function deleteData(data) {
 	if (!confirm('Delete ' + data[3] + ' ' + data[0] + ' -> ' + data[2] + ':' + data[1] + ' ?')) return;
 	submitDelete(data[3], data[0]);
 }
@@ -102,14 +100,12 @@ ug.populate = function() {
 	E('upnp-delete-all').disabled = (ug.getDataCount() == 0);
 }
 
-function deleteAll()
-{
+function deleteAll() {
 	if (!confirm('Delete all entries?')) return;
 	submitDelete('*', '0');
 }
 
-function verifyFields(focused, quiet)
-{
+function verifyFields(focused, quiet) {
 /* REMOVE-BEGIN
 	!!TB - additional miniupnp settings
 REMOVE-END */
@@ -168,14 +164,13 @@ REMOVE-END */
 	return 1;
 }
 
-function save()
-{
+function save() {
 /* REMOVE-BEGIN
 	!!TB - miniupnp
 REMOVE-END */
 	if (!verifyFields(null, 0)) return;
 
-	var fom = E('_fom');
+	var fom = E('t_fom');
 	fom.upnp_enable.value = 0;
 	if (fom.f_enable_upnp.checked) fom.upnp_enable.value = 1;
 	if (fom.f_enable_natpmp.checked) fom.upnp_enable.value |= 2;
@@ -194,58 +189,56 @@ REMOVE-END */
 	form.submit(fom, 0);
 }
 
-function init()
-{
+function init() {
 	ug.recolor();
 }
 
 /* REMOVE-BEGIN
 	!!TB - miniupnp
 REMOVE-END */
-function submit_complete()
-{
+function submit_complete() {
 	reloadPage();
 }
 </script>
 
 </head>
-<body onload='init()'>
-<form id='_fom' method='post' action='tomato.cgi'>
-<table id='container' cellspacing=0>
-<tr><td colspan=2 id='header'>
-	<div class='title'>Tomato</div>
-	<div class='version'>Version <% version(); %></div>
+<body onload="init()">
+<form id="t_fom" method="post" action="tomato.cgi">
+<table id="container" cellspacing="0">
+<tr><td colspan="2" id="header">
+	<div class="title">Tomato</div>
+	<div class="version">Version <% version(); %></div>
 </td></tr>
-<tr id='body'><td id='navi'><script type='text/javascript'>navi()</script></td>
-<td id='content'>
-<div id='ident'><% ident(); %></div>
+<tr id="body"><td id="navi"><script type="text/javascript">navi()</script></td>
+<td id="content">
+<div id="ident"><% ident(); %></div>
 
 <!-- / / / -->
 
-<input type='hidden' name='_nextpage' value='forward-upnp.asp'>
-<input type='hidden' name='_service' value='upnp-restart'>
+<input type="hidden" name="_nextpage" value="forward-upnp.asp">
+<input type="hidden" name="_service" value="upnp-restart">
 
-<input type='hidden' name='upnp_enable'>
+<input type="hidden" name="upnp_enable">
 /* REMOVE-BEGIN
 	!!TB - additional miniupnp settings
 REMOVE-END */
-<input type='hidden' name='upnp_mnp'>
-<input type='hidden' name='upnp_clean'>
-<input type='hidden' name='upnp_secure'>
-<input type='hidden' name='upnp_lan'>
-<input type='hidden' name='upnp_lan1'>
-<input type='hidden' name='upnp_lan2'>
-<input type='hidden' name='upnp_lan3'>
+<input type="hidden" name="upnp_mnp">
+<input type="hidden" name="upnp_clean">
+<input type="hidden" name="upnp_secure">
+<input type="hidden" name="upnp_lan">
+<input type="hidden" name="upnp_lan1">
+<input type="hidden" name="upnp_lan2">
+<input type="hidden" name="upnp_lan3">
 
-<div class='section-title'>Forwarded Ports</div>
-<div class='section'>
-	<table id='upnp-grid' class='tomato-grid'></table>
-	<div style='width: 100%; text-align: right'><input type='button' value='Delete All' onclick='deleteAll()' id='upnp-delete-all'> <input type='button' value='Refresh' onclick='javascript:reloadPage();'></div>
+<div class="section-title">Forwarded Ports</div>
+<div class="section">
+	<div id="upnp-grid" class="tomato-grid"></div>
+	<div style="width: 100%; text-align: right"><input type="button" value="Delete All" onclick="deleteAll()" id="upnp-delete-all"> <input type="button" value="Refresh" onclick="reloadPage();"></div>
 </div>
 
-<div class='section-title'>Settings</div>
-<div class='section'>
-<script type='text/javascript'>
+<div class="section-title">Settings</div>
+<div class="section">
+<script type="text/javascript">
 createFieldTable('', [
 	{ title: 'Enable UPnP', name: 'f_enable_upnp', type: 'checkbox', value: (nvram.upnp_enable & 1) },
 	{ title: 'Enable NAT-PMP', name: 'f_enable_natpmp', type: 'checkbox', value: (nvram.upnp_enable & 2) },
@@ -254,11 +247,11 @@ createFieldTable('', [
 REMOVE-END */
 	{ title: 'Inactive Rules Cleaning', name: 'f_upnp_clean', type: 'checkbox', value: (nvram.upnp_clean == '1') },
 	{ title: 'Cleaning Interval', indent: 2, name: 'upnp_clean_interval', type: 'text', maxlen: 5, size: 7,
-		suffix: ' <small>seconds</small>', value: nvram.upnp_clean_interval },
+		suffix: ' <small>seconds<\/small>', value: nvram.upnp_clean_interval },
 	{ title: 'Cleaning Threshold', indent: 2, name: 'upnp_clean_threshold', type: 'text', maxlen: 4, size: 7,
-		suffix: ' <small>redirections</small>', value: nvram.upnp_clean_threshold },
+		suffix: ' <small>redirections<\/small>', value: nvram.upnp_clean_threshold },
 	{ title: 'Secure Mode', name: 'f_upnp_secure', type: 'checkbox',
-		suffix: ' <small>(when enabled, UPnP clients are allowed to add mappings only to their IP)</small>',
+		suffix: ' <small>(when enabled, UPnP clients are allowed to add mappings only to their IP)<\/small>',
 		value: (nvram.upnp_secure == '1') },
 	{ title: 'Enabled on' },
 	{ title: 'LAN', indent: 2, name: 'f_upnp_lan', type: 'checkbox', value: (nvram.upnp_lan == '1') },
@@ -267,7 +260,7 @@ REMOVE-END */
 	{ title: 'LAN3', indent: 2, name: 'f_upnp_lan3', type: 'checkbox', value: (nvram.upnp_lan3 == '1') },
 	{ title: 'Show In My Network Places',  name: 'f_upnp_mnp',  type: 'checkbox',  value: (nvram.upnp_mnp == '1')},
 	null,
-	{ title: 'Miniupnpd</a><br>Custom configuration', name: 'upnp_custom', type: 'textarea', value: nvram.upnp_custom }
+	{ title: 'Miniupnpd<\/a><br />Custom configuration', name: 'upnp_custom', type: 'textarea', value: nvram.upnp_custom }
 ]);
 </script>
 </div>
@@ -276,16 +269,16 @@ REMOVE-END */
 <!-- / / / -->
 
 </td></tr>
-<tr><td id='footer' colspan=2>
-	<span id='footer-msg'></span>
-	<input type='button' value='Save' id='save-button' onclick='save()'>
-	<input type='button' value='Cancel' id='cancel-button' onclick='javascript:reloadPage();'>
+<tr><td id="footer" colspan="2">
+	<span id="footer-msg"></span>
+	<input type="button" value="Save" id="save-button" onclick="save()">
+	<input type="button" value="Cancel" id="cancel-button" onclick="reloadPage();">
 </td></tr>
 </table>
 </form>
 /* REMOVE-BEGIN
 	!!TB - added verifyFields
 REMOVE-END */
-<script type='text/javascript'>ug.setup();verifyFields(null, 1);</script>
+<script type="text/javascript">ug.setup();verifyFields(null, 1);</script>
 </body>
 </html>
