@@ -354,6 +354,24 @@ endif
 		|| true; \
 	done
 
+# Use HTML compressor to compress HTML as much as possible
+	cd $(INSTALLDIR)/www && \
+	for F in $(wildcard *.asp ); do \
+		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/tools/bin/html-minifier $$F --minify-css --use-short-doctype -o $$F || true; \
+	done
+
+# Compress JAVASCRIPT files
+	cd $(INSTALLDIR)/www && \
+	for F in $(wildcard *.js ); do \
+		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/tools/bin/uglifyjs $$F -c -o $$F || true; \
+	done
+
+# Compress CSS files
+	cd $(INSTALLDIR)/www && \
+	for F in $(wildcard *.css ); do \
+		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/tools/bin/uglifycss $$F --output $$F || true; \
+	done
+
 # Make sure old and debugging crap is gone
 	@rm -f $(INSTALLDIR)/www/debug.js
 	@rm -f $(INSTALLDIR)/www/*-x.*
