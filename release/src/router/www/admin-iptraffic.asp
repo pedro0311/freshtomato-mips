@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.0//EN'>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <!--
 	Tomato GUI
 	Copyright (C) 2006-2010 Jonathan Zarate
@@ -9,44 +9,41 @@
 -->
 <html>
 <head>
-<meta http-equiv='content-type' content='text/html;charset=utf-8'>
-<meta name='robots' content='noindex,nofollow'>
+<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Admin: IP Traffic Monitoring</title>
-<link rel='stylesheet' type='text/css' href='tomato.css'>
+<link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
-<script type='text/javascript' src='tomato.js'></script>
+<script type="text/javascript" src="tomato.js"></script>
 
 <!-- / / / -->
-<style type='text/css'>
+<style type="text/css">
 textarea {
 	width: 98%;
 	height: 15em;
 }
 </style>
 
-<script type='text/javascript' src='debug.js'></script>
+<script type="text/javascript" src="debug.js"></script>
 
-<script type='text/javascript'>
+<script type="text/javascript">
 
 //	<% nvram("cstats_enable,cstats_path,cstats_stime,cstats_offset,cstats_exclude,cstats_include,cstats_sshut,et0macaddr,cifs1,cifs2,jffs2_on,cstats_bak,cstats_all,cstats_labels"); %>
 
-function fix(name)
-{
+function fix(name) {
 	var i;
 	if (((i = name.lastIndexOf('/')) > 0) || ((i = name.lastIndexOf('\\')) > 0))
 		name = name.substring(i + 1, name.length);
 	return name;
 }
 
-function backupNameChanged()
-{
+function backupNameChanged() {
 	if (location.href.match(/^(http.+?\/.+\/)/)) {
 		E('backup-link').href = RegExp.$1 + 'ipt/' + fix(E('backup-name').value) + '.gz?_http_id=' + nvram.http_id;
 	}
 }
 
-function backupButton()
-{
+function backupButton() {
 	var name;
 
 	name = fix(E('backup-name').value);
@@ -57,8 +54,7 @@ function backupButton()
 	location.href = 'ipt/' + name + '.gz?_http_id=' + nvram.http_id;
 }
 
-function restoreButton()
-{
+function restoreButton() {
 	var fom;
 	var name;
 	var i;
@@ -79,14 +75,12 @@ function restoreButton()
 	E('restore-form').submit();
 }
 
-function getPath()
-{
+function getPath() {
 	var s = E('_f_loc').value;
 	return (s == '*user') ? E('_f_user').value : s;
 }
 
-function verifyFields(focused, quiet)
-{
+function verifyFields(focused, quiet) {
 	var b, v;
 	var path;
 	var eLoc, eUser, eTime, eOfs;
@@ -141,20 +135,17 @@ function verifyFields(focused, quiet)
 			ferror.set(eUser, 'Please start at the / root directory.', quiet);
 			return 0;
 		}
-	}
-	else if (v == '/jffs/') {
+	} else if (v == '/jffs/') {
 		if (nvram.jffs2_on != '1') {
 			ferror.set(eLoc, 'JFFS2 is not enabled.', quiet);
 			return 0;
 		}
-	}
-	else if (v.match(/^\/cifs(1|2)\/$/)) {
+	} else if (v.match(/^\/cifs(1|2)\/$/)) {
 		if (nvram['cifs' + RegExp.$1].substr(0, 1) != '1') {
 			ferror.set(eLoc, 'CIFS #' + RegExp.$1 + ' is not enabled.', quiet);
 			return 0;
 		}
-	}
-	else {
+	} else {
 		bak = 1;
 	}
 
@@ -163,15 +154,14 @@ function verifyFields(focused, quiet)
 	return v_range(eOfs, quiet, 1, 31);
 }
 
-function save()
-{
+function save() {
 	var fom, path, en, e, aj;
 
 	if (!verifyFields(null, false)) return;
 
 	aj = 1;
 	en = E('_f_cstats_enable').checked;
-	fom = E('_fom');
+	fom = E('t_fom');
 	fom._service.value = 'cstats-restart';
 	if (en) {
 		path = getPath();
@@ -212,37 +202,37 @@ function save()
 	}
 }
 
-function init()
-{
+function init() {
 	backupNameChanged();
 }
 </script>
 
 </head>
 <body onload="init()">
-<table id='container' cellspacing=0>
-<tr><td colspan=2 id='header'>
-	<div class='title'>Tomato</div>
-	<div class='version'>Version <% version(); %></div>
+<table id="container" cellspacing="0">
+<tr><td colspan="2" id="header">
+	<div class="title">Tomato</div>
+	<div class="version">Version <% version(); %></div>
 </td></tr>
-<tr id='body'><td id='navi'><script type='text/javascript'>navi()</script></td>
-<td id='content'>
-<div id='ident'><% ident(); %></div>
+<tr id="body"><td id="navi"><script type="text/javascript">navi()</script></td>
+<td id="content">
+<div id="ident"><% ident(); %></div>
 
 <!-- / / / -->
 
-<div class='section-title'>IP Traffic Monitoring</div>
-<div class='section' id='config-section'>
-<form id='_fom' method='post' action='tomato.cgi'>
-<input type='hidden' name='_nextpage' value='admin-iptraffic.asp'>
-<input type='hidden' name='_service' value='cstats-restart'>
-<input type='hidden' name='cstats_enable'>
-<input type='hidden' name='cstats_path'>
-<input type='hidden' name='cstats_sshut'>
-<input type='hidden' name='cstats_bak'>
-<input type='hidden' name='cstats_all'>
+<div class="section-title">IP Traffic Monitoring</div>
+<div class="section" id="config-section">
+<form id="t_fom" method="post" action="tomato.cgi">
+<div>
+<input type="hidden" name="_nextpage" value="admin-iptraffic.asp">
+<input type="hidden" name="_service" value="cstats-restart">
+<input type="hidden" name="cstats_enable">
+<input type="hidden" name="cstats_path">
+<input type="hidden" name="cstats_sshut">
+<input type="hidden" name="cstats_bak">
+<input type="hidden" name="cstats_all">
 
-<script type='text/javascript'>
+<script type="text/javascript">
 switch (nvram.cstats_path) {
 case '':
 case '*nvram':
@@ -269,55 +259,60 @@ REMOVE-END */
 		[9,'Every 9 Hours'],[12,'Every 12 Hours'],[24,'Every 24 Hours'],[48,'Every 2 Days'],[72,'Every 3 Days'],[96,'Every 4 Days'],
 		[120,'Every 5 Days'],[144,'Every 6 Days'],[168,'Every Week']] },
 	{ title: 'Save On Shutdown', indent: 2, name: 'f_sshut', type: 'checkbox', value: nvram.cstats_sshut == '1' },
-	{ title: 'Create New File<br><small>(Reset Data)</small>', indent: 2, name: 'f_new', type: 'checkbox', value: 0,
-		suffix: ' &nbsp; <b id="newmsg" style="visibility:hidden"><small>(note: enable if this is a new file)</small></b>' },
+	{ title: 'Create New File<br /><small>(Reset Data)<\/small>', indent: 2, name: 'f_new', type: 'checkbox', value: 0,
+		suffix: ' &nbsp; <b id="newmsg" style="visibility:hidden"><small>(note: enable if this is a new file)<\/small><\/b>' },
 	{ title: 'Create Backups', indent: 2, name: 'f_bak', type: 'checkbox', value: nvram.cstats_bak == '1' },
 	{ title: 'First Day Of The Month', name: 'cstats_offset', type: 'text', value: nvram.cstats_offset, maxlen: 2, size: 4 },
-	{ title: 'Excluded IPs', name: 'cstats_exclude', type: 'text', value: nvram.cstats_exclude, maxlen: 512, size: 50, suffix: '&nbsp;<small>(comma separated list)</small>' },
-	{ title: 'Included IPs', name: 'cstats_include', type: 'text', value: nvram.cstats_include, maxlen: 2048, size: 50, suffix: '&nbsp;<small>(comma separated list)</small>' },
-	{ title: 'Enable Auto-Discovery', name: 'f_all', type: 'checkbox', value: nvram.cstats_all == '1', suffix: '&nbsp;<small>(automatically include new IPs in monitoring as soon as any traffic is detected)</small>' },
+	{ title: 'Excluded IPs', name: 'cstats_exclude', type: 'text', value: nvram.cstats_exclude, maxlen: 512, size: 50, suffix: '&nbsp;<small>(comma separated list)<\/small>' },
+	{ title: 'Included IPs', name: 'cstats_include', type: 'text', value: nvram.cstats_include, maxlen: 2048, size: 50, suffix: '&nbsp;<small>(comma separated list)<\/small>' },
+	{ title: 'Enable Auto-Discovery', name: 'f_all', type: 'checkbox', value: nvram.cstats_all == '1', suffix: '&nbsp;<small>(automatically include new IPs in monitoring as soon as any traffic is detected)<\/small>' },
 	{ title: 'Labels on graphics', name: 'cstats_labels', type: 'select', value: nvram.cstats_stime, options: [[0,'Show known hostnames and IPs'],[1,'Prefer to show only known hostnames, otherwise show IPs'],[2,'Show only IPs']], value: nvram.cstats_labels }
 ]);
 </script>
+</div>
 </form>
 </div>
 
-<br>
+<br/>
 
-<div class='section-title'>Backup</div>
-<div class='section' id='backup-section'>
-	<form>
-	<script type='text/javascript'>
+<div class="section-title">Backup</div>
+<div class="section" id="backup-section">
+	<form action="">
+	<script type="text/javascript">
 	W("<input type='text' size='40' maxlength='64' id='backup-name' name='backup_name' onchange='backupNameChanged()' value='tomato_cstats_" + nvram.et0macaddr.replace(/:/g, '').toLowerCase() + "'>");
 	</script>
-	.gz &nbsp;
-	<input type='button' name='f_backup_button' id='backup-button' onclick='backupButton()' value='Backup'>
-	</form>
-	<a href='' id='backup-link'>Link</a>
-</div>
-<br>
 
-<div class='section-title'>Restore</div>
-<div class='section' id='restore-section'>
-	<form id='restore-form' method='post' action='ipt/restore.cgi?_http_id=<% nv(http_id); %>' encType='multipart/form-data'>
-		<input type='file' size='40' id='restore-name' name='restore_name'>
-		<input type='button' name='f_restore_button' id='restore-button' value='Restore' onclick='restoreButton()'>
-		<br>
+	<div style="display:inline">.gz &nbsp;
+		<input type="button" name="f_backup_button" id="backup-button" onclick="backupButton()" value="Backup">
+	</div>
+	</form>
+	<a href="#" id="backup-link">Link</a>
+</div>
+
+<div class="section-title">Restore</div>
+<div class="section" id="restore-section">
+	<form id="restore-form" method="post" action="ipt/restore.cgi?_http_id=<% nv(http_id); %>" enctype="multipart/form-data">
+		<div>
+			<input type="file" size="40" id="restore-name" name="restore_name">
+			<input type="button" name="f_restore_button" id="restore-button" value="Restore" onclick="restoreButton()">
+			<br/>
+		</div>
 	</form>
 </div>
 
 <!-- / / / -->
 
 </td></tr>
-<tr><td id='footer' colspan=2>
-	<form>
-	<span id='footer-msg'></span>
-	<input type='button' value='Save' id='save-button' onclick='save()'>
-	<input type='button' value='Cancel' id='cancel-button' onclick='javascript:reloadPage();'>
+<tr><td id="footer" colspan="2">
+	<form action="">
+		<div>
+			<span id="footer-msg"></span>
+			<input type="button" value="Save" id="save-button" onclick="save()">
+			<input type="button" value="Cancel" id="cancel-button" onclick="reloadPage();">
+		</div>
 	</form>
-<div></div>
 </td></tr>
 </table>
-<script type='text/javascript'>verifyFields(null, 1);</script>
+<script type="text/javascript">verifyFields(null, 1);</script>
 </body>
 </html>

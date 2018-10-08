@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.0//EN'>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <!--
 	Tomato GUI
 	Copyright (C) 2006-2007 Jonathan Zarate
@@ -16,13 +16,13 @@
 -->
 <html>
 <head>
-<meta http-equiv='content-type' content='text/html;charset=utf-8'>
-<meta name='robots' content='noindex,nofollow'>
+<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Advanced: Virtual Wireless Interfaces</title>
-<link rel='stylesheet' type='text/css' href='tomato.css'>
+<link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
-<script type='text/javascript' src='tomato.js'></script>
-<style type='text/css'>
+<script type="text/javascript" src="tomato.js"></script>
+<style type="text/css">
 #wlif-grid .co2,
 #wlif-grid .co3,
 #wlif-grid .co4,
@@ -42,14 +42,14 @@ ul.tabs a,
 }
 </style>
 
-<script type='text/javascript' src='debug.js'></script>
+<script type="text/javascript" src="debug.js"></script>
 
-<script type='text/javascript' src='md5.js'></script>
-<script type='text/javascript' src='wireless.jsx?_http_id=<% nv(http_id); %>'></script>
-<script type='text/javascript' src='interfaces.js'></script>
-<script type='text/javascript' src='wireless.js'></script>
+<script type="text/javascript" src="md5.js"></script>
+<script type="text/javascript" src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
+<script type="text/javascript" src="interfaces.js"></script>
+<script type="text/javascript" src="wireless.js"></script>
 
-<script type='text/javascript'>
+<script type="text/javascript">
 
 var nvram;
 
@@ -110,7 +110,7 @@ function spin(x, unit) {
 }
 </script>
 
-<script type='text/javascript'>
+<script type="text/javascript">
 earlyInit();
 
 var wlg = new TomatoGrid();
@@ -118,9 +118,9 @@ var wlg = new TomatoGrid();
 wlg.setup = function() {
 	this.init('wlif-grid', '', max_no_vifs, [
 		{ type: 'select', options: vifs_possible },
-		{ type: 'checkbox', prefix: '<div class="centered">', suffix: '</div>' },
-		{ type: 'text', maxlen: 32, size: 34, prefix: '<div class="centered">', suffix: '</div>' },
-		{ type: 'select', options: wl_modes_available , prefix: '<div class="centered">', suffix: '</div>' },
+		{ type: 'checkbox', prefix: '<div class="centered">', suffix: '<\/div>' },
+		{ type: 'text', maxlen: 32, size: 34, prefix: '<div class="centered">', suffix: '<\/div>' },
+		{ type: 'select', options: wl_modes_available , prefix: '<div class="centered">', suffix: '<\/div>' },
 		{ type: 'select', options: [[0,'LAN (br0)'],[1,'LAN1 (br1)'],[2,'LAN2 (br2)'],[3,'LAN3 (br3)'],[4,'none']] },
 		{ type: 'select', options: [['disabled','Disabled'],['deny','Block'],['allow','Permit']] }
 	]);
@@ -503,7 +503,7 @@ function earlyInit() {
 	W('	visibility: hidden;');
 	W('	vertical-align: middle;');
 	W('}');
-	W('</style>');
+	W('<\/style>');
 }
 
 function init() {
@@ -516,7 +516,7 @@ function init() {
 
 	E('sesdiv').style.display = '';
 	if (uninit < 0) {
-		E('sesdiv').innerHTML = '<i>This feature is not supported on this router.</i>';
+		E('sesdiv').innerHTML = '<i>This feature is not supported on this router.<\/i>';
 		return;
 	}
 
@@ -533,6 +533,10 @@ function init() {
 	}
 
 	wlg.setup();
+
+	var elements = document.getElementsByClassName("new_window");
+	for (var i = 0; i < elements.length; i++) if (elements[i].nodeName.toLowerCase()==="a")
+		addEvent(elements[i], "click", function(e) { cancelDefaultAction(e); window.open(this,"_blank"); } );
 }
 
 function toggleVisibility(whichone) {
@@ -1051,7 +1055,7 @@ function save() {
 
 	var i, u, vidx, vif;
 
-	var fom = E('_fom');
+	var fom = E('t_fom');
 
 	for (var i = 0 ; i <= MAX_BRIDGE_ID ; i++) {
 		var j = (i == 0) ? '' : i.toString();
@@ -1330,7 +1334,7 @@ function do_pre_submit_form(fom) {
 function error_pre_submit_form() {
 	var footermsg = E('footer-msg');
 
-	footermsg.innerHTML = '<tt>' + escapeText(cmdresult) + '</tt>';
+	footermsg.innerHTML = '<tt>' + escapeText(cmdresult) + '<\/tt>';
 	footermsg.style.visibility = 'visible';
 
 	cmdresult = '';
@@ -1341,7 +1345,7 @@ function post_pre_submit_form(s) {
 
 	cmd = new XmlHttp();
 	cmd.onCompleted = function(text, xml) {
-		form.submit(E('_fom'),1);
+		form.submit(E('t_fom'),1);
 	}
 	cmd.onError = function(x) {
 		cmdresult = 'ERROR: ' + x;
@@ -1355,62 +1359,62 @@ function escapeText(s) {
 	function esc(c) {
 		return '&#' + c.charCodeAt(0) + ';';
 	}
-	return s.replace(/[&"'<>]/g, esc).replace(/\n/g, ' <br>').replace(/ /g, '&nbsp;');
+	return s.replace(/[&"'<>]/g, esc).replace(/\n/g, ' <br />').replace(/ /g, '&nbsp;');
 }
 
 </script>
 
 </head>
-<body onload='init()'>
-<form id='_fom' method='post' action='tomato.cgi'>
-<table id='container' cellspacing=0>
-<tr><td colspan=2 id='header'>
-  <div class='title'>Tomato</div>
-  <div class='version'>Version <% version(); %></div>
+<body onload="init()">
+<form id="t_fom" method="post" action="tomato.cgi">
+<table id="container" cellspacing="0">
+<tr><td colspan="2" id="header">
+  <div class="title">Tomato</div>
+  <div class="version">Version <% version(); %></div>
 </td></tr>
-<tr id='body'><td id='navi'><script type='text/javascript'>navi()</script></td>
-<td id='content'>
-<div id='ident'><% ident(); %></div>
+<tr id="body"><td id="navi"><script type="text/javascript">navi()</script></td>
+<td id="content">
+<div id="ident"><% ident(); %></div>
 
 <!-- / / / -->
 
-<input type='hidden' name='_nextpage' value='advanced-wlanvifs.asp'>
-<input type='hidden' name='_nextwait' value='10'>
-<input type='hidden' name='_service' value='wireless-restart'>
-<input type='hidden' name='_force_commit' value='1'>
-<input type='hidden' name='lan_ifnames' value=''>
-<input type='hidden' name='lan1_ifnames' value=''>
-<input type='hidden' name='lan2_ifnames' value=''>
-<input type='hidden' name='lan3_ifnames' value=''>
-<input type='hidden' name='wl_macmode' value=''>
+<input type="hidden" name="_nextpage" value="advanced-wlanvifs.asp">
+<input type="hidden" name="_nextwait" value="10">
+<input type="hidden" name="_service" value="wireless-restart">
+<input type="hidden" name="_force_commit" value="1">
+<input type="hidden" name="lan_ifnames" value="">
+<input type="hidden" name="lan1_ifnames" value="">
+<input type="hidden" name="lan2_ifnames" value="">
+<input type="hidden" name="lan3_ifnames" value="">
+<input type="hidden" name="wl_macmode" value="">
 
 <!-- / / / -->
 
-<div id='sesdiv' style='display:none'>
+<div id="sesdiv" style="display:none">
 
 <!-- / / / -->
-<div class='section-title'>Virtual Wireless Interfaces</div>
-<div class='section'>
+<div class="section-title">Virtual Wireless Interfaces</div>
+<div class="section">
 
-<script type='text/javascript'>
+<script type="text/javascript">
 tabCreate.apply(this, tabs);
 </script>
 
-<div id='overview-tab'>
-<br>
-<table class='tomato-grid' cellspacing=1 id='wlif-grid'></table>
-<br>
+<div id="overview-tab">
+<br/>
+<div class="tomato-grid" id="wlif-grid"></div>
+<br/>
 
 <!-- / / / -->
 
-<div class='section-title'>Wireless Interfaces Details <small><i><a href='javascript:toggleVisibility("details");'><span id='sesdivdetailsshowhide'>(Click here to show)</span></a></i></small></div>
-<div class='section' id='sesdivdetails' style='display:none'>
+<div class="section-title">Wireless Interfaces Details <small><i><a href='javascript:toggleVisibility("details");'><span id="sesdivdetailsshowhide">(Click here to show)</span></a></i></small></div>
+<div class="section" id="sesdivdetails" style="display:none">
 
-<script type='text/javascript'>
+<script type="text/javascript">
 for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 	if (wl_sunit(uidx)<0) {
 		var c = [];
-		c.push({ title: 'Interface', text: 'wl' + wl_fface(uidx) + ' <small>(' + wl_display_ifname(uidx) + ')</small>' });
+		c.push({ title: 'Interface', text: 'wl' + wl_fface(uidx) + ' <small>(' + wl_display_ifname(uidx) + ')<\/small>' });
 		c.push({ title: 'Virtual Interfaces', indent: 2, rid: 'wl' + wl_fface(uidx) + '_vifs',
 			text: 'wl' + wl_fface(uidx) + ' ' + nvram['wl' + wl_fface(uidx) + '_vifs'] + ' <small>(max ' + wl_ifaces[uidx][7] + ')<\/small>' });
 		createFieldTable('',c);
@@ -1421,20 +1425,20 @@ for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 
 <!-- / / / -->
 
-<div class='section-title'>Notes <small><i><a href='javascript:toggleVisibility("notes");'><span id='sesdivnotesshowhide'>(Click here to show)</span></a></i></small></div>
-<div class='section' id='sesdivnotes' style='display:none'>
+<div class="section-title">Notes <small><i><a href='javascript:toggleVisibility("notes");'><span id="sesdivnotesshowhide">(Click here to show)</span></a></i></small></div>
+<div class="section" id="sesdivnotes" style="display:none">
 
 <ul>
-<li><b>Interface</b> - Wireless VIF name.</li>
-<li><b>Enabled</b> - If this VIF should be active and brought online.</li>
-<li><b>SSID</b> - Wireless Service Set Identifier.</li>
-<li><b>Mode</b> - Interface mode: Access Point, WDS, Wireless Client, etc...</li>
-<li><b>Bridge</b> - Which LAN bridge this VIF should be assigned.</li>
-	<li><b>WFilter</b> - <a href="basic-wfilter.asp" target="_blank">Wireless Filter</a>:
+	<li><b>Interface</b> - Wireless VIF name.</li>
+	<li><b>Enabled</b> - If this VIF should be active and brought online.</li>
+	<li><b>SSID</b> - Wireless Service Set Identifier.</li>
+	<li><b>Mode</b> - Interface mode: Access Point, WDS, Wireless Client, etc...</li>
+	<li><b>Bridge</b> - Which LAN bridge this VIF should be assigned.</li>
+	<li><b>WFilter</b> - <a href="basic-wfilter.asp" class="new_window">Wireless Filter</a>:
 		<ul>
 			<li><i>Disabled</i> - Disable filter on that interface.</li>
-			<li><i>Block</i> - Block clients from the <a href="basic-wfilter.asp" target="_blank">list</a> on that interface.</li>
-			<li><i>Permit</i> - Permit only clients from the <a href="basic-wfilter.asp" target="_blank">list</a> on that interface.</li>
+			<li><i>Block</i> - Block clients from the <a href="basic-wfilter.asp" class="new_window">list</a> on that interface.</li>
+			<li><i>Permit</i> - Permit only clients from the <a href="basic-wfilter.asp" class="new_window">list</a> on that interface.</li>
 		</ul>
 	</li>
 </ul>
@@ -1449,8 +1453,6 @@ for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 	</li>
 </ul>
 
-</div>
-
 <!-- / / / -->
 
 </div>
@@ -1461,19 +1463,19 @@ for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 
 <!-- / / / -->
 
-<script type='text/javascript'>
+<script type="text/javascript">
 for (var i = 1; i < tabs.length; ++i) {
 	var t = tabs[i][0];
 	var uidx = wl_ifidxx(t);
 	var u = t;
 
 	W('<div id=\''+t+'-tab-disabled\'>');
-	W('<br>');
+	W('<br />');
 	W('VIF ' + tabs[i][1] + ' is not defined.');
-	W('</div>');
+	W('<\/div>');
 
 	W('<div id=\''+t+'-tab\'>');
-	W('<br>');
+	W('<br />');
 
 /* common to all VIFs */
 	W('<input type=\'hidden\' id=\'_wl'+u+'_radio\'       name=\'wl'+u+'_radio\'       >');
@@ -1510,12 +1512,12 @@ for (var i = 1; i < tabs.length; ++i) {
 	f.push (
 		{ title: 'Enable Interface', name: 'f_wl'+u+'_radio', type: 'checkbox',
 			value: (eval('nvram["wl'+u+'_radio"]') == '1') && (eval('nvram["wl'+u+'_net_mode"]') != 'disabled') },
-		{ title: 'MAC Address', text: '<a href="advanced-mac.asp">' + (eval('nvram["wl'+u+'_hwaddr"]') || '00:00:00:00:00:00') + '</a>' +
-			' &nbsp; <b id="wl'+u+'_hwaddr_msg" style="visibility:hidden"><small>(warning: WL driver reports BSSID <a href=advanced-mac.asp>' + ((typeof(wl_ifaces[wl_ifidxx(u)]) != 'undefined')? wl_ifaces[wl_ifidxx(u)][9] : '') + '</a>)</small></b>' },
+		{ title: 'MAC Address', text: '<a href="advanced-mac.asp">' + (eval('nvram["wl'+u+'_hwaddr"]') || '00:00:00:00:00:00') + '<\/a>' +
+			' &nbsp; <b id="wl'+u+'_hwaddr_msg" style="visibility:hidden"><small>(warning: WL driver reports BSSID <a href=advanced-mac.asp>' + ((typeof(wl_ifaces[wl_ifidxx(u)]) != 'undefined')? wl_ifaces[wl_ifidxx(u)][9] : '') + '<\/a>)<\/small><\/b>' },
 		{ title: 'Wireless Mode', name: 'f_wl'+u+'_mode', type: 'select',
 			options: wl_modes_available,
 			value: ((eval('nvram["wl'+u+'_mode"]') == 'ap') && (eval('nvram["wl'+u+'_wds_enable"]') == '1')) ? 'apwds' : eval('nvram["wl'+u+'_mode"]'),
-			suffix: ' &nbsp; <b id="wl'+u+'_mode_msg" style="visibility:hidden"><small>(note: you might wish to cross-check settings later on <a href=basic-network.asp>Basic/Network</a>)</small></b>' }
+			suffix: ' &nbsp; <b id="wl'+u+'_mode_msg" style="visibility:hidden"><small>(note: you might wish to cross-check settings later on <a href=basic-network.asp>Basic/Network<\/a>)<\/small><\/b>' }
 	);
 
 /* only if primary VIF */
@@ -1525,7 +1527,7 @@ for (var i = 1; i < tabs.length; ++i) {
 				value: eval('nvram["wl'+u+'_nband"]') || '0' == '0' ? bands[uidx][0][0] : eval('nvram["wl'+u+'_nband"]') },
 			{ title: 'Wireless Network Mode', name: 'wl'+u+'_net_mode', type: 'select',
 				value: (eval('nvram["wl'+u+'_net_mode"]') == 'disabled') ? 'mixed' : eval('nvram["wl'+u+'_net_mode"]'),
-				options: [], prefix: '<span id="__wl'+u+'_net_mode">', suffix: '</span>' }
+				options: [], prefix: '<span id="__wl'+u+'_net_mode">', suffix: '<\/span>' }
 		);
 	}
 
@@ -1540,7 +1542,7 @@ for (var i = 1; i < tabs.length; ++i) {
 /* only if primary VIF */
 	if (u.toString().indexOf('.') < 0) {
 		f.push (
-			{ title: 'Channel', name: 'wl'+u+'_channel', type: 'select', options: ghz[uidx], prefix: '<span id="__wl'+u+'_channel">', suffix: '</span> <input type="button" id="_f_wl'+u+'_scan" value="Scan" onclick="scanButton('+u+')"> <img src="spin.gif" id="spin'+u+'">',
+			{ title: 'Channel', name: 'wl'+u+'_channel', type: 'select', options: ghz[uidx], prefix: '<span id="__wl'+u+'_channel">', suffix: '<\/span> <input type="button" id="_f_wl'+u+'_scan" value="Scan" onclick="scanButton('+u+')"> <img src="spin.gif" id="spin'+u+'">',
 				value: eval('nvram["wl'+u+'_channel"]') },
 			{ title: 'Channel Width', name: 'wl'+u+'_nbw_cap', type: 'select', options: [],
 				value: eval('nvram["wl'+u+'_nbw_cap"]'), prefix: '<span id="__wl'+u+'_nbw_cap">', suffix: '<\/span>' },
@@ -1554,7 +1556,7 @@ for (var i = 1; i < tabs.length; ++i) {
 
 	f.push (
 		null,
-		{ title: '<a href="basic-wfilter.asp" target="_blank">Wireless Filter<\/a>', name: 'f_wl'+u+'_macmode', type: 'select',
+		{ title: '<a href="basic-wfilter.asp" class="new_window">Wireless Filter<\/a>', name: 'f_wl'+u+'_macmode', type: 'select',
 			options: [['disabled','Disable filter on that interface'],['deny','Block clients from the list on that interface'],['allow','Permit only clients from the list on that interface']],
 			value: nvram['wl'+u+'_macmode'] },
 		null,
@@ -1616,7 +1618,7 @@ for (var i = 1; i < tabs.length; ++i) {
 	}
 
 	createFieldTable('', f);
-	W('</div>');
+	W('<\/div>');
 
 }
 
@@ -1632,14 +1634,14 @@ for (var i = 1; i < tabs.length; ++i) {
 </div>
 
 </td></tr>
-<tr><td id='footer' colspan=2>
-	<span id='footer-msg'></span>
-	<input type='button' value='Save' id='save-button' onclick='save()'>
-	<input type='button' value='Cancel' id='cancel-button' onclick='cancel()'>
+<tr><td id="footer" colspan="2">
+	<span id="footer-msg"></span>
+	<input type="button" value="Save" id="save-button" onclick="save()">
+	<input type="button" value="Cancel" id="cancel-button" onclick="cancel()">
 </td></tr>
 </table>
 </form>
-<script type='text/javascript'>
+<script type="text/javascript">
 for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 	if (wl_sunit(uidx) < 0) {
 		refreshNetModes(uidx);

@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.0//EN'>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <!--
 	Tomato GUI
 	Copyright (C) 2006-2010 Jonathan Zarate
@@ -9,16 +9,16 @@
 -->
 <html>
 <head>
-<meta http-equiv='content-type' content='text/html;charset=utf-8'>
-<meta name='robots' content='noindex,nofollow'>
+<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Access Restrictions</title>
-<link rel='stylesheet' type='text/css' href='tomato.css'>
-<link rel='stylesheet' type='text/css' href='color.css'>
-<script type='text/javascript' src='tomato.js'></script>
+<link rel="stylesheet" type="text/css" href="tomato.css">
+<% css(); %>
+<script type="text/javascript" src="tomato.js"></script>
 
 <!-- / / / -->
 
-<style type='text/css'>
+<style type="text/css">
 #res-over-grid .co1 {
 	width: 40%;
 }
@@ -33,9 +33,9 @@
 }
 </style>
 
-<script type='text/javascript' src='debug.js'></script>
+<script type="text/javascript" src="debug.js"></script>
 
-<script type='text/javascript'>
+<script type="text/javascript">
 //	<% nvram(''); %>	// http_id
 //	<% nvramseq("rrules", "rrule%d", 0, 49); %>
 
@@ -75,10 +75,10 @@ og.populate = function() {
 		}
 
 		if ((v[1] >= 0) && (v[2] >= 0)) {
-			s += '<br>' + timeString(v[1]) + ' to ' + timeString(v[2]);
-			if (v[2] <= v[1]) s += ' <small>(the following day)</small>';
+			s += '<br />' + timeString(v[1]) + ' to ' + timeString(v[2]);
+			if (v[2] <= v[1]) s += ' <small>(the following day)<\/small>';
 		}
-		if (v[0] != '1') s += '<br><i><b>Disabled</b></i>';
+		if (v[0] != '1') s += '<br /><i><b>Disabled<\/b><\/i>';
 		this.insertData(-1, [i, v[8], s]);
 	}
 	og.sort(0);
@@ -87,59 +87,57 @@ og.dataToView = function(data) {
 	return [escapeHTML(data[1]), data[2]];
 }
 og.onClick = function(cell) {
-	E('_rruleN').value = PR(cell).getRowData()[0];
-	form.submit('_fom');
+	E('t_rruleN').value = PR(cell).getRowData()[0];
+	form.submit('t_fom');
 }
 og.addEntry = function() {
 	for (var i = 0; i < 140; ++i) {
 		if ((rrules[i] == null) || (rrules[i] == '')) {
-			E('_rruleN').value = i;
-			form.submit('_fom');
+			E('t_rruleN').value = i;
+			form.submit('t_fom');
 			return;
 		}
 	}
 }
 
-function init()
-{
+function init() {
 	og.populate();
 }
 </script>
 </head>
-<body onload='init()'>
-<form name='_fom' id='_fom' method='post' action='tomato.cgi'>
-<table id='container' cellspacing=0>
-<tr><td colspan=2 id='header'>
-	<div class='title'>Tomato</div>
-	<div class='version'>Version <% version(); %></div>
+<body onload="init()">
+<form id="t_fom" method="post" action="tomato.cgi">
+<table id="container" cellspacing="0">
+<tr><td colspan="2" id="header">
+	<div class="title">Tomato</div>
+	<div class="version">Version <% version(); %></div>
 </td></tr>
-<tr id='body'><td id='navi'><script type='text/javascript'>navi()</script></td>
-<td id='content'>
-<div id='ident'><% ident(); %></div>
+<tr id="body"><td id="navi"><script type="text/javascript">navi()</script></td>
+<td id="content">
+<div id="ident"><% ident(); %></div>
 
 <!-- / / / -->
 
-<input type='hidden' name='_redirect' value='restrict-edit.asp'>
-<input type='hidden' name='_commit' value='0'>
-<input type='hidden' name='rruleN' id='_rruleN' value=''>
+<input type="hidden" name="_redirect" value="restrict-edit.asp">
+<input type="hidden" name="_commit" value="0">
+<input type="hidden" name="rruleN" id="t_rruleN" value="">
 
-<div class='section-title'>Access Restriction Overview</div>
-<div class='section'>
-	<table class='tomato-grid' cellspacing=1 id='res-over-grid'></table>
+<div class="section-title">Access Restriction Overview</div>
+<div class="section">
+	<div class="tomato-grid" id="res-over-grid"></div>
 </div>
 
-<br>
-<script type='text/javascript'>show_notice1('<% notice("iptables"); %>');</script>
-<br>
-<script type='text/javascript'>show_notice1('<% notice("ip6tables"); %>');</script>
+<br/>
+<script type="text/javascript">show_notice1('<% notice("iptables"); %>');</script>
+<br/>
+<script type="text/javascript">show_notice1('<% notice("ip6tables"); %>');</script>
 
 <!-- / / / -->
 
 </td></tr>
-<tr><td id='footer' colspan=2>&nbsp;</td></tr>
+<tr><td id="footer" colspan="2">&nbsp;</td></tr>
 </table>
 </form>
-<script text='text/javascript'>og.setup();</script>
+<script type="text/javascript">og.setup();</script>
 </body>
 </html>
-

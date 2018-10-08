@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.0//EN'>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <!--
 	Tomato GUI
 	USB Support - !!TB
@@ -8,23 +8,20 @@
 -->
 <html>
 <head>
-<meta http-equiv='content-type' content='text/html;charset=utf-8'>
-<meta name='robots' content='noindex,nofollow'>
+<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] NAS: USB Support</title>
-<link rel='stylesheet' type='text/css' href='tomato.css'>
-<link rel='stylesheet' type='text/css' href='color.css'>
-<script type='text/javascript' src='tomato.js'></script>
+<link rel="stylesheet" type="text/css" href="tomato.css">
+<% css(); %>
+<script type="text/javascript" src="tomato.js"></script>
 
 <!-- / / / -->
 
-<style type='text/css'>
+<style type="text/css">
 textarea {
 	width: 98%;
 	height: 5em;
 }
-</style>
-
-<style type='text/css'>
 #dev-grid .co1 {
 	width: 10%;
 }
@@ -43,10 +40,9 @@ textarea {
 }
 </style>
 
-<script type='text/javascript' src='debug.js'></script>
+<script type="text/javascript" src="debug.js"></script>
 
-<script type='text/javascript'>
-
+<script type="text/javascript">
 //	<% nvram("usb_enable,usb_uhci,usb_ohci,usb_usb2,usb_mmc,usb_storage,usb_printer,usb_printer_bidirect,usb_automount,usb_fs_ext3,usb_fs_fat,usb_fs_ntfs,usb_fs_hfs,script_usbmount,script_usbumount,script_usbhotplug,idle_enable,usb_3g,usb_apcupsd"); %>
 //	<% usbdevices(); %>
 
@@ -54,24 +50,20 @@ list = [];
 
 var xob = null;
 
-function _umountHost(host)
-{
+function _umountHost(host) {
 	form.submitHidden('usbcmd.cgi', { remove: host });
 }
 
-function _mountHost(host)
-{
+function _mountHost(host) {
 	form.submitHidden('usbcmd.cgi', { mount: host });
 }
 
-function _forceRefresh()
-{
+function _forceRefresh() {
 	if (!ref.running) ref.once = 1;
 	ref.start();
 }
 
-function umountHost(a, host)
-{
+function umountHost(a, host) {
 	if (xob) return;
 
 	if ((xob = new XmlHttp()) == null) {
@@ -100,8 +92,7 @@ function umountHost(a, host)
 	xob.post('usbcmd.cgi', 'remove=' + host);
 }
 
-function mountHost(a, host)
-{
+function mountHost(a, host) {
 	if (xob) return;
 
 	if ((xob = new XmlHttp()) == null) {
@@ -132,8 +123,7 @@ function mountHost(a, host)
 
 var ref = new TomatoRefresh('update.cgi', 'exec=usbdevices', 0, 'nas_usb_refresh');
 
-ref.refresh = function(text)
-{
+ref.refresh = function(text) {
 	try {
 		eval(text);
 	}
@@ -166,8 +156,7 @@ dg.sortCompare = function(a, b) {
 	return this.sortAscending ? r : -r;
 }
 
-dg.populate = function()
-{
+dg.populate = function() {
 	var i, j, k, a, b, c, e, s, desc, d, parts, p;
 
 	list = [];
@@ -200,16 +189,16 @@ dg.populate = function()
 		e = list[i];
 
 		if (e.type != 'Storage')
-			s = '&nbsp<br><small>&nbsp</small>';
+			s = '<br />';
 		else {
 			if (xob)
-				s = ((e.is_mounted == 0) ? 'No' : 'Yes') + '<br><small>Please wait...</small>';
+				s = ((e.is_mounted == 0) ? 'No' : 'Yes') + '<br /><small>Please wait...<\/small>';
 			else if (e.is_mounted == 0)
-				s = 'No<br><small><a href="javascript:mountHost(\'L' + i + '\',\'' + e.host + '\')" title="Mount all Partitions of Storage Device" id="L' + i + '">[ Mount ]</a></small>';
+				s = 'No<br /><small><a href="javascript:mountHost(\'L' + i + '\',\'' + e.host + '\')" title="Mount all Partitions of Storage Device" id="L' + i + '">[ Mount ]<\/a><\/small>';
 			else
-				s = 'Yes<br><small><a href="javascript:umountHost(\'L' + i + '\',\'' + e.host + '\')" title="Safely Remove Storage Device" id="L' + i + '">[ Unmount ]</a></small>';
+				s = 'Yes<br /><small><a href="javascript:umountHost(\'L' + i + '\',\'' + e.host + '\')" title="Safely Remove Storage Device" id="L' + i + '">[ Unmount ]<\/a><\/small>';
 		}
-		desc = (e.vendor + ' ' + e.product).trim() + '<small>'; // + (e.serial == '' ? '' : '<br>Serial No: ' + e.serial);
+		desc = (e.vendor + ' ' + e.product).trim() + '<small>'; // + (e.serial == '' ? '' : '<br />Serial No: ' + e.serial);
 		if (e.discs) {
 			for (j = 0; j <= e.discs.length - 1; ++j) {
 				d = e.discs[j];
@@ -217,7 +206,7 @@ dg.populate = function()
 				for (k = 0; k <= parts.length - 1; ++k) {
 					p = parts[k];
 					if (p) {
-						desc = desc + '<br>Partition \'' + p[0] + '\'' + (p[3] != '' ? ' ' + p[3] : '') +
+						desc = desc + '<br />Partition \'' + p[0] + '\'' + (p[3] != '' ? ' ' + p[3] : '') +
 							((p[5] != 0) ? ' (' + doScaleSize(p[5], 0) + 
 							((p[1] == 1) ? ' / ' + doScaleSize(p[6], 0) + ' free' : '') +
 							')' : '') + ' is ' +
@@ -227,34 +216,30 @@ dg.populate = function()
 				}
 			}
 		}
-		desc = desc + '</small>';
+		desc = desc + '<\/small>';
 		this.insert(-1, e, [e.type, e.host, desc, s], false);
 	}
 
 	list = [];
 }
 
-dg.setup = function()
-{
+dg.setup = function() {
 	this.init('dev-grid', 'sort');
 	this.headerSet(['Type', 'Host', 'Description', 'Mounted?']);
 	this.populate();
 	this.sort(1);
 }
 
-function earlyInit()
-{
+function earlyInit() {
 	dg.setup();
 }
 
-function init()
-{
+function init() {
 	dg.recolor();
 	ref.initPage();
 }
 
-function verifyFields(focused, quiet)
-{
+function verifyFields(focused, quiet) {
 	var b = !E('_f_usb').checked;
 	var a = !E('_f_storage').checked;
 
@@ -300,13 +285,12 @@ function verifyFields(focused, quiet)
 	return 1;
 }
 
-function save()
-{
+function save() {
 	var fom;
 
 	if (!verifyFields(null, 0)) return;
 
-	fom = E('_fom');
+	fom = E('t_fom');
 	fom.usb_enable.value = E('_f_usb').checked ? 1 : 0;
 	fom.usb_uhci.value = nvram.usb_uhci == -1 ? -1 : (E('_f_uhci').checked ? 1 : 0);
 	fom.usb_ohci.value = nvram.usb_ohci == -1 ? -1 : (E('_f_ohci').checked ? 1 : 0);
@@ -341,57 +325,57 @@ function save()
 	form.submit(fom, 1);
 }
 
-function submit_complete()
-{
+function submit_complete() {
 	reloadPage();
 }
 </script>
 
 </head>
-<body onload='init()'>
-<form id='_fom' method='post' action='tomato.cgi'>
-<table id='container' cellspacing=0>
-<tr><td colspan=2 id='header'>
-	<div class='title'>Tomato</div>
-	<div class='version'>Version <% version(); %></div>
+<body onload="init()">
+<form id="t_fom" method="post" action="tomato.cgi">
+<table id="container" cellspacing="0">
+<tr><td colspan="2" id="header">
+	<div class="title">Tomato</div>
+	<div class="version">Version <% version(); %></div>
 </td></tr>
-<tr id='body'><td id='navi'><script type='text/javascript'>navi()</script></td>
-<td id='content'>
-<div id='ident'><% ident(); %></div>
+<tr id="body"><td id="navi"><script type="text/javascript">navi()</script></td>
+<td id="content">
+<div id="ident"><% ident(); %></div>
 
 <!-- / / / -->
 
-<input type='hidden' name='_nextpage' value='nas-usb.asp'>
-<input type='hidden' name='_service' value='usb-restart'>
+<input type="hidden" name="_nextpage" value="nas-usb.asp">
+<input type="hidden" name="_service" value="usb-restart">
 
-<input type='hidden' name='usb_enable'>
-<input type='hidden' name='usb_uhci'>
-<input type='hidden' name='usb_ohci'>
-<input type='hidden' name='usb_usb2'>
-<input type='hidden' name='usb_mmc'>
-<input type='hidden' name='usb_storage'>
-<input type='hidden' name='usb_printer'>
-<input type='hidden' name='usb_printer_bidirect'>
-<input type='hidden' name='usb_fs_ext3'>
-<input type='hidden' name='usb_fs_fat'>
-<!-- NTFS-BEGIN
-<input type='hidden' name='usb_fs_ntfs'>
-NTFS-END -->
-<!-- HFS-BEGIN
-<input type='hidden' name='usb_fs_hfs'>
-HFS-END -->
-<input type='hidden' name='usb_automount'>
+<input type="hidden" name="usb_enable">
+<input type="hidden" name="usb_uhci">
+<input type="hidden" name="usb_ohci">
+<input type="hidden" name="usb_usb2">
+<input type="hidden" name="usb_mmc">
+<input type="hidden" name="usb_storage">
+<input type="hidden" name="usb_printer">
+<input type="hidden" name="usb_printer_bidirect">
+<input type="hidden" name="usb_fs_ext3">
+<input type="hidden" name="usb_fs_fat">
+<input type="hidden" name="usb_fs_exfat">
+/* NTFS-BEGIN */
+<input type="hidden" name="usb_fs_ntfs">
+/* NTFS-END */
+/* HFS-BEGIN */
+<input type="hidden" name="usb_fs_hfs">
+/* HFS-END */
+<input type="hidden" name="usb_automount">
 /* LINUX26-BEGIN */
-<input type='hidden' name='idle_enable'>
-<input type='hidden' name='usb_3g'>
+<input type="hidden" name="idle_enable">
+<input type="hidden" name="usb_3g">
 /* LINUX26-END */
 /* UPS-BEGIN */
-<input type='hidden' name='usb_apcupsd'>
+<input type="hidden" name="usb_apcupsd">
 /* UPS-END */
 
-<div class='section-title'>USB Support</div>
-<div class='section'>
-<script type='text/javascript'>
+<div class="section-title">USB Support</div>
+<div class="section">
+<script type="text/javascript">
 
 createFieldTable('', [
 	{ title: 'Core USB Support', name: 'f_usb', type: 'checkbox', value: nvram.usb_enable == 1 },
@@ -421,48 +405,48 @@ createFieldTable('', [
 /* MICROSD-END */
 /* LINUX26-END */
 		{ title: 'Automount', indent: 2, name: 'f_automount', type: 'checkbox',
-			suffix: ' <small>Automatically mount all partitions to sub-directories in <i>/mnt</i>.</small>', value: nvram.usb_automount == 1 },
+			suffix: '&nbsp; <small>Automatically mount all partitions to sub-directories in <i>/mnt<\/i>.<\/small>', value: nvram.usb_automount == 1 },
 	{ title: 'Run after mounting', indent: 2, name: 'script_usbmount', type: 'textarea', value: nvram.script_usbmount },
 	{ title: 'Run before unmounting', indent: 2, name: 'script_usbumount', type: 'textarea', value: nvram.script_usbumount },
 	null,
 /* LINUX26-BEGIN */
 	{ title: 'HDD Spindown', name: 'f_idle_enable', type: 'checkbox',
-		suffix: ' <small>Spin down each HDD when idle. No need to use with flash drive.</small>', value: nvram.idle_enable == 1 },
-	{ title: 'USB 3G Modem support', name: 'f_usb_3g', type: 'checkbox',
-		suffix: ' <small>Before disconnecting 3G Modem from USB port, remember to uncheck box. If modem used usbserial module, you have to reboot router before unplug modem.</small>', value: nvram.usb_3g == 1 },
+		suffix: '&nbsp; <small>Spin down each HDD when idle. No need to use with flash drive.<\/small>', value: nvram.idle_enable == 1 },
+	{ title: '3G/4G Modem Support', name: 'f_usb_3g', type: 'checkbox',
+		suffix: '&nbsp; <small>Before disconnecting Modem from USB port, remember to uncheck box. If modem used usbserial module, you have to reboot router before unplug modem.<\/small>', value: nvram.usb_3g == 1 },
 /* LINUX26-END */
 /* UPS-BEGIN */
 	{ title: 'Run APCUPSD Deamon', name: 'f_usb_apcupsd', type: 'checkbox',
-		suffix: ' <small>Required by UPS Monitor (APC Uninterruptible Power Supply)</small>', value: nvram.usb_apcupsd == 1 },
+		suffix: '&nbsp; <small>Required by UPS Monitor (APC Uninterruptible Power Supply)<\/small>', value: nvram.usb_apcupsd == 1 },
 /* UPS-END */
-	{ title: 'Hotplug script<br><small>(called when any USB device is attached or removed)</small>', name: 'script_usbhotplug', type: 'textarea', value: nvram.script_usbhotplug },
+	{ title: 'Hotplug script<br /><small>(called when any USB device is attached or removed)<\/small>', name: 'script_usbhotplug', type: 'textarea', value: nvram.script_usbhotplug },
 	null,
-	{ text: '<small>Some of the changes will take effect only after a restart.</small>' }
+	{ text: '<small>Some of the changes will take effect only after a restart.<\/small>' }
 ]);
 </script>
 </div>
 
 <!-- / / / -->
 
-<div class='section-title'>Attached Devices</div>
-<div class='section'>
-<table id='dev-grid' class='tomato-grid' cellspacing=0></table>
-<div id='usb-controls'>
-	<script type='text/javascript'>genStdRefresh(1,0,'ref.toggle()');</script>
+<div class="section-title">Attached Devices</div>
+<div class="section">
+	<div id="dev-grid" class="tomato-grid"></div>
+<div id="usb-controls">
+	<script type="text/javascript">genStdRefresh(1,0,'ref.toggle()');</script>
 </div>
-<script type='text/javascript'></script>
+<script type="text/javascript"></script>
 </div>
 
 <!-- / / / -->
 
 </td></tr>
-<tr><td id='footer' colspan=2>
-	<span id='footer-msg'></span>
-	<input type='button' value='Save' id='save-button' onclick='save()'>
-	<input type='button' value='Cancel' id='cancel-button' onclick='javascript:reloadPage();'>
+<tr><td id="footer" colspan="2">
+	<span id="footer-msg"></span>
+	<input type="button" value="Save" id="save-button" onclick="save()">
+	<input type="button" value="Cancel" id="cancel-button" onclick="reloadPage();">
 </td></tr>
 </table>
 </form>
-<script type='text/javascript'>earlyInit();verifyFields(null, 1);</script>
+<script type="text/javascript">earlyInit();verifyFields(null, 1);</script>
 </body>
 </html>

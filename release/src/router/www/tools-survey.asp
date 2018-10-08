@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.0//EN'>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <!--
 	Tomato GUI
 	Copyright (C) 2006-2010 Jonathan Zarate
@@ -9,16 +9,16 @@
 -->
 <html>
 <head>
-<meta http-equiv='content-type' content='text/html;charset=utf-8'>
-<meta name='robots' content='noindex,nofollow'>
+<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Tools: Wireless Survey</title>
-<link rel='stylesheet' type='text/css' href='tomato.css'>
-<link rel='stylesheet' type='text/css' href='color.css'>
-<script type='text/javascript' src='tomato.js'></script>
+<link rel="stylesheet" type="text/css" href="tomato.css">
+<% css(); %>
+<script type="text/javascript" src="tomato.js"></script>
 
 <!-- / / / -->
 
-<style type='text/css'>
+<style type="text/css">
 #survey-grid .brate {
 	color: blue;
 }
@@ -48,9 +48,9 @@
 }
 </style>
 
-<script type='text/javascript' src='debug.js'></script>
+<script type="text/javascript" src="debug.js"></script>
 
-<script type='text/javascript'>
+<script type="text/javascript">
 //	<% nvram(''); %>	// http_id
 
 var wlscandata = [];
@@ -90,15 +90,13 @@ sg.sortCompare = function(a, b) {
 	return this.sortAscending ? r : -r;
 }
 
-sg.rateSorter = function(a, b)
-{
+sg.rateSorter = function(a, b) {
 	if (a < b) return -1;
 	if (a > b) return 1;
 	return 0;
 }
 
-sg.populate = function()
-{
+sg.populate = function() {
 	var added = 0;
 	var removed = 0;
 	var i, j, k, t, e, s;
@@ -155,12 +153,12 @@ sg.populate = function()
 		seen = e.lastSeen.toWHMS();
 		if (useAjax()) {
 			m = Math.floor(((new Date()).getTime() - e.firstSeen.getTime()) / 60000);
-			if (m <= 10) seen += '<br> <b><small>NEW (' + -m + 'm)</small></b>';
+			if (m <= 10) seen += '<br /> <b><small>NEW (' + -m + 'm)<\/small><\/b>';
 		}
 
 		mac = e.bssid;
 		if (mac.match(/^(..):(..):(..)/))
-			mac = '<a href="http://api.macvendors.com/' + RegExp.$1 + '-' + RegExp.$2 + '-' + RegExp.$3 + '" target="_new" title="OUI search">' + mac + '</a>';
+			mac = '<a href="http://api.macvendors.com/' + RegExp.$1 + '-' + RegExp.$2 + '-' + RegExp.$3 + '" class="new_window" title="OUI search">' + mac + '<\/a>';
 
 		sg.insert(-1, e, [
 			'<small>' + seen + '<\/small>',
@@ -177,7 +175,7 @@ sg.populate = function()
 	if (useAjax()) s = added + ' added, ' + removed + ' removed, ';
 	s += entries.length + ' total.';
 
-	s += '<br><br><small>Last updated: ' + (new Date()).toWHMS() + '</small>';
+	s += '<br /><br /><small>Last updated: ' + (new Date()).toWHMS() + '<\/small>';
 	setMsg(s);
 
 	wlscandata = [];
@@ -191,16 +189,14 @@ sg.setup = function() {
 }
 
 
-function setMsg(msg)
-{
+function setMsg(msg) {
 	E('survey-msg').innerHTML = msg;
 }
 
 
 var ref = new TomatoRefresh('update.cgi', 'exec=wlscan', 0, 'tools_survey_refresh');
 
-ref.refresh = function(text)
-{
+ref.refresh = function(text) {
 	try {
 		eval(text);
 	}
@@ -212,49 +208,47 @@ ref.refresh = function(text)
 	sg.resort();
 }
 
-function earlyInit()
-{
+function earlyInit() {
 	if (!useAjax()) E('expire-time').style.visibility = 'hidden';
 	sg.setup();
 }
 
-function init()
-{
+function init() {
+	new observer(InNewWindow).observe(E("survey-grid"), { childList: true, subtree: true });
 	sg.recolor();
 	ref.initPage();
 }
+
+var observer = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
+
+function InNewWindow () {
+	var elements = document.getElementsByClassName("new_window");
+	for (var i = 0; i < elements.length; i++) if (elements[i].nodeName.toLowerCase()==="a")
+		addEvent(elements[i], "click", function(e) { cancelDefaultAction(e); window.open(this,"_blank"); } );
+}
 </script>
 </head>
-<body onload='init()'>
-<form action='javascript:{}'>
-<table id='container' cellspacing=0>
-<tr><td colspan=2 id='header'>
-	<div class='title'>Tomato</div>
-	<div class='version'>Version <% version(); %></div>
+<body onload="init()">
+<form action="javascript:{}">
+<table id="container" cellspacing="0">
+<tr><td colspan="2" id="header">
+	<div class="title">Tomato</div>
+	<div class="version">Version <% version(); %></div>
 </td></tr>
-<tr id='body'><td id='navi'><script type='text/javascript'>navi()</script></td>
-<td id='content'>
-<div id='ident'><% ident(); %></div>
+<tr id="body"><td id="navi"><script type="text/javascript">navi()</script></td>
+<td id="content">
+<div id="ident"><% ident(); %></div>
 
 <!-- / / / -->
 
-<div class='section-title'>Wireless Site Survey</div>
-<div class='section'>
-	<table id='survey-grid' class='tomato-grid' cellspacing=0></table>
-	<div id='survey-msg'></div>
-	<div id='survey-controls'>
-		<img src="spin.gif" id="refresh-spinner">
-		<script type='text/javascript'>
-		genStdTimeList('expire-time', 'Auto Expire', 0);
-		genStdTimeList('refresh-time', 'Auto Refresh', 0);
-		</script>
-		<input type="button" value="Refresh" onclick="ref.toggle()" id="refresh-button">
-	</div>
-
-	<br><br><br><br>
-	<script type='text/javascript'>
+<div class="section-title">Wireless Site Survey</div>
+<div class="section">
+	<div id="survey-grid" class="tomato-grid"></div>
+	<div id="survey-msg"></div>
+	<br/><br/><br/><br/>
+	<script type="text/javascript">
 	if ('<% wlclient(); %>' == '0') {
-		document.write('<small>Warning: Wireless connections to this router may be disrupted while using this tool.</small>');
+		document.write('<small>Warning: Wireless connections to this router may be disrupted while using this tool.<\/small>');
 	}
 	</script>
 </div>
@@ -262,10 +256,18 @@ function init()
 <!-- / / / -->
 
 </td></tr>
-<tr><td id='footer' colspan=2>&nbsp;</td></tr>
+<tr><td id="footer" colspan="2">
+	<div id="survey-controls">
+		<img src="spin.gif" alt="" id="refresh-spinner">
+		<script type="text/javascript">
+		genStdTimeList('expire-time', 'Auto Expire', 0);
+		genStdTimeList('refresh-time', 'Auto Refresh', 0);
+		</script>
+		<input type="button" value="Refresh" onclick="ref.toggle()" id="refresh-button">
+	</div>
+</td></tr>
 </table>
 </form>
-<script type='text/javascript'>earlyInit();</script>
+<script type="text/javascript">earlyInit();</script>
 </body>
 </html>
-

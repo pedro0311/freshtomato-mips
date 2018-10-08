@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.0//EN'>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <!--
 	Tomato GUI
 	Copyright (C) 2007-2011 Shibby
@@ -8,15 +8,15 @@
 -->
 <html>
 <head>
-<meta http-equiv='content-type' content='text/html;charset=utf-8'>
-<meta name='robots' content='noindex,nofollow'>
+<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Admin: NFS Server</title>
-<link rel='stylesheet' type='text/css' href='tomato.css'>
-<link rel='stylesheet' type='text/css' href='color.css'>
-<script type='text/javascript' src='tomato.js'></script>
+<link rel="stylesheet" type="text/css" href="tomato.css">
+<% css(); %>
+<script type="text/javascript" src="tomato.js"></script>
 
 <!-- / / / -->
-<style type='text/css'>
+<style type="text/css">
 #nfsg-grid {
 	width: 100%;
 }
@@ -42,9 +42,9 @@
 
 </style>
 
-<script type='text/javascript' src='debug.js'></script>
+<script type="text/javascript" src="debug.js"></script>
 
-<script type='text/javascript'>
+<script type="text/javascript">
 
 //	<% nvram("nfs_enable,nfs_exports"); %>
 
@@ -54,8 +54,7 @@ var subtree = [['subtree_check', 'Yes'], ['no_subtree_check', 'No']];
 
 var nfsg = new TomatoGrid();
 
-nfsg.exist = function(f, v)
-{
+nfsg.exist = function(f, v) {
 	var data = this.getAllData();
 	for (var i = 0; i < data.length; ++i) {
 		if (data[i][f] == v) return true;
@@ -67,8 +66,7 @@ nfsg.dataToView = function(data) {
 	return [data[0], data[1], data[2],data[3], data[4], data[5]];
 }
 
-nfsg.verifyFields = function(row, quiet)
-{
+nfsg.verifyFields = function(row, quiet) {
 	var ok = 1;
 
 	return ok;
@@ -87,8 +85,7 @@ nfsg.resetNewEditor = function() {
 	f[5].value = 'no_root_squash';
 }
 
-nfsg.setup = function()
-{
+nfsg.setup = function() {
 	this.init('nfsg-grid', '', 50, [
 		{ type: 'text', maxlen: 50 },
 		{ type: 'text', maxlen: 30 },
@@ -107,8 +104,12 @@ nfsg.setup = function()
 	this.resetNewEditor();
 }
 
-function save()
-{
+function verifyFields(focused, quiet) {
+	var ok = 1;
+	return ok;
+}
+
+function save() {
 	var data = nfsg.getAllData();
 	var exports = '';
 	var i;
@@ -118,77 +119,79 @@ function save()
 		exports += '>' + data[i].join('<');
 	}
 
-	var fom = E('_fom');
+	var fom = E('t_fom');
 	fom.nfs_enable.value = E('_f_nfs_enable').checked ? 1 : 0;
 	fom.nfs_exports.value = exports;
 	form.submit(fom, 1);
 }
 
-function init()
-{
+function init() {
 	nfsg.recolor();
+	var elements = document.getElementsByClassName("new_window");
+	for (var i = 0; i < elements.length; i++) if (elements[i].nodeName.toLowerCase()==="a")
+		addEvent(elements[i], "click", function(e) { cancelDefaultAction(e); window.open(this,"_blank"); } );
 }
 </script>
 </head>
-<body onload='init()'>
-<form id='_fom' method='post' action='tomato.cgi'>
-<table id='container' cellspacing=0>
-<tr><td colspan=2 id='header'>
-	<div class='title'>Tomato</div>
-	<div class='version'>Version <% version(); %></div>
+<body onload="init()">
+<form id="t_fom" method="post" action="tomato.cgi">
+<table id="container" cellspacing="0">
+<tr><td colspan="2" id="header">
+	<div class="title">Tomato</div>
+	<div class="version">Version <% version(); %></div>
 </td></tr>
-<tr id='body'><td id='navi'><script type='text/javascript'>navi()</script></td>
-<td id='content'>
-<div id='ident'><% ident(); %></div>
+<tr id="body"><td id="navi"><script type="text/javascript">navi()</script></td>
+<td id="content">
+<div id="ident"><% ident(); %></div>
 
 <!-- / / / -->
 
-<input type='hidden' name='_nextpage' value='admin-nfs.asp'>
-<input type='hidden' name='_service' value='nfs-start'>
+<input type="hidden" name="_nextpage" value="admin-nfs.asp">
+<input type="hidden" name="_service" value="nfs-start">
 
-<input type='hidden' name='nfs_enable'>
-<input type='hidden' name='nfs_exports'>
+<input type="hidden" name="nfs_enable">
+<input type="hidden" name="nfs_exports">
 
-<div class='section-title'>NFS Server</div>
-<div class='section'>
-	<script type='text/javascript'>
+<div class="section-title">NFS Server</div>
+<div class="section">
+	<script type="text/javascript">
 	createFieldTable('', [
 		{ title: 'Enable NFS Server', name: 'f_nfs_enable', type: 'checkbox', value: nvram.nfs_enable != '0' }
 	]);
 	</script>
-<br>
+<br/>
 
-<div class='section-title'>Exports</div>
-<div class='section'>
-	<table class='tomato-grid' cellspacing=1 id='nfsg-grid'></table>
-	<script type='text/javascript'>nfsg.setup();</script>
-<br>
+<div class="section-title">Exports</div>
+<div class="section">
+	<div class="tomato-grid" id="nfsg-grid"></div>
+	<script type="text/javascript">nfsg.setup();</script>
+<br/>
 	<ul>
-	<li>You can find more information on proper NFS configuration at the following website: <a href="http://nfs.sourceforge.net/nfs-howto/" target="_blanc"><b>http://nfs.sourceforge.net</b></a>.
-	</ul>
-<br>
+	<li>You can find more information on proper NFS configuration at the following website: <a href="http://nfs.sourceforge.net/nfs-howto/" class="new_window"><b>http://nfs.sourceforge.net</b></a>.
+	</li></ul>
+<br/>
 </div>
 
 </div>
 
-<div class='section-title'>NFS Client</div>
-<div class='section'>
-<br>
+<div class="section-title">NFS Client</div>
+<div class="section">
+<br/>
 	<ul>
 	<li>If you want to mount an NFS share from other NFS Server, you can use the mount.nfs tool via telnet/ssh.
-	</ul>
+	</li></ul>
 </div>
 
 <!-- / / / -->
 
 </td></tr>
-<tr><td id='footer' colspan=2>
-	<span id='footer-msg'></span>
-	<input type='button' value='Save' id='save-button' onclick='save()'>
-	<input type='button' value='Cancel' id='cancel-button' onclick='reloadPage();'>
+<tr><td id="footer" colspan="2">
+	<span id="footer-msg"></span>
+	<input type="button" value="Save" id="save-button" onclick="save()">
+	<input type="button" value="Cancel" id="cancel-button" onclick="reloadPage();">
 </td></tr>
 </table>
 </form>
-<script type='text/javascript'>verifyFields(null, 1);</script>
+<script type="text/javascript">verifyFields(null, 1);</script>
 </body>
 </html>
