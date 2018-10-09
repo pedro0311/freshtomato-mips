@@ -7,8 +7,6 @@
 
 PID=$$
 SERVICE=$1
-PIDFILE="/tmp/vpnrouting.pid"
-PIDFILE2="/tmp/vpnrouting2.pid"
 
 
 if [ -z "$SERVICE" ]; then
@@ -17,7 +15,7 @@ if [ -z "$SERVICE" ]; then
 fi
 
 
-find_iface(){
+find_iface() {
     if [ "$SERVICE" == "client1" ]; then
         IFACE="tun11"
         ID="311"
@@ -27,14 +25,14 @@ find_iface(){
     else
         echo "vpnrouting: Interface not found!"
         logger -t vpnrouting[$PID] "Interface not found!"
-        rm -f $PIDFILE > /dev/null 2>&1
         exit 0
     fi
 
+    PIDFILE="/var/run/vpnrouting$ID.pid"
     FIREWALL="/etc/openvpn/fw/vpnrouting$ID.sh"
 }
 
-cleanup(){
+cleanup() {
     ip route flush table $ID
     ip route flush cache
     RULE=`ip rule | grep "lookup $ID" | wc -l`
@@ -48,29 +46,28 @@ cleanup(){
     ipset --destroy vpnrouting$ID
     sed -i /etc/dnsmasq.ipset -e "/vpnrouting$ID/d"
 
-    logger -t vpnrouting[$PID] "Clean-up"
+    logger -t vpnrouting[$PID][$IFACE] "Clean-up"
 }
 
 startRouting() {
-    find_iface
     cleanup
 
-    CONNECTED="0"
+    CONNECTED=0
     VPN_GW=""
 
     #wait for gateway
-    while [ $CONNECTED == "0" ]; do
+    while [ "$CONNECTED" -eq 0 ]; do
         VPN_GW=`ifconfig $IFACE | awk '/inet addr/ {split ($2,A,":"); print A[2]}'`
         if [ -n "$VPN_GW" ]; then
-            logger -t vpnrouting[$PID] "Got gateway for $IFACE - IP $VPN_GW - ID $ID"
-            CONNECTED="1"
+            logger -t vpnrouting[$PID][$IFACE] "Got gateway for $IFACE - IP $VPN_GW - ID $ID"
+            CONNECTED=1
         else
-            logger -t vpnrouting[$PID] "Searching gateway for $IFACE"
+            logger -t vpnrouting[$PID][$IFACE] "Searching gateway for $IFACE"
             sleep 3
         fi
     done
 
-    #logger -t vpnrouting[$PID] "Applying routing on VPN $SERVICE - Interface $IFACE - Table $ID - GW $VPN_GW"
+    #logger -t vpnrouting[$PID][$IFACE] "Applying routing on VPN $SERVICE - Interface $IFACE - Table $ID - GW $VPN_GW"
 
     ip route add table $ID default via $VPN_GW dev $IFACE
     ip rule add fwmark $ID table $ID priority 1000
@@ -88,7 +85,7 @@ startRouting() {
     #example of routing_val: 1<2<8.8.8.8>1<1<1.2.3.4>1<3<domain.com>
     VALUE=`nvram get vpn_"$SERVICE"_routing_val`
 
-    DNSMASQ="0"
+    DNSMASQ=0
 
     for i in $(echo $VALUE | tr ">" "\n")
     do
@@ -101,21 +98,21 @@ startRouting() {
 
             case "$VAL2" in
                 1) #from source
-                    logger -t vpnrouting[$PID] "Type: $VAL2 - add $VAL3"
+                    logger -t vpnrouting[$PID][$IFACE] "Type: $VAL2 - add $VAL3"
                     echo "iptables -t mangle -A PREROUTING -s $VAL3 -j MARK --set-mark $ID" >> $FIREWALL
                     ;;
                 2) #to destination
-                    logger -t vpnrouting[$PID] "Type: $VAL2 - add $VAL3"
+                    logger -t vpnrouting[$PID][$IFACE] "Type: $VAL2 - add $VAL3"
                     echo "iptables -t mangle -A PREROUTING -d $VAL3 -j MARK --set-mark $ID" >> $FIREWALL
                     ;;
                 3) #to domain
-                    logger -t vpnrouting[$PID] "Type: $VAL2 - add $VAL3"
+                    logger -t vpnrouting[$PID][$IFACE] "Type: $VAL2 - add $VAL3"
                     echo "ipset=/$VAL3/vpnrouting$ID" >> /etc/dnsmasq.ipset
 
                     #try to add ipset rule using forced query to DNS server
                     nslookup $VAL3 127.0.0.1 > /dev/null
 
-                    DNSMASQ="1"
+                    DNSMASQ=1
                     ;;
                 *) continue ;;
             esac
@@ -125,13 +122,14 @@ startRouting() {
     chmod +x $FIREWALL
     service firewall restart
 
-    if [ "$DNSMASQ" == "1" ]; then
+    if [ "$DNSMASQ" -eq 1 ]; then
         service dnsmasq restart
     fi
+
+    logger -t vpnrouting[$PID][$IFACE] "Completed routing policy configuration for $SERVICE"
 }
 
 stopRouting() {
-    find_iface
     cleanup
 }
 
@@ -143,26 +141,26 @@ checkPid() {
 
         if [ $? -eq 0 ]; then
             # priority has the last process
-            logger -t vpnrouting[$PID] "Killing previous process ..."
+            logger -t vpnrouting[$PID][$IFACE] "Killing previous process ..."
             kill -9 $PIDNO
             echo $PID > $PIDFILE
 
             if [ $? -ne 0 ]; then
-                logger -t vpnrouting[$PID] "Could not create PID file"
+                logger -t vpnrouting[$PID][$IFACE] "Could not create PID file"
                 exit 0
             fi
         else
             # Process not found assume not running
             echo $PID > $PIDFILE
             if [ $? -ne 0 ]; then
-                logger -t vpnrouting[$PID] "Could not create PID file"
+                logger -t vpnrouting[$PID][$IFACE] "Could not create PID file"
                 exit 0
             fi
         fi
     else
         echo $PID > $PIDFILE
         if [ $? -ne 0 ]; then
-            logger -t vpnrouting[$PID] "Could not create PID file"
+            logger -t vpnrouting[$PID][$IFACE] "Could not create PID file"
             exit 0
         fi
     fi
@@ -173,19 +171,26 @@ checkPid() {
 
 
 if [ "$2" == "start" ]; then
-    # check pid file /pedro
+    # check for proper interface
+    find_iface
+
+    # check pid file
     checkPid
 
     startRouting
 
 elif [ "$2" == "stop" ]; then
-    # check pid file /pedro
+    # check for proper interface
+    find_iface
+
+    # check pid file
     checkPid
 
     stopRouting
 
 else
     echo "vpnrouting: unsupported command"
+    exit 0
 fi
 
 
