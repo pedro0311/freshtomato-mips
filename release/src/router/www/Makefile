@@ -27,7 +27,7 @@ install:
 	for F in $(wildcard *.asp *.svg); do \
 		sed	-e "/REMOVE-BEGIN/,/REMOVE-END/d" \
 			-e "s,<script[^>]\+debug\.js[^>]\+></script>,," \
-			-e "s,<link[^>]\+href='color\.css'>,<% css(); %>," \
+			-e "s,<link[^>]\+href=\"color\.css\">,<% css(); %>," \
 			-e "s,color\.css,<% nv('web_css'); %>\.css," \
 			-e "s,<!-- / / / -->,," \
 			-e "s,\x0d,," \
@@ -202,21 +202,21 @@ endif
 
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp); do \
-		sed -e "s,<div class='title'>Tomato</div>,<div class='title'>FreshTomato</div>," $$F > $$F.tmp; \
+		sed -e "s,<div class=\"title\">Tomato</div>,<div class=\"title\">FreshTomato</div>," $$F > $$F.tmp; \
 		mv $$F.tmp $$F; \
 	done
 
 ifeq ($(TOMATO_EXPERIMENTAL),1)
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp); do \
-		sed -e "s,<div class='title'>FreshTomato</div>,<div class='title'>FreshTomato <small><i>(beta)</i></small></div>," $$F > $$F.tmp; \
+		sed -e "s,<div class=\"title\">FreshTomato</div>,<div class=\"title\">FreshTomato <small><i>(beta)</i></small></div>," $$F > $$F.tmp; \
 		mv $$F.tmp $$F; \
 	done
 endif
 
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp); do \
-		sed -e "s,<div class='version'>Version <% version(); %></div>,<div class='version'>Version <% version(); %> by FreshTomato team</div>," $$F > $$F.tmp; \
+		sed -e "s,<div class=\"version\">Version <% version(); %></div>,<div class=\"version\">Version <% version(); %> by FreshTomato team</div>," $$F > $$F.tmp; \
 		mv $$F.tmp $$F; \
 	done
 
@@ -345,13 +345,13 @@ endif
 # Use HTML compressor to compress HTML as much as possible
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp ); do \
-		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/tools/bin/html-minifier $$F --minify-css --minify-js {\"output\":{\"comments\":[\"/.+\<\%.+\;.{0,1}\%\>/\"]}} --use-short-doctype -o $$F || true; \
+		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/tools/bin/html-minifier $$F --minify-css --use-short-doctype -o $$F || true; \
 	done
 
 # Compress JAVASCRIPT files
 	cd $(INSTALLDIR)/www && \
-	for F in $(wildcard *.js *.jsx ); do \
-		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/tools/bin/uglifyjs $$F -c --comments /.+\<\%.+\;.{0,1}\%\>/ -o $$F || true; \
+	for F in $(wildcard *.js ); do \
+		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/tools/bin/uglifyjs $$F -c -o $$F || true; \
 	done
 
 # Compress CSS files
