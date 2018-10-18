@@ -127,7 +127,6 @@ obj-$(TCONFIG_USB) += scsi-idle
 endif
 
 obj-y += libusb10
-#obj-y += libusb
 obj-y += usbmodeswitch
 obj-$(TCONFIG_FTP) += vsftpd
 
@@ -1072,24 +1071,6 @@ libusb10-install:
 libusb10-clean:
 	-@$(MAKE) -C $@ clean
 	@rm -rf libusb10/Makefile
-
-libusb/Makefile: libusb/Makefile.in
-	cd libusb && CFLAGS="-Wall -Os $(EXTRACFLAGS)" \
-	$(CONFIGURE) --prefix=/usr \
-		LIBUSB_1_0_CFLAGS="-I$(TOP)/libusb10/libusb" \
-		LIBUSB_1_0_LIBS="-L$(TOP)/libusb10/libusb/.libs -lusb-1.0 -lpthread \
-		-Wl,-R/lib:/usr/lib:/opt/usr/lib:/usr/local/share"
-
-libusb: libusb10 libusb/Makefile
-	$(MAKE) -C $@
-
-libusb-install:
-	install -D libusb/libusb/.libs/libusb-0.1.so $(INSTALLDIR)/libusb/usr/lib/libusb-0.1.so
-	$(STRIP) $(INSTALLDIR)/libusb/usr/lib/*.so
-
-libusb-clean:
-	-@$(MAKE) -C $@ clean
-	@rm -rf libusb/Makefile
 
 usbmodeswitch: libusb10
 	$(MAKE) -C $@ CC=$(CC) CFLAGS="-Os $(EXTRACFLAGS) -DLIBUSB10 \
