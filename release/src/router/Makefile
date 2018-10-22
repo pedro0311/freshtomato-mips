@@ -127,7 +127,6 @@ obj-$(TCONFIG_USB) += scsi-idle
 endif
 
 obj-y += libusb10
-#obj-y += libusb
 obj-y += usbmodeswitch
 obj-$(TCONFIG_FTP) += vsftpd
 
@@ -1099,24 +1098,6 @@ libusb10-clean:
 	-@$(MAKE) -C $@ clean
 	@rm -rf libusb10/Makefile
 
-libusb/Makefile: libusb/Makefile.in
-	cd libusb && CFLAGS="-Wall -Os $(EXTRACFLAGS)" \
-	$(CONFIGURE) --prefix=/usr \
-		LIBUSB_1_0_CFLAGS="-I$(TOP)/libusb10/libusb" \
-		LIBUSB_1_0_LIBS="-L$(TOP)/libusb10/libusb/.libs -lusb-1.0 -lpthread \
-		-Wl,-R/lib:/usr/lib:/opt/usr/lib:/usr/local/share"
-
-libusb: libusb10 libusb/Makefile
-	$(MAKE) -C $@
-
-libusb-install:
-	install -D libusb/libusb/.libs/libusb-0.1.so $(INSTALLDIR)/libusb/usr/lib/libusb-0.1.so
-	$(STRIP) $(INSTALLDIR)/libusb/usr/lib/*.so
-
-libusb-clean:
-	-@$(MAKE) -C $@ clean
-	@rm -rf libusb/Makefile
-
 usbmodeswitch: libusb10
 	$(MAKE) -C $@ CC=$(CC) CFLAGS="-Os $(EXTRACFLAGS) -DLIBUSB10 \
 	    -Wl,-R/lib:/usr/lib:/opt/usr/lib:/usr/local/share -lpthread \
@@ -1864,7 +1845,8 @@ libxml2/stamp-h1:
 	cd libxml2 && \
 	autoreconf -fsi && \
 	CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
-	$(CONFIGURE) --prefix=/usr --without-python --enable-static --enable-shared --includedir="$(TOP)/libxml2/include"
+	$(CONFIGURE) --prefix=/usr --without-python --enable-static --enable-shared \
+		--includedir="$(TOP)/libxml2/include" --without-lzma
 	touch $@
 
 libxml2: libxml2/stamp-h1
@@ -1996,7 +1978,6 @@ php/stamp-h1: pcre zlib libiconv sqlite libxml2 libpng jpeg libcurl
 	--enable-xmlreader \
 	--enable-xmlwriter \
 	--enable-zip \
-	--disable-filter \
 	--without-valgrind \
 	--with-libxml-dir="$(TOP)/libxml2/staged/usr"
 	@touch php/stamp-h1
@@ -2126,11 +2107,6 @@ mysql/stamp-h1: openssl zlib libncurses
 		--with-zlib-dir="$(TOP)/zlib/staged/usr" \
 		ac_cv_c_stack_direction=-1
 	cd mysql && tar xvfz .host.tgz
-	# Update time of config.status to avoid run 'config.status --recheck'
-	touch mysql/config.status
-	# Update time of Makefile to avoid regenerate it when do make
-	sleep 5
-	-find mysql -name Makefile -print | xargs -i touch {}
 	touch mysql/stamp-h1
 
 mysql: mysql/stamp-h1
@@ -2761,6 +2737,7 @@ libjson-c-clean:
 	@rm -rf libjson-c/stamp-h1
 
 uqmi: libjson-c
+	$(call patch_files,libubox)
 	$(MAKE) -C uqmi/libubox
 	$(MAKE) -C uqmi SHARED=0 CC='$(CC) -static'
 
@@ -2770,6 +2747,7 @@ uqmi-install:
 
 uqmi-clean: libjson-c-clean
 	-@$(MAKE) -C uqmi/libubox clean
+	$(call unpatch_files,libubox)
 	-@$(MAKE) -C uqmi clean
 
 comgt:
