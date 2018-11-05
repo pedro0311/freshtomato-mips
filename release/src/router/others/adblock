@@ -14,7 +14,7 @@ WORK1="$PREFIX/hosts.work1"
 WORK2="$PREFIX/hosts.work2"
 FINAL="/etc/dnsmasq.adblock"
 CHK_FILE="/tmp/adblock.time"
-WGET="/usr/bin/wget"
+WGET="/usr/bin/wget -T 15"
 
 BLACKLIST=$(nvram get adblock_blacklist)
 WHITELIST=$(nvram get adblock_whitelist)
@@ -26,6 +26,11 @@ download() {
 	# example: Yes<http://url1>No<http://URL2>Yes<http://URL3>
 	COUNT=1
 	ENTRIES=0
+
+	# fix race condition on wan-up
+	sleep 30
+
+	$LOGS "prepare to download ..."
 
 	# clean-up first
 	rm -rf $PREFIX/*
@@ -137,7 +142,6 @@ else
 			TIME_2HRS=$(($(date +%s)-7200))
 
 			if [ "$TIME_FILE" -lt "$TIME_2HRS" ]; then
-				$LOGS "prepare to download ..."
 				download
 			else
 				COUNT=$(cat $FINAL | wc -l)
@@ -145,7 +149,6 @@ else
 				cru d adblockDL
 			fi
 		else
-			$LOGS "prepare to download ..."
 			download
 		fi
 
