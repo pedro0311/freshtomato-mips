@@ -328,7 +328,7 @@ const defaults_t defaults[] = {
 	{ "ipv6_rtr_addr",		""				},	// defaults to $ipv6_prefix::1
 	{ "ipv6_radvd",			"1"				},	// Enable Router Advertisement (radvd)
 	{ "ipv6_dhcpd",			"1"				},	// Enable DHCPv6
-	{ "ipv6_accept_ra",		"1"				},	// Accept RA on bit 0WAN and/or bit1LAN interfaces
+	{ "ipv6_accept_ra",		"1"				},	// Enable Accept RA on WAN (bit 0) and/or LAN (bit 1) interfaces (br0...br3 if available)
 	{ "ipv6_ifname",		"six0"				},	// The interface facing the rest of the IPv6 world
 	{ "ipv6_tun_v4end",		"0.0.0.0"			},	// Foreign IPv4 endpoint of SIT tunnel
 	{ "ipv6_relay",			"1"				},	// Foreign IPv4 endpoint host of SIT tunnel 192.88.99.?
@@ -342,7 +342,7 @@ const defaults_t defaults[] = {
 	{ "ipv6_6rd_prefix_length",	"32"				},	// 6RD prefix length (32-62) checkme
 	{ "ipv6_6rd_borderrelay",	"68.113.165.1"			},	// 6RD border relay address
 	{ "ipv6_6rd_ipv4masklen",	"0"				},	// 6RD IPv4 mask length (0-30) checkme
-	{ "ipv6_vlan",			"0"				},	// Enable IPv6 on 1=LAN1 2=LAN2 4=LAN3
+	{ "ipv6_vlan",			"0"				},	// Enable IPv6 on LAN1 (bit 0) and/or LAN2 (bit 1) and/or LAN3 (bit 2)
 	{ "ipv6_pdonly",		"0"				},	// Request DHCPv6 Prefix Delegation Only
 	{ "ipv6_ipsec",			"1"				},	// Enable Incoming IPv6 IPSec
 	{ "ipv6_wan_addr",		""				},	// Static IPv6 WAN Address
