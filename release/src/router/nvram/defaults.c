@@ -1116,7 +1116,7 @@ const defaults_t defaults[] = {
 	{ "vpn_server2_custom",		""				},
 	{ "vpn_server2_static",		""				},
 	{ "vpn_server2_ca",		""				},
-	{ "vpn_server1_ca_key",		""				},
+	{ "vpn_server2_ca_key",		""				},
 	{ "vpn_server2_crt",		""				},
 	{ "vpn_server2_key",		""				},
 	{ "vpn_server2_dh",		""				},
