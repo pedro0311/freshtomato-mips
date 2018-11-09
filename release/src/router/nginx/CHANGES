@@ -1,4 +1,82 @@
 
+Changes with nginx 1.14.1                                        06 Nov 2018
+
+    *) Security: when using HTTP/2 a client might cause excessive memory
+       consumption (CVE-2018-16843) and CPU usage (CVE-2018-16844).
+
+    *) Security: processing of a specially crafted mp4 file with the
+       ngx_http_mp4_module might result in worker process memory disclosure
+       (CVE-2018-16845).
+
+    *) Bugfix: working with gRPC backends might result in excessive memory
+       consumption.
+
+
+Changes with nginx 1.14.0                                        17 Apr 2018
+
+    *) 1.14.x stable branch.
+
+
+Changes with nginx 1.13.12                                       10 Apr 2018
+
+    *) Bugfix: connections with gRPC backends might be closed unexpectedly
+       when returning a large response.
+
+
+Changes with nginx 1.13.11                                       03 Apr 2018
+
+    *) Feature: the "proxy_protocol" parameter of the "listen" directive now
+       supports the PROXY protocol version 2.
+
+    *) Bugfix: nginx could not be built with OpenSSL 1.1.1 statically on
+       Linux.
+
+    *) Bugfix: in the "http_404", "http_500", etc. parameters of the
+       "proxy_next_upstream" directive.
+
+
+Changes with nginx 1.13.10                                       20 Mar 2018
+
+    *) Feature: the "set" parameter of the "include" SSI directive now
+       allows writing arbitrary responses to a variable; the
+       "subrequest_output_buffer_size" directive defines maximum response
+       size.
+
+    *) Feature: now nginx uses clock_gettime(CLOCK_MONOTONIC) if available,
+       to avoid timeouts being incorrectly triggered on system time changes.
+
+    *) Feature: the "escape=none" parameter of the "log_format" directive.
+       Thanks to Johannes Baiter and Calin Don.
+
+    *) Feature: the $ssl_preread_alpn_protocols variable in the
+       ngx_stream_ssl_preread_module.
+
+    *) Feature: the ngx_http_grpc_module.
+
+    *) Bugfix: in memory allocation error handling in the "geo" directive.
+
+    *) Bugfix: when using variables in the "auth_basic_user_file" directive
+       a null character might appear in logs.
+       Thanks to Vadim Filimonov.
+
+
+Changes with nginx 1.13.9                                        20 Feb 2018
+
+    *) Feature: HTTP/2 server push support; the "http2_push" and
+       "http2_push_preload" directives.
+
+    *) Bugfix: "header already sent" alerts might appear in logs when using
+       cache; the bug had appeared in 1.9.13.
+
+    *) Bugfix: a segmentation fault might occur in a worker process if the
+       "ssl_verify_client" directive was used and no SSL certificate was
+       specified in a virtual server.
+
+    *) Bugfix: in the ngx_http_v2_module.
+
+    *) Bugfix: in the ngx_http_dav_module.
+
+
 Changes with nginx 1.13.8                                        26 Dec 2017
 
     *) Feature: now nginx automatically preserves the CAP_NET_RAW capability
