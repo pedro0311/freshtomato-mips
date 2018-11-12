@@ -168,6 +168,19 @@ void start_dnsmasq()
 		fprintf(f, "server=127.0.0.1#5453\n");
 	}
 #endif
+#ifdef TCONFIG_TOR
+	if (nvram_match("tor_enable", "1")) {
+		char *t_ip;
+
+		if (nvram_match("tor_iface", "br0"))      { t_ip = nvram_safe_get("lan_ipaddr");  }
+		else if (nvram_match("tor_iface", "br1")) { t_ip = nvram_safe_get("lan1_ipaddr"); }
+		else if (nvram_match("tor_iface", "br2")) { t_ip = nvram_safe_get("lan2_ipaddr"); }
+		else if (nvram_match("tor_iface", "br3")) { t_ip = nvram_safe_get("lan3_ipaddr"); }
+		else                                      { t_ip = nvram_safe_get("lan_ipaddr");  }
+
+		fprintf(f, "server=/onion/%s#%s\n", t_ip, nvram_safe_get("tor_dnsport"));
+	}
+#endif
 	for (wan_unit = 1; wan_unit <= mwan_num; ++wan_unit) {
 
 		get_wan_prefix(wan_unit, wan_prefix);
@@ -1050,9 +1063,9 @@ void start_ipv6(void)
 	}
 
 	if (service != IPV6_DISABLED) {
-		/* Check if "ipv6_accept_ra" (bit 1) for lan is enabled (via GUI, basic-ipv6.asp) and "ipv6_radvd" (SLAAC with dnsmasq) is disabled (via GUI, advanced-dhcpdns.asp) */
+		/* Check if "ipv6_accept_ra" (bit 1) for lan is enabled (via GUI, basic-ipv6.asp) and "ipv6_radvd" AND "ipv6_dhcpd" (SLAAC and/or DHCP with dnsmasq) is disabled (via GUI, advanced-dhcpdns.asp) */
 		/* HINT: "ipv6_accept_ra" bit 0 ==> used for wan, "ipv6_accept_ra" bit 1 ==> used for lan interfaces (br0...br3) */
-		if ((nvram_get_int("ipv6_accept_ra") & 0x02) != 0 && !nvram_get_int("ipv6_radvd")) {
+		if ((nvram_get_int("ipv6_accept_ra") & 0x02) != 0 && !nvram_get_int("ipv6_radvd") && !nvram_get_int("ipv6_dhcpd")) {
 			/* Check lan / br0 - If available then accept_ra for br0 */
 			if(strcmp(nvram_safe_get("lan_ipaddr"),"")!=0) {
 				accept_ra(nvram_safe_get("lan_ifname"));
@@ -1063,11 +1076,28 @@ void start_ipv6(void)
 			}
 			/* Check lan2 / br2 - If available then accept_ra for br2 */
 			if (strcmp(nvram_safe_get("lan2_ipaddr"),"")!=0) {
-			accept_ra(nvram_safe_get("lan2_ifname"));
+				accept_ra(nvram_safe_get("lan2_ifname"));
 			}
 			/* Check lan3 / br3 - If available then accept_ra for br3 */
 			if (strcmp(nvram_safe_get("lan3_ipaddr"),"")!=0) {
 				accept_ra(nvram_safe_get("lan3_ifname"));
+			}
+		} else {
+			/* Check lan / br0 - If available then set accept_ra default value for br0 */
+			if (strcmp(nvram_safe_get("lan_ipaddr"),"")!=0) {
+				accept_ra_reset(nvram_safe_get("lan_ifname"));
+			}
+			/* Check lan1 / br1 - If available then set accept_ra default value for br1 */
+			if (strcmp(nvram_safe_get("lan1_ipaddr"),"")!=0) {
+				accept_ra_reset(nvram_safe_get("lan1_ifname"));
+			}
+			/* Check lan2 / br2 - If available then set accept_ra default value for br2 */
+			if (strcmp(nvram_safe_get("lan2_ipaddr"),"")!=0) {
+				accept_ra_reset(nvram_safe_get("lan2_ifname"));
+			}
+			/* Check lan3 / br3 - If available then set accept_ra default value for br3 */
+			if (strcmp(nvram_safe_get("lan3_ipaddr"),"")!=0) {
+				accept_ra_reset(nvram_safe_get("lan3_ifname"));
 			}
 		}
 	}
