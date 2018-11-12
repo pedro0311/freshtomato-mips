@@ -1402,7 +1402,6 @@ static void update_minidns(void)
 	int r;
 	char *body;
 	char query[2048];
-	const char *p;
 
 	// +opt +opt +opt
 	sprintf(query, "/areg.php?opcode=ADD&host=%s&username=%s&password=%s",
@@ -1485,7 +1484,7 @@ static void update_editdns(void)
 /*
 
 	HE.net IPv6 TunnelBroker
-	https://ipv4.tunnelbroker.net/ipv4_end.php?ipv4b=$IPV4ADDR&pass=$MD5PASS&user_id=$USERID&tunnel_id=$GTUNID
+	https://ipv4.tunnelbroker.net/ipv4_end.php?ip=$IPV4ADDR&pass=$MD5PASS&apikey=$USERID&tid=$TUNNELID
 
 	---
 
@@ -1511,7 +1510,7 @@ static void update_heipv6tb(void)
 	char query[2048];
 
 	// +opt +opt +opt
-	sprintf(query, "/ipv4_end.php?pass=%s&user_id=%s&tunnel_id=%s",
+	sprintf(query, "/ipv4_end.php?pass=%s&apikey=%s&tid=%s",
 		md5_string(get_option_required("pass")),
 		get_option_required("user"),
 		get_option_required("host"));
