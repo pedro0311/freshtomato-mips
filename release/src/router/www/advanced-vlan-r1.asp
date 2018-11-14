@@ -814,12 +814,12 @@ function init() {
 }
 
 function toggleVisibility(whichone) {
-	if (E('sesdiv_' + whichone).style.display == '') {
+	if (E('sesdiv_' + whichone).style.display == 'block') {
 		E('sesdiv_' + whichone).style.display = 'none';
 		E('sesdiv_' + whichone + '_showhide').innerHTML = '(Click here to show)';
 		cookie.set('advanced_vlan_' + whichone + '_vis', 0);
 	} else {
-		E('sesdiv_' + whichone).style.display='';
+		E('sesdiv_' + whichone).style.display='block';
 		E('sesdiv_' + whichone + '_showhide').innerHTML = '(Click here to hide)';
 		cookie.set('advanced_vlan_' + whichone + '_vis', 1);
 	}
@@ -958,7 +958,7 @@ createFieldTable('', [
 </div>
 
 <div class="section-title">Notes <small><i><a href='javascript:toggleVisibility("notes");'><span id="sesdiv_notes_showhide">(Click here to hide)</span></a></i></small></div>
-<div class="section" id="sesdiv_notes" style="display:">
+<div class="section" id="sesdiv_notes" style="display:block">
 <ul>
 	<li><b>VLAN</b> - Unique identifier of a VLAN.</li>
 	<li><b>VID</b> - <i>EXPERIMENTAL</i> - Allows overriding 'traditional' VLAN/VID mapping with arbitrary VIDs for each VLAN (set to '0' to use 'regular' VLAN/VID mappings instead). Warning: this hasn't been verified/tested on anything but a Cisco/Linksys E3000 and may not be supported by your particular device/model (<small><b><i>see notes on "VID Offset" below</i></b></small>).</li>
@@ -1004,9 +1004,9 @@ createFieldTable('', [
 if (!port_vlan_supported) {
 	W('<i>This feature is not supported on this router.<\/i>\n');
 } else {
-	E('sesdiv').style.display = '';
+	E('sesdiv').style.display = 'block';
 	if (!trunk_vlan_supported)
-		E('trunk_vlan_override').style.display = '';
+		E('trunk_vlan_override').style.display = 'block';
 }
 </script>
 </td></tr>
