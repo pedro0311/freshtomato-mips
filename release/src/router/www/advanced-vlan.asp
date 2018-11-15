@@ -872,12 +872,12 @@ function init() {
 }
 
 function toggleVisibility(whichone) {
-	if (E('sesdiv_' + whichone).style.display == '') {
+	if (E('sesdiv_' + whichone).style.display == 'block') {
 		E('sesdiv_' + whichone).style.display = 'none';
 		E('sesdiv_' + whichone + '_showhide').innerHTML = '(Click here to show)';
 		cookie.set('advanced_vlan_' + whichone + '_vis', 0);
 	} else {
-		E('sesdiv_' + whichone).style.display='';
+		E('sesdiv_' + whichone).style.display='block';
 		E('sesdiv_' + whichone + '_showhide').innerHTML = '(Click here to hide)';
 		cookie.set('advanced_vlan_' + whichone + '_vis', 1);
 	}
@@ -890,7 +890,7 @@ function earlyInit() {
 	}
 
 	if (unknown_router == '1')
-		E('unknown_router').style.display = '';
+		E('unknown_router').style.display = 'block';
 
 }
 
@@ -1021,7 +1021,7 @@ createFieldTable('', [
 </div>
 
 <div class="section-title">Notes <small><i><a href='javascript:toggleVisibility("notes");'><span id="sesdiv_notes_showhide">(Click here to hide)</span></a></i></small></div>
-<div class="section" id="sesdiv_notes" style="display:">
+<div class="section" id="sesdiv_notes" style="display:block">
 <ul>
 	<li>If you notice that the order of the Lan Ports are incorrectly mapped, <a href="http://www.linksysinfo.org/index.php?threads/can-vlan-gui-port-order-be-corrected.70160/#post-247634/"> <b>Please Follow these Instructions to get it corrected.</b></a></li>
 	<li style="list-style: none"><br/></li>
@@ -1058,7 +1058,7 @@ createFieldTable('', [
 if (!port_vlan_supported) {
 	W('<i>This feature is not supported on this router.<\/i>');
 } else {
-	E('sesdiv').style.display = '';
+	E('sesdiv').style.display = 'block';
 }
 </script>
 </td></tr>
