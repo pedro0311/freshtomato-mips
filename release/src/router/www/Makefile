@@ -314,6 +314,12 @@ ifneq ($(TCONFIG_STUBBY),y)
 	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/STUBBY-BEGIN/,/STUBBY-END/d"
 endif
 
+# Only include the Iperf page if it is compiled in
+ifneq ($(TCONFIG_IPERF),y)
+	rm -f $(INSTALLDIR)/www/tools-iperf.asp
+	sed -i $(INSTALLDIR)/www/tomato.js -e "/IPERF-BEGIN/,/IPERF-END/d"
+endif
+
 # Only include the https option if it is compiled in
 ifneq ($(TCONFIG_HTTPS),y)
 	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/HTTPS-BEGIN/,/HTTPS-END/d"
