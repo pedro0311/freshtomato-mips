@@ -181,6 +181,51 @@ void asp_psup(int argc, char **argv)
 	if (argc == 1) web_printf("%d", pidof(argv[0]) > 0);
 }
 
+void wo_vpn_status(char *url)
+{
+#ifdef TCONFIG_OPENVPN
+	char buf[256];
+	char *type;
+	char *str;
+	int num;
+	FILE *fp;
+
+	type = 0;
+	if ( (str = webcgi_get("server")) )
+		type = "server";
+	else if ( (str = webcgi_get("client")) )
+		type = "client";
+
+	num = str? atoi(str): 0;
+	if ( type && num > 0 )
+	{
+		// Trigger OpenVPN to update the status file
+		snprintf(&buf[0], sizeof(buf), "vpn%s%d", type, num);
+		killall(&buf[0], SIGUSR2);
+
+		// Give it a chance to update the file
+		sleep(1);
+
+		// Read the status file and repeat it verbatim to the caller
+		snprintf(&buf[0], sizeof(buf), "/etc/openvpn/%s%d/status", type, num);
+		fp = fopen(&buf[0], "r");
+		if( fp != NULL )
+		{
+			while (fgets(&buf[0], sizeof(buf), fp) != NULL)
+				web_puts(&buf[0]);
+			fclose(fp);
+		}
+	}
+#endif
+}
+
+void wo_vpn_genkey(char *url)
+{
+#ifdef TCONFIG_OPENVPN
+		web_pipecmd("openvpn --genkey --secret /tmp/genvpnkey \
+		 && cat /tmp/genvpnkey | tail -n +4 && rm /tmp/genvpnkey", WOF_NONE);
+#endif
+}
 
 /*
 # cat /proc/meminfo
@@ -652,7 +697,7 @@ void asp_wanup(int argc, char **argv)
 	char prefix[] = "wanXXXXXXXXXX_";
 
 	if(argc > 0){
-		strcpy(prefix, argv[0]); }
+		strcpy(prefix, argv[0]); } 
 	else{
 		strcpy(prefix, "wan"); }
 
@@ -664,7 +709,7 @@ void asp_wanstatus(int argc, char **argv)
 	char prefix[] = "wanXXXXXXXXXX_";
 
 	if(argc > 0){
-		strcpy(prefix, argv[0]); }
+		strcpy(prefix, argv[0]); } 
 	else{
 		strcpy(prefix, "wan"); }
 
@@ -700,12 +745,12 @@ void asp_link_uptime(int argc, char **argv)
 	long uptime;
 	char prefix[] = "wanXXXXXXXXXX_";
 	char wantime_file[256];
-
+	
 	if(argc > 0){
 		strcpy(prefix, argv[0]); }
 	else{
 		strcpy(prefix, "wan"); }
-
+	
 	buf[0] = '-';
 	buf[1] = 0;
 	if (check_wanup(prefix)) {
@@ -832,7 +877,7 @@ void asp_dns(int argc, char **argv)
 	char prefix[] = "wanXX";
 
 	if(argc > 0){
-		strcpy(prefix, argv[0]); }
+		strcpy(prefix, argv[0]); } 
 	else{
 		strcpy(prefix, "wan"); }
 

@@ -74,7 +74,6 @@ extern void asp_psup(int argc, char **argv);
 #ifdef TCONFIG_OPENVPN
 extern void wo_vpn_status(char *url);
 extern void wo_vpn_genkey(char *url);
-extern void wo_vpn_genclientconfig(char *url);
 #endif
 extern void asp_sysinfo(int argc, char **argv);
 extern void asp_statfs(int argc, char **argv);
