@@ -287,6 +287,9 @@ sub fixDyn
 
 #Roadkill for NocatSplash
 	fixDynDep("splashd","libglib-1.2.so.0.0.10");
+
+# iperf (pedro)
+	fixDynDep("iperf", "libiperf.so.0.0.0");
 }
 
 sub usersOf
@@ -594,6 +597,9 @@ genSO("${root}/usr/lib/libpcre.so.1.2.10", "${router}/pcre/.libs/libpcre.a");
 genSO("${root}/usr/lib/libpcreposix.so.0.0.6", "${router}/pcre/.libs/libpcreposix.a");
 genSO("${root}/usr/lib/libatomic_ops.so.1.0.3", "${router}/libatomic_ops/src/.libs/libatomic_ops.a");
 genSO("${root}/usr/lib/libncurses.so.6", "${router}/libncurses/lib/libncurses.a");
+
+# iperf (pedro)
+genSO("${root}/usr/lib/libiperf.so.0.0.0", "${router}/iperf/src/.libs/libiperf.a");
 
 print "\n";
 
