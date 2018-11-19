@@ -677,6 +677,10 @@ define RouterOptions
 		sed -i "/TCONFIG_TINC/d" $(1); \
 		echo "TCONFIG_TINC=y" >>$(1); \
 	fi; \
+	if [ "$(IPERF)" = "y" ]; then \
+		sed -i "/TCONFIG_IPERF/d" $(1); \
+		echo "TCONFIG_IPERF=y" >>$(1); \
+	fi; \
 	)
 endef
 
@@ -1045,7 +1049,7 @@ o:
 ## All-In-One (AIO) MIPS1 - only for router with more than 8MB flash!! ZTE H618B
 z:
 	@$(MAKE) bin USB="USB" B=E NTFS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y USBEXTRAS=y OPENVPN=y PPTPD=y \
-	    BBEXTRAS=y MEDIASRV=y DNSCRYPT=y STUBBY=y NOCAT=y TOR=y BTCLIENT=y NFS=y SNMP=y UPS=y TR_EXTRAS=y IPSEC=y DNSSEC=y TINC=y NANO=y HFS=y NGINX=y BUILD_DESC="AIO"
+	    BBEXTRAS=y MEDIASRV=y DNSCRYPT=y STUBBY=y NOCAT=y TOR=y BTCLIENT=y NFS=y SNMP=y UPS=y TR_EXTRAS=y IPSEC=y DNSSEC=y TINC=y NANO=y HFS=y NGINX=y BUILD_DESC="AIO" IPERF=y
 
 
 #################################

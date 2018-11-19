@@ -317,13 +317,17 @@ const struct mime_handler mime_handlers[] = {
 #ifdef TCONFIG_OPENVPN
 	{ "vpnstatus.cgi",		mime_javascript,			0,	wi_generic,		wo_vpn_status,		1 },
 	{ "vpngenkey.cgi",		mime_javascript,			0,	wi_generic,		wo_vpn_genkey,		1 },
-	{ "vpn/ClientConfig.tgz",	mime_binary,				0,	wi_generic,		wo_vpn_genclientconfig,	1 },
 #endif
 #ifdef TCONFIG_PPTPD
 	{ "pptpd.cgi",			mime_javascript,			0,	wi_generic,		wo_pptpdcmd,		1 },	//!!AB - PPTPD
 #endif
 #ifdef TCONFIG_USB
 	{ "usbcmd.cgi",			mime_javascript,			0,	wi_generic,		wo_usbcommand,		1 },	//!!TB - USB
+#endif
+#ifdef TCONFIG_IPERF
+	{ "iperfstatus.cgi",			mime_javascript,			0,	wi_generic,		wo_ttcpstatus,		1 },
+	{ "iperfrun.cgi",			mime_javascript,			0,	wi_generic,		wo_ttcprun,		1 },
+	{ "iperfkill.cgi",			mime_javascript,			0,	wi_generic,		wo_ttcpkill,		1 },
 #endif
 #ifdef BLACKHOLE
 	{ "blackhole.cgi",		NULL,					0,	wi_blackhole,		NULL,			1 },
@@ -411,11 +415,11 @@ static void asp_css(int argc, char **argv)
 	const char *css = nvram_safe_get("web_css");
 	const char *ttb = nvram_safe_get("ttb_css");
 
-	if( nvram_match( "web_css", "online" ) ) {
-		web_printf("<link rel='stylesheet' type='text/css' href='ext/%s.css'>", ttb);
+	if (nvram_match( "web_css", "online" )) {
+		web_printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"ext/%s.css\">", ttb);
 	} else {
 		if (strcmp(css, "tomato") != 0) {
-			web_printf("<link rel='stylesheet' type='text/css' href='%s.css'>", css);
+			web_printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"%s.css\">", css);
 		}
 	}
 }
@@ -1583,7 +1587,6 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_server1_ccd_val",	V_NONE				},
 	{ "vpn_server1_static",		V_NONE				},
 	{ "vpn_server1_ca",		V_NONE				},
-	{ "vpn_server1_ca_key",		V_NONE				},
 	{ "vpn_server1_crt",		V_NONE				},
 	{ "vpn_server1_key",		V_NONE				},
 	{ "vpn_server1_dh",		V_NONE				},
@@ -1626,7 +1629,6 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_server2_ccd_val",	V_NONE				},
 	{ "vpn_server2_static",		V_NONE				},
 	{ "vpn_server2_ca",		V_NONE				},
-	{ "vpn_server2_ca_key",		V_NONE				},
 	{ "vpn_server2_crt",		V_NONE				},
 	{ "vpn_server2_key",		V_NONE				},
 	{ "vpn_server2_dh",		V_NONE				},

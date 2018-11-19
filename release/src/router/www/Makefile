@@ -221,6 +221,7 @@ endif
 	done
 
 # Remove from html obsolete stuff
+	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp); do \
 		sed     -e "s,<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">,<!DOCTYPE html>," \
 			-e "s,<form action=\"\">,<form>," \
@@ -301,6 +302,12 @@ endif
 # Only include the stubby option if is compiled in
 ifneq ($(TCONFIG_STUBBY),y)
 	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/STUBBY-BEGIN/,/STUBBY-END/d"
+endif
+
+# Only include the Iperf page if it is compiled in
+ifneq ($(TCONFIG_IPERF),y)
+	rm -f $(INSTALLDIR)/www/tools-iperf.asp
+	sed -i $(INSTALLDIR)/www/tomato.js -e "/IPERF-BEGIN/,/IPERF-END/d"
 endif
 
 # Only include the https option if it is compiled in
