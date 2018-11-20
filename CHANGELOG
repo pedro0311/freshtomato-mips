@@ -3,6 +3,95 @@ FreshTomato-MIPS Changelog
 
 
 
+2018.5.083-beta 2018.11.25
+--------------------------
+
+- kernel: BCM47XX: add vectored interrupt support (ie: Linksys WRT160N3, Cisco M10, Asus RT-N12, Linksys EA6500v1, Tenda N80, Tenda W1800R, Buffalo WZR-D1800H, Asus RT-N66U)
+- kernel: drivers: net: usb: qmi_wwan.c: fix CVE-2017-16650
+- tor: Update to 0.3.4.9
+- php: update to 7.2.12
+- nano: update to 3.2
+- SQLite: pdate to 3.25.3
+- dnsmasq: update to 2.80
+- uqmi: update to uqmi-01944dd
+- libubox: update to libubox-c83a84a, clean sources, add patch instead
+- tinc: update to 1.1pre17
+- snmpd: update to 5.8
+- libcurl: update CA certificate bundle as of 2018-10-17
+- libcurl: update to 7.62.0
+- dropbear: fix from upstream for CVE-2018-15599
+- nginx: update to 1.14.1
+- apcupsd: update to 3.14.14
+- miniupnpd: update to git snapshot from 20181031 (includes PCP fix)
+- mssl: Updated cipher list
+- Add IPERF bandwidth test tool with GUI as an option
+- GUI: adblock: add warning
+- GUI: stubby: add the ability to choose the level of logging
+- GUI: add feature to generate VPN static key from GUI
+- Add GUI optimization tools that are run before compilation
+- GUI: add warning on OpenVPN server page about needed free NVRAM space
+- GUI: add option for OpenVPN LZ4-V2 compression
+- GUI: Generation of iperf commandline
+- GUI: IPerf: fix some minor JS bugs
+- www: W3C never-ending-story
+- dnsmasq: change default dns priority to 'no-resolv'
+- dnsmasq: improve insecure ds syslog to handle servers that really do not support dnssec
+- patches: fix mysql re-check patch
+- cosmetic and small updates for IPv6
+- btools: libfoo.pl: fix typo
+- btools: libfoo.pl: prepare for new package (iperf)
+- Makefile: add targets n60h, n60k and n60l to build images for Linksys E3000 without minidlna
+- Makefile: add stubby to target "o" (Mega-VPN)
+- Makefile: remove targets "n60l" (VPN-noMS) and "n60h" (IPv6-VPN) for E3000. Add "n60a" (MiniVPN) instead. Clean-up
+- Makefile: changes for "n60" (TendaN60) target: remove minidlna because of the large image size, add dnscrypt-proxy and JFFS instead
+- router: preparation of variables for new version of switch4g/switch3g
+- router: preparation of variables for new version of switch4g/switch3g part 2
+- router: Makefile: fix build when valgrind is installed on host
+- router: Makefile: fix nano not working due to missing libstdc++ library (Mega-VPN target)
+- router: Makefile: add libnfnetlink-clean target (additionally add PARALLEL_BUILD to MAKE)
+- router: Makefile: Filter support for PHP needs to be enabled for h5ai
+- router: Makefile: fix typo
+- router: www: qos-graphs.asp: Hide "Zoom Graphs" because it doesn't work anyway
+- router: www: status-overview.asp: Cosmetics (W3C)
+- router: www: tomato.js: small fixes
+- router: www: basic-ipv6.asp AND rc: dhcp.c - some cosmetic - add missing verifcation for lanX_ipv6 - add/change comments (also at file httpd/tomato.c) - add additional check before we request a prefix for br1/br2/br3
+- router: httpd: increase HTTP_MAX_LISTENERS to 16 --> avoid error message "number of listeners exceeded the max allowed" --> advanced setups with Dual-Stack (IPv4 and IPv6) and remote access need more listerners
+- router: httpd: wl.c: fix popen/pclose
+- router: httpd: update gencert.sh script
+- router: httpd: tomato.c - sync NVRAM variables sequence of OpenVPN Server 1 and Server 2 - add missing default-values for variables "vpn_server1_userpass" and "vpn_server1_nocert"
+- router: httpd: iperf.c: change the location of the pid file
+- router: dhcp.c: add some comments -cosmetic -change *lanif to const char (pointer can be changed but not char), because of getifaddr return value (const char*) -remove semicolon after some if-conditions
+- router: nvram: defaults.c: change default value for ntp_updates (Auto Update Time) to 1 (Auto interval)
+- router: rc: vpn.c: add some comments -protection/cosmetic within function start_vpn_eas() and stop_vpn_eas: add check that i (counter for Server X/Client Y) will always be < 4 before write value to nums[i]
+- router: rc: network.c - Do not enable IPv6 for 'all', 'eth0', 'eth1', 'eth2' (ethX) - IPv6 will live on the bridged instances
+- router: rc: services.c: fix: Static DNS settings broken with WAN disabled (i.e. operating as AP)
+- router: usbmodeswitch: remove obsolete files from the device database
+- small fix for IPv6 accept_ra: make it possible to change accept_ra value for WAN and LAN(br0...br3) without reboot/restart of the router
+- IPv6: restrict Accept RA from LAN option (with dnsmasq)
+- stubby: make tls_authentication REQUIRED
+- toolchain: update to support IPerf (def. of be64toh and htobe64)
+- adblock: clean-up, fixes, improvements
+- adblock: decrease timeout for wget to a reasonable value
+- adblock: fix race condition when wan is up; avoid adblock to start downloading over and over (on some connections 2-3 times); instead, it's better to have one inactive process
+- switch3g: change PIDFILE location
+- switch3g: rework (1/2)
+- switch4g: change PIDFILE location
+- switch4g: add more possible options to Network Type and Roaming for 2nd type (qmi-wwan) non-hilink modems
+- switch4g: rework
+- switch4g: do not search all DIAGS every time - instead use already found in searchDiag()
+- vpnrouting: stay as close as possible to ARM
+- mssl: fix ssl context ciphers & options wasn't applied
+- nano: bindings: when Ctrl+Shift+Delete has no keycode, don't use KEY_BSP
+- nano: fix compilation again when configured with --enable-tiny
+- tor: make tor fully functional, so users can solve xxx.onion website dns and visit tor sites
+- Final clean-up of UI files according to the Web Consortium W3C standard
+- Fix PHP build when libicu is installed
+- Fix build when LZMA is installed on host
+- Fix "cannot run test program while cross compiling"
+- Remove residues in the code after ARIA2
+- Cleanup of unused libusb from the tree and Makefile
+
+
 2018.4          2018.09.10
 --------------------------
 
