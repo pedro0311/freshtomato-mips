@@ -211,7 +211,7 @@ const defaults_t defaults[] = {
 #ifdef TCONFIG_USB
 	// 3G/4G Modem
 	{ "wan_modem_pin",		""				},
-	{ "wan_modem_dev",		""				},
+	{ "wan_modem_dev",		"/dev/ttyUSB0"			},
 	{ "wan_modem_init",		"*99#"				},
 	{ "wan_modem_apn",		"internet"			},
 	{ "wan_modem_speed",		"00"				},
