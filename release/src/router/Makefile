@@ -732,16 +732,6 @@ httpd: shared nvram mssl
 www-install:
 	@$(MAKE) -C www install INSTALLDIR=$(INSTALLDIR)/www TOMATO_EXPERIMENTAL=$(TOMATO_EXPERIMENTAL)
 
-matrixssl:
-	@$(SEP)
-	@$(MAKE) -C matrixssl/src
-
-matrixssl-install:
-	@true
-
-matrixssl-clean:
-	-@$(MAKE) -C matrixssl/src clean
-
 cyassl/stamp-h1:
 	@cd cyassl && CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) \
 	CFLAGS="-Os -Wall -fPIC $(EXTRACFLAGS) -ffunction-sections -fdata-sections \
