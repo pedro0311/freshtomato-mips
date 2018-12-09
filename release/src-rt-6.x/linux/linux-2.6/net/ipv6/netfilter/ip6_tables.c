@@ -1170,6 +1170,7 @@ do_ip6t_get_ctl(struct sock *sk, int cmd, void __user *user, int *len)
 			struct ip6t_getinfo info;
 			struct xt_table_info *private = t->private;
 
+			memset(&info, 0, sizeof(info));
 			info.valid_hooks = t->valid_hooks;
 			memcpy(info.hook_entry, private->hook_entry,
 			       sizeof(info.hook_entry));
