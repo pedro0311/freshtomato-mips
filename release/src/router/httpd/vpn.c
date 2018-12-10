@@ -32,6 +32,7 @@
 #include <wlutils.h>
 
 #ifdef TCONFIG_OPENVPN
+#ifdef TCONFIG_KEYGEN
 
 /* FIXME: Somehow, eval doesn't seem to work? */
 static void run_program(const char *program)
@@ -60,14 +61,13 @@ static void prepareCAGeneration(int serverNum)
 	eval("rm", "-Rf", "/tmp/openssl");
 	eval("mkdir", "-p", "/tmp/openssl");
 	put_to_file("/tmp/openssl/index.txt", "");
-	put_to_file("/tmp/openssl/openssl.log", "w");
+	put_to_file("/tmp/openssl/openssl.log", "");
 
 	sprintf(&buffer[0], "vpn_server%d_ca_key", serverNum);
 
 	if (nvram_match(buffer, "")) {
 		syslog(LOG_WARNING, "No CA KEY was saved for server %d, regenerating", serverNum);
 		sprintf(&buffer2[0], "\"/C=GB/ST=Yorks/L=York/O=Company/OU=IT/CN=server.%s\"", nvram_safe_get("wan_domain"));
-		syslog(LOG_WARNING, "SUBJ is: %s", buffer2);
 		sprintf(&buffer[0], "openssl req -days 3650 -nodes -new -x509 -keyout /tmp/openssl/cakey.pem -out /tmp/openssl/cacert.pem -subj %s >>/tmp/openssl/openssl.log 2>&1", buffer2);
 		syslog(LOG_WARNING, buffer);
 		run_program(buffer);
@@ -93,7 +93,6 @@ static void generateKey(const char *prefix)
 	char buffer[512];
 	put_to_file("/tmp/openssl/serial", "00");
 	sprintf(&subj_buf[0], "\"/C=GB/ST=Yorks/L=York/O=Company/OU=IT/CN=%s.%s\"", prefix, nvram_safe_get("wan_domain"));
-	syslog(LOG_WARNING, "SUBJ is: %s", subj_buf);
 	sprintf(&buffer[0], "openssl req -days 3650 -nodes -new -keyout /tmp/openssl/%s.key -out /tmp/openssl/%s.csr -subj %s >>/tmp/openssl/openssl.log 2>&1", prefix, prefix, subj_buf);
 	syslog(LOG_WARNING, buffer);
 	run_program(buffer);
@@ -118,6 +117,7 @@ static void print_generated_keys_to_user(const char *prefix)
 	web_putfile(buffer, WOF_JAVASCRIPT);
 	web_puts("';");
 }
+#endif
 #endif
 
 void wo_vpn_status(char *url)
@@ -171,10 +171,13 @@ void wo_vpn_genkey(char *url)
 	}
 	if (!strcmp(modeStr, "static")) {
 		web_pipecmd("openvpn --genkey --secret /tmp/genvpnkey >/dev/null 2>&1 && cat /tmp/genvpnkey | tail -n +4 && rm /tmp/genvpnkey", WOF_NONE);
+#ifdef TCONFIG_KEYGEN
 	} else if (!strcmp(modeStr, "dh")) {
 		web_pipecmd("openssl dhparam -out /tmp/dh1024.pem 1024 >/dev/null 2>&1 && cat /tmp/dh1024.pem && rm /tmp/dh1024.pem", WOF_NONE);
+#endif
 	} else if (!strcmp(modeStr, "stop")) {
 		killall("openssl", SIGTERM);
+#ifdef TCONFIG_KEYGEN
 	} else {
 		strlcpy(buffer, webcgi_safeget("_server", ""), sizeof(buffer));
 		serverStr = js_string(buffer);	/* quicky scrub */
@@ -187,6 +190,7 @@ void wo_vpn_genkey(char *url)
 		generateKey("client1");
 		print_generated_ca_to_user();
 		print_generated_keys_to_user("client1");
+#endif
 	}
 #endif
 }
@@ -194,6 +198,7 @@ void wo_vpn_genkey(char *url)
 void wo_vpn_genclientconfig(char *url)
 {
 #ifdef TCONFIG_OPENVPN
+#ifdef TCONFIG_KEYGEN
 	char s[72];
 	char s2[72];
 	char *serverStr;
@@ -285,5 +290,6 @@ void wo_vpn_genclientconfig(char *url)
 	fclose(fp);
 	eval("tar", "-cf", "/tmp/ovpnclientconfig.tar", "-C", "/tmp/ovpnclientconfig", ".");
 	do_file("/tmp/ovpnclientconfig.tar");
+#endif
 #endif
 }

@@ -48,3 +48,4 @@ TCONFIG_SAMBASRV=y
 # TCONFIG_DNSSEC is not set
 # TCONFIG_TINC is not set
 # TCONFIG_IPERF is not set
+# TCONFIG_KEYGEN is not set

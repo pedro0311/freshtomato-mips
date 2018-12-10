@@ -325,6 +325,13 @@ ifneq ($(TCONFIG_HTTPS),y)
 	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/HTTPS-BEGIN/,/HTTPS-END/d"
 endif
 
+# Only include the TLS keys generator option if it is compiled in
+ifeq ($(TCONFIG_OPENVPN),y)
+ifneq ($(TCONFIG_KEYGEN),y)
+	sed -i $(INSTALLDIR)/www/vpn-server.asp -e "/KEYGEN-BEGIN/,/KEYGEN-END/d"
+endif
+endif
+
 # Clean-up compiler directives
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp *.js *.jsx *.html); do \
@@ -365,6 +372,7 @@ endif
 		-e "/MULTIWAN-BEGIN/d"	-e "/MULTIWAN-END/d"\
 		-e "/DUALWAN-BEGIN/d"	-e "/DUALWAN-END/d"\
 		-e "/HTTPS-BEGIN/d"	-e "/HTTPS-END/d"\
+		-e "/KEYGEN-BEGIN/d"	-e "/KEYGEN-END/d"\
 		|| true; \
 	done
 

@@ -317,6 +317,9 @@ const struct mime_handler mime_handlers[] = {
 #ifdef TCONFIG_OPENVPN
 	{ "vpnstatus.cgi",		mime_javascript,			0,	wi_generic,		wo_vpn_status,		1 },
 	{ "vpngenkey.cgi",		mime_javascript,			0,	wi_generic,		wo_vpn_genkey,		1 },
+#ifdef TCONFIG_KEYGEN
+	{ "vpn/ClientConfig.tgz",	mime_binary,				0,	wi_generic,		wo_vpn_genclientconfig,	1 },
+#endif
 #endif
 #ifdef TCONFIG_PPTPD
 	{ "pptpd.cgi",			mime_javascript,			0,	wi_generic,		wo_pptpdcmd,		1 },	//!!AB - PPTPD
@@ -1588,6 +1591,7 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_server1_ccd_val",	V_NONE				},
 	{ "vpn_server1_static",		V_NONE				},
 	{ "vpn_server1_ca",		V_NONE				},
+	{ "vpn_server1_ca_key",		V_NONE				},
 	{ "vpn_server1_crt",		V_NONE				},
 	{ "vpn_server1_key",		V_NONE				},
 	{ "vpn_server1_dh",		V_NONE				},
@@ -1630,6 +1634,7 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_server2_ccd_val",	V_NONE				},
 	{ "vpn_server2_static",		V_NONE				},
 	{ "vpn_server2_ca",		V_NONE				},
+	{ "vpn_server2_ca_key",		V_NONE				},
 	{ "vpn_server2_crt",		V_NONE				},
 	{ "vpn_server2_key",		V_NONE				},
 	{ "vpn_server2_dh",		V_NONE				},

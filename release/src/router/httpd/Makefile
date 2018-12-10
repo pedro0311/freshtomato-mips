@@ -18,6 +18,10 @@ ifeq ($(TCONFIG_NOCAT),y)
 OBJS += nocat.o
 endif
 
+ifeq ($(TCONFIG_OPENVPN),y)
+OBJS += vpn.o
+endif
+
 LIBS = -L$(TOP)/nvram -lnvram -L$(TOP)/shared -lshared
 LIBS += -L$(TOP)/mssl -lmssl
 
