@@ -752,16 +752,6 @@ httpd: shared nvram mssl
 www-install:
 	@$(MAKE) -C www install INSTALLDIR=$(INSTALLDIR)/www TOMATO_EXPERIMENTAL=$(TOMATO_EXPERIMENTAL)
 
-matrixssl:
-	@$(SEP)
-	@$(MAKE) -C matrixssl/src
-
-matrixssl-install:
-	@true
-
-matrixssl-clean:
-	-@$(MAKE) -C matrixssl/src clean
-
 cyassl/stamp-h1:
 	@cd cyassl && CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) \
 	CFLAGS="-Os -Wall -fPIC $(EXTRACFLAGS) -ffunction-sections -fdata-sections \
@@ -788,7 +778,16 @@ else
 OPENSSL_CIPHERS:=no-dh no-idea no-rc2 no-rc5 no-engine no-aes192 no-cast
 endif
 
+ifeq ($(TCONFIG_KEYGEN),)
+OPENSSL_CIPHERS+=no-sha0 no-smime no-camellia no-krb5 no-rmd160 no-ripemd no-seed no-capieng no-gms no-gmp no-rfc3779 no-err no-hw no-jpake no-zlib no-engines no-sse2 no-libunbound no-ssl-trace no-dtls1 no-store no-psk no-md2 no-mdc2 no-ts
+endif
+
 openssl/stamp-h1:
+ifeq ($(TCONFIG_KEYGEN),y)
+	mv patches/openssl/102-tomato-mips-specific.patch patches/openssl/102-tomato-mips-specific.patch.tmp || true
+else
+	mv patches/openssl/102-tomato-mips-specific.patch.tmp patches/openssl/102-tomato-mips-specific.patch || true
+endif
 	$(call patch_files,openssl)
 	cd openssl && \
 	CC=$(CC:$(CROSS_COMPILE)%=%) \
@@ -797,13 +796,8 @@ openssl/stamp-h1:
 	RANLIB=$(RANLIB:$(CROSS_COMPILE)%=%) \
 	./Configure $(HOSTCONFIG) --openssldir=/etc \
 	-ffunction-sections -fdata-sections -Wl,--gc-sections \
-	shared $(OPENSSL_CIPHERS) \
-	no-sha0 no-smime no-camellia no-krb5 no-rmd160 no-ripemd \
-	no-seed no-capieng no-gms no-gmp no-rfc3779 \
-	no-err no-hw no-jpake \
-	no-zlib no-engines no-sse2 no-libunbound no-ssl-trace \
-	no-dtls1 no-store no-psk no-md2 no-mdc2 no-ts
-
+	shared $(OPENSSL_CIPHERS)
+ifeq ($(TCONFIG_KEYGEN),)
 	cd openssl && mkdir -p include/openssl && \
 	ln -sf ../../crypto/camellia/camellia.h include/openssl/camellia.h && \
 	ln -sf ../../crypto/krb5/krb5_asn.h include/openssl/krb5_asn.h && \
@@ -817,6 +811,10 @@ openssl/stamp-h1:
 	ln -sf ../../crypto/idea/idea.h include/openssl/idea.h && \
 	ln -sf ../../crypto/rc2/rc2.h include/openssl/rc2.h && \
 	ln -sf ../../crypto/cast/cast.h include/openssl/cast.h
+else
+	cd openssl && mkdir -p include/openssl && \
+	ln -sf ../../crypto/krb5/krb5_asn.h include/openssl/krb5_asn.h
+endif
 	@$(MAKE) -C openssl clean depend
 	@touch openssl/stamp-h1
 
@@ -827,6 +825,7 @@ openssl: openssl/stamp-h1
 openssl-clean:
 	-@$(MAKE) -C openssl clean
 	@rm -f openssl/stamp-h1
+	@rm -fr openssl/include
 	$(call unpatch_files,openssl)
 
 openssl-install:

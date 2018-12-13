@@ -41,7 +41,7 @@
  
  SRC=$(E_SRC)
  
-@@ -159,7 +164,7 @@ $(EXE): progs.h $(E_OBJ) $(PROGRAM).o $(
+@@ -159,12 +164,11 @@ $(EXE): progs.h $(E_OBJ) $(PROGRAM).o $(
  	elif [ -n "$(FIPSCANLIB)" ]; then \
  	  FIPSLD_CC="$(CC)"; CC=$(FIPSDIR)/bin/fipsld; export CC FIPSLD_CC; \
  	fi; \
@@ -50,6 +50,11 @@
  	$(MAKE) -f $(TOP)/Makefile.shared -e \
  		APPNAME=$(EXE) OBJECTS="$(PROGRAM).o $(E_OBJ)" \
  		LIBDEPS="$(PEX_LIBS) $$LIBRARIES $(EX_LIBS)" \
+ 		link_app.$${shlib_target}
+-	@(cd ..; $(MAKE) rehash)
+ 
+ progs.h: progs.pl
+ 	$(PERL) progs.pl $(E_EXE) >progs.h
 --- openssl/apps/openssl.c	2017-01-26 14:22:03.000000000 +0100
 +++ openssl/apps/openssl.c	2018-05-14 00:49:03.294179077 +0200
 @@ -463,11 +463,15 @@ int main(int Argc, char *ARGV[])
@@ -203,7 +208,7 @@
  };
 --- openssl/apps/x509.c	2017-01-26 14:22:03.000000000 +0100
 +++ openssl/apps/x509.c	2018-05-14 15:39:23.000000000 +0200
-@@ -218,7 +219,9 @@ int MAIN(int argc, char **argv)
+@@ -218,7 +218,9 @@ int MAIN(int argc, char **argv)
      char *checkhost = NULL;
      char *checkemail = NULL;
      char *checkip = NULL;
@@ -213,7 +218,7 @@
  
      reqfile = 0;
  
-@@ -499,7 +508,10 @@ int MAIN(int argc, char **argv)
+@@ -499,7 +501,10 @@ int MAIN(int argc, char **argv)
              BIO_printf(bio_err, "%s", *pp);
          goto end;
      }
@@ -224,7 +229,7 @@
  
      if (need_rand)
          app_RAND_load_file(NULL, bio_err, 0);
-@@ -1036,7 +1048,9 @@ int MAIN(int argc, char **argv)
+@@ -1036,7 +1041,9 @@ int MAIN(int argc, char **argv)
      ASN1_INTEGER_free(sno);
      sk_ASN1_OBJECT_pop_free(trust, ASN1_OBJECT_free);
      sk_ASN1_OBJECT_pop_free(reject, ASN1_OBJECT_free);
