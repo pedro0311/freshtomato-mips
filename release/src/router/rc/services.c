@@ -1113,9 +1113,16 @@ void stop_ipv6(void)
 
 #endif
 
-void start_adblock()
+void start_adblock(int update)
 {
-	xstart("/usr/sbin/adblock");
+	if (nvram_match("adblock_enable", "1")) {
+		killall("adblock", SIGHUP);
+		if (update) {
+			xstart("/usr/sbin/adblock", "update");
+		} else {
+			xstart("/usr/sbin/adblock");
+		}
+	}
 }
 
 void stop_adblock()
@@ -2824,7 +2831,7 @@ TOP:
 
 	if (strcmp(service, "adblock") == 0) {
 		if (action & A_STOP) stop_adblock();
-		if (action & A_START) start_adblock();
+		if (action & A_START) start_adblock(1);		/* update lists immediately */
 		goto CLEAR;
 	}
 
