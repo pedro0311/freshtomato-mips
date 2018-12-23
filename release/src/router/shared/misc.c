@@ -256,7 +256,7 @@ void notice_set(const char *path, const char *format, ...)
 //	#define _x_dprintf(args...)	syslog(LOG_DEBUG, args);
 #define _x_dprintf(args...)	do { } while (0);
 
-/* function for rstats & cstats */
+/* function for rstats, cstats, httpd */
 long check_wanup_time(char *prefix)
 {
 	long wanuptime = 0; /* wanX uptime in seconds */
