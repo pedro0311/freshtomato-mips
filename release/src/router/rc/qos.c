@@ -72,7 +72,7 @@ void ipt_qos(void)
 		":QOSO - [0:0]\n"
 		"-A QOSO -j CONNMARK --restore-mark --mask 0xff\n"
 		"-A QOSO -m connmark ! --mark 0/0x0f00 -j RETURN\n"
-		);
+	);
 
 	g = buf = strdup(nvram_safe_get("qos_orules"));
 	while (g) {
@@ -245,8 +245,12 @@ void ipt_qos(void)
 				else {
 					sport[0] = 0;
 				}
-				if (proto_num != 6) ip46t_flagged_write(v4v6_ok, "-A %s -p %s %s %s %s", chain, "udp", sport, saddr, end);
-				if (proto_num != 17) ip46t_flagged_write(v4v6_ok, "-A %s -p %s %s %s %s", chain, "tcp", sport, saddr, end);
+				if (proto_num != 6) {
+					ip46t_flagged_write(v4v6_ok, "-A %s -p %s %s %s %s", chain, "udp", sport, saddr, end);
+				}
+				if (proto_num != 17) {
+					ip46t_flagged_write(v4v6_ok, "-A %s -p %s %s %s %s", chain, "tcp", sport, saddr, end);
+				{
 			}
 			else {
 				ip46t_flagged_write(v4v6_ok, "-A %s -p %d %s %s", chain, proto_num, saddr, end);
@@ -269,13 +273,13 @@ void ipt_qos(void)
 	ipt_write(
 		"-A FORWARD -o %s -j QOSO\n"
 		"-A OUTPUT -o %s -j QOSO\n",
-			qface, qface);
+		qface, qface);
 	if(check_wanup("wan2")){
 		qface = wan2faces.iface[0].name;
 		ipt_write(
 			"-A FORWARD -o %s -j QOSO\n"
 			"-A OUTPUT -o %s -j QOSO\n",
-				qface, qface);
+			qface, qface);
 	}
 #ifdef TCONFIG_MULTIWAN
 	if(check_wanup("wan3")){
@@ -283,14 +287,14 @@ void ipt_qos(void)
 		ipt_write(
 			"-A FORWARD -o %s -j QOSO\n"
 			"-A OUTPUT -o %s -j QOSO\n",
-				qface, qface);
+			qface, qface);
 	}
 	if(check_wanup("wan4")){
 		qface = wan4faces.iface[0].name;
 		ipt_write(
 			"-A FORWARD -o %s -j QOSO\n"
 			"-A OUTPUT -o %s -j QOSO\n",
-				qface, qface);
+			qface, qface);
 	}
 #endif
 
@@ -395,8 +399,7 @@ void ipt_qos(void)
 			}
 
 #ifdef TCONFIG_IPV6
-			if (*wan6face)
-			{
+			if (*wan6face) {
 				qosImqDeviceNumberString = 0;
 				ip6t_write("-A PREROUTING -i %s -j CONNMARK --restore-mark --mask 0xff\n", wan6face);
 
@@ -446,7 +449,7 @@ void start_qos(char *prefix)
 
 	qosDefaultClassId = (nvram_get_int("qos_default") + 1) * 10;
 	incomingBandwidthInKilobitsPerSecond = strtoul(nvram_safe_get(strcat_r(prefix, "_qos_ibw", tmp)), NULL, 10);
-	
+
 	if(!strcmp(prefix,"wan")){
 		strcpy(qosfn, "/etc/wan_qos");
 		strcpy(qosImqDeviceString, "imq0");
