@@ -24,7 +24,7 @@ static int rctest_main(int argc, char *argv[])
 			start_qos();
 		}
 #ifdef TCONFIG_IPV6
-		if (strcmp(argv[1], "6rd") == 0) {
+		else if (strcmp(argv[1], "6rd") == 0) {
 			stop_6rd_tunnel();
 			start_6rd_tunnel();
 		}

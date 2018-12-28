@@ -638,6 +638,10 @@ const defaults_t defaults[] = {
 	{ "multicast_lan3",		"0"				},	// on LAN3 (br3)
 	{ "multicast_custom",		""				},	// custom config for IGMP proxy instead of default config
 	{ "udpxy_enable",		"0"				},
+	{ "udpxy_lan",			"0"				},  // listen on LAN (br0)
+	{ "udpxy_lan1",			"0"				},  // listen on LAN (br1)
+	{ "udpxy_lan2",			"0"				},  // listen on LAN (br2)
+	{ "udpxy_lan3",			"0"				},  // listen on LAN (br3)
 	{ "udpxy_stats",		"0"				},
 	{ "udpxy_clients",		"3"				},
 	{ "udpxy_port",			"4022"				},

@@ -52,7 +52,7 @@
 // Pop an alarm to recheck pids in 500 msec.
 static const struct itimerval pop_tv = { {0,0}, {0, 500 * 1000} };
 
-// Pop an alarm to reap zombies. 
+// Pop an alarm to reap zombies.
 static const struct itimerval zombie_tv = { {0,0}, {307, 0} };
 
 // -----------------------------------------------------------------------------
@@ -676,6 +676,23 @@ void clear_resolv(void)
 	f_write(dmresolv, NULL, 0, 0, 0);	// blank
 }
 
+void start_adblock(int update)
+{
+	if (nvram_match("adblock_enable", "1")) {
+		killall("adblock", SIGHUP);
+		if (update) {
+			xstart("/usr/sbin/adblock", "update");
+		} else {
+			xstart("/usr/sbin/adblock");
+		}
+	}
+}
+
+void stop_adblock()
+{
+	xstart("/usr/sbin/adblock", "stop");
+}
+
 #ifdef TCONFIG_IPV6
 static int write_ipv6_dns_servers(FILE *f, const char *prefix, char *dns, const char *suffix, int once)
 {
@@ -738,7 +755,7 @@ void dns_to_resolv(void)
 			append++;
 		}
 		m = umask(022);	// 077 from pppoecd
-		if ((f = fopen(dmresolv, (append == 1) ? "w" : "a")) != NULL) {	// write / append	
+		if ((f = fopen(dmresolv, (append == 1) ? "w" : "a")) != NULL) {	// write / append
 			if (append == 1)
 				exclusive = ( write_pptpvpn_resolv(f) || write_vpn_resolv(f) ); // Check for VPN DNS entries
 			dnslog(LOG_DEBUG, "exclusive: %d", exclusive);
@@ -1112,16 +1129,6 @@ void stop_ipv6(void)
 }
 
 #endif
-
-void start_adblock()
-{
-	xstart("/usr/sbin/adblock");
-}
-
-void stop_adblock()
-{
-	xstart("/usr/sbin/adblock", "stop");
-}
 
 // -----------------------------------------------------------------------------
 
@@ -1622,7 +1629,7 @@ void start_igmp_proxy(void)
 		}
 		else if ((fp = fopen("/etc/igmp.conf", "w")) != NULL) {
 		  /* check that lan, lan1, lan2 and lan3 are not selected and use custom config */
-		  /* The configuration file must define one (or more) upstream interface(s) and one or more downstream interfaces, 
+		  /* The configuration file must define one (or more) upstream interface(s) and one or more downstream interfaces,
 		     see https://github.com/pali/igmpproxy/commit/b55e0125c79fc9dbc95c6d6ab1121570f0c6f80f and
 		     see https://github.com/pali/igmpproxy/blob/master/igmpproxy.conf
 		   */
@@ -1707,11 +1714,44 @@ void stop_igmp_proxy(void)
 
 void start_udpxy(void)
 {
-	if (nvram_match("udpxy_enable", "1")) {
-		if (get_wan_proto() == WP_DISABLED)
-			return;
-		eval("udpxy", (nvram_get_int("udpxy_stats") ? "-S" : ""), "-p", nvram_safe_get("udpxy_port"), "-c", nvram_safe_get("udpxy_clients"), "-m", nvram_safe_get("wan_ifname") );
-	}
+  char wan_prefix[] = "wan"; /* not yet mwan ready, use wan for now */
+  char buffer[32];
+
+  /* check if udpxy is enabled via GUI, advanced-firewall.asp */
+  if (nvram_match("udpxy_enable", "1")) {
+    if ((check_wanup(wan_prefix)) && (get_wanx_proto(wan_prefix) != WP_DISABLED)) {
+      memset(buffer, 0, sizeof(buffer)); /* reset */
+      snprintf(buffer, sizeof(buffer),"%s", get_wanface(wan_prefix)); /* copy wanface to buffer */
+
+      /* check interface to listen on */
+      /* check udpxy enabled/selected for lan / br0 ? */
+      if (nvram_match("udpxy_lan", "1") && strcmp(nvram_safe_get("lan_ipaddr"),"")!=0) {
+	eval("udpxy", (nvram_get_int("udpxy_stats") ? "-S" : ""), "-p", nvram_safe_get("udpxy_port"), "-c", nvram_safe_get("udpxy_clients"), "-a", nvram_safe_get("lan_ifname"), "-m", buffer);
+      }
+      /* check udpxy enabled/selected for lan1 / br1 ? */
+      else if (nvram_match("udpxy_lan1", "1") && strcmp(nvram_safe_get("lan1_ipaddr"),"")!=0) {
+	eval("udpxy", (nvram_get_int("udpxy_stats") ? "-S" : ""), "-p", nvram_safe_get("udpxy_port"), "-c", nvram_safe_get("udpxy_clients"), "-a", nvram_safe_get("lan1_ifname"), "-m", buffer);
+      }
+      /* check udpxy enabled/selected for lan2 / br2 ? */
+      else if (nvram_match("udpxy_lan2", "1") && strcmp(nvram_safe_get("lan2_ipaddr"),"")!=0) {
+	eval("udpxy", (nvram_get_int("udpxy_stats") ? "-S" : ""), "-p", nvram_safe_get("udpxy_port"), "-c", nvram_safe_get("udpxy_clients"), "-a", nvram_safe_get("lan2_ifname"), "-m", buffer);
+      }
+      /* check udpxy enabled/selected for lan3 / br3 ? */
+      else if (nvram_match("udpxy_lan3", "1") && strcmp(nvram_safe_get("lan3_ipaddr"),"")!=0) {
+	eval("udpxy", (nvram_get_int("udpxy_stats") ? "-S" : ""), "-p", nvram_safe_get("udpxy_port"), "-c", nvram_safe_get("udpxy_clients"), "-a", nvram_safe_get("lan3_ifname"), "-m", buffer);
+      }
+      else {
+	/* address/interface to listen on: default = 0.0.0.0 */
+	eval("udpxy", (nvram_get_int("udpxy_stats") ? "-S" : ""), "-p", nvram_safe_get("udpxy_port"), "-c", nvram_safe_get("udpxy_clients"), "-m", buffer);
+      }
+
+    }
+    else {
+      /* do nothing */
+      syslog(LOG_DEBUG, "udpxy not started!\n");
+    }
+
+  }
 }
 
 void stop_udpxy(void)
@@ -1979,8 +2019,8 @@ static void start_ftpd(void)
 	FILE *fp, *f;
 	char *buf;
 	char *p, *q;
-	int i;
 	char *user, *pass, *rights, *root_dir;
+	int i;
 
 	if (getpid() != 1) {
 		start_service("ftpd");
@@ -2022,17 +2062,17 @@ static void start_ftpd(void)
 		{
 			if (nvram_match("ftp_dirlist", "0"))
 				fprintf(f, "dirlist_enable=yes\n");
-			if (nvram_match("ftp_anonymous", "1") || 
+			if (nvram_match("ftp_anonymous", "1") ||
 			    nvram_match("ftp_anonymous", "3"))
 				fprintf(f, "write_enable=yes\n");
-			if (nvram_match("ftp_anonymous", "1") || 
+			if (nvram_match("ftp_anonymous", "1") ||
 			    nvram_match("ftp_anonymous", "2"))
 				fprintf(f, "download_enable=yes\n");
 			fclose(f);
 		}
-		if (nvram_match("ftp_anonymous", "1") || 
+		if (nvram_match("ftp_anonymous", "1") ||
 		    nvram_match("ftp_anonymous", "3"))
-			fprintf(fp, 
+			fprintf(fp,
 				"anon_upload_enable=yes\n"
 				"anon_mkdir_write_enable=yes\n"
 				"anon_other_write_enable=yes\n");
@@ -2391,9 +2431,9 @@ static void start_samba(void)
 	/* start samba if it's not already running */
 	if (pidof("nmbd") <= 0)
 		ret1 = xstart("nmbd", "-D");
-	if (pidof("smbd") <= 0)
+	if (pidof("smbd") <= 0) {
 		ret2 = xstart("smbd", "-D");
-
+	}
 	if (ret1 || ret2) kill_samba(SIGTERM);
 }
 
@@ -2824,7 +2864,7 @@ TOP:
 
 	if (strcmp(service, "adblock") == 0) {
 		if (action & A_STOP) stop_adblock();
-		if (action & A_START) start_adblock();
+		if (action & A_START) start_adblock(1);		/* update lists immediately */
 		goto CLEAR;
 	}
 
