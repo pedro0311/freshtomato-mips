@@ -250,7 +250,7 @@ void ipt_qos(void)
 				}
 				if (proto_num != 17) {
 					ip46t_flagged_write(v4v6_ok, "-A %s -p %s %s %s %s", chain, "tcp", sport, saddr, end);
-				{
+				}
 			}
 			else {
 				ip46t_flagged_write(v4v6_ok, "-A %s -p %d %s %s", chain, proto_num, saddr, end);
