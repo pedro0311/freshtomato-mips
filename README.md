@@ -6,11 +6,11 @@ Forums about Tomato:
 
 PL: https://openlinksys.info/forum/
 
-EN: https://www.linksysinfo.org/index.php
+EN: https://www.linksysinfo.org/
 
 This is a FreshTomato fork, If anyone wants to pick up changes and merge them to your repository, feel free and go ahead. That's the reason Tomato is an open-source project.
 
-**Source code**: https://bitbucket.org/pedro311/freshtomato-mips
+**Source code**: https://bitbucket.org/pedro311/freshtomato-mips/commits/all
 
 **Downloads**: https://mega.nz/#F!QywknIpa!5JwWNIfEwCOKXqXG0AOh4w
 
@@ -19,7 +19,7 @@ For the following **MIPSR1** and **MIPSR2** routers: **Asus** WL500GP, N10U, N12
 Disclaimer: I am not responsible for any bricked routers, nor do I encourage other people to flash alternative firmwares on their routers. Use at your own risk!
 
 
-**HOW TO COMPILE FRESHTOMATO on Debian 9.x/64bit**
+**HOW TO PREPARE A WORK ENVIRONMENT FOR FRESHTOMATO COMPILATION (on Debian 9.x/64bit)**
 
 1. Login as root
 
@@ -79,5 +79,17 @@ Disclaimer: I am not responsible for any bricked routers, nor do I encourage oth
 
 14. Add your username to git config:  
     git config --global user.name <name>  
-  
-**You're ready**
+
+
+**HOW TO COMPILE**
+
+1. Change dir to git repository ie: ```$ cd /freshtomato-mips```  
+2. Before every compilation, use ```$ git clean -fdxq && git reset --hard```, and possibly ```git pull``` to pull recent changes from remote  
+3. To compile RT image, use: ```$ git checkout mips-master``` then: ```$ cd release/src-rt```, check for possible targets: ```$ make help```, use one (Mini for ie. WRT54G): ```$ make f```  
+4. To compile RT-N image, use: ```$ git checkout mips-RT-AC``` then: ```$ cd release/src-rt```, check for possible targets: ```$ make help```, use one (RT-N66U build AIO): ```$ make r64z```  
+5. To compile RT-AC image, use: ```$ git checkout mips-RT-AC``` then: ```$ cd release/src-rt-6.x```, check for possible targets: ```$ make help```, use one (RT-AC66U build AIO): ```$ make ac66z```  
+
+**WARNING**
+
+To compile n60, rtn53, e2500, e3200, wndr64, wndr64-vpn and f9k targets (RT-N), before compilation you have to revert patch to the kernel: ```$ cd release/src-rt/linux``` ```patch -R -p4 < fix4usbap.patch```
+
