@@ -782,7 +782,7 @@ m:
 ########## Mips32r2 builds ##########
 
 
-## AIO MIPS2 for RT-N16 and E4200
+## AIO MIPS2 for RT-N16
 r2z:
 	@$(MAKE) z MIPS32=r2
 
@@ -831,10 +831,8 @@ r2v:
 r2m:
 	@$(MAKE) m MIPS32=r2
 
-## AIO for E4200
-n60z:
-	@$(MAKE) r2z NVRAM_SIZE=60 LINKSYS_E=1
 
+## Linksys
 n60e:
 	@$(MAKE) r2e NVRAM_SIZE=60 LINKSYS_E=1
 
@@ -962,7 +960,6 @@ help:
 	@echo "n60t         Linksys E-series build BT-VPN"
 	@echo "n60b         Linksys E-series build Big-VPN"
 	@echo "n60o         Linksys E-series build Mega-VPN"
-	@echo "n60z         Linksys E-series build AIO"
 	@echo "n60a         Linksys E-series build MiniVPN for E3000"
 	@echo "n60k         Linksys E-series build Nocat-MiniVPN for E3000"
 	@echo "n60v         Linksys E-series build IPv6-VPN for E2000"
