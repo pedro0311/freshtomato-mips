@@ -1090,7 +1090,7 @@ m:
 ########## Mips32r2 builds ##########
 
 
-## AIO MIPS2 for RT-N16 and E4200
+## AIO MIPS2 for RT-N16
 r2z:
 	@$(MAKE) z MIPS32=r2
 
@@ -1149,9 +1149,6 @@ f7d:
 
 
 ## Linksys E-series witk 60K NVRAM builds
-n60z:
-	@$(MAKE) r2z NVRAM_SIZE=60 LINKSYS_E=y
-
 n60e:
 	@$(MAKE) r2e NVRAM_SIZE=60 LINKSYS_E=y
 
