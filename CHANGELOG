@@ -31,6 +31,7 @@ FreshTomato-MIPS Changelog
 - GUI: MultiWAN Routing: increase the maximum number of digits to 80 for Port
 - router: httpd: misc.c: use function check_wanup_time(char *prefix) for void asp_link_uptime(int argc, char **argv) to get the link uptime (wanX)
 - router: shared: misc.c: make function check_wanup_time() mwan-ready; small change/adjustment to rstats & cstats to use the new function; cosmetic for rstats & cstats at function calc(): add typecast (long) to meet variable wanuptime (long)
+- dnsmasq: fix router reboots, when connected to wifi with specific configuration
 
 
 2018.5          2018.12.21
