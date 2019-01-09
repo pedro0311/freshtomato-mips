@@ -1992,6 +1992,7 @@ nginx/stamp-h1: openssl zlib pcre libatomic_ops
 		--with-http_flv_module \
 		--with-http_ssl_module \
 		--with-http_gzip_static_module \
+		--with-http_v2_module \
 		--http-uwsgi-temp-path=/tmp/var/lib/nginx/uwsgi \
 		--http-scgi-temp-path=/tmp/var/lib/nginx/scgi \
 		--http-proxy-temp-path=/tmp/var/lib/nginx/proxy \
