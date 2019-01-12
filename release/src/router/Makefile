@@ -2652,7 +2652,7 @@ tor: tor/stamp-h1
 
 tor-install:
 	install -d $(INSTALLDIR)/tor/usr/share
-	install -D tor/src/or/tor $(INSTALLDIR)/tor/usr/sbin/tor
+	install -D tor/src/app/tor $(INSTALLDIR)/tor/usr/sbin/tor
 	$(STRIP) -s $(INSTALLDIR)/tor/usr/sbin/tor
 
 tor-clean:
