@@ -17,6 +17,7 @@ include common.mak
 #export PARALLEL_BUILD :=
 export PARALLEL_BUILD := -j`grep -c '^processor' /proc/cpuinfo`
 
+
 define patch_files
  find patches/$(1) -maxdepth 1 -type f -name '*.patch' | sort -t '\0' -n | while read FILE; do \
   ( if ! patch -p0 -Rf --dry-run --silent < $$FILE 2>/dev/null; then \
@@ -45,19 +46,21 @@ echo "\033[41;1m   $@ ${progress}$\/${totalSteps} \033[0m\033]2;$@ ${progress}$\
 # standard packages
 #
 obj-y += lzma-loader
-obj-y += nvram
 obj-y += shared
+obj-y += nvram
+obj-y += et
+obj-y += libbcmcrypto
+obj-y += wlconf
 obj-y += prebuilt
 obj-y += igmpproxy
-obj-y += iptables
 obj-y += rc
+obj-y += iptables
 obj-y += iproute2
 obj-y += rom
 obj-y += others
 obj-y += busybox
 obj-y += httpd
 obj-y += www
-obj-y += wwwAT
 obj-y += bridge
 obj-$(TCONFIG_DNSSEC) += nettle
 obj-y += dnsmasq
@@ -66,7 +69,6 @@ obj-y += etc
 obj-y += pppd
 obj-y += rp-pppoe
 obj-y += utils
-#obj-y += ntpc
 obj-y += rstats
 obj-y += cstats
 obj-y += udpxy
@@ -98,18 +100,13 @@ obj-$(TCONFIG_STUBBY) += getdns
 obj-$(TCONFIG_SNMP) += snmp
 obj-$(TCONFIG_SDHC) += mmc
 
-# !!TB - updated Broadcom Wireless driver
-obj-y += et
-obj-y += libbcmcrypto
-obj-y += wlconf
-
 obj-y += cyassl
 obj-y += mssl
 obj-y += mdu
 obj-$(TCONFIG_RAID) += mdadm
 
-obj-$(TCONFIG_NFS) += portmap
 obj-$(TCONFIG_NFS) += e2fsprogs
+obj-$(TCONFIG_NFS) += portmap
 obj-$(TCONFIG_NFS) += libnfsidmap
 obj-$(TCONFIG_NFS) += nfs-utils
 
@@ -168,9 +165,8 @@ endif
 
 obj-$(NEED_SAMBA3) += samba3
 obj-$(TCONFIG_NTFS) += ntfs-3g
+
 obj-$(TCONFIG_EBTABLES) += ebtables
-#obj-$(TCONFIG_IPV6) += libdaemon
-#obj-$(TCONFIG_IPV6) += radvd
 obj-$(TCONFIG_IPV6) += dhcpv6
 
 obj-$(TCONFIG_MEDIA_SERVER) += ffmpeg
@@ -183,11 +179,9 @@ obj-$(TCONFIG_MEDIA_SERVER) += libid3tag
 obj-$(TCONFIG_MEDIA_SERVER) += libvorbis
 obj-$(TCONFIG_MEDIA_SERVER) += minidlna
 MEDIA_SERVER_STATIC=y
-#MEDIA_SERVER_STATIC :=
 
 #obj-y += libnfnetlink
 obj-y += miniupnpd
-#	obj-y += upnp
 obj-$(CONFIG_LINUX26) += ipset
 
 
@@ -199,7 +193,6 @@ obj-$(TCONFIG_PPTP) += accel-pptp
 obj-$(TCONFIG_PPTPD) += pptpd
 obj-$(TCONFIG_SSH) += dropbear
 obj-$(TCONFIG_ZEBRA) += zebra
-#	obj-$(TCONFIG_IPP2P) += ipp2p
 obj-$(TCONFIG_LZO) += lzo
 obj-$(TCONFIG_OPENVPN) += openvpn
 obj-$(TCONFIG_OPENVPN) += openvpn_plugin_auth_nvram
@@ -282,11 +275,10 @@ endif
 
 
 lzma-loader:
+	@$(SEP)
 	$(MAKE) -C $(SRCBASE)/lzma-loader CROSS_COMPILE=$(CROSS_COMPILE) LD=$(LD) $(PARALLEL_BUILD)
 
 lzma-loader-install: lzma-loader
-	@$(SEP)
-
 
 kmod: dummy
 	$(MAKE) -C $(LINUXDIR) modules CC=$(KERNELCC) $(PARALLEL_BUILD)
@@ -297,7 +289,6 @@ testfind:
 
 install package: $(obj-install) $(LINUXDIR)/.config
 	@$(SEP)
-
 	install -d $(TARGETDIR)
 
 
@@ -314,7 +305,6 @@ ifneq ($(CONFIG_LINUX26),y)
 	find $(TARGETDIR)/lib/modules -name emf.*o -exec $(STRIP) --strip-unneeded -x {} \;
 	find $(TARGETDIR)/lib/modules -name igs.*o -exec $(STRIP) --strip-unneeded -x {} \;
 	find $(TARGETDIR)/lib/modules -name jffs*.*o -exec $(STRIP) --strip-unneeded -x {} \;
-
 	find $(TARGETDIR)/lib/modules -name *.*o -exec $(STRIP) --strip-debug -x -R .mdebug.abi32 {} \;
 endif
 
@@ -378,7 +368,6 @@ endif
 	cd $(TARGETDIR)/lib/modules/*/kernel/drivers/media/video/gspca && mv stv06xx/* . && rm -rf stv06xx || true
 	cd $(TARGETDIR)/lib/modules/*/kernel/drivers/media/video && mv gspca/* . && rm -rf gspca || true
 	cd $(TARGETDIR)/lib/modules/*/kernel/drivers/media && mv video/* . && rm -rf video || true
-
 	cd $(TARGETDIR)/lib/modules/*/kernel/drivers/net && mv bcm57xx/* . && rm -rf bcm57xx || true
 	cd $(TARGETDIR)/lib/modules/*/kernel/drivers/net && mv emf/* . && rm -rf emf || true
 	cd $(TARGETDIR)/lib/modules/*/kernel/drivers/net && mv igs/* . && rm -rf igs || true
@@ -712,6 +701,7 @@ oldconfig oldconf: koldconf roldconf dependconf bboldconf
 #
 
 busybox: dummy
+	@$(SEP)
 	@$(MAKE) -C busybox EXTRA_CFLAGS="-fPIC $(EXTRACFLAGS)" $(PARALLEL_BUILD)
 
 busybox-install:
@@ -745,12 +735,12 @@ cyassl: cyassl/stamp-h1
 	@$(SEP)
 	@$(MAKE) -C cyassl
 
+cyassl-install:
+	@true
+
 cyassl-clean:
 	-@$(MAKE) -C cyassl clean
 	@rm -f cyassl/stamp-h1
-
-cyassl-install:
-	@true
 
 ifeq ($(FULL_OPENSSL),y)
 OPENSSL_CIPHERS:=enable-rc5
@@ -819,8 +809,6 @@ openssl-install:
 
 	install -D -m 0500 httpd/gencert.sh $(INSTALLDIR)/openssl/usr/sbin/gencert.sh
 
-#	perl -e 'while (<>) { s/.SECS/time()-(24*60*60)/e; print; }' < httpd/gencert.sh > $(INSTALLDIR)/openssl/usr/sbin/gencert.sh
-#	chmod 0500 $(INSTALLDIR)/openssl/usr/sbin/gencert.sh
 
 #ifeq ($(FULL_OPENSSL),y)
 	install -D openssl/libssl.so.1.0.0 $(INSTALLDIR)/openssl/usr/lib/libssl.so.1.0.0
@@ -956,6 +944,7 @@ rp-pppoe/src/stamp-h1: rp-pppoe/src/Makefile.in
 	@touch rp-pppoe/src/stamp-h1
 
 rp-pppoe: pppd rp-pppoe/src/stamp-h1
+	@$(SEP)
 	$(MAKE) -C rp-pppoe/src pppoe-relay rp-pppoe.so $(PARALLEL_BUILD)
 
 rp-pppoe-clean:
@@ -972,6 +961,7 @@ rp-pppoe-install:
 
 
 upnp: nvram shared iptables
+	@$(SEP)
 
 libnfnetlink/stamp-h1:
 	cd $(TOP)/libnfnetlink && CC=$(CC) STRIP=$(CROSS_COMPILE)strip \
@@ -984,16 +974,16 @@ libnfnetlink: libnfnetlink/stamp-h1
 	@$(SEP)
 	$(MAKE) -C libnfnetlink $(PARALLEL_BUILD)
 
-libnfnetlink-clean:
-	-@$(MAKE) -C libnfnetlink distclean
-	@rm -f libnfnetlink/stamp-h1
-
 libnfnetlink-install:
 	install -D libnfnetlink/src/.libs/libnfnetlink.so.0.2.0 $(INSTALLDIR)/libnfnetlink/usr/lib/libnfnetlink.so.0.2.0
 	$(STRIP) -s $(INSTALLDIR)/libnfnetlink/usr/lib/libnfnetlink.so.0.2.0
 	cd $(INSTALLDIR)/libnfnetlink/usr/lib/ && \
 		ln -sf libnfnetlink.so.0.2.0 libnfnetlink.so.0 && \
 		ln -sf libnfnetlink.so.0.2.0 libnfnetlink.so
+
+libnfnetlink-clean:
+	-@$(MAKE) -C libnfnetlink distclean
+	@rm -f libnfnetlink/stamp-h1
 
 miniupnpd-config:
 ifeq ($(TCONFIG_IPV6),y)
@@ -1043,6 +1033,7 @@ ntfs-3g/Makefile:
 		--disable-posix-acls --disable-nfconv --disable-dependency-tracking
 
 ntfs-3g: ntfs-3g/Makefile
+	@$(SEP)
 	@$(MAKE) -C ntfs-3g $(PARALLEL_BUILD)
 
 ntfs-3g-clean:
@@ -1062,6 +1053,7 @@ libusb10/Makefile: libusb10/Makefile.in
 	$(CONFIGURE) --disable-udev --prefix=/usr ac_cv_lib_rt_clock_gettime=no
 
 libusb10: libusb10/Makefile
+	@$(SEP)
 	$(MAKE) -C $@
 
 libusb10-install:
@@ -1075,6 +1067,7 @@ libusb10-clean:
 	@rm -rf libusb10/Makefile
 
 usbmodeswitch: libusb10
+	@$(SEP)
 	$(MAKE) -C $@ CC=$(CC) CFLAGS="-Os $(EXTRACFLAGS) -DLIBUSB10 \
 	    -Wl,-R/lib:/usr/lib:/opt/usr/lib:/usr/local/share -lpthread \
 	    -I$(TOP)/libusb10/libusb -L$(TOP)/libusb10/libusb/.libs -lusb-1.0"
@@ -1092,42 +1085,6 @@ usbmodeswitch-install: usbmodeswitch usbmodeswitchdb-install
 	$(STRIP) -s $(INSTALLDIR)/usbmodeswitch/usr/sbin/usb_modeswitch
 	@mkdir -p $(TARGETDIR)/rom/etc
 	@sed 's/#.*//g;s/[ \t]\+/ /g;s/^[ \t]*//;s/[ \t]*$$//;/^$$/d' < $(TOP)/usbmodeswitch/usb_modeswitch.conf > $(TARGETDIR)/rom/etc/usb_modeswitch.conf
-
-#libdaemon: libdaemon/Makefile
-	#$(MAKE) -C $@
-
-#libdaemon/Makefile: libdaemon/Makefile.in
-#	cd libdaemon && $(CONFIGURE) ac_cv_func_setpgrp_void=yes \
-#		--disable-dependency-tracking
-
-#libdaemon-install: libdaemon
-#	install -D libdaemon/libdaemon/.libs/libdaemon.so.0.5.0 $(INSTALLDIR)/libdaemon/usr/lib/libdaemon.so.0.5.0
-#	$(STRIP) $(INSTALLDIR)/libdaemon/usr/lib/*.so.*
-#	cd $(INSTALLDIR)/libdaemon/usr/lib && \
-#		ln -sf libdaemon.so.0.5.0 libdaemon.so && \
-#		ln -sf libdaemon.so.0.5.0 libdaemon.so.0
-
-#libdaemon-clean:
-#	-@$(MAKE) -C libdaemon distclean
-
-#radvd/stamp-h1:
-#	cd radvd && CFLAGS="-Os $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
-#		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
-#	$(CONFIGURE) --prefix="" --disable-dependency-tracking \
-#	DAEMON_CFLAGS="-I$(TOP)/libdaemon" \
-#	DAEMON_LIBS="-ldaemon -L$(TOP)/libdaemon/libdaemon/.libs"
-#	@$(MAKE) -C radvd clean
-#	@touch radvd/stamp-h1
-##
-#radvd: libdaemon radvd/stamp-h1
-
-#radvd-clean:
-#	-@$(MAKE) -C radvd distclean
-#	@rm -f radvd/stamp-h1
-
-#radvd-install: radvd
-#	install -D radvd/radvd $(INSTALLDIR)/radvd/usr/sbin/radvd
-#	$(STRIP) $(INSTALLDIR)/radvd/usr/sbin/radvd
 
 dhcpv6/stamp-h1:
 	@cd dhcpv6 && \
@@ -1150,7 +1107,6 @@ dhcpv6-clean:
 	-@$(MAKE) -C dhcpv6 clean
 	@rm -f dhcpv6/Makefile dhcpv6/stamp-h1
 
-
 p910nd:
 samba3:
 
@@ -1166,13 +1122,8 @@ vlan-install:
 	$(MAKE) -C vlan CROSS=$(CROSS_COMPILE) INSTALLDIR=$(INSTALLDIR) install	# STRIPTOOL=$(STRIP)
 	$(STRIP) $(INSTALLDIR)/vlan/usr/sbin/vconfig
 
-
-pptp-client-install:
-	install -D pptp-client/pptp $(INSTALLDIR)/pptp-client/usr/sbin/pptp
-	$(STRIP) $(INSTALLDIR)/pptp-client/usr/sbin/pptp
-
-
 accel-pptp: pppd accel-pptp/Makefile
+	@$(SEP)
 	@$(MAKE) -C accel-pptp
 
 accel-pptp/Makefile: accel-pptp/Makefile.in $(LINUXDIR)/include/linux/version.h
@@ -1195,6 +1146,8 @@ pptpd/stamp-h1:
 	touch pptpd/stamp-h1
 
 pptpd: pptpd/stamp-h1
+	@$(SEP)
+	@$(MAKE) -C pptpd
 
 pptpd-install:
 	@echo pptpd
@@ -1234,10 +1187,6 @@ ifeq ($(TCONFIG_L2TP),y)
 	$(STRIP) $(INSTALLDIR)/pppd/usr/lib/pppd/*.so
 endif
 
-#	ipupdate-install:
-#		install -D ipupdate/ez-ipupdate $(INSTALLDIR)/ipupdate/usr/sbin/ez-ipupdate
-#		$(STRIP) $(INSTALLDIR)/ipupdate/usr/sbin/ez-ipupdate
-
 zebra/stamp-h1:
 	@cd zebra && rm -f config.cache && \
 	CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) \
@@ -1249,6 +1198,7 @@ zebra/stamp-h1:
 	@touch zebra/stamp-h1
 
 zebra: zebra/stamp-h1
+	@$(SEP)
 	@$(MAKE) -C zebra CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD)
 
 zebra-clean:
@@ -1263,7 +1213,6 @@ zebra-install:
 	$(STRIP) $(INSTALLDIR)/zebra/usr/sbin/ripd
 	$(STRIP) $(INSTALLDIR)/zebra/usr/lib/libzebra.so
 
-
 rp-l2tp-install:
 	install -d $(INSTALLDIR)/rp-l2tp/usr/lib/l2tp
 	install rp-l2tp/handlers/*.so $(INSTALLDIR)/rp-l2tp/usr/lib/l2tp
@@ -1274,6 +1223,7 @@ rp-l2tp-install:
 	$(STRIP) $(INSTALLDIR)/rp-l2tp/usr/sbin/l2tpd
 
 xl2tpd: pppd
+	@$(SEP)
 	$(call patch_files,xl2tpd)
 	CFLAGS="-g $(EXTRACFLAGS)" $(MAKE) -C $@ PREFIX=/usr xl2tpd $(PARALLEL_BUILD)
 
@@ -1288,23 +1238,13 @@ bpalogin-install:
 	install -D bpalogin/bpalogin $(INSTALLDIR)/bpalogin/usr/sbin/bpalogin
 	$(STRIP) $(INSTALLDIR)/bpalogin/usr/sbin/bpalogin
 
-
-#	libnet:
-#		@$(SEP)
-#		@-mkdir -p libnet/lib
-#		@$(MAKE) -C libnet CC=$(CC) AR=$(AR) RANLIB=$(RANLIB)
-
-#	libpcap:
-#		@$(SEP)
-#		@$(MAKE) -C libpcap CC=$(CC) AR=$(AR) RANLIB=$(RANLIB)
-
 libbcm:
+	@$(SEP)
 	@[ ! -f libbcm/Makefile ] || $(MAKE) -C libbcm
 
 libbcm-install:
 	install -D libbcm/libbcm.so $(INSTALLDIR)/libbcm/usr/lib/libbcm.so
 	$(STRIP) $(INSTALLDIR)/libbcm/usr/lib/libbcm.so
-
 
 iproute2:
 	@$(SEP)
@@ -1366,6 +1306,7 @@ sqlite/stamp-h1:
 	touch sqlite/stamp-h1
 
 sqlite: sqlite/stamp-h1
+	@$(SEP)
 	@$(MAKE) -C sqlite all $(PARALLEL_BUILD)
 
 sqlite-clean:
@@ -1373,7 +1314,6 @@ sqlite-clean:
 	@rm -f sqlite/stamp-h1
 
 sqlite-install:
-	@$(SEP)
 ifeq ($(TCONFIG_NGINX),y)
 	install -D sqlite/.libs/libsqlite3.so.0.8.6 $(INSTALLDIR)/sqlite/usr/lib/libsqlite3.so.0.8.6
 	$(STRIP) $(INSTALLDIR)/sqlite/usr/lib/libsqlite3.so.0.8.6
@@ -1381,6 +1321,7 @@ ifeq ($(TCONFIG_NGINX),y)
 		ln -sf libsqlite3.so.0.8.6 libsqlite3.so.0 && \
 		ln -sf libsqlite3.so.0.8.6 libsqlite3.so
 endif
+	@true
 
 FFMPEG_FILTER_CONFIG= $(foreach c, $(2), --$(1)="$(c)")
 
@@ -1415,6 +1356,7 @@ ffmpeg/stamp-h1: zlib
 	touch ffmpeg/stamp-h1
 
 ffmpeg: ffmpeg/stamp-h1 zlib
+	@$(SEP)
 	@$(MAKE) -C ffmpeg all $(PARALLEL_BUILD)
 
 ffmpeg-clean:
@@ -1422,7 +1364,6 @@ ffmpeg-clean:
 	@rm -f ffmpeg/stamp-h1 ffmpeg/config.h ffmpeg/config.mak
 
 ffmpeg-install:
-	@$(SEP)
 ifneq ($(MEDIA_SERVER_STATIC),y)
 	install -D ffmpeg/libavformat/libavformat.so.52 $(INSTALLDIR)/ffmpeg/usr/lib/libavformat.so.52
 	install -D ffmpeg/libavcodec/libavcodec.so.52 $(INSTALLDIR)/ffmpeg/usr/lib/libavcodec.so.52
@@ -1431,6 +1372,7 @@ ifneq ($(MEDIA_SERVER_STATIC),y)
 	$(STRIP) $(INSTALLDIR)/ffmpeg/usr/lib/libavcodec.so.52
 	$(STRIP) $(INSTALLDIR)/ffmpeg/usr/lib/libavutil.so.50
 endif
+	@true
 
 libogg/stamp-h1:
 	cd libogg && \
@@ -1441,6 +1383,7 @@ libogg/stamp-h1:
 	touch libogg/stamp-h1
 
 libogg: libogg/stamp-h1
+	@$(SEP)
 	@$(MAKE) -C libogg all $(PARALLEL_BUILD)
 
 libogg-clean:
@@ -1448,11 +1391,11 @@ libogg-clean:
 	@rm -f libogg/stamp-h1
 
 libogg-install:
-	@$(SEP)
 ifneq ($(MEDIA_SERVER_STATIC),y)
 	install -D libogg/src/.libs/libogg.so.0 $(INSTALLDIR)/libogg/usr/lib/libogg.so.0
 	$(STRIP) $(INSTALLDIR)/libogg/usr/lib/libogg.so.0
 endif
+	@true
 
 flac/stamp-h1: libogg
 	cd flac && \
@@ -1466,6 +1409,7 @@ flac/stamp-h1: libogg
 	touch flac/stamp-h1
 
 flac: flac/stamp-h1 libogg
+	@$(SEP)
 	@$(MAKE) -C flac/src/libFLAC all $(PARALLEL_BUILD)
 
 flac-clean:
@@ -1473,11 +1417,11 @@ flac-clean:
 	@rm -f flac/stamp-h1
 
 flac-install:
-	@$(SEP)
 ifneq ($(MEDIA_SERVER_STATIC),y)
 	install -D flac/src/libFLAC/.libs/libFLAC.so.8 $(INSTALLDIR)/flac/usr/lib/libFLAC.so.8
 	$(STRIP) $(INSTALLDIR)/flac/usr/lib/libFLAC.so.8
 endif
+	@true
 
 jpeg/stamp-h1:
 	cd jpeg && \
@@ -1485,6 +1429,7 @@ jpeg/stamp-h1:
 	touch jpeg/stamp-h1
 
 jpeg: jpeg/stamp-h1
+	@$(SEP)
 	@$(MAKE) -C jpeg LIBTOOL="" O=o A=a CC=$(CC) AR2="touch" libjpeg.a libjpeg.so $(PARALLEL_BUILD)
 	install -d $(TOP)/jpeg/staged/include
 	install -d $(TOP)/jpeg/staged/lib
@@ -1500,7 +1445,6 @@ jpeg-clean:
 	@rm -rf jpeg/staged
 
 jpeg-install:
-	@$(SEP)
 ifneq ($(MEDIA_SERVER_STATIC),y)
 	install -D jpeg/libjpeg.so $(INSTALLDIR)/jpeg/usr/lib/libjpeg.so
 	$(STRIP) $(INSTALLDIR)/jpeg/usr/lib/libjpeg.so
@@ -1509,6 +1453,7 @@ ifeq ($(TCONFIG_NGINX),y)
 	install -D jpeg/libjpeg.so $(INSTALLDIR)/jpeg/usr/lib/libjpeg.so
 	$(STRIP) $(INSTALLDIR)/jpeg/usr/lib/libjpeg.so
 endif
+	@true
 
 libexif/stamp-h1:
 	cd libexif && CFLAGS="-Os -Wall $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections" \
@@ -1518,6 +1463,7 @@ libexif/stamp-h1:
 	touch libexif/stamp-h1
 
 libexif: libexif/stamp-h1
+	@$(SEP)
 	@$(MAKE) -C libexif all
 
 libexif-clean:
@@ -1525,11 +1471,11 @@ libexif-clean:
 	@rm -f libexif/stamp-h1
 
 libexif-install:
-	@$(SEP)
 ifneq ($(MEDIA_SERVER_STATIC),y)
 	install -D libexif/libexif/.libs/libexif.so.12 $(INSTALLDIR)/libexif/usr/lib/libexif.so.12
 	$(STRIP) $(INSTALLDIR)/libexif/usr/lib/libexif.so.12
 endif
+	@true
 
 zlib/stamp-h1:
 	cd zlib && \
@@ -1538,6 +1484,7 @@ zlib/stamp-h1:
 	touch zlib/stamp-h1
 
 zlib: zlib/stamp-h1
+	@$(SEP)
 	@$(MAKE) -C zlib all
 	@$(MAKE) -C zlib DESTDIR=$(TOP)/zlib/staged install
 
@@ -1547,7 +1494,6 @@ zlib-clean:
 	@rm -rf zlib/staged
 
 zlib-install:
-	@$(SEP)
 ifneq ($(MEDIA_SERVER_STATIC),y)
 	install -d $(INSTALLDIR)/zlib/usr/lib
 	install -D zlib/libz.so.1 $(INSTALLDIR)/zlib/usr/lib/
@@ -1568,6 +1514,7 @@ ifeq ($(TCONFIG_NGINX),y)
 	install -D zlib/libz.so.1 $(INSTALLDIR)/zlib/usr/lib/
 	$(STRIP) $(INSTALLDIR)/zlib/usr/lib/libz.so.1
 endif
+	@true
 
 libid3tag/stamp-h1: zlib
 	$(call patch_files,libid3tag)
@@ -1579,6 +1526,7 @@ libid3tag/stamp-h1: zlib
 	touch libid3tag/stamp-h1
 
 libid3tag: libid3tag/stamp-h1 zlib
+	@$(SEP)
 	@$(MAKE) -C libid3tag all $(PARALLEL_BUILD)
 
 libid3tag-clean:
@@ -1587,11 +1535,11 @@ libid3tag-clean:
 	$(call unpatch_files,libid3tag)
 
 libid3tag-install:
-	@$(SEP)
 ifneq ($(MEDIA_SERVER_STATIC),y)
 	install -D libid3tag/.libs/libid3tag.so.0 $(INSTALLDIR)/libid3tag/usr/lib/libid3tag.so.0
 	$(STRIP) $(INSTALLDIR)/libid3tag/usr/lib/libid3tag.so.0
 endif
+	@true
 
 libvorbis/stamp-h1: libogg
 	cd libvorbis && \
@@ -1604,6 +1552,7 @@ libvorbis/stamp-h1: libogg
 	touch libvorbis/stamp-h1
 
 libvorbis: libvorbis/stamp-h1
+	@$(SEP)
 	@$(MAKE) -C libvorbis/lib all $(PARALLEL_BUILD)
 
 libvorbis-clean:
@@ -1611,11 +1560,11 @@ libvorbis-clean:
 	@rm -f libvorbis/stamp-h1
 
 libvorbis-install:
-	@$(SEP)
 ifneq ($(MEDIA_SERVER_STATIC),y)
 	install -D libvorbis/lib/.libs/libvorbis.so.0 $(INSTALLDIR)/libvorbis/usr/lib/libvorbis.so.0
 	$(STRIP) $(INSTALLDIR)/libvorbis/usr/lib/libvorbis.so.0
 endif
+	@true
 
 minidlna: zlib sqlite ffmpeg libogg flac jpeg libexif libid3tag libvorbis
 	@$(SEP)
@@ -1628,7 +1577,6 @@ minidlna-clean:
 	$(call unpatch_files,minidlna)
 
 minidlna-install:
-	@$(SEP)
 	install -D minidlna/minidlna $(INSTALLDIR)/minidlna/usr/sbin/minidlna
 	$(STRIP) $(INSTALLDIR)/minidlna/usr/sbin/minidlna
 
@@ -1654,6 +1602,7 @@ igmpproxy-clean:
 	@rm -f igmpproxy/src/Makefile
 
 udev:
+	@$(SEP)
 	$(MAKE) -C $@ CROSS_COMPILE=$(CROSS_COMPILE) EXTRACFLAGS="$(EXTRACFLAGS)" \
 	    PROGRAMS=udevtrigger
 
@@ -1663,7 +1612,8 @@ udev-install:
 	$(MAKE) -C udev DESTDIR=$(INSTALLDIR) prefix=/udev install-udevtrigger
 
 hotplug2:
-	$(MAKE) -C $@ CROSS_COMPILE=$(CROSS_COMPILE) EXTRACFLAGS="$(EXTRACFLAGS)"
+	@$(SEP)
+	$(MAKE) -C $@ CROSS_COMPILE=$(CROSS_COMPILE) CC=$(CC) EXTRACFLAGS="$(EXTRACFLAGS)"
 
 hotplug2-install:
 	$(MAKE) -C hotplug2 install PREFIX=$(INSTALLDIR)/hotplug2 SUBDIRS=""
@@ -1693,6 +1643,7 @@ wanuptime-install:
 	$(STRIP) $(INSTALLDIR)/wanuptime/usr/sbin/wanuptime
 
 ebtables: dummy
+	@$(SEP)
 	$(MAKE) -C ebtables CC=$(CC) LD=$(LD) \
 	CFLAGS="-Os $(EXTRACFLAGS) -DEBT_MIN_ALIGN=4 -Wall -Wunused" \
 	LOCKFILE="/var/lock/ebtables" LOCKDIR="/var/lock" \
@@ -1727,6 +1678,7 @@ spawn-fcgi/stamp-h1:
 	touch spawn-fcgi/stamp-h1
 
 spawn-fcgi: spawn-fcgi/stamp-h1
+	@$(SEP)
 	@$(MAKE) -C spawn-fcgi $(PARALLEL_BUILD)
 
 spawn-fcgi-clean:
@@ -1740,9 +1692,8 @@ spawn-fcgi-install:
 
 #Roadkill
 glib/stamp-h1:
-	@$(SEP)
 	@cd glib && CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
-	$(CONFIGURE) --prefix=/usr glib_cv_prog_cc_ansi_proto=no glib_cv_has__inline=yes glib_cv_has__inline__=yes glib_cv_hasinline=yes \
+		$(CONFIGURE) --prefix=/usr glib_cv_prog_cc_ansi_proto=no glib_cv_has__inline=yes glib_cv_has__inline__=yes glib_cv_hasinline=yes \
 		glib_cv_sane_realloc=yes glib_cv_va_copy=no glib_cv___va_copy=yes glib_cv_va_val_copy=yes glib_cv_rtldglobal_broken=no \
 		glib_cv_uscore=no glib_cv_func_pthread_mutex_trylock_posix=yes glib_cv_func_pthread_cond_timedwait_posix=yes glib_cv_sizeof_gmutex=24 \
 		glib_cv_byte_contents_gmutex="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0" glib_cv_sys_pthread_getspecific_posix=yes \
@@ -1751,6 +1702,7 @@ glib/stamp-h1:
 	touch glib/stamp-h1
 
 glib: glib/stamp-h1
+	@$(SEP)
 	@$(MAKE) -C glib $(PARALLEL_BUILD)
 
 glib-clean:
@@ -1761,7 +1713,6 @@ glib-install: glib
 	@$(MAKE) -C glib DESTDIR=$(INSTALLDIR)/glib install
 
 nocat/stamp-h1: glib-install
-	@$(SEP)
 	@cd nocat && \
 	NC_CONF_PATH="/" CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
 	$(CONFIGURE) --with-firewall=iptables --with-glib-prefix="$(INSTALLDIR)/glib/usr" --localstatedir=/var --sysconfdir=/etc
@@ -1775,6 +1726,7 @@ nocat/stamp-h1: glib-install
 	touch nocat/stamp-h1
 
 nocat: nocat/stamp-h1
+	@$(SEP)
 	@$(MAKE) -C nocat $(PARALLEL_BUILD)
 
 nocat-clean:
@@ -1789,18 +1741,18 @@ nocat-install:
 
 #Tomato RAF
 pcre/stamp-h1:
-	$(SEP)
 	cd pcre && \
 	autoreconf -fsi && \
 	CC=$(CC) CXX=$(HOST)-g++ AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
 	$(CONFIGURE) --prefix=/usr --disable-dependency-tracking --enable-utf8 --enable-unicode-properties --disable-cpp
-	@touch pcre/stamp-h1
 	[ -d pcre/m4 ] || mkdir pcre/m4
+	@touch pcre/stamp-h1
 
 pcre: pcre/stamp-h1
+	@$(SEP)
+	@$(MAKE) -C pcre
 
 pcre-install:
-	@$(SEP)
 	install -D pcre/.libs/libpcre.so.1 $(INSTALLDIR)/pcre/usr/lib/libpcre.so.1.2.10
 	$(STRIP) -s $(INSTALLDIR)/pcre/usr/lib/libpcre.so.1.2.10
 	cd $(INSTALLDIR)/pcre/usr/lib/ && \
@@ -1826,11 +1778,11 @@ libxml2/stamp-h1:
 	touch $@
 
 libxml2: libxml2/stamp-h1
+	@$(SEP)
 	@$(MAKE) -C libxml2 all $(PARALLEL_BUILD)
 	@$(MAKE) -C libxml2 DESTDIR=$(TOP)/libxml2/staged install
 
 libxml2-install:
-	@$(SEP)
 	install -D libxml2/.libs/libxml2.so.2.9.3 $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.9.3
 	$(STRIP) $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.9.3
 	cd $(INSTALLDIR)/libxml2/usr/lib && \
@@ -1842,18 +1794,18 @@ libxml2-clean:
 	@rm -f libxml2/stamp-h1
 	@rm -rf libxml2/staged
 
-libpng/stamp-h1: zlib
+libpng/stamp-h1:
 	cd libpng && \
 	CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) CFLAGS="-Os -Wall -I$(TOP)/zlib $(EXTRACFLAGS)" LDFLAGS="-L$(TOP)/zlib" \
 	$(CONFIGURE) --prefix=/usr --enable-static --enable-shared
 	touch $@
 
 libpng: libpng/stamp-h1
+	@$(SEP)
 	@$(MAKE) -C libpng all $(PARALLEL_BUILD)
 	@$(MAKE) -C libpng DESTDIR=$(TOP)/libpng/staged install
 
 libpng-install:
-	@$(SEP)
 	install -D libpng/.libs/libpng.so.3.57.0 $(INSTALLDIR)/libpng/usr/lib/libpng.so.3.57.0
 	$(STRIP) $(INSTALLDIR)/libpng/usr/lib/libpng.so.3.57.0
 	cd $(INSTALLDIR)/libpng/usr/lib && \
@@ -1865,6 +1817,11 @@ libpng-install:
 		ln -sf libpng12.so.0.57.0 libpng12.so && \
 		ln -sf libpng12.so.0.57.0 libpng12.so.0
 
+libpng-clean:
+	-@$(MAKE) -C libpng clean
+	@rm -f libpng/stamp-h1
+	@rm -rf libpng/staged
+
 libatomic_ops/stamp-h1:
 	cd libatomic_ops && \
 	./autogen.sh && \
@@ -1873,10 +1830,10 @@ libatomic_ops/stamp-h1:
 	touch $@
 
 libatomic_ops: libatomic_ops/stamp-h1
+	@$(SEP)
 	@$(MAKE) -C libatomic_ops $(PARALLEL_BUILD)
 
 libatomic_ops-install: libatomic_ops
-	@$(SEP)
 	install -D libatomic_ops/src/.libs/libatomic_ops.so.1.0.3 $(INSTALLDIR)/libatomic_ops/usr/lib/libatomic_ops.so.1.0.3
 	$(STRIP) $(INSTALLDIR)/libatomic_ops/usr/lib/libatomic_ops.so.1.0.3
 
@@ -1885,7 +1842,6 @@ libatomic_ops-clean:
 	@rm -f libatomic_ops/stamp-h1
 
 php/stamp-h1: pcre zlib libiconv sqlite libxml2 libpng jpeg libcurl
-	@$(SEP)
 	$(call patch_files,php)
 	cd php && CC=$(CC) CXX=$(ARCH)-g++ AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) \
 	CFLAGS="-Os -Wall -I$(TOP)/zlib -I$(TOP)/libxml2/include/libxml -I$(TOP)/libxml2/include -I$(TOP)/pcre -I$(TOP)/libiconv/include \
@@ -1968,7 +1924,6 @@ php-clean:
 	$(call unpatch_files,php)
 
 php-install:
-	@$(SEP)
 	install -d $(INSTALLDIR)/php/usr/sbin
 	install -D php/sapi/cli/.libs/php $(INSTALLDIR)/php/usr/sbin/php-cli && chmod 0755 $(INSTALLDIR)/php/usr/sbin/php-cli
 	$(STRIP) $(INSTALLDIR)/php/usr/sbin/php-cli
@@ -1977,7 +1932,6 @@ php-install:
 	$(STRIP) $(INSTALLDIR)/php/usr/sbin/php-cgi
 
 nginx/stamp-h1: openssl zlib pcre libatomic_ops
-	@$(SEP)
 	$(call patch_files,nginx)
 	cd $(TOP)/nginx && ./configure --crossbuild=Linux::$(ARCH) \
 		--prefix=/usr \
@@ -2060,7 +2014,6 @@ libncurses-install:
 		ln -sf libmenu.so.6 libmenu.so
 
 mysql/stamp-h1: openssl zlib libncurses
-	@$(SEP)
 	@cp -f $(TOP)/patches/mysql/.host.tgz $(TOP)/mysql/ || true
 	$(call patch_files,mysql)
 	cd mysql && \
@@ -2078,6 +2031,7 @@ mysql/stamp-h1: openssl zlib libncurses
 		--without-mysqlmanager \
 		--with-pthread \
 		--with-ssl \
+		--without-docs \
 		--with-geometry \
 		--with-low-memory \
 		--enable-assembler \
@@ -2146,6 +2100,7 @@ lzo/stamp-h1:
 	touch lzo/stamp-h1
 
 lzo: lzo/stamp-h1
+	@$(SEP)
 	@$(MAKE) -C lzo $(PARALLEL_BUILD)
 
 lzo-clean:
@@ -2175,6 +2130,7 @@ openvpn/.conf: openssl lzo
 	touch openvpn/.conf
 
 openvpn: openvpn/.conf
+	@$(SEP)
 	@$(MAKE) -C openvpn $(PARALLEL_BUILD)
 
 openvpn-clean:
@@ -2202,6 +2158,7 @@ nano/stamp-h1: libncurses
 	touch nano/stamp-h1
 
 nano: nano/stamp-h1
+	@$(SEP)
 	@$(MAKE) -C nano $(PARALLEL_BUILD)
 
 nano-clean:
@@ -2238,6 +2195,7 @@ libcurl/stamp-h1: zlib openssl
 		touch libcurl/stamp-h1
 
 libcurl: libcurl/stamp-h1
+	@$(SEP)
 	@$(MAKE) -C libcurl $(PARALLEL_BUILD)
 	@$(MAKE) -C libcurl install
 
@@ -2487,6 +2445,7 @@ tinc-install:
 	$(STRIP) $(INSTALLDIR)/tinc/usr/sbin/tincd
 
 sd-idle/stamp-h1:
+	@$(SEP)
 	cd sd-idle \
 	CFLAGS="-Os -Wall --host=$(HOST) --target=$(HOST) $(EXTRACFLAGS)" \
 	$(MAKE) -C sd-idle
@@ -2539,6 +2498,7 @@ apcupsd/stamp-h1:
 	touch apcupsd/stamp-h1
 
 apcupsd: apcupsd/stamp-h1
+	@$(SEP)
 	$(MAKE) -C apcupsd $(PARALLEL_BUILD)
 
 apcupsd-clean:
@@ -2560,6 +2520,7 @@ libsodium/stamp-h1:
 	touch libsodium/stamp-h1
 
 libsodium: libsodium/stamp-h1
+	@$(SEP)
 	$(MAKE) -C libsodium $(PARALLEL_BUILD)
 
 libsodium-install:
@@ -2584,6 +2545,7 @@ dnscrypt/stamp-h1: libsodium
 	touch dnscrypt/stamp-h1
 
 dnscrypt: dnscrypt/stamp-h1
+	@$(SEP)
 	$(MAKE) -C dnscrypt $(PARALLEL_BUILD)
 
 dnscrypt-install:
@@ -2604,6 +2566,7 @@ libyaml/stamp-h1:
 	touch libyaml/stamp-h1
 
 libyaml: libyaml/stamp-h1
+	@$(SEP)
 	$(MAKE) -C libyaml $(PARALLEL_BUILD)
 
 libyaml-install:
@@ -2625,6 +2588,7 @@ getdns/stamp-h1: openssl libyaml
 	touch getdns/stamp-h1
 
 getdns: getdns/stamp-h1
+	@$(SEP)
 	$(MAKE) -C getdns $(PARALLEL_BUILD)
 
 getdns-install:
@@ -2648,6 +2612,7 @@ tor/stamp-h1: openssl zlib libevent
 	touch tor/stamp-h1
 
 tor: tor/stamp-h1
+	@$(SEP)
 	$(MAKE) -C tor $(PARALLEL_BUILD)
 
 tor-install:
@@ -2661,12 +2626,12 @@ tor-clean:
 
 udpxy/stamp-h1:
 	$(call patch_files,udpxy)
-	$(MAKE) -C udpxy lean CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections"
 	touch udpxy/stamp-h1
 
 udpxy: udpxy/stamp-h1
 	@$(SEP)
+	$(MAKE) -C udpxy lean CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections"
 
 udpxy-clean:
 	-@$(MAKE) -C udpxy clean
@@ -2674,12 +2639,12 @@ udpxy-clean:
 	$(call unpatch_files,udpxy)
 
 udpxy-install:
-	@$(SEP)
 	install -d $(INSTALLDIR)/udpxy/usr/bin
 	install -D udpxy/udpxy $(INSTALLDIR)/udpxy/bin/udpxy
 	$(STRIP) -s $(INSTALLDIR)/udpxy/bin/udpxy
 
 mdadm:
+	@$(SEP)
 	$(MAKE) -C mdadm mdadm $(PARALLEL_BUILD)
 
 mdadm-install:
@@ -2690,6 +2655,7 @@ mdadm-clean:
 	-@$(MAKE) -C mdadm clean
 
 ipset:
+	@$(SEP)
 	$(MAKE) -C ipset binaries COPT_FLAGS="-Os"
 
 ipset-install:
@@ -2709,6 +2675,7 @@ libjson-c/stamp-h1:
 	touch libjson-c/stamp-h1
 
 libjson-c: libjson-c/stamp-h1
+	@$(SEP)
 	$(MAKE) -C libjson-c $(PARALLEL_BUILD)
 
 libjson-c-clean:
@@ -2716,6 +2683,7 @@ libjson-c-clean:
 	@rm -rf libjson-c/stamp-h1
 
 uqmi: libjson-c
+	@$(SEP)
 	$(call patch_files,libubox)
 	$(MAKE) -C uqmi/libubox
 	$(MAKE) -C uqmi SHARED=0 CC='$(CC) -static'
@@ -2730,6 +2698,7 @@ uqmi-clean: libjson-c-clean
 	-@$(MAKE) -C uqmi clean
 
 comgt:
+	@$(SEP)
 	$(call patch_files,comgt)
 	@$(MAKE) -C comgt CC=$(CC) CFLAGS="-Os $(EXTRACFLAGS)" LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" comgt
 
@@ -2755,6 +2724,7 @@ iperf/stamp-h1:
 	touch iperf/stamp-h1
 
 iperf: iperf/stamp-h1
+	@$(SEP)
 	$(call patch_files,iperf)
 	$(MAKE) -C iperf
 
