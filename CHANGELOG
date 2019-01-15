@@ -3,6 +3,37 @@ FreshTomato-MIPS Changelog
 
 
 
+2019.1.015-beta 2019.01.10
+--------------------------
+- kernel: ipv6: Drop packets for loopback address from outside of the box
+- kernel: ipv6: drop packets when source address is multicast
+- kernel: ipv6: don't accept multicast traffic with scope 0
+- kernel: ipv6: don't accept node local multicast traffic from the wire
+- kernel: ipv6: drop non loopback packets claiming to originate from ::1
+- kernel: ipv6: use ND_REACHABLE_TIME and ND_RETRANS_TIMER instead of magic number
+- kernel: ipv6: ip6_forward: perform skb->pkt_type check at the beginning
+- kernel: ipv6: drop frames with attached skb->sk in forwarding
+- kernel: net: Discard and warn about LRO'd skbs received for forwarding
+- kernel: ipv4: ip_forward: perform skb->pkt_type check at the beginning
+- kernel: ipv4: ip_forward: Drop frames with attached skb->sk
+- kernel: net: ipv4: igmp.c: bonding: fix to rejoin multicast groups immediately
+- kernel: net: ipv4: igmp.c: igmp: Reduce Unsolicited report interval to 1s when using IGMPv3
+- kernel: net: ipv4: igmp.c: Make igmp group member RFC 3376 compliant
+- kernel: ipv6: Remove IPV6_ADDR_RESERVED
+- kernel RT-AC: backport useful macros and defines from upstream
+- udpxy: update to 1.0.23-12, clean sources
+- e2fsprogs: update to 1.44.5
+- Makefile: remove n60z (AIO) target, because the image size exceeds the flash size (16MB)
+- miniupnpd: do not disable port forwarding when in double NAT / CGNAT
+- udpxy: fix start with PPP connection
+- udpxy: extend GUI function (advanced-firewall.asp)
+- GUI: adblock: update lists immediately, if called from the GUI
+- GUI: MultiWAN Routing: increase the maximum number of digits to 80 for Port
+- router: httpd: misc.c: use function check_wanup_time(char *prefix) for void asp_link_uptime(int argc, char **argv) to get the link uptime (wanX)
+- router: shared: misc.c: make function check_wanup_time() mwan-ready; small change/adjustment to rstats & cstats to use the new function; cosmetic for rstats & cstats at function calc(): add typecast (long) to meet variable wanuptime (long)
+- dnsmasq: fix router reboots, when connected to wifi with specific configuration
+
+
 2018.5          2018.12.21
 --------------------------
 

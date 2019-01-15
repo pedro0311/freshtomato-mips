@@ -276,9 +276,8 @@ We want to express our gratitude to all people not mentioned here but contribute
 
 <hr>
 <br/><b>FreshTomato-MIPS - is an alternative, customized version, forked off from Tomato by Shibby</b>
-
 <br/>
-Copyright (C) 2016-2018 FreshTomato team
+Copyright (C) 2016-2019 FreshTomato team
 <br/>
 <br/>
 Built on <% build_time(); %> by Pedro
