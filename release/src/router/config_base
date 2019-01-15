@@ -49,3 +49,4 @@ TCONFIG_SAMBASRV=y
 # TCONFIG_TINC is not set
 # TCONFIG_IPERF is not set
 # TCONFIG_KEYGEN is not set
+# TCONFIG_TERMLIB is not set

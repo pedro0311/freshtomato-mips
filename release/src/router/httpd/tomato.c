@@ -122,7 +122,11 @@ void wi_cgi_bin(char *url, int len, char *boundary)
 	}
 }
 
+#ifdef TCONFIG_TERMLIB
+static void _execute_command(char *url, char *command, char *query, char *working_dir, wofilter_t wof)
+#else
 static void _execute_command(char *url, char *command, char *query, wofilter_t wof)
+#endif
 {
 	char webExecFile[]  = "/tmp/.wxXXXXXX";
 	char webQueryFile[] = "/tmp/.wqXXXXXX";
@@ -146,8 +150,14 @@ static void _execute_command(char *url, char *command, char *query, wofilter_t w
 			"export REQUEST_METHOD=\"%s\"\n"
 			"export PATH=%s\n"
 			". /etc/profile\n"
+#ifdef TCONFIG_TERMLIB
+			"cd %s\n"
+#endif
 			"%s%s %s%s\n",
 			post ? "POST" : "GET", getenv("PATH"),
+#ifdef TCONFIG_TERMLIB
+			working_dir,
+#endif
 			command ? "" : "./", command ? command : url,
 			query ? "<" : "", query ? webQueryFile : "");
 		fclose(f);
@@ -183,7 +193,11 @@ static void _execute_command(char *url, char *command, char *query, wofilter_t w
 static void wo_cgi_bin(char *url)
 {
 	if (!header_sent) send_header(200, NULL, mime_html, 0);
+#ifdef TCONFIG_TERMLIB
+	_execute_command(url, NULL, post_buf, "/www", WOF_NONE);
+#else
 	_execute_command(url, NULL, post_buf, WOF_NONE);
+#endif
 	if (post_buf) {
 		free(post_buf);
 		post_buf = NULL;
@@ -192,9 +206,19 @@ static void wo_cgi_bin(char *url)
 
 static void wo_shell(char *url)
 {
+#ifdef TCONFIG_TERMLIB
+	if (atoi(webcgi_safeget("nojs", "0"))) {
+		_execute_command(NULL, webcgi_get("command"), NULL, webcgi_safeget("working_dir", "/www"), WOF_NONE);
+	} else {
+		web_puts("\ncmdresult = '");
+		_execute_command(NULL, webcgi_get("command"), NULL, "/www", WOF_JAVASCRIPT);
+		web_puts("';");
+	}
+#else
 	web_puts("\ncmdresult = '");
 	_execute_command(NULL, webcgi_get("command"), NULL, WOF_JAVASCRIPT);
 	web_puts("';");
+#endif
 }
 
 static void wo_blank(char *url)
