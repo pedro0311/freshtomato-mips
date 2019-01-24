@@ -322,6 +322,14 @@ ifneq ($(TCONFIG_KEYGEN),y)
 endif
 endif
 
+# Only include the Termlib based tools-shell.asp option if it is compiled in
+ifneq ($(TCONFIG_TERMLIB),y)
+	rm -f $(INSTALLDIR)/www/termlib_min.js
+	sed -i $(INSTALLDIR)/www/tools-shell.asp -e "/TERMLIB-BEGIN/,/TERMLIB-END/d"
+else
+	sed -i $(INSTALLDIR)/www/tools-shell.asp -e "/TERMLIB0-BEGIN/,/TERMLIB0-END/d"
+endif
+
 # Clean-up compiler directives
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp *.js *.jsx *.html); do \
@@ -361,19 +369,21 @@ endif
 		-e "/DUALWAN-BEGIN/d"	-e "/DUALWAN-END/d"\
 		-e "/HTTPS-BEGIN/d"	-e "/HTTPS-END/d"\
 		-e "/KEYGEN-BEGIN/d"	-e "/KEYGEN-END/d"\
+		-e "/TERMLIB-BEGIN/d"	-e "/TERMLIB-END/d"\
+		-e "/TERMLIB0-BEGIN/d"	-e "/TERMLIB0-END/d"\
 		|| true; \
 	done
 
 # Use HTML compressor to compress HTML as much as possible
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp ); do \
-		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/tools/bin/html-minifier $$F --minify-css -o $$F || true; \
+		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/tools/bin/html-minifier $$F --minify-css --minify-js {\"output\":{\"comments\":[\"/.+\<\%.+\;.{0,1}\%\>/\"]}} --use-short-doctype -o $$F || true; \
 	done
 
 # Compress JAVASCRIPT files
 	cd $(INSTALLDIR)/www && \
-	for F in $(wildcard *.js ); do \
-		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/tools/bin/uglifyjs $$F -c -o $$F || true; \
+	for F in $(wildcard *.js *.jsx ); do \
+		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/tools/bin/uglifyjs $$F -c --comments /.+\<\%.+\;.{0,1}\%\>/ -o $$F || true; \
 	done
 
 # Compress CSS files

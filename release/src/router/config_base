@@ -58,3 +58,4 @@ TCONFIG_SAMBASRV=y
 # TCONFIG_WNDR4500V2 is not set
 # TCONFIG_IPERF is not set
 # TCONFIG_KEYGEN is not set
+# TCONFIG_TERMLIB is not set

@@ -122,7 +122,11 @@ void wi_cgi_bin(char *url, int len, char *boundary)
 	}
 }
 
+#ifdef TCONFIG_TERMLIB
+static void _execute_command(char *url, char *command, char *query, char *working_dir, wofilter_t wof)
+#else
 static void _execute_command(char *url, char *command, char *query, wofilter_t wof)
+#endif
 {
 	char webExecFile[]  = "/tmp/.wxXXXXXX";
 	char webQueryFile[] = "/tmp/.wqXXXXXX";
@@ -146,8 +150,14 @@ static void _execute_command(char *url, char *command, char *query, wofilter_t w
 			"export REQUEST_METHOD=\"%s\"\n"
 			"export PATH=%s\n"
 			". /etc/profile\n"
+#ifdef TCONFIG_TERMLIB
+			"cd %s\n"
+#endif
 			"%s%s %s%s\n",
 			post ? "POST" : "GET", getenv("PATH"),
+#ifdef TCONFIG_TERMLIB
+			working_dir,
+#endif
 			command ? "" : "./", command ? command : url,
 			query ? "<" : "", query ? webQueryFile : "");
 		fclose(f);
@@ -183,7 +193,11 @@ static void _execute_command(char *url, char *command, char *query, wofilter_t w
 static void wo_cgi_bin(char *url)
 {
 	if (!header_sent) send_header(200, NULL, mime_html, 0);
+#ifdef TCONFIG_TERMLIB
+	_execute_command(url, NULL, post_buf, "/www", WOF_NONE);
+#else
 	_execute_command(url, NULL, post_buf, WOF_NONE);
+#endif
 	if (post_buf) {
 		free(post_buf);
 		post_buf = NULL;
@@ -192,9 +206,19 @@ static void wo_cgi_bin(char *url)
 
 static void wo_shell(char *url)
 {
+#ifdef TCONFIG_TERMLIB
+	if (atoi(webcgi_safeget("nojs", "0"))) {
+		_execute_command(NULL, webcgi_get("command"), NULL, webcgi_safeget("working_dir", "/www"), WOF_NONE);
+	} else {
+		web_puts("\ncmdresult = '");
+		_execute_command(NULL, webcgi_get("command"), NULL, "/www", WOF_JAVASCRIPT);
+		web_puts("';");
+	}
+#else
 	web_puts("\ncmdresult = '");
 	_execute_command(NULL, webcgi_get("command"), NULL, WOF_JAVASCRIPT);
 	web_puts("';");
+#endif
 }
 
 static void wo_blank(char *url)
@@ -1561,7 +1585,7 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_server_dns",		V_NONE				},
 	{ "vpn_server1_poll",		V_RANGE(0, 30)			},
 	{ "vpn_server1_if",		V_TEXT(3, 3)			},	// tap, tun
-	{ "vpn_server1_proto",		V_TEXT(3, 10)			},	// udp, tcp-server
+	{ "vpn_server1_proto",		V_TEXT(3, 11)			},	// udp, tcp-server, udp4, tcp4-server, udp6, tcp6-server
 	{ "vpn_server1_port",		V_PORT				},
 	{ "vpn_server1_firewall",	V_TEXT(0, 8)			},	// auto, external, custom
 	{ "vpn_server1_crypt",		V_TEXT(0, 6)			},	// tls, secret, custom
@@ -1604,7 +1628,7 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_server1_routing_val",	V_NONE				},
 	{ "vpn_server2_poll",		V_RANGE(0, 30)			},
 	{ "vpn_server2_if",		V_TEXT(3, 3)			},	// tap, tun
-	{ "vpn_server2_proto",		V_TEXT(3, 10)			},	// udp, tcp-server
+	{ "vpn_server2_proto",		V_TEXT(3, 11)			},	// udp, tcp-server, udp4, tcp4-server, udp6, tcp6-server
 	{ "vpn_server2_port",		V_PORT				},
 	{ "vpn_server2_firewall",	V_TEXT(0, 8)			},	// auto, external, custom
 	{ "vpn_server2_crypt",		V_TEXT(0, 6)			},	// tls, secret, custom
@@ -1650,7 +1674,7 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_client1_if",		V_TEXT(3, 3)			},	// tap, tun
 	{ "vpn_client1_bridge",		V_01				},
 	{ "vpn_client1_nat",		V_01				},
-	{ "vpn_client1_proto",		V_TEXT(3, 10)			},	// udp, tcp-server
+	{ "vpn_client1_proto",		V_TEXT(3, 11)			},	// udp, tcp-client, udp4, tcp4-client, udp6, tcp6-client
 	{ "vpn_client1_addr",		V_NONE				},
 	{ "vpn_client1_port",		V_PORT				},
 	{ "vpn_client1_retry",		V_RANGE(-1,32767)		},	// -1 infinite, 0 disabled, >= 1 custom
@@ -1689,7 +1713,7 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_client2_if",		V_TEXT(3, 3)			},	// tap, tun
 	{ "vpn_client2_bridge",		V_01				},
 	{ "vpn_client2_nat",		V_01				},
-	{ "vpn_client2_proto",		V_TEXT(3, 10)			},	// udp, tcp-server
+	{ "vpn_client2_proto",		V_TEXT(3, 11)			},	// udp, tcp-client, udp4, tcp4-client, udp6, tcp6-client
 	{ "vpn_client2_addr",		V_NONE				},
 	{ "vpn_client2_port",		V_PORT				},
 	{ "vpn_client2_retry",		V_RANGE(-1,32767)		},	// -1 infinite, 0 disabled, >= 1 custom
