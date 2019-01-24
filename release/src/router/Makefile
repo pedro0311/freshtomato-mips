@@ -2434,6 +2434,7 @@ nfs-utils-install:
 	$(STRIP) -s $(INSTALLDIR)/nfs-utils/usr/sbin/mountd
 
 tinc/stamp-h1: openssl zlib lzo
+	$(call patch_files,tinc)
 	@cd tinc && autoreconf -fsi && \
 	CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) \
 	CFLAGS="-Os -Wall $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections" \
@@ -2454,7 +2455,6 @@ tinc/stamp-h1: openssl zlib lzo
 
 tinc: tinc/stamp-h1
 	@$(SEP)
-	$(call patch_files,tinc)
 	@$(MAKE) -C tinc LIBS="-lcrypto $(TOP)/zlib/libz.a -llzo2 -lm" $(PARALLEL_BUILD)
 
 tinc-clean:
