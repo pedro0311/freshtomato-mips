@@ -109,7 +109,7 @@ function save() {
 
 	if (smg.isEditing()) return;
 
-	fom = E('_fom');
+	fom = E('t_fom');
 
 	macs = [];
 	names = [];
@@ -128,7 +128,7 @@ function save() {
 
 	for (i = 0; i < wl_ifaces.length; ++i) {
 		u = wl_fface(i);
-		E('_wl'+u+'_maclist').value = fom.wl_maclist.value;
+		E('t_wl'+u+'_maclist').value = fom.wl_maclist.value;
 	}
 
 	form.submit(fom, 1);
@@ -140,11 +140,15 @@ function earlyInit() {
 
 function init() {
 	smg.recolor();
+
+	var elements = document.getElementsByClassName("new_window");
+	for (var i = 0; i < elements.length; i++) if (elements[i].nodeName.toLowerCase()==="a")
+		addEvent(elements[i], "click", function(e) { cancelDefaultAction(e); window.open(this,"_blank"); } );
 }
 </script>
 </head>
 <body onload="init()">
-<form id="_fom" method="post" action="tomato.cgi">
+<form id="t_fom" method="post" action="tomato.cgi">
 <table id="container" cellspacing="0">
 <tr><td colspan="2" id="header">
 	<div class="title">Tomato</div>
@@ -166,14 +170,14 @@ function init() {
 <script type="text/javascript">
 for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 	var u = wl_fface(uidx);
-	W('<input type=\'hidden\' id=\'_wl'+u+'_maclist\' name=\'wl'+u+'_maclist\'>');
+	W('<input type="hidden" id="t_wl'+u+'_maclist" name="wl'+u+'_maclist">');
 }
 </script>
 
 <div class="section-title">Wireless Client Filter</div>
 <div class="section">
-	<br>
-	<table id="sm-grid" class="tomato-grid"></table>
+	<br/>
+	<div id="sm-grid" class="tomato-grid"></div>
 </div>
 
 
@@ -182,7 +186,8 @@ for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 <div class="section-title">Notes</div>
 <div class="section">
 	<ul>
-	<li>To specify how and on which interface this list should work, use the <a href="advanced-wlanvifs.asp" target="_blank">Virtual Wireless Interfaces</a> page.</li>
+	<li>To specify how and on which interface this list should work, use the <a href="advanced-wlanvifs.asp" class="new_window">Virtual Wireless Interfaces</a> page.</li>
+	<li>Warning: the filter supports only a certain number of MAC addresses, depending on the WL driver. Above this number, added addresses are not filtered!</li>
 	</ul>
 </div>
 
