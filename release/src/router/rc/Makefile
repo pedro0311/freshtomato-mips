@@ -18,10 +18,6 @@ OBJS += new_qoslimit.o arpbind.o
 OBJS += tomatoanon.o
 OBJS += blink.o
 
-ifeq ($(CONFIG_BCMWL6),y)
-OBJS += blink_5g.o
-endif
-
 # dualwan / multiwan
 OBJS += mwan.o pbr.o
 
@@ -107,7 +103,6 @@ install: all
 	@cd $(INSTALLDIR)/sbin && ln -sf rc service
 	@cd $(INSTALLDIR)/sbin && ln -sf rc buttons
 	@cd $(INSTALLDIR)/sbin && ln -sf rc blink
-	@cd $(INSTALLDIR)/sbin && ln -sf rc blink_5g
 	@cd $(INSTALLDIR)/sbin && ln -sf rc rcheck
 	@cd $(INSTALLDIR)/sbin && ln -sf rc radio
 	@cd $(INSTALLDIR)/sbin && ln -sf rc led

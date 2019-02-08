@@ -1308,7 +1308,7 @@ static int init_nvram(void)
 			nvram_set("wl0_chanspec","36/80");
 			nvram_set("wl1_bw_cap","3");
 			nvram_set("wl1_chanspec","1l");
-			nvram_set("blink_5g_interface","eth1");
+			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
 			//nvram_set("landevs", "vlan1 wl0 wl1");
 			//nvram_set("wandevs", "vlan2");
 
@@ -1342,7 +1342,7 @@ static int init_nvram(void)
 			nvram_set("wl0_chanspec","1l");
 			nvram_set("wl1_bw_cap","7");
 			nvram_set("wl1_chanspec","36/80");
-			nvram_set("blink_5g_interface","eth2");
+			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
 			//nvram_set("landevs", "vlan1 wl0 wl1");
 			//nvram_set("wandevs", "vlan2");
 
@@ -1371,7 +1371,7 @@ static int init_nvram(void)
 			nvram_set("wl0_chanspec","1l");
 			nvram_set("wl1_bw_cap","7");
 			nvram_set("wl1_chanspec","36/80");
-			nvram_set("blink_5g_interface","eth2");
+			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
 
 		// fix WL mac`s
 		nvram_set("wl0_hwaddr", nvram_safe_get("sb/1/macaddr"));
@@ -1437,6 +1437,7 @@ static int init_nvram(void)
 			nvram_set("wan_ifnames", "vlan2");
 			nvram_set("wl_ifname", "eth1");
 		}
+			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
 		break;
 	case MODEL_RTN16:
 		mfr = "Asus";
@@ -1521,7 +1522,7 @@ static int init_nvram(void)
 			nvram_set("wl1_chanspec","36/80");
 			nvram_set("wl0_bw_cap","3");
 			nvram_set("wl0_chanspec","1l");
-			nvram_set("blink_5g_interface","eth2");
+			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
 
 			// fix WL mac`s
 			strcpy(s, nvram_safe_get("et0macaddr"));
@@ -1639,7 +1640,7 @@ static int init_nvram(void)
 			nvram_set("wl0_chanspec","36/80");
 			nvram_set("wl1_bw_cap","3");
 			nvram_set("wl1_chanspec","1l");
-			nvram_set("blink_5g_interface","eth1");
+			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
 			//nvram_set("landevs", "vlan1 wl0 wl1");
 			//nvram_set("wandevs", "vlan2");
 
@@ -1680,7 +1681,7 @@ static int init_nvram(void)
 			nvram_set("wl0_chanspec","36/80");
 			nvram_set("wl1_bw_cap","3");
 			nvram_set("wl1_chanspec","1l");
-			nvram_set("blink_5g_interface","eth1");
+			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
 
 			// fix WL mac`s
 			strcpy(s, nvram_safe_get("et0macaddr"));
@@ -1768,9 +1769,7 @@ static int init_nvram(void)
 			nvram_set("wl1_ifname", "eth2");
 			nvram_set("wl1_bw_cap","7");
 			nvram_set("wl1_chanspec","36/80");
-			//nvram_set("blink_5g_interface","eth2");
-			//blink_wl will let both wlan and 5g blink
-        		nvram_set("blink_wl", "1");
+			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
 			nvram_set("landevs", "vlan1 wl0 wl1");
 			nvram_set("wandevs", "vlan2");
 			nvram_set("lan_invert", "1");
@@ -2067,9 +2066,7 @@ static int init_nvram(void)
 			nvram_set("wl1_bw_cap","7");
 			nvram_set("wl1_chanspec","36/80");
 			nvram_set("wl1_country_code", "US");
-			//nvram_set("blink_5g_interface","eth2");
-			//blink_wl will let both wlan and 5g blink
-        		nvram_set("blink_wl", "1");
+			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
 			nvram_set("landevs", "vlan1 wl0 wl1");
 			nvram_set("wandevs", "vlan2");
 			nvram_set("lan_invert", "1");
@@ -2284,9 +2281,7 @@ static int init_nvram(void)
 			nvram_set("wl1_ifname", "eth2");
 			nvram_set("wl0_bw_cap","7");
 			nvram_set("wl0_chanspec","36/80");
-			//nvram_set("blink_5g_interface","eth2");
-			//blink_wl will let both wlan and 5g blink
-        		nvram_set("blink_wl", "1");
+			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
 			nvram_set("landevs", "vlan1 wl0 wl1");
 			nvram_set("wandevs", "vlan2");
 			nvram_set("lan_invert", "1");
@@ -2493,7 +2488,7 @@ static int init_nvram(void)
 			nvram_set("wl0_chanspec","36/80");
 			nvram_set("wl1_bw_cap","3");
 			nvram_set("wl1_chanspec","1l");
-			nvram_set("blink_5g_interface","eth1");
+			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
 
 			// fix ssid according to 5G(eth1) and 2.4G(eth2) 
 			nvram_set("wl_ssid","Tomato50");
@@ -3853,10 +3848,6 @@ static void sysinit(void)
 	set_tz();
 
 	eval("buttons");
-
-#ifdef CONFIG_BCMWL6
-	eval("blink_5g");
-#endif
 
 	if (!noconsole) xstart("console");
 
