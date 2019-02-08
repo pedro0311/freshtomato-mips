@@ -268,8 +268,31 @@ int wan_led(int *mode) /* mode: 0 - OFF, 1 - ON */
 	}
 
 	model = get_model();
-
-	if (model == MODEL_RTN15U || MODEL_WL1600GL) {
+	/* check router model according to shared/led.c table, LED WHITE */
+	if (model == MODEL_WNR3500L ||
+	    model == MODEL_WNR3500LV2 ||
+	    model == MODEL_WNDR4000 ||
+	    model == MODEL_WNDR3400 ||
+	    model == MODEL_WNDR3400v2 ||
+	    model == MODEL_WNDR3400v3 ||
+	    model == MODEL_WRT160Nv3 ||
+	    model == MODEL_E900 ||
+	    model == MODEL_E1500 ||
+	    model == MODEL_E1550 ||
+	    model == MODEL_E2500 ||
+	    model == MODEL_E1000v2 ||
+	    model == MODEL_WRT320N ||
+	    model == MODEL_WRT610Nv2 ||
+	    model == MODEL_E4200 ||
+	    model == MODEL_RTN15U ||
+	    model == MODEL_D1800H ||
+	    model == MODEL_TDN6 ||
+	    model == MODEL_TDN60 ||
+	    model == MODEL_WNDR4500 ||
+	    model == MODEL_WNDR4500V2 ||
+	    model == MODEL_WL1600GL ||
+	    model == MODEL_WRT310Nv1 ||
+	    model == MODEL_WRT160Nv1) {
 		led(LED_WHITE, mode);
 	}
 
