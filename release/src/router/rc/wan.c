@@ -317,6 +317,9 @@ static void stop_ppp(char *prefix)
 	 */
 	//killall_tk("listen");
 
+	/* WAN LED control */
+	wan_led_off(prefix); /* LED OFF? */
+
 	TRACE_PT("end\n");
 }
 
@@ -1283,8 +1286,12 @@ void start_wan_done(char *wan_ifname, char *prefix)
 		if (wanup) {
 			SET_LED(GOT_IP);
 			notice_set(prefix, "");
-
 			run_nvscript("script_wanup", NULL, 0);
+		}
+
+		/* WAN LED control */
+		if (wanup) {
+		  wan_led(wanup); /* LED ON! */
 		}
 
 		/* We don't need STP after wireless led is lighted		// no idea why... toggling it if necessary	-- zzz */
