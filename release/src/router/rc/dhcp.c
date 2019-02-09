@@ -202,6 +202,14 @@ static int bound(char *ifname, int renew, char *prefix)
 	TRACE_PT("wan_6rd=%s\n", nvram_safe_get("wan_6rd"));
 #endif
 
+	mwanlog(LOG_DEBUG, "*** bound, %s_ipaddr=%s", prefix, nvram_safe_get(strcat_r(prefix, "_ipaddr", tmp)));
+	mwanlog(LOG_DEBUG, "*** bound, %s_netmask=%s", prefix, netmask);
+	mwanlog(LOG_DEBUG, "*** bound, %s_gateway=%s", prefix, nvram_safe_get(strcat_r(prefix, "_gateway", tmp)));
+	mwanlog(LOG_DEBUG, "*** bound, %s_get_dns=%s", prefix, nvram_safe_get(strcat_r(prefix, "_get_dns", tmp)));
+	mwanlog(LOG_DEBUG, "*** bound, %s_routes1=%s", prefix, nvram_safe_get(strcat_r(prefix, "_routes1", tmp)));
+	mwanlog(LOG_DEBUG, "*** bound, %s_routes2=%s", prefix, nvram_safe_get(strcat_r(prefix, "_routes2", tmp)));
+
+	mwanlog(LOG_DEBUG, "*** bound, do ifconfig ...");
 	ifconfig(ifname, IFUP, "0.0.0.0", NULL);
 	ifconfig(ifname, IFUP, nvram_safe_get(strcat_r(prefix, "_ipaddr", tmp)), netmask);
 
@@ -392,6 +400,10 @@ int dhcpc_release_main(int argc, char **argv)
 #ifdef TCONFIG_MULTIWAN
 	mwan_load_balance();
 #endif
+
+	/* WAN LED control */
+	wan_led_off(prefix); /* LED OFF? */
+
 	TRACE_PT("end\n");
 	return 0;
 }
@@ -500,6 +512,9 @@ void stop_dhcpc(char *prefix)
 	memset(renew_file, 0, 256);
 	sprintf(renew_file, "/var/lib/misc/%s_dhcpc.renewing", prefix);
 	unlink(renew_file);
+
+	/* WAN LED control */
+	wan_led_off(prefix); /* LED OFF? */
 
 	TRACE_PT("end\n");
 }
