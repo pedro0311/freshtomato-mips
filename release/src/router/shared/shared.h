@@ -40,6 +40,10 @@ extern const char *tomato_shortver;
 #define _dprintf(args...)	do { } while(0)
 #endif
 
+/* support up to 32 GPIO pins for buttons and leds */
+#define TOMATO_GPIO_MAX 31
+#define TOMATO_GPIO_MIN 0
+
 
 // misc.c
 #define	WP_DISABLED		0		// order must be synced with def in misc.c
@@ -353,7 +357,6 @@ extern int f_wait_notexists(const char *name, int max);
 #define LED_PROBE			3
 
 extern const char *led_names[];
-extern const char *led_modes[];
 
 extern int gpio_open(uint32_t mask);
 extern void gpio_write(uint32_t bit, int en);

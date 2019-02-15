@@ -1291,7 +1291,7 @@ void start_wan_done(char *wan_ifname, char *prefix)
 
 		/* WAN LED control */
 		if (wanup) {
-		  wan_led(wanup); /* LED ON! */
+			wan_led(wanup); /* LED ON! */
 		}
 
 		/* We don't need STP after wireless led is lighted		// no idea why... toggling it if necessary	-- zzz */
