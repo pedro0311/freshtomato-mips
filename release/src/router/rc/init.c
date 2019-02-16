@@ -1596,6 +1596,12 @@ int init_main(int argc, char *argv[])
 			syslog(LOG_INFO, "%s: FreshTomato %s", nvram_safe_get("t_model_name"), tomato_version);
 
 			led(LED_DIAG, 0);
+			switch(get_model())
+			{
+				case MODEL_E4200:
+					led(LED_DIAG, LED_ON); /* Turn on cisco LOGO light (again) */
+					break;
+			}
 			notice_set("sysup", "");
 			break;
 		}
