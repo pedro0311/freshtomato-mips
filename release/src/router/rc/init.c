@@ -3994,6 +3994,9 @@ int init_main(int argc, char *argv[])
 					gpio_write(1 << 9, 0); // Turn on right half of LOGO light
 					gpio_write(1 << 2, 0); // Turn on power light (green)
 					break;
+				case MODEL_E4200:
+					led(LED_DIAG, LED_ON); /* Turn on cisco LOGO light (again) */
+					break;
 			}//bwq518
 			notice_set("sysup", "");
 			break;
