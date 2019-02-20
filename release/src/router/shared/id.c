@@ -155,7 +155,7 @@ int check_hw_type(void)
 #endif
 	}
 
-	// WR850G may have "bcm94710dev " (extra space)
+	/* WR850G may have "bcm94710dev " (extra space) */
 	if ((strncmp(s, "bcm94710dev", 11) == 0) || (strcmp(s, "bcm94710r4") == 0)) {
 		return HW_BCM4702;
 	}
@@ -176,7 +176,7 @@ int get_model(void)
 
 	switch (strtoul(nvram_safe_get("melco_id"), NULL, 16)) {
 	case 0x29115:
-    case 0x30061:
+	case 0x30061:
 		return MODEL_WZRG54;
 	case 0x30182:
 		return MODEL_WHRG54S;
@@ -185,15 +185,15 @@ int get_model(void)
 	case 0xCA020906:
 		return MODEL_WBRG54;
 	case 0x30026:
-    	return MODEL_WZRHPG54;
-    case 0x30083:
-        return MODEL_WZRRSG54;
-    case 0x30103:
-    	return MODEL_WZRRSG54HP;
-    case 0x28100:
-    	return MODEL_WVRG54NF;
-    case 0x29130:
-    	return MODEL_WHR3AG54;
+		return MODEL_WZRHPG54;
+	case 0x30083:
+		return MODEL_WZRRSG54;
+	case 0x30103:
+		return MODEL_WZRRSG54HP;
+	case 0x28100:
+		return MODEL_WVRG54NF;
+	case 0x29130:
+		return MODEL_WHR3AG54;
 	case 0x290441DD:
 		return MODEL_WHR2A54G54;
 	case 0x32093:
@@ -224,7 +224,7 @@ int get_model(void)
 		if (nvram_match("boardnum", "mn700")) return MODEL_MN700;
 		if (nvram_match("ModelId", "WX-5565")) return MODEL_TM2300;
 	}
-	
+
 	if (hw == HW_UNKNOWN) return MODEL_UNKNOWN;
 
 /*
@@ -250,7 +250,7 @@ int get_model(void)
 			if (nvram_match("boardrev", "0x1100")) return MODEL_F5D8235v3;
 			if (nvram_match("boardrev", "0x1102")) {
 				FILE *fp;
-				unsigned char s[18];
+				char s[18];
 				uint32 sig = TRX_MAGIC;
 				sprintf(s, MTD_DEV(%dro), 1);
 				if ((fp = fopen(s, "rb"))) {
@@ -270,7 +270,6 @@ int get_model(void)
 		}
 	}
 #endif
-
 	switch (strtoul(nvram_safe_get("boardnum"), NULL, 0)) {
 	case 42:
 		switch (hw) {
@@ -330,15 +329,17 @@ int get_model(void)
 	case 1:
 		switch (hw) {
 		case HW_BCM4716:
-			//if (nvram_match("boardrev", "0x1700"))
+			// if (nvram_match("boardrev", "0x1700"))
 			return MODEL_WNR2000v2;
+			break;
 		}
 		/* fall through */
 	case 3500:
 		switch (hw) {
 		case HW_BCM4718:
-			//if (nvram_match("boardrev", "0x1213") || nvram_match("boardrev", "02"))
+			// if (nvram_match("boardrev", "0x1213") || nvram_match("boardrev", "02"))
 			return MODEL_WNR3500L;
+			break;
 		}
 		break;
 #endif

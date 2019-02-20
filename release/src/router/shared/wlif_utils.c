@@ -15,8 +15,8 @@
 #include <typedefs.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <string.h>
+#include <stdarg.h>	// for va_list
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -37,23 +37,23 @@
 typedef struct _wlif_name_desc {
 	char		*name;		/* wlif name */
 	bool		wds;		/* wds interface */
-	bool		subunit;		/* subunit existance */
+	bool		subunit;	/* subunit existance */
 } wlif_name_desc_t;
 
 wlif_name_desc_t wlif_name_array[] = {
 /*	  name	wds		subunit */
 /* PARIMARY */
 #if defined(linux)
-	{ "eth",	0,		0}, /* primary */
+	{"eth", 0, 0},	/* primary */
 #else
-	{ "wl",	0,		0}, /* primary */
+	{"wl", 0, 0},	/* primary */
 #endif
 
 /* MBSS */
-	{ "wl",	0,		1}, /* mbss */
+	{"wl", 0, 1},	/* mbss */
 
 /* WDS */
-	{ "wds",	1,		1} /* wds */
+	{"wds", 1, 1}	/* wds */
 };
 
 /*
@@ -183,7 +183,7 @@ get_real_mac(char *mac, int maclen)
 	if (ptr == NULL)
 		return -1;
 
-	ether_atoe(ptr, mac);
+	ether_atoe(ptr, (unsigned char *) mac);
 	return 0;
 }
 
@@ -200,13 +200,13 @@ get_wlmacstr_by_unit(char *unit)
 	if (!macaddr)
 		return NULL;
 
-	return macaddr;
+	return (unsigned char *) macaddr;
 }
 
 int
 get_lan_mac(unsigned char *mac)
 {
-	unsigned char *lanmac_str = nvram_get("lan_hwaddr");
+	char *lanmac_str = nvram_get("lan_hwaddr");
 
 	if (mac)
 		memset(mac, 0, 6);
@@ -328,69 +328,9 @@ get_ifname_by_wlmac(unsigned char *mac, char *name)
 #define CHECK_RADIUS(mode) ((mode) & (WPA_AUTH_UNSPECIFIED | WLIFU_AUTH_RADIUS))
 #endif
 
-#if 0
-/*
- * wl_wds<N> is authentication protocol dependant.
- * when auth is "psk":
- *	wl_wds<N>=mac,role,crypto,auth,ssid,passphrase
- */
-bool
-get_wds_wsec(int unit, int which, unsigned char *mac, char *role,
-             char *crypto, char *auth, ...)
-{
-	char name[] = "wlXXXXXXX_wdsXXXXXXX", value[1000], *next;
-
-	snprintf(name, sizeof(name), "wl%d_wds%d", unit, which);
-	strncpy(value, nvram_safe_get(name), sizeof(value));
-	next = value;
-
-	/* separate mac */
-	strcpy((char *)mac, strsep(&next, ","));
-	if (!next)
-		return FALSE;
-
-	/* separate role */
-	strcpy(role, strsep(&next, ","));
-	if (!next)
-		return FALSE;
-
-	/* separate crypto */
-	strcpy(crypto, strsep(&next, ","));
-	if (!next)
-		return FALSE;
-
-	/* separate auth */
-	strcpy(auth, strsep(&next, ","));
-	if (!next)
-		return FALSE;
-
-	if (!strcmp(auth, "psk")) {
-		va_list va;
-
-		va_start(va, auth);
-
-		/* separate ssid */
-		strcpy(va_arg(va, char *), strsep(&next, ","));
-		if (!next)
-			goto fail;
-
-		/* separate passphrase */
-		strcpy(va_arg(va, char *), next);
-
-		va_end(va);
-		return TRUE;
-fail:
-		va_end(va);
-		return FALSE;
-	}
-
-	return FALSE;
-}
-#endif	// 0
-
 /* Get wireless security setting by interface name */
 int
-get_wsec(wsec_info_t *info, char *mac, char *osifname)
+get_wsec(wsec_info_t *info, unsigned char *mac, char *osifname)
 {
 	int unit, wds = 0, wds_wsec = 0;
 	char nv_name[16], os_name[16], wl_prefix[16], comb[32], key[8];
@@ -427,29 +367,13 @@ get_wsec(wsec_info_t *info, char *mac, char *osifname)
 	strcat(wl_prefix, "_");
 	memset(info, 0, sizeof(wsec_info_t));
 
-	/* get wsd setting */
+
+	/* get wds setting */
 	if (wds) {
 		/* remote address */
 		if (wl_ioctl(os_name, WLC_WDS_GET_REMOTE_HWADDR, remote, ETHER_ADDR_LEN))
 			return WLIFU_ERR_WL_REMOTE_HWADDR;
 		memcpy(info->remote, remote, ETHER_ADDR_LEN);
-#if 0
-		int i;
-		/* get per wds settings */
-		for (i = 0; i < MAX_NVPARSE; i ++) {
-			char macaddr[18];
-			uint8 ea[ETHER_ADDR_LEN];
-
-			if (get_wds_wsec(unit, i, macaddr, wds_role, wds_crypto, wds_akms, wds_ssid,
-			                 wds_psk) &&
-			    ((ether_atoe(macaddr, ea) && !bcmp(ea, remote, ETHER_ADDR_LEN)) ||
-			     (!strcmp(mac, "*")))) {
-			     /* found wds settings */
-			     wds_wsec = 1;
-			     break;
-			}
-		}
-#endif	// 0
 	}
 
 	/* interface unit */
@@ -529,7 +453,8 @@ get_wsec(wsec_info_t *info, char *mac, char *osifname)
 	}
 	/* overwrite flags */
 	if (wds) {
-		unsigned char buf[32], *ptr, lrole;
+		char buf[32];
+		unsigned char *ptr, lrole;
 
 		/* did not find WDS link configuration, use wireless' */
 		if (!wds_wsec)
@@ -544,7 +469,7 @@ get_wsec(wsec_info_t *info, char *mac, char *osifname)
 			lrole = WL_WDS_WPA_ROLE_AUTO;
 
 		strcpy(buf, "wds_wpa_role");
-		ptr = buf + strlen(buf) + 1;
+		ptr = (unsigned char *)buf + strlen(buf) + 1;
 		bcopy(info->remote, ptr, ETHER_ADDR_LEN);
 		ptr[ETHER_ADDR_LEN] = lrole;
 		if (wl_ioctl(os_name, WLC_SET_VAR, buf, sizeof(buf)))
@@ -618,6 +543,7 @@ get_wsec(wsec_info_t *info, char *mac, char *osifname)
 	value = nvram_safe_get(strcat_r(wl_prefix, "nas_dbg", comb));
 	info->debug = (int)strtoul(value, NULL, 0);
 
+
+
 	return WLIFU_WSEC_SUCCESS;
 }
-
