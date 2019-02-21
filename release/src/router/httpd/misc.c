@@ -368,7 +368,7 @@ static void print_ipv6_addrs(void) /* show IPv6 addresses: wan, lan, lan-ll, lan
 
 			/* check WAN IPv6 address and copy to buffer */
 			p_tmp = NULL;
-			p_tmp = getifaddr(get_wan6face(), AF_INET6, 0); /* global address */
+			p_tmp = getifaddr((char *) get_wan6face(), AF_INET6, 0); /* global address */
 			if (p_tmp != NULL) {
 				memset(buffer, 0, sizeof(buffer));
 				snprintf(buffer, sizeof(buffer),"%s", p_tmp);
@@ -430,7 +430,7 @@ mtd1: 007d0000 00010000 "linux"
 		fclose(f);
 	}
 	if (found) {
-		     if ((size > 0x2000000) && (size < 0x4000000)) return 64;
+		if ((size > 0x2000000) && (size < 0x4000000)) return 64;
 		else if ((size > 0x1000000) && (size < 0x2000000)) return 32;
 		else if ((size > 0x800000) && (size < 0x1000000)) return 16;
 		else if ((size > 0x400000) && (size < 0x800000)) return 8;
