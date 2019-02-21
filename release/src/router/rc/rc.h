@@ -454,6 +454,7 @@ extern int write_pptpvpn_resolv(FILE*);
 extern void clear_pptp_route(void);
 extern int pptpc_ipup_main(int argc, char **argv);
 extern int pptpc_ipdown_main(int argc, char **argv);
+extern void get_cidr(char *ipaddr, char *netmask, char *cidr);
 #else
 #define write_pptpvpn_resolv(f) (0)
 #endif
