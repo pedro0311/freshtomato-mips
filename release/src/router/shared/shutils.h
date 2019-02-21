@@ -301,4 +301,6 @@ int is_hwnat_loaded(void);
 #define vstrsep(buf, sep, args...) _vstrsep(buf, sep, args, NULL)
 extern int _vstrsep(char *buf, const char *sep, ...);
 
+extern char *sort_list(char *inlist, int inlist_size);
+
 #endif /* _shutils_h_ */
