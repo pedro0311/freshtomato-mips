@@ -3,8 +3,75 @@ FreshTomato-MIPS Changelog
 
 
 
+2019.1          2019.02.27
+--------------------------
+
+- kernel RT-AC: drivers: net: usb: cdc-ether.c: clean packet filter upon probe
+- php: update to 7.2.15
+- getdns: update to 1.5.1 (stubby 0.2.5)
+- tor: updated to 0.3.5.8
+- dnsmasq: update to 2.80-28cfe36 snapshot (add back ability to compile without IPv6 support to minimize size of dnsmasq (as a patch), cosmetics in other patches, little cleanup in router/Makefile)
+- adminer: update from 4.7.0 to 4.7.1 2019-01-24
+- libcurl: updated CA certificate bundle as of 2019-01-23
+- libcurl: update to 7.64.0
+- stubby: add Google DNSoTLS (ipv4/ipv6) to stubby.yml
+- nettle: update to 3.4.1
+- SQLite: update to 3.27.1
+- miniupnpd: update to 2.1.20190210
+- OpenVPN: update to 2.4.7
+- switch4g: add support for rndis protocol
+- switch4g: fix path for DIAG device in qmi_wwan mode
+- stubby: change round_robin_upstreams to 1
+- tinc: revert: Use git describe to populate autoconf's VERSION (it is needed to have proper "tinc --version" string, it must be remembered that with every tinc update, change the version number in the patch)
+- tinc: synchronize source with ARM branch. For unknown reasons, MIPS version was quite different from the ARM...
+- E4200v1: change LED pin table - this router has only 2 LEDs at the cisco LOGO
+- vpnrouting: fix cleaning of routing after stopping the OpenVPN client with "Redirect through VPN" checked - not working from the very beginning (commit that adds this function, also responsible for the error: https://bitbucket.org/pedro311/freshtomato-mips/commits/4c75d36f6fb2c1da1de8d7db33e2a91714d045e8)
+- switch4g: fix path for DIAG device in qmi_wwan mode
+- DDNS: HE.net IPv6 Tunnel Broker uses now Dyn DNS Update API http://dyn.com/support/developers/api/
+- DDNS: FreeDNS: add possibility to update IP with custom value as on other services, add https
+- DDNS: opendns requires now HTTP 1.1 in request header
+- GUI: OpenVPN ServerX & ClientX - restrict option/setting "Poll Interval" to 0-30 minutes (values > 30 are not usefull)
+- GUI: OpenVPN: increase max length of client common name to 255 chararacters
+- GUI: new termlib based tools-shell.asp as an option for o (Mega-VPN) and z (AIO) targets
+- GUI optimization tools: optimize also javascript in .asp and .jsx files with filter (I know it will break W3C compatibility in some places, but we really need that to decrease image size...)
+- GUI: add option for OpenVPN server to force IPv4 or IPv6 for connection
+- GUI: add option for OpenVPN client to choose IPv4 or IPv6 only connection
+- GUI: fix generate vpn client config
+- GUI: QOS: hide View Details when QOS is disabled
+- GUI: Wireless Filter: add a warning about the number of MAC addresses supported + cosmetics
+- GUI: fix IPv6 mask matches
+- router: Makefile: build nginx with http v2 module
+- router: Makefile: don't ln /usr/share to /tmp when samba3 is installed
+- router: Makefile: pptp-client: remove (forgotten) obsolete sh ip scripts
+- router: Makefile: fix tor build failures
+- router: Makefile: some changes with clean up
+- router: httpd: tomato.c: additional commit for #c6db081 and #c7d5c2c (increase length of variables for vpn protocol to 11 characters)
+- router: httpd: fix warnings in compiler; clean-up
+- router: mdu: mdu.c: clean-up & simplify some if conditions
+- router: mdu: remove no more needed functions/files/includes
+- router: mdu: fix compiler warnings
+- router: rc: blink_5g.c: old blink 5g code is obsolete [RT-AC]
+- router: rc: dhcp.c: clean-up
+- router: rc: dhcp.c: remove unused variable
+- router: rc: wan.c: cleanup WAN LED control [RT-AC]
+- router: rc: fix warnings in compiler; clean-up
+- router: shared: led.c: clean-up; remove unused code
+- router: shared: led.c: extend GPIO pin support from 0-15 to 0-31
+- router: shared: misc.c: add support for WAN LED for more MIPS Router according to LED table at file shared/led.c [RT-AC]
+- router: shared: misc.c: fix a few typos (wrong type, pointer by mistake) at function wan_led_off(...) and check_wanup(...)
+- router: shared: misc.c: change/fix function wan_led(int mode) --> call by value
+- router: shared: misc.c: add/fix missing fclose(...) and some cosmetic
+- router: shared: shared.h: add missing prototype declaration for function wan_led(...) and wan_led_off(...) [RT-AC]
+- router: shared: fix warnings in compiler; clean-up
+- router: shared: fix warnings in compiler [RT-AC]
+- router: www: vpn-client.asp: change allowed server address length to 60 characters (it's amazing that such long addresses exist ...)
+- router: www: basic-ddns.asp: clean-up of vars, remove unneeded js code
+- Improved a little bit build progress indicator
+
+
 2019.1.015-beta 2019.01.10
 --------------------------
+
 - kernel: ipv6: Drop packets for loopback address from outside of the box
 - kernel: ipv6: drop packets when source address is multicast
 - kernel: ipv6: don't accept multicast traffic with scope 0
