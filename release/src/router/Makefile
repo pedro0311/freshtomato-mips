@@ -1650,6 +1650,7 @@ wanuptime-install:
 
 ebtables: dummy
 	@$(SEP)
+	$(call patch_files,ebtables)
 	$(MAKE) -C ebtables CC=$(CC) LD=$(LD) \
 	CFLAGS="-Os $(EXTRACFLAGS) -DEBT_MIN_ALIGN=4 -Wall -Wunused" \
 	LOCKFILE="/var/lock/ebtables" LOCKDIR="/var/lock" \
@@ -1673,6 +1674,7 @@ ebtables-install:
 
 ebtables-clean:
 	-@$(MAKE) -C ebtables clean
+	$(call unpatch_files,ebtables)
 
 #Roadkill
 spawn-fcgi/stamp-h1:
