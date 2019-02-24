@@ -773,7 +773,7 @@ endif
 	RANLIB=$(RANLIB:$(CROSS_COMPILE)%=%) \
 	./Configure $(HOSTCONFIG) --openssldir=/etc \
 	-ffunction-sections -fdata-sections -Wl,--gc-sections \
-	shared $(OPENSSL_CIPHERS)
+	shared $(OPENSSL_CIPHERS) no-ssl2 no-ssl3
 ifeq ($(TCONFIG_KEYGEN),)
 	cd openssl && mkdir -p include/openssl && \
 	ln -sf ../../crypto/camellia/camellia.h include/openssl/camellia.h && \
