@@ -389,13 +389,13 @@ endif
 # Use HTML compressor to compress HTML as much as possible
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp ); do \
-		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/tools/bin/html-minifier $$F --minify-css --minify-js {\"output\":{\"comments\":[\"/.+\<\%.+\;.{0,1}\%\>/\"]}} --use-short-doctype -o $$F || true; \
+		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/tools/bin/html-minifier $$F --minify-css -o $$F || true; \
 	done
 
 # Compress JAVASCRIPT files
 	cd $(INSTALLDIR)/www && \
-	for F in $(wildcard *.js *.jsx ); do \
-		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/tools/bin/uglifyjs $$F -c --comments /.+\<\%.+\;.{0,1}\%\>/ -o $$F || true; \
+	for F in $(wildcard *.js ); do \
+		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/tools/bin/uglifyjs $$F -c -o $$F || true; \
 	done
 
 # Compress CSS files
