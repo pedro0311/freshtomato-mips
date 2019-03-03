@@ -792,7 +792,7 @@ endif
 	RANLIB=$(RANLIB:$(CROSS_COMPILE)%=%) \
 	./Configure $(HOSTCONFIG) --openssldir=/etc \
 	-ffunction-sections -fdata-sections -Wl,--gc-sections \
-	shared $(OPENSSL_CIPHERS)
+	shared $(OPENSSL_CIPHERS) no-ssl2 no-ssl3
 ifeq ($(TCONFIG_KEYGEN),)
 	cd openssl && mkdir -p include/openssl && \
 	ln -sf ../../crypto/camellia/camellia.h include/openssl/camellia.h && \
@@ -1675,6 +1675,7 @@ wanuptime-install:
 
 ebtables: dummy
 	@$(SEP)
+	$(call patch_files,ebtables)
 	$(MAKE) -C ebtables CC=$(CC) LD=$(LD) \
 	CFLAGS="-Os $(EXTRACFLAGS) -DEBT_MIN_ALIGN=4 -Wall -Wunused" \
 	LOCKFILE="/var/lock/ebtables" LOCKDIR="/var/lock" \
@@ -1698,6 +1699,7 @@ ebtables-install:
 
 ebtables-clean:
 	-@$(MAKE) -C ebtables clean
+	$(call unpatch_files,ebtables)
 
 #Roadkill
 spawn-fcgi/stamp-h1:
@@ -2153,8 +2155,7 @@ openvpn/.conf: openssl lzo
 	CPPFLAGS="-I$(TOP)/lzo/include -I$(TOP)/openssl/include" \
 	$(CONFIGURE) --prefix= \
 	--with-crypto-library=openssl \
-	--disable-debug --disable-plugin-auth-pam --disable-plugin-down-root --with-plugindir=/lib --enable-management --disable-small \
-	--disable-selinux --disable-socks \
+	--disable-debug --disable-plugin-auth-pam --disable-plugin-down-root --with-plugindir=/lib --enable-management \
 	OPENSSL_SSL_CFLAGS="-I$(TOP)/openssl/include" \
 	OPENSSL_SSL_LIBS="-L$(TOP)/openssl -lssl" \
 	ac_cv_lib_resolv_gethostbyname=no

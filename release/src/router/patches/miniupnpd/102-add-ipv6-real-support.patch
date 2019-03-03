@@ -1,6 +1,6 @@
 --- miniupnpd/Makefile.linux	2018-04-06 12:53:32.000000000 +0200
 +++ miniupnpd/Makefile.linux	2018-05-17 18:11:30.504486000 +0200
-@@ -110,7 +110,13 @@ TEST := $(shell [ $(IPTVER1) -gt 1 ] ||
+@@ -114,7 +114,13 @@ TEST := $(shell [ $(IPTVER1) -gt 1 ] ||
  LDLIBS = $(IPTABLESPATH)/libiptc/.libs/libip4tc.o
  #LDLIBS = $(IPTABLESPATH)/libiptc/.libs/libiptc.a
  else # ifeq ($(TEST), 1)

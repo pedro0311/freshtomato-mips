@@ -154,7 +154,7 @@ function termOpen() {
 			thePasteEvent.preventDefault();
 			clipboardData = thePasteEvent.clipboardData || window.clipboardData;
 			pastedData = clipboardData.getData('Text');
-			term.type(pastedData);
+			TermGlobals.importMultiLine(pastedData);
 		}
 	}, false);
 }
