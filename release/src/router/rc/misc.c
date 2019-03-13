@@ -156,7 +156,7 @@ static int endswith_filter(const struct dirent *entry)
 /* If the filename has an '&' character in it, don't wait at all. */
 void run_userfile(char *folder, char *extension, const char *arg1, int wtime)
 {
-	unsigned char buf[PATH_MAX + 1];
+	char buf[PATH_MAX + 1];
 	char *argv[] = { buf, (char *)arg1, NULL };
 	struct dirent **namelist;
 	int i, n;
@@ -280,7 +280,7 @@ void run_nvscript(const char *nv, const char *arg1, int wtime)
 
 static void write_ct_timeout(const char *type, const char *name, unsigned int val)
 {
-	unsigned char buf[128];
+	char buf[128];
 	char v[16];
 
 	sprintf(buf, "/proc/sys/net/ipv4/netfilter/ip_conntrack_%s_timeout%s%s",
@@ -300,7 +300,7 @@ static void write_ct_timeout(const char *type, const char *name, unsigned int va
 
 static unsigned int read_ct_timeout(const char *type, const char *name)
 {
-	unsigned char buf[128];
+	char buf[128];
 	unsigned int val = 0;
 	char v[16];
 

@@ -267,20 +267,21 @@ int wan_led(int mode) /* mode: 0 - OFF, 1 - ON */
 		mwanlog(LOG_DEBUG, "wan_led: led(LED_WHITE,OFF)");
 	}
 
+	/* get router model */
 	model = get_model();
 
 	/* check router model according to shared/led.c table, LED WHITE */
-	if (model == MODEL_WRT54G ||
-	    model == MODEL_WRTSL54GS ||
-	    model == MODEL_DIR320 ||
-	    model == MODEL_WL1600GL ||
-	    model == MODEL_WRT310Nv1 ||
-	    model == MODEL_WRT160Nv1 ||
-	    model == MODEL_WNR3500L ||
-	    model == MODEL_WRT160Nv3 ||
-	    model == MODEL_WRT320N ||
-	    model == MODEL_WRT610Nv2 ||
-	    model == MODEL_E4200)
+	if ((model == MODEL_WRT54G) ||
+	    (model == MODEL_WRTSL54GS) ||
+	    (model == MODEL_DIR320) ||
+	    (model == MODEL_WL1600GL) ||
+	    (model == MODEL_WRT310Nv1) ||
+	    (model == MODEL_WRT160Nv1) ||
+	    (model == MODEL_WNR3500L) ||
+	    (model == MODEL_WRT160Nv3) ||
+	    (model == MODEL_WRT320N) ||
+	    (model == MODEL_WRT610Nv2) ||
+	    (model == MODEL_E4200))
 	{
 		led(LED_WHITE, mode);
 	}
