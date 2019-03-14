@@ -156,7 +156,7 @@ static int endswith_filter(const struct dirent *entry)
 /* If the filename has an '&' character in it, don't wait at all. */
 void run_userfile(char *folder, char *extension, const char *arg1, int wtime)
 {
-	unsigned char buf[PATH_MAX + 1];
+	char buf[PATH_MAX + 1];
 	char *argv[] = { buf, (char *)arg1, NULL };
 	struct dirent **namelist;
 	int i, n;
@@ -280,7 +280,7 @@ void run_nvscript(const char *nv, const char *arg1, int wtime)
 
 static void write_ct_timeout(const char *type, const char *name, unsigned int val)
 {
-	unsigned char buf[128];
+	char buf[128];
 	char v[16];
 
 	sprintf(buf, "/proc/sys/net/ipv4/netfilter/ip_conntrack_%s_timeout%s%s",
@@ -300,7 +300,7 @@ static void write_ct_timeout(const char *type, const char *name, unsigned int va
 
 static unsigned int read_ct_timeout(const char *type, const char *name)
 {
-	unsigned char buf[128];
+	char buf[128];
 	unsigned int val = 0;
 	char v[16];
 
@@ -737,51 +737,4 @@ long fappend_file(const char *path, const char *fname)
 		fclose(f);
 	}
 	return r;
-}
-
-/* convert mac address format from XXXXXXXXXXXX to XX:XX:XX:XX:XX:XX */
-char *conv_mac(char *mac, char *buf)
-{
-	int i, j;
-
-	if (strlen(mac)==0)
-	{
-		buf[0] = 0;
-	}
-	else
-	{
-		j=0;
-		for (i=0; i<12; i++)
-		{
-			if (i!=0&&i%2==0) buf[j++] = ':';
-			buf[j++] = mac[i];
-		}
-		buf[j] = 0;	// oleg patch
-	}
-	//buf[j] = 0;
-
-	_dprintf("mac: %s\n", buf);
-
-	return (buf);
-}
-
-/* convert mac address format from XX:XX:XX:XX:XX:XX to XXXXXXXXXXXX */
-char *conv_mac2(char *mac, char *buf)
-{
-	int i,j;
-
-	if(strlen(mac) != 17)
-		buf[0] = 0;
-	else{
-		for(i = 0, j = 0; i < 17; ++i){
-			if(i%3 != 2){
-				buf[j] = mac[i];
-				++j;
-			}
-
-			buf[j] = 0;
-		}
-	}
-
-	return(buf);
 }

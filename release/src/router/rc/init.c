@@ -3677,10 +3677,19 @@ static inline void tune_min_free_kbytes(void)
 
 	memset(&info, 0, sizeof(struct sysinfo));
 	sysinfo(&info);
-	if (info.totalram >= 55 * 1024 * 1024) {
-		// If we have 64MB+ RAM, tune min_free_kbytes
-		// to reduce page allocation failure errors.
-		f_write_string("/proc/sys/vm/min_free_kbytes", "8192", 0, 0);
+	if (info.totalram >= (TOMATO_RAM_HIGH_END * 1024)) { /* Router with 256 MB RAM and more */
+		f_write_string("/proc/sys/vm/min_free_kbytes", "20480", 0, 0);  /* 20 MByte */
+	}
+	else if (info.totalram >= (TOMATO_RAM_MID_END * 1024)) { /* Router with 128 MB RAM */
+		f_write_string("/proc/sys/vm/min_free_kbytes", "14336", 0, 0); /* 14 MByte */
+	}
+	else if (info.totalram >= (TOMATO_RAM_LOW_END * 1024)) { /* Router with 64 MB RAM */
+		f_write_string("/proc/sys/vm/min_free_kbytes", "8192", 0, 0); /* 8 MByte */
+	}
+	else if (info.totalram >= (TOMATO_RAM_VLOW_END * 1024)) {
+		/* If we have 32MB+ RAM, tune min_free_kbytes
+		   to reduce page allocation failure errors. */
+		f_write_string("/proc/sys/vm/min_free_kbytes", "1024", 0, 0); /* 1 MByte */
 	}
 }
 #endif
@@ -3956,12 +3965,9 @@ int init_main(int argc, char *argv[])
 			start_lan();
 			start_arpbind();
 			mwan_state_files();
+			start_wan(BOOT);
 			start_services();
 			start_wl();
-			/*
-			 * last one as ssh telnet httpd etc can fail to load untill start_wan_done
-			 */
-			start_wan(BOOT);
 
 #ifdef CONFIG_BCMWL5
 			if (wds_enable()) {

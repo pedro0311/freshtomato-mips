@@ -40,6 +40,7 @@
 #include <sys/time.h>
 #include <errno.h>
 #include <string.h>
+#include <wlutils.h>
 
 // !!TB
 #include <sys/mount.h>
@@ -1621,11 +1622,10 @@ void start_igmp_proxy(void)
 
 	pid_igmp = -1;
 	if (nvram_match("multicast_pass", "1")) {
+		int ret = 0;
 
-//		if (get_wan_proto() == WP_DISABLED)
-//			return;
 		if (f_exists("/etc/igmp.alt")) {
-			eval("igmpproxy", "/etc/igmp.alt");
+			ret = eval("igmpproxy", "/etc/igmp.alt");
 		}
 		else if ((fp = fopen("/etc/igmp.conf", "w")) != NULL) {
 		  /* check that lan, lan1, lan2 and lan3 are not selected and use custom config */
@@ -1636,7 +1636,7 @@ void start_igmp_proxy(void)
 		  if (nvram_match("multicast_lan", "0") && nvram_match("multicast_lan1", "0") && nvram_match("multicast_lan2", "0") && nvram_match("multicast_lan3", "0")) {
 			fprintf(fp, "%s\n", nvram_safe_get("multicast_custom"));
 			fclose(fp);
-			eval("igmpproxy", "/etc/igmp.conf");
+			ret = eval("igmpproxy", "/etc/igmp.conf");
 		  }
 		  /* create default config for upstream/downstream interface(s) */
 		  else {
@@ -1692,7 +1692,7 @@ void start_igmp_proxy(void)
 					}
 				}
 			fclose(fp);
-			eval("igmpproxy", "/etc/igmp.conf");
+			ret = eval("igmpproxy", "/etc/igmp.conf");
 		  }
 		}
 		else {
@@ -1701,6 +1701,11 @@ void start_igmp_proxy(void)
 		if (!nvram_contains_word("debug_norestart", "igmprt")) {
 			pid_igmp = -2;
 		}
+		if (ret) {
+			syslog(LOG_INFO, "starting igmpproxy failed ...\n");
+		} else {
+			syslog(LOG_INFO, "igmpproxy is started\n");
+		}
 	}
 }
 
@@ -1708,6 +1713,8 @@ void stop_igmp_proxy(void)
 {
 	pid_igmp = -1;
 	killall_tk("igmpproxy");
+
+	syslog(LOG_INFO, "igmpproxy is stopped\n");
 }
 
 // -----------------------------------------------------------------------------
@@ -2196,8 +2203,16 @@ static void start_ftpd(void)
 	killall("vsftpd", SIGHUP);
 
 	/* start vsftpd if it's not already running */
-	if (pidof("vsftpd") <= 0)
-		xstart("vsftpd");
+	if (pidof("vsftpd") <= 0) {
+		int ret = 0;
+
+		ret = xstart("vsftpd");
+		if (ret) {
+			syslog(LOG_INFO, "starting vsftpd failed ...\n");
+		} else {
+			syslog(LOG_INFO, "vsftpd is started\n");
+		}
+	}
 }
 
 static void stop_ftpd(void)
@@ -2211,6 +2226,8 @@ static void stop_ftpd(void)
 	unlink(vsftpd_passwd);
 	unlink(vsftpd_conf);
 	eval("rm", "-rf", vsftpd_users);
+
+	syslog(LOG_INFO, "vsftpd is stopped\n");
 }
 #endif	// TCONFIG_FTP
 
@@ -2428,13 +2445,21 @@ static void start_samba(void)
 
 	kill_samba(SIGHUP);
 	int ret1 = 0, ret2 = 0;
+
 	/* start samba if it's not already running */
 	if (pidof("nmbd") <= 0)
 		ret1 = xstart("nmbd", "-D");
+
 	if (pidof("smbd") <= 0) {
 		ret2 = xstart("smbd", "-D");
 	}
-	if (ret1 || ret2) kill_samba(SIGTERM);
+
+	if (ret1 || ret2) {
+		kill_samba(SIGTERM);
+		syslog(LOG_INFO, "starting samba daemon failed ...\n");
+	} else {
+		syslog(LOG_INFO, "samba daemon is started\n");
+	}
 }
 
 static void stop_samba(void)
@@ -2449,6 +2474,8 @@ static void stop_samba(void)
 	unlink("/var/log/smb");
 	unlink("/var/log/nmb");
 	eval("rm", "-rf", "/var/run/samba");
+
+	syslog(LOG_INFO, "samba daemon is stopped\n");
 }
 #endif	// TCONFIG_SAMBASRV
 
@@ -2463,9 +2490,9 @@ static void start_media_server(void)
 	char *argv[] = { MEDIA_SERVER_APP, "-f", "/etc/"MEDIA_SERVER_APP".conf", "-r", NULL, NULL };
 	static int once = 1;
 	int index = 4;
-	int i;
 	char *msi;
-	char serial[16];
+	unsigned char ea[ETHER_ADDR_LEN];
+	char serial[18], uuid[37];
 
 	if (getpid() != 1) {
 		start_service("media");
@@ -2476,8 +2503,7 @@ static void start_media_server(void)
 		argv[index - 1] = NULL;
 	}
 	if (nvram_get_int("ms_enable") != 0) {
-		if (/* (once) && */(nvram_get_int("ms_rescan") == 1)) {
-			// force rebuild
+		if (nvram_get_int("ms_rescan") == 1) {	/* force rebuild */
 			argv[index - 1] = "-R";
 			nvram_unset("ms_rescan");
 		}
@@ -2494,14 +2520,13 @@ static void start_media_server(void)
 				mkdir_if_none(dbdir ? : "/var/run/"MEDIA_SERVER_APP);
 
 				msi = nvram_safe_get("ms_ifname");
-				//persistent ident (router's mac as serial)
-				conv_mac2(nvram_safe_get("et0macaddr"), serial);
- 				if (strlen(serial)) {
- 					for (i = 0; i < strlen(serial); i++)
- 						serial[i] = tolower(serial[i]);
- 					}
-				else
-					strcpy(serial, "554e4b4e4f57"); //default if no hwaddr
+
+				/* persistent ident (router's mac as serial) */
+				if (!ether_atoe(nvram_safe_get("et0macaddr"), ea))
+					f_read("/dev/urandom", ea, sizeof(ea));
+
+				snprintf(serial, sizeof(serial), "%02x:%02x:%02x:%02x:%02x:%02x", ea[0], ea[1], ea[2], ea[3], ea[4], ea[5]);
+				snprintf(uuid, sizeof(uuid), "4d696e69-444c-164e-9d41-%02x%02x%02x%02x%02x%02x", ea[0], ea[1], ea[2], ea[3], ea[4], ea[5]);
 
 				fprintf(f,
 					"network_interface=%s\n"
@@ -2513,25 +2538,23 @@ static void start_media_server(void)
 					"presentation_url=http%s://%s:%s/nas-media.asp\n"
 					"inotify=yes\n"
 					"notify_interval=600\n"
-					"album_art_names=Cover.jpg/cover.jpg/AlbumArtSmall.jpg/albumartsmall.jpg/AlbumArt.jpg/albumart.jpg/Album.jpg/album.jpg/Folder.jpg/folder.jpg/Thumb.jpg/thumb.jpg\n"
+					"album_art_names=Cover.jpg/cover.jpg/Album.jpg/album.jpg/Folder.jpg/folder.jpg/Thumb.jpg/thumb.jpg\n"
 					"log_dir=/var/log\n"
 					"log_level=general,artwork,database,inotify,scanner,metadata,http,ssdp,tivo=warn\n"
 					"serial=%s\n"
-					//add explicit uuid based on mac(serial)
-					//since some recent change has resulted in a changing uuid at boot
-					"uuid=4d696e69-444c-164e-9d41-%s\n"
-					"\n",
+					"uuid=%s\n"
+					"model_number=%s\n\n",
 					strlen(msi) ? msi : nvram_safe_get("lan_ifname"),
 					(port < 0) || (port >= 0xffff) ? 0 : port,
-					nvram_get("router_name") ? : "Tomato",
+					nvram_get("router_name") ? : "FreshTomato",
 					dbdir ? : "/var/run/"MEDIA_SERVER_APP,
 					nvram_get_int("ms_tivo") ? "yes" : "no",
 					nvram_get_int("ms_stdlna") ? "yes" : "no",
 					https ? "s" : "", nvram_safe_get("lan_ipaddr"), nvram_safe_get(https ? "https_lanport" : "http_lanport"),
-					serial, serial
+					serial, uuid, nvram_safe_get("os_version")
 				);
 
-				// media directories
+				/* media directories */
 				char *buf, *p, *q;
 				char *path, *restrict;
 
@@ -2555,8 +2578,6 @@ static void start_media_server(void)
 		if (nvram_get_int("ms_debug") == 1)
 			argv[index++] = "-v";
 
-		//syslog(LOG_DEBUG,"**** minidlna cmd: minidlna -f /etc/minidlna.conf %s %s", argv[3] ? argv[3] : "" , argv[4] ? argv[4] : "");
-
 		/* start media server if it's not already running */
 		if (pidof(MEDIA_SERVER_APP) <= 0) {
 			if ((_eval(argv, NULL, 0, &pid) == 0) && (once)) {
@@ -2566,10 +2587,15 @@ static void start_media_server(void)
 				 * disable forced once-after-reboot rescan.
 				 */
 				sleep(1);
-				if (pidof(MEDIA_SERVER_APP) > 0)
+				if (pidof(MEDIA_SERVER_APP) > 0) {
 					once = 0;
+				} else {
+					syslog(LOG_INFO, "starting "MEDIA_SERVER_APP" failed ...\n");
+					return;
+				}
 			}
 		}
+		syslog(LOG_INFO, MEDIA_SERVER_APP" is started\n");
 	}
 }
 
@@ -2581,6 +2607,8 @@ static void stop_media_server(void)
 	}
 
 	killall_tk(MEDIA_SERVER_APP);
+
+	syslog(LOG_INFO, MEDIA_SERVER_APP" is stopped\n");
 }
 #endif	// TCONFIG_MEDIA_SERVER
 
