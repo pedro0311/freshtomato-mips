@@ -850,7 +850,7 @@ dnsmasq: $(if $(TCONFIG_DNSSEC),nettle,)
 	$(call patch_files,dnsmasq)
 	@$(MAKE) -C dnsmasq $(PARALLEL_BUILD) \
 	CFLAGS="-Os -ffunction-sections -fdata-sections $(EXTRACFLAGS)" \
-	COPTS="-DNO_INOTIFY -DHAVE_BROKEN_RTC -DHAVE_TOMATO -DNO_DUMPFILE -DNO_ID -DNO_AUTH -DNO_GMP -DUSE_IPSET \
+	COPTS="-DNO_INOTIFY -DHAVE_BROKEN_RTC -DHAVE_TOMATO -DNO_DUMPFILE -DNO_ID -DNO_GMP -DUSE_IPSET \
 		$(if $(TCONFIG_DNSSEC),-I$(TOP)/nettle/include -I$(TOP)/gmp -DHAVE_DNSSEC -DHAVE_DNSSEC_STATIC,) \
 		$(if $(TCONFIG_IPV6),-DUSE_IPV6,-DNO_IPV6)" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC \
