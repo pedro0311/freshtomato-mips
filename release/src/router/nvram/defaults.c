@@ -220,7 +220,6 @@ const defaults_t defaults[] = {
 	{ "wan_modem_if",		""				},
 	{ "wan_modem_type",		""				},
 	{ "wan_modem_modules",		""				},
-	{ "wan_modem_signal",		"-113"				},
 
 	{ "wan2_modem_pin",		""				},
 	{ "wan2_modem_dev",		""				},
@@ -232,7 +231,6 @@ const defaults_t defaults[] = {
 	{ "wan2_modem_if",		""				},
 	{ "wan2_modem_type",		""				},
 	{ "wan2_modem_modules",		""				},
-	{ "wan2_modem_signal",		"-113"				},
 
 #ifdef TCONFIG_MULTIWAN
 	{ "wan3_modem_pin",		""				},
@@ -245,7 +243,6 @@ const defaults_t defaults[] = {
 	{ "wan3_modem_if",		""				},
 	{ "wan3_modem_type",		""				},
 	{ "wan3_modem_modules",		""				},
-	{ "wan3_modem_signal",		"-113"				},
 
 	{ "wan4_modem_pin",		""				},
 	{ "wan4_modem_dev",		""				},
@@ -257,7 +254,6 @@ const defaults_t defaults[] = {
 	{ "wan4_modem_if",		""				},
 	{ "wan4_modem_type",		""				},
 	{ "wan4_modem_modules",		""				},
-	{ "wan4_modem_signal",		"-113"				},
 #endif
 #endif
 

@@ -1264,8 +1264,8 @@ void start_wan_done(char *wan_ifname, char *prefix)
 		start_zebra();
 #endif
 		if ((wanup) || (time(0) < Y2K)) {
-			stop_ntpc();
-			start_ntpc();
+			stop_ntpd();
+			start_ntpd();
 		}
 
 		if ((wanup) || (proto == WP_DISABLED)) {
@@ -1431,7 +1431,7 @@ void stop_wan(void)
 	stop_firewall();
 	stop_igmp_proxy();
 	stop_udpxy();
-	stop_ntpc();
+	stop_ntpd();
 
 #ifdef TCONFIG_IPV6
 	stop_ipv6_tunnel();
