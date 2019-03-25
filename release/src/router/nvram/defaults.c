@@ -542,8 +542,8 @@ const defaults_t defaults[] = {
 	{ "ddnsx_refresh",		"28"			},
 
 // basic-ident
-	{ "router_name",		"TomatoUSB"		},
-	{ "wan_hostname",		"unknown"		},
+	{ "router_name",		"FreshTomato"			},
+	{ "wan_hostname",		"unknown"			},
 	{ "wan_domain",			""				},
 
 // basic-time
