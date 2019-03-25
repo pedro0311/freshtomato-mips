@@ -542,8 +542,8 @@ const defaults_t defaults[] = {
 	{ "ddnsx_refresh",		"28"			},
 
 // basic-ident
-	{ "router_name",		"TomatoUSB"		},
-	{ "wan_hostname",		"unknown"		},
+	{ "router_name",		"FreshTomato"			},
+	{ "wan_hostname",		"unknown"			},
 	{ "wan_domain",			""				},
 
 // basic-time
@@ -650,6 +650,7 @@ const defaults_t defaults[] = {
 // advanced-routing
 	{ "routes_static",		""				},
 	{ "dhcp_routes",		"1"				},
+	{ "force_igmpv2",		"0"				},
 	{ "wk_mode",			"gateway"		},	// Network mode [gateway|router]
 #ifdef TCONFIG_ZEBRA
 	{ "dr_setting",			"0"				},	// [ Disable | WAN | LAN | Both ]
@@ -1052,7 +1053,7 @@ const defaults_t defaults[] = {
 	{ "vpn_server1_comp",		"adaptive"			},
 	{ "vpn_server1_cipher",		"AES-128-CBC"			},
 	{ "vpn_server1_ncp_enable",	"1"				},
-	{ "vpn_server1_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC" },
+	{ "vpn_server1_ncp_ciphers",	"AES-256-GCM:AES-128-GCM:AES-256-CBC:AES-128-CBC"},
 	{ "vpn_server1_digest",		"default"			},
 	{ "vpn_server1_dhcp",		"1"				},
 	{ "vpn_server1_r1",		"192.168.1.50"			},
@@ -1094,7 +1095,7 @@ const defaults_t defaults[] = {
 	{ "vpn_server2_comp",		"adaptive"			},
 	{ "vpn_server2_cipher",		"AES-128-CBC"			},
 	{ "vpn_server2_ncp_enable",	"1"				},
-	{ "vpn_server2_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC" },
+	{ "vpn_server2_ncp_ciphers",	"AES-256-GCM:AES-128-GCM:AES-256-CBC:AES-128-CBC"},
 	{ "vpn_server2_digest",		"default"			},
 	{ "vpn_server2_dhcp",		"1"				},
 	{ "vpn_server2_r1",		"192.168.1.50"			},
@@ -1142,7 +1143,7 @@ const defaults_t defaults[] = {
 	{ "vpn_client1_comp",		"adaptive"			},
 	{ "vpn_client1_cipher",		"default"			},
 	{ "vpn_client1_ncp_enable",	"1"				},
-	{ "vpn_client1_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC" },
+	{ "vpn_client1_ncp_ciphers",	"AES-256-GCM:AES-128-GCM:AES-256-CBC:AES-128-CBC"},
 	{ "vpn_client1_digest",		"default"			},
 	{ "vpn_client1_local",		"10.8.0.2"			},
 	{ "vpn_client1_remote",		"10.8.0.1"			},
@@ -1177,7 +1178,7 @@ const defaults_t defaults[] = {
 	{ "vpn_client2_comp",		"adaptive"			},
 	{ "vpn_client2_cipher",		"default"			},
 	{ "vpn_client2_ncp_enable",	"1"				},
-	{ "vpn_client2_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC" },
+	{ "vpn_client2_ncp_ciphers",	"AES-256-GCM:AES-128-GCM:AES-256-CBC:AES-128-CBC"},
 	{ "vpn_client2_digest",		"default"			},
 	{ "vpn_client2_local",		"10.9.0.2"			},
 	{ "vpn_client2_remote",		"10.9.0.1"			},

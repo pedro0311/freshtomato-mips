@@ -46,7 +46,7 @@ wmo = {'ap':'Access Point','sta':'Wireless Client','wet':'Wireless Ethernet Brid
 auth = {'disabled':'-','wep':'WEP','wpa_personal':'WPA Personal (PSK)','wpa_enterprise':'WPA Enterprise','wpa2_personal':'WPA2 Personal (PSK)','wpa2_enterprise':'WPA2 Enterprise','wpaX_personal':'WPA / WPA2 Personal','wpaX_enterprise':'WPA / WPA2 Enterprise','radius':'Radius'};
 enc = {'tkip':'TKIP','aes':'AES','tkip+aes':'TKIP / AES'};
 bgmo = {'disabled':'-','mixed':'Auto','b-only':'B Only','g-only':'G Only','bg-mixed':'B/G Mixed','lrs':'LRS','n-only':'N Only'};
-
+updateWWANTimers = [];
 </script>
 
 <script type="text/javascript" src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
@@ -109,17 +109,27 @@ ref.refresh = function(text) {
 }
 
 /* USB-BEGIN */
-var updateWWAN = new TomatoRefresh('wwansignal.cgi', '', 30, 'wwan_signal_refresh');
-
-updateWWAN.refresh = function(text) {
-	try {
-		eval(text);
-		E("sesdiv_WWANStatus").innerHTML = createWWANStatusSection();
-	}
-	catch (ex) {
-		E("sesdiv_WWANStatus").innerHTML = '';
+function foreach_wwan(functionToDo) {
+	for (let uidx=1; uidx <= nvram.mwan_num; uidx++) {
+		let wan_str = 'nvram.wan';
+		wan_str += uidx > 1 ? uidx : '';
+		wan_str += '_proto';
+		if (eval(wan_str) == "lte" || eval(wan_str) == "ppp3g") {
+				functionToDo(uidx);
+			}
 	}
 }
+
+foreach_wwan(function(i) {
+	updateWWANTimers[i-1] = new TomatoRefresh('wwansignal.cgi', 'mwan_num='+i, 30, 'wwan_signal_refresh');
+	updateWWANTimers[i-1].refresh = function(text) {
+		try {
+			E("sesdiv_WWANStatus"+i).innerHTML = createWWANStatusSection(i, eval(text));
+		}
+		catch (ex) {
+		}
+	}
+});
 /* USB-END */
 
 function c(id, htm) {
@@ -361,10 +371,11 @@ function init() {
 		if (((c = cookie.get('status_overview_wl_'+u+'_vis')) != null) && (c != '1')) toggleVisibility("wl_"+u);
 	}
 /* USB-BEGIN */
-	if (nvram['wan_proto'] == 'ppp3g' || nvram['wan_proto'] == 'lte') {
-		E('sesdiv_WWANStatus_overall').style.display = '';
-		updateWWAN.initPage(1000, 1);
-	}
+	foreach_wwan(function(wwan_number) {
+		E('sesdiv_WWANStatus'+wwan_number+'_overall').style.display = '';
+		let timer = updateWWANTimers[wwan_number - 1];
+		timer.initPage(3000, 3);
+	});
 /* USB-END */
 	ref.initPage(3000, 3);
 
@@ -432,16 +443,17 @@ createFieldTable('', [
 
 <div class="section" id="ports">
 </div>
+<script type="text/javascript">
+
 /* USB-BEGIN */
-<div class="section" id="sesdiv_WWANStatus_overall" style="display:none;">
-	<div class="section-title">WWAN Modem Status <small><i><a href='javascript:toggleVisibility("WWANStatus");'><span id="sesdiv_WWANStatus_showhide">(hide)</span></a></i></small></div>
-	<div id="sesdiv_WWANStatus">
-		<div class="fields">Please wait... Initial refresh...<img src="spin.gif" alt=""></div>
-	</div>
-</div>
+foreach_wwan(function(i) {
+	W('<div class="section" id="sesdiv_WWANStatus'+i+'_overall" style="display:none;">');
+	W('<div class="section-title">WWAN' + (updateWWANTimers > 1 ? i : '') + ' Modem Status <small><i><a href="javascript:toggleVisibility(\'WWANStatus'+i+'\');"><span id="sesdiv_WWANStatus'+i+'_showhide">(hide)<\/span><\/a><\/i><\/small><\/div>');
+	W('<div id="sesdiv_WWANStatus'+i+'"><div class="fields">Please wait... Initial refresh...<img src="spin.gif" alt=""><\/div><\/div>');
+	W('<\/div>');
+});
 /* USB-END */
 
-<script type="text/javascript">
 for (var uidx = 1; uidx <= nvram.mwan_num; ++uidx) {
 	var u = (uidx>1) ? uidx : '';
 	W('<div class=\'section-title\' id=\'wan'+u+'-title\'>WAN'+u+' <small><i><a href=\'javascript:toggleVisibility("wan' + u + '");\'><span id=\'sesdiv_wan' +u + '_showhide\'>(hide)<\/span><\/a><\/i><\/small><\/div>');
@@ -481,7 +493,7 @@ function h_countbitsfromleft(num) {
 		return(8);
 	}
 	var i = 0;
-	var bitpat=0xff00; 
+	var bitpat=0xff00;
 	while (i < 8){
 		if (num == (bitpat & 0xff)){
 			return(i);
@@ -592,11 +604,20 @@ function onRefToggle() {
 	ref.toggle();
 /* USB-BEGIN */
 	if (!ref.running) {
-		if (updateWWAN.running)
-			updateWWAN.stop();
+		for (let i=0; i < updateWWANTimers.length; i++) {
+			if (updateWWANTimers[i].running) {
+				updateWWANTimers[i].stop();
+			}
+		}
 	} else {
 		let value = E('refresh-time').value;
-		value < 30 ? updateWWAN.toggle(30) : updateWWAN.toggle(value);
+		for (let i=0; i < updateWWANTimers.length; i++) {
+			if (value < 30) {
+				updateWWANTimers[i].toggle(30);
+			} else {
+				updateWWANTimers[i].toggle(value);
+			}
+		}
 	}
 /* USB-END */
 }
