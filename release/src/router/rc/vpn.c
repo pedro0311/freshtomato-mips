@@ -90,7 +90,7 @@ void start_vpnclient(int clientNum)
 	}
 
 	// Build interface name
-	snprintf(&iface[0], IF_SIZE, "%s%d", nvram_safe_get(buffer), clientNum+CLIENT_IF_START);
+	snprintf(iface, IF_SIZE, "%s%d", nvram_safe_get(buffer), clientNum+CLIENT_IF_START);
 
 	// Determine encryption mode
 	sprintf(buffer, "vpn_client%d_crypt", clientNum);
@@ -136,7 +136,7 @@ void start_vpnclient(int clientNum)
 	f_wait_exists("/dev/net/tun", 5);
 
 	// Create tap/tun interface
-	sprintf(buffer, "openvpn --mktun --dev %s", &iface[0]);
+	sprintf(buffer, "openvpn --mktun --dev %s", iface);
 	for (argv[argc=0] = strtok(buffer, " "); argv[argc] != NULL; argv[++argc] = strtok(NULL, " "));
 	if ( _eval(argv, NULL, 0, NULL) )
 	{
@@ -151,7 +151,7 @@ void start_vpnclient(int clientNum)
 		if ( routeMode == BRIDGE )
 		{
 			sprintf(buffer2, "vpn_client%d_br", clientNum);
-			snprintf(buffer, BUF_SIZE, "brctl addif %s %s", nvram_safe_get(buffer2), &iface[0]);
+			snprintf(buffer, BUF_SIZE, "brctl addif %s %s", nvram_safe_get(buffer2), iface);
 			for (argv[argc=0] = strtok(buffer, " "); argv[argc] != NULL; argv[++argc] = strtok(NULL, " "));
 			if ( _eval(argv, NULL, 0, NULL) )
 			{
@@ -161,7 +161,7 @@ void start_vpnclient(int clientNum)
 			}
 		}
 
-		snprintf(buffer, BUF_SIZE, "ifconfig %s promisc up", &iface[0]);
+		snprintf(buffer, BUF_SIZE, "ifconfig %s promisc up", iface);
 		for (argv[argc=0] = strtok(buffer, " "); argv[argc] != NULL; argv[++argc] = strtok(NULL, " "));
 		if ( _eval(argv, NULL, 0, NULL) )
 		{
@@ -185,7 +185,8 @@ void start_vpnclient(int clientNum)
 	fprintf(fp, "daemon\n");
 	if ( cryptMode == TLS )
 		fprintf(fp, "client\n");
-	fprintf(fp, "dev %s\n", &iface[0]);
+	fprintf(fp, "dev %s\n", iface);
+	fprintf(fp, "txqueuelen 1000\n");
 	sprintf(buffer, "vpn_client%d_proto", clientNum);
 	fprintf(fp, "proto %s\n", nvram_safe_get(buffer)); /*full dual-stack functionality starting with OpenVPN 2.4.0*/
 	sprintf(buffer, "vpn_client%d_addr", clientNum);
@@ -428,15 +429,15 @@ void start_vpnclient(int clientNum)
 		fp = fopen(buffer, "w");
 		chmod(buffer, S_IRUSR|S_IWUSR|S_IXUSR);
 		fprintf(fp, "#!/bin/sh\n");
-		fprintf(fp, "iptables -I INPUT -i %s -j ACCEPT\n", &iface[0]);
-		fprintf(fp, "iptables -I FORWARD -i %s -j ACCEPT\n", &iface[0]);
+		fprintf(fp, "iptables -I INPUT -i %s -j ACCEPT\n", iface);
+		fprintf(fp, "iptables -I FORWARD -i %s -j ACCEPT\n", iface);
 		if ( routeMode == NAT )
 		{
 			// Add the nat for the main lan addresses
 			sscanf(nvram_safe_get("lan_ipaddr"), "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]);
 			sscanf(nvram_safe_get("lan_netmask"), "%d.%d.%d.%d", &nm[0], &nm[1], &nm[2], &nm[3]);
 			fprintf(fp, "iptables -t nat -I POSTROUTING -s %d.%d.%d.%d/%s -o %s -j MASQUERADE\n",
-				ip[0]&nm[0], ip[1]&nm[1], ip[2]&nm[2], ip[3]&nm[3], nvram_safe_get("lan_netmask"), &iface[0]);
+				ip[0]&nm[0], ip[1]&nm[1], ip[2]&nm[2], ip[3]&nm[3], nvram_safe_get("lan_netmask"), iface);
 
 			// Add the nat for other bridges, too
 			for(i=1; i < 4; i++) {
@@ -448,7 +449,7 @@ void start_vpnclient(int clientNum)
 				ret2 = sscanf(nvram_safe_get(buffer), "%d.%d.%d.%d", &nm[0], &nm[1], &nm[2], &nm[3]);
 				if (ret1 == 4 && ret2 == 4) {
 					fprintf(fp, "iptables -t nat -I POSTROUTING -s %d.%d.%d.%d/%s -o %s -j MASQUERADE\n",
-			        		ip[0]&nm[0], ip[1]&nm[1], ip[2]&nm[2], ip[3]&nm[3], nvram_safe_get("lan_netmask"), &iface[0]);
+			        		ip[0]&nm[0], ip[1]&nm[1], ip[2]&nm[2], ip[3]&nm[3], nvram_safe_get("lan_netmask"), iface);
 				}
 			}
 		}
@@ -456,8 +457,8 @@ void start_vpnclient(int clientNum)
 	/*Create firewall rules for IPv6*/
 #ifdef TCONFIG_IPV6
 	if (ipv6_enabled()) {
-		fprintf(fp, "ip6tables -I INPUT -i %s -j ACCEPT\n", &iface[0]);
-		fprintf(fp, "ip6tables -I FORWARD -i %s -j ACCEPT\n", &iface[0]);
+		fprintf(fp, "ip6tables -I INPUT -i %s -j ACCEPT\n", iface);
+		fprintf(fp, "ip6tables -I FORWARD -i %s -j ACCEPT\n", iface);
 	}
 #endif
 
@@ -645,7 +646,7 @@ void start_vpnserver(int serverNum)
 	}
 
 	// Build interface name
-	snprintf(&iface[0], IF_SIZE, "%s%d", nvram_safe_get(buffer), serverNum+SERVER_IF_START);
+	snprintf(iface, IF_SIZE, "%s%d", nvram_safe_get(buffer), serverNum+SERVER_IF_START);
 
 	// Determine encryption mode
 	sprintf(buffer, "vpn_server%d_crypt", serverNum);
@@ -681,7 +682,7 @@ void start_vpnserver(int serverNum)
 	f_wait_exists("/dev/net/tun", 5);
 
 	// Create tap/tun interface
-	sprintf(buffer, "openvpn --mktun --dev %s", &iface[0]);
+	sprintf(buffer, "openvpn --mktun --dev %s", iface);
 	for (argv[argc=0] = strtok(buffer, " "); argv[argc] != NULL; argv[++argc] = strtok(NULL, " "));
 	if ( _eval(argv, NULL, 0, NULL) )
 	{
@@ -694,7 +695,7 @@ void start_vpnserver(int serverNum)
 	if( ifType == TAP )
 	{
 		sprintf(buffer2, "vpn_server%d_br", serverNum);
-		snprintf(buffer, BUF_SIZE, "brctl addif %s %s", nvram_safe_get(buffer2), &iface[0]);
+		snprintf(buffer, BUF_SIZE, "brctl addif %s %s", nvram_safe_get(buffer2), iface);
 		for (argv[argc=0] = strtok(buffer, " "); argv[argc] != NULL; argv[++argc] = strtok(NULL, " "));
 		if ( _eval(argv, NULL, 0, NULL) )
 		{
@@ -705,7 +706,7 @@ void start_vpnserver(int serverNum)
 	}
 
 	// Bring interface up
-	sprintf(buffer, "ifconfig %s 0.0.0.0 promisc up", &iface[0]);
+	sprintf(buffer, "ifconfig %s 0.0.0.0 promisc up", iface);
 	for (argv[argc=0] = strtok(buffer, " "); argv[argc] != NULL; argv[++argc] = strtok(NULL, " "));
 	if ( _eval(argv, NULL, 0, NULL) )
 	{
@@ -775,7 +776,8 @@ void start_vpnserver(int serverNum)
 	fprintf(fp, "proto %s\n", nvram_safe_get(buffer)); /*full dual-stack functionality starting with OpenVPN 2.4.0*/
 	sprintf(buffer, "vpn_server%d_port", serverNum);
 	fprintf(fp, "port %d\n", nvram_get_int(buffer));
-	fprintf(fp, "dev %s\n", &iface[0]);
+	fprintf(fp, "dev %s\n", iface);
+	fprintf(fp, "txqueuelen 1000\n");
 
 	/* Cipher */
 	if (cryptMode == TLS) {
@@ -1166,8 +1168,8 @@ void start_vpnserver(int serverNum)
 		sprintf(buffer, "vpn_server%d_firewall", serverNum);
 		if ( !nvram_contains_word(buffer, "external") )
 		{
-			fprintf(fp, "iptables -I INPUT -i %s -j ACCEPT\n", &iface[0]);
-			fprintf(fp, "iptables -I FORWARD -i %s -j ACCEPT\n", &iface[0]);
+			fprintf(fp, "iptables -I INPUT -i %s -j ACCEPT\n", iface);
+			fprintf(fp, "iptables -I FORWARD -i %s -j ACCEPT\n", iface);
 		}
 
 	/*Create firewall rules for IPv6*/
@@ -1181,8 +1183,8 @@ void start_vpnserver(int serverNum)
 		sprintf(buffer, "vpn_server%d_firewall", serverNum);
 		if ( !nvram_contains_word(buffer, "external") )
 		{
-			fprintf(fp, "ip6tables -I INPUT -i %s -j ACCEPT\n", &iface[0]);
-			fprintf(fp, "ip6tables -I FORWARD -i %s -j ACCEPT\n", &iface[0]);
+			fprintf(fp, "ip6tables -I INPUT -i %s -j ACCEPT\n", iface);
+			fprintf(fp, "ip6tables -I FORWARD -i %s -j ACCEPT\n", iface);
 		}
 	}
 #endif

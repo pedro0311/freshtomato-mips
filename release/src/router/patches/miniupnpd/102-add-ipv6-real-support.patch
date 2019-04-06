@@ -1,6 +1,6 @@
---- miniupnpd/Makefile.linux	2018-04-06 12:53:32.000000000 +0200
-+++ miniupnpd/Makefile.linux	2018-05-17 18:11:30.504486000 +0200
-@@ -114,7 +114,13 @@ TEST := $(shell [ $(IPTVER1) -gt 1 ] ||
+--- miniupnpd/Makefile.linux
++++ miniupnpd/Makefile.linux
+@@ -113,7 +113,13 @@ TEST := $(shell [ $(IPTVER1) -gt 1 ] ||
  LDLIBS = $(IPTABLESPATH)/libiptc/.libs/libip4tc.o
  #LDLIBS = $(IPTABLESPATH)/libiptc/.libs/libiptc.a
  else # ifeq ($(TEST), 1)
@@ -14,8 +14,8 @@
  endif # ifeq ($(TEST), 1)
  else # ($(TARGET_OPENWRT),)
  # openWRT :
---- miniupnpd/netfilter/iptpinhole.c	2018-05-21 23:16:44.302686318 +0200
-+++ miniupnpd/netfilter/iptpinhole.c	2018-05-21 23:26:09.000000000 +0200
+--- miniupnpd/netfilter/iptpinhole.c
++++ miniupnpd/netfilter/iptpinhole.c
 @@ -20,7 +20,7 @@
  
  #ifdef ENABLE_UPNPPINHOLE
