@@ -3,6 +3,70 @@ FreshTomato-MIPS Changelog
 
 
 
+2019.2          2019.04.20
+--------------------------
+
+- openssl: update to 1.0.2r
+- SQLite: update to 3.27.2
+- php: update to 7.2.17
+- dnsmasq: update to 2.80-343b7b4 snapshot
+- libcurl: update to 7.64.1
+- nano: update to 4.0
+- dropbear: update to 2019.78
+- pppd: clean sources 2.4.5, add patches instead
+- pppd: update to 2.4.6
+- pppd: update to 2.4.7
+- pppd: fixes from upstream
+- miniupnpd: update to 2.1.20190408
+- libyaml: update to 0.2.2
+- getdns: update to 1.5.2 + upstream build error fix
+- libubox: update to eeef7b5 snapshot
+- getdns: add patch to fix missing define for log_warn
+- patches: miniupnpd: fix naming, cosmetics
+- patches: libcurl: cosmetics
+- ebtables: add 2 patches (Check -C parameters correctly, Check port range correctly)
+- GUI: fix at last Wireless Ethernet Bridge mode. It doesn't solve the problem if WL does not connect to AP (ie. on WPE2 Personal + AES), but it solves of updating time and dnslookup (valid /etc/resolv.conf)
+- GUI: QOS: fix JS error on View Details page, when view in given class
+- GUI: QOS: fix (again) some problems on View Details page
+- GUI: QOS: fix table sorting by "Protocol" on View Details page
+- GUI: OpenVPN: remove support for the RC ciphers. DES is kept for now, for legacy reasons
+- GUI: OpenVPN: Fix vpn-server.asp visible key fields
+- GUI: PPTP Client: increase max length of "server address" to 50 chararacters
+- GUI: add support of WWAN modem signal - use a minimum of 10 seconds of refresh time for best readings on Status -> Overview page
+- GUI: advanced-routing.asp - add option to force IGMPv2 - cosmetic
+- GUI: add support of multi WAN in modem status
+- GUI: add support of SMS inbox for 4G non-hilink/3G modems
+- GUI: fix ports order caused by commit #081d9ad + clean-up
+- Cleanup of unused rp-l2tp from the tree and Makefile
+- OpenVPN: change the default order of Negotiable Ciphers
+- OpenVPN: fix generating an openvpn client configuration on server with TLS authorization (enable remote-cert-tls)
+- router: Makefile: clean-up openvpn recipe
+- router: Makefile: build openssl with no SSLv2 and SSLv3 support
+- router: Makefile: clean-up miniupnpd build recipe
+- router: Makefile: build dnsmasq with HAVE_AUTH flag
+- router: httpd/rc: vpn.c: replace &buffer[0] (and &buffer2[0], &buf[0]) references in openvpn with straight buffer, for better readability and reduced risk of errors
+- router: httpd: correct generation of HTTPS certificate
+- router: nvram: defaults.c: cosmetics - rebranding ;)
+- router: others: wwansignal: fix showing the 3G signal level
+- router: others: switch3g/switch4g/wwansignal: some improvements/fixes
+- router: rc: change the name of the ntpc service to ntpd + some code changes, in accordance with other start/stop functions
+- router: rc: init.c: change back to where the start_wan() function is called
+- router: rc: init.c: change min_free_kbytes setting - catch up to AsusWRT / Merlin and also Netgear (case 20 MByte right now, was 14 MByte)
+- router: rc: network.c - change blink behaviour / start
+- router: rc: vpn.c: increase interface queue length from 100 to 1000 bytes
+- router: rc: services.c: add some logging when starting/stopping services
+- router: rc: services.c: change the way how "serial" and "uuid" are created in minidlna config
+- router: rc/shared: clean-up, cosmetics, fix compiler warnings
+- router: rc: clean-up (cosmetics)
+- router: shared: led.c: RT-N15U: change LED table - set GPIO 1 for LED_WLAN active HIGH --> small fix, was active LOW
+- router: utils: robocfg.c - catch up to AsusWRT / Merlin (thx) - one file for both, ARM and MIPS
+- router: www: tools-shell.asp: support of multiple lines pasted into termlib window
+- router: www: status-overview.asp: a few W3C fixes
+- router: www: Makefile: remove more obsolete stuff from html
+- router: www: another W3C fixes
+- Revert "router: rc: init.c: change back to where the start_wan () function is called"
+
+
 2019.1          2019.02.27
 --------------------------
 
@@ -26,7 +90,6 @@ FreshTomato-MIPS Changelog
 - tinc: synchronize source with ARM branch. For unknown reasons, MIPS version was quite different from the ARM...
 - E4200v1: change LED pin table - this router has only 2 LEDs at the cisco LOGO
 - vpnrouting: fix cleaning of routing after stopping the OpenVPN client with "Redirect through VPN" checked - not working from the very beginning (commit that adds this function, also responsible for the error: https://bitbucket.org/pedro311/freshtomato-mips/commits/4c75d36f6fb2c1da1de8d7db33e2a91714d045e8)
-- switch4g: fix path for DIAG device in qmi_wwan mode
 - DDNS: HE.net IPv6 Tunnel Broker uses now Dyn DNS Update API http://dyn.com/support/developers/api/
 - DDNS: FreeDNS: add possibility to update IP with custom value as on other services, add https
 - DDNS: opendns requires now HTTP 1.1 in request header
