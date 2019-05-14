@@ -437,6 +437,10 @@ define RouterOptions
 		sed -i "/TCONFIG_TERMLIB/d" $(1); \
 		echo "TCONFIG_TERMLIB=y" >>$(1); \
 	fi; \
+	if [ "$(NVRAM_SIZE)" = "32" ]; then \
+		sed -i "/TCONFIG_NVRAM_32K/d" $(1); \
+		echo "TCONFIG_NVRAM_32K=y" >>$(1); \
+	fi; \
 	)
 endef
 
