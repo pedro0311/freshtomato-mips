@@ -59,3 +59,4 @@ TCONFIG_SAMBASRV=y
 # TCONFIG_IPERF is not set
 # TCONFIG_KEYGEN is not set
 # TCONFIG_TERMLIB is not set
+# TCONFIG_NVRAM_32K is not set
