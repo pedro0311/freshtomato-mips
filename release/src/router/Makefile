@@ -1253,10 +1253,6 @@ iproute2-install:
 	install -D iproute2/ip/ip $(INSTALLDIR)/iproute2/usr/sbin/ip
 	$(STRIP) $(INSTALLDIR)/iproute2/usr/sbin/ip
 
-
-ntpc: nvram shared
-
-
 dropbear: dropbear/config.h
 	@$(SEP)
 ifeq ($(TCONFIG_ZEBRA),y)
