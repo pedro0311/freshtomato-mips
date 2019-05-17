@@ -216,7 +216,7 @@ static void shutdn(int rb)
 	}
 	set_action(ACT_REBOOT);
 
-	// Disconnect pppd - need this for PPTP/L2TP to finish gracefully
+	/* Disconnect pppd - need this for PPTP/L2TP to finish gracefully */
 	stop_pptp("wan");
 	stop_l2tp("wan");
 
@@ -230,22 +230,23 @@ static void shutdn(int rb)
 	sleep(1);
 	sync();
 
-	// umount("/jffs");	// may hang if not
-	// routers without JFFS will never reboot
-	// with above call on presseed reset,
-	// let's try eval code here
+	// umount("/jffs");	/* may hang if not */
+	/* routers without JFFS will never reboot
+	 * with above call on presseed reset,
+	 * let's try eval code here
+	 */
 	eval("umount", "-f", "/jffs");
 	sleep(1);
 
 	if (rb != -1) {
-		led(LED_WLAN, 0);
+		led(LED_WLAN, LED_OFF);
 		if (rb == 0) {
 			for (i = 4; i > 0; --i) {
-				led(LED_DMZ, 1);
-				led(LED_WHITE, 1);
+				led(LED_DMZ, LED_ON);
+				led(LED_WHITE, LED_ON);
 				usleep(250000);
-				led(LED_DMZ, 0);
-				led(LED_WHITE, 0);
+				led(LED_DMZ, LED_OFF);
+				led(LED_WHITE, LED_OFF);
 				usleep(250000);
 			}
 		}
@@ -384,7 +385,7 @@ static int init_vlan_ports(void)
 	switch (model) {
 	case MODEL_WRT54G:
 		switch (check_hw_type()) {
-		case HW_BCM5352E:	// G v4, GS v3, v4
+		case HW_BCM5352E:	/* G v4, GS v3, v4 */
 			dirty |= check_nv("vlan0ports", "3 2 1 0 5*");
 			break;
 		}
@@ -399,7 +400,7 @@ static int init_vlan_ports(void)
 	case MODEL_WL500GPv2:
 	case MODEL_WL520GU:
 	case MODEL_WL330GE:
-		if (nvram_match("vlan1ports", "0 5u"))	// 520GU or 330GE or WL500GE?
+		if (nvram_match("vlan1ports", "0 5u"))	/* 520GU or 330GE or WL500GE? */
 			dirty |= check_nv("vlan1ports", "0 5");
 		else if (nvram_match("vlan1ports", "4 5u"))
 			dirty |= check_nv("vlan1ports", "4 5");
@@ -412,6 +413,7 @@ static int init_vlan_ports(void)
 	case MODEL_H618B:
 		dirty |= (nvram_get("vlan2ports") != NULL);
 		nvram_unset("vlan2ports");
+		dirty |= check_nv("vlan0ports", "1 2 3 4 5*");
 		dirty |= check_nv("vlan1ports", "0 5");
 		break;
 	case MODEL_WRT310Nv1:
@@ -461,11 +463,11 @@ static int init_vlan_ports(void)
 		break;
 	case MODEL_WRT160Nv3:
 		if (nvram_match("vlan1ports", "1 2 3 4 5*")) {
-			// fix lan port numbering on CSE41, CSE51
+			/* fix lan port numbering on CSE41, CSE51 */
 			dirty |= check_nv("vlan1ports", "4 3 2 1 5*");
 		}
 		else if (nvram_match("vlan1ports", "1 2 3 4 8*")) {
-			// WRT310Nv2 ?
+			/* WRT310Nv2 ? */
 			dirty |= check_nv("vlan1ports", "4 3 2 1 8*");
 		}
 		break;
@@ -495,7 +497,7 @@ static void check_bootnv(void)
 		break;
 	case MODEL_WR850GV1:
 	case MODEL_WR850GV2:
-		// need to cleanup some variables...
+		/* need to cleanup some variables... */
 		if ((nvram_get("t_model") == NULL) && (nvram_get("MyFirmwareVersion") != NULL)) {
 			nvram_unset("MyFirmwareVersion");
 			nvram_set("restore_defaults", "1");
@@ -514,7 +516,7 @@ static void check_bootnv(void)
 		dirty |= check_nv("wl0gpio0", "0x88");
 		break;
 	case MODEL_WL500GP:
-		dirty |= check_nv("sdram_init", "0x0009");	// 32MB; defaults: 0x000b, 0x0009
+		dirty |= check_nv("sdram_init", "0x0009");	/* 32MB; defaults: 0x000b, 0x0009 */
 		dirty |= check_nv("wl0gpio0", "136");
 		break;
 	case MODEL_WL500GPv2:
@@ -524,7 +526,7 @@ static void check_bootnv(void)
 	case MODEL_WL500GD:
 		dirty |= check_nv("vlan0hwname", "et0");
 		dirty |= check_nv("vlan1hwname", "et0");
-		dirty |= check_nv("boardflags", "0x00000100"); // set BFL_ENETVLAN
+		dirty |= check_nv("boardflags", "0x00000100"); /* set BFL_ENETVLAN */
 		nvram_unset("wl0gpio0");
 		break;
 	case MODEL_DIR320:
@@ -554,7 +556,7 @@ static void check_bootnv(void)
 		break;
 #ifdef CONFIG_BCMWL5
 	case MODEL_WNR3500L:
-		dirty |= check_nv("boardflags", "0x00000710"); // needed to enable USB
+		dirty |= check_nv("boardflags", "0x00000710"); /* needed to enable USB */
 		dirty |= check_nv("vlan2hwname", "et0");
 		dirty |= check_nv("ledbh0", "7");
 		break;
@@ -636,7 +638,8 @@ static void check_bootnv(void)
 	switch (hardware) {
 	case HW_BCM5325E:
 		/* Lower the DDR ram drive strength , the value will be stable for all boards
-		   Latency 3 is more stable for all ddr 20050420 by honor */
+		 *  Latency 3 is more stable for all ddr 20050420 by honor
+		 */
 		dirty |= check_nv("sdram_init", "0x010b");
 		dirty |= check_nv("sdram_config", "0x0062");
 		if (!nvram_match("debug_clkfix", "0")) {
@@ -649,9 +652,9 @@ static void check_bootnv(void)
 		dirty |= check_nv("pa0b0", "0x15eb");
 		dirty |= check_nv("pa0b1", "0xfa82");
 		dirty |= check_nv("pa0b2", "0xfe66");
-		//dirty |= check_nv("pa0maxpwr", "0x4e");
+		/* dirty |= check_nv("pa0maxpwr", "0x4e"); */
 		break;
-	case HW_BCM5352E:	// G v4, GS v3, v4
+	case HW_BCM5352E:	/* G v4, GS v3, v4 */
 		dirty |= check_nv("sdram_init", "0x010b");
 		dirty |= check_nv("sdram_config", "0x0062");
 		if (dirty) {
@@ -661,35 +664,35 @@ static void check_bootnv(void)
 		dirty |= check_nv("pa0b0", "0x168b");
 		dirty |= check_nv("pa0b1", "0xfabf");
 		dirty |= check_nv("pa0b2", "0xfeaf");
-		//dirty |= check_nv("pa0maxpwr", "0x4e");
+		/* dirty |= check_nv("pa0maxpwr", "0x4e"); */
 		break;
 	case HW_BCM5354G:
 		dirty |= check_nv("pa0itssit", "62");
 		dirty |= check_nv("pa0b0", "0x1326");
 		dirty |= check_nv("pa0b1", "0xFB51");
 		dirty |= check_nv("pa0b2", "0xFE87");
-		//dirty |= check_nv("pa0maxpwr", "0x4e");
+		/* dirty |= check_nv("pa0maxpwr", "0x4e"); */
 		break;
 	case HW_BCM4704_BCM5325F:
-		// nothing to do
+		/* nothing to do */
 		break;
 	default:
 		dirty |= check_nv("pa0itssit", "62");
 		dirty |= check_nv("pa0b0", "0x170c");
 		dirty |= check_nv("pa0b1", "0xfa24");
 		dirty |= check_nv("pa0b2", "0xfe70");
-		//dirty |= check_nv("pa0maxpwr", "0x48");
+		/* dirty |= check_nv("pa0maxpwr", "0x48"); */
 		break;
 	}
 	break;
 
-	} // switch (model)
+	} /* switch (model) */
 
 	dirty |= init_vlan_ports();
 
 	if (dirty) {
 		nvram_commit();
-REBOOT:	// do a simple reboot
+REBOOT:	/* do a simple reboot */
 		sync();
 		reboot(RB_AUTOBOOT);
 		exit(0);
@@ -756,7 +759,7 @@ static int init_nvram(void)
 		nvram_set("pa0b0", "0x1542");
 		nvram_set("pa0b1", "0xfacb");
 		nvram_set("pa0b2", "0xfec7");
-		//nvram_set("pa0maxpwr", "0x4c");
+		/* nvram_set("pa0maxpwr", "0x4c"); */
 		features = SUP_SES;
 		break;
 	case MODEL_WRTSL54GS:
@@ -883,7 +886,7 @@ static int init_nvram(void)
 		nvram_set("usb_ohci", "-1");
 #endif
 		if (!nvram_match("t_fix1", (char *)name)) {
-			nvram_set("lan_ifnames", "vlan0 eth1 eth2 eth3");	// set to "vlan0 eth2" by DD-WRT; default: vlan0 eth1
+			nvram_set("lan_ifnames", "vlan0 eth1 eth2 eth3");	/* set to "vlan0 eth2" by DD-WRT; default: vlan0 eth1 */
 		}
 		break;
 	case MODEL_WL500W:
@@ -897,7 +900,7 @@ static int init_nvram(void)
 	case MODEL_WL500GE:
 		mfr = "Asus";
 		name = "WL-550gE";
-		//	features = ?
+		/* features = ? */
 #ifdef TCONFIG_USB
 		nvram_set("usb_uhci", "-1");
 #endif
@@ -905,7 +908,7 @@ static int init_nvram(void)
 	case MODEL_WX6615GT:
 		mfr = "SparkLAN";
 		name = "WX-6615GT";
-		//	features = ?
+		/* features = ? */
 		break;
 	case MODEL_MN700:
 		mfr = "Microsoft";
@@ -1046,7 +1049,7 @@ static int init_nvram(void)
 		}
 		break;
 	case MODEL_WRT160Nv3:
-		// same as M10, M20, WRT310Nv2, E1000v1
+		/* same as M10, M20, WRT310Nv2, E1000v1 */
 		mfr = "Linksys";
 		name = nvram_safe_get("boot_hw_model");
 		if (strcmp(name, "E100") == 0)
@@ -1094,14 +1097,15 @@ static int init_nvram(void)
 			nvram_set("wl_ifname", "eth1");
 		}
 		break;
-#endif	// CONFIG_BCMWL5
+#endif	/* CONFIG_BCMWL5 */
 
 	case MODEL_WL330GE:
 		mfr = "Asus";
 		name = "WL-330gE";
-		// The 330gE has only one wired port which can act either as WAN or LAN.
-		// Failsafe mode is to have it start as a LAN port so you can get an IP
-		// address via DHCP and access the router config page.
+		/* The 330gE has only one wired port which can act either as WAN or LAN.
+		 * Failsafe mode is to have it start as a LAN port so you can get an IP
+		 * address via DHCP and access the router config page.
+		 */
 		if (!nvram_match("t_fix1", (char *)name)) {
 			nvram_set("wl_ifname", "eth1");
 			nvram_set("lan_ifnames", "eth1");
@@ -1129,7 +1133,7 @@ static int init_nvram(void)
 	case MODEL_WL500GD:
 		mfr = "Asus";
 		name = "WL-500g Deluxe";
-		// features = SUP_SES;
+		/* features = SUP_SES; */
 #ifdef TCONFIG_USB
 		nvram_set("usb_ohci", "-1");
 #endif
@@ -1159,7 +1163,7 @@ static int init_nvram(void)
 		name = "WL1600GL";
 		features = SUP_SES;
 		break;
-#endif	// WL_BSS_INFO_VERSION >= 108
+#endif	/* WL_BSS_INFO_VERSION >= 108 */
 	case MODEL_WZRG300N:
 		mfr = "Buffalo";
 		name = "WZR-G300N";
@@ -1198,14 +1202,14 @@ static int init_nvram(void)
 	}
 	nvram_set("t_model_name", s);
 
-	nvram_set("pa0maxpwr", "400");	// allow Tx power up tp 400 mW, needed for ND only
+	nvram_set("pa0maxpwr", "400");	/* allow Tx power up tp 400 mW, needed for ND only */
 
 	sprintf(s, "0x%lX", features);
 	nvram_set("t_features", s);
 
 	/*
 		note: set wan_ifnameX if wan_ifname needs to be overriden
-	
+
 	*/
 	if (nvram_is_empty("wan_ifnameX")) {
 #if 1
@@ -1221,7 +1225,7 @@ static int init_nvram(void)
 #endif
 	}
 
-	//!!TB - do not force country code here to allow nvram override
+	/* !!TB - do not force country code here to allow nvram override */
 	//nvram_set("wl_country", "JP");
 	//nvram_set("wl_country_code", "JP");
 	nvram_set("wan_get_dns", "");
@@ -1252,7 +1256,7 @@ static int init_nvram(void)
 
 	if ((features & SUP_1000ET) == 0) nvram_set("jumbo_frame_enable", "0");
 
-	// compatibility with old versions
+	/* compatibility with old versions */
 	if (nvram_match("wl_net_mode", "disabled")) {
 		nvram_set("wl_radio", "0");
 		nvram_set("wl_net_mode", "mixed");
@@ -1308,7 +1312,8 @@ static inline void tune_min_free_kbytes(void)
 	}
 	else if (info.totalram >= (TOMATO_RAM_VLOW_END * 1024)) {
 		/* If we have 32MB+ RAM, tune min_free_kbytes
-		   to reduce page allocation failure errors. */
+		 * to reduce page allocation failure errors.
+		 */
 		f_write_string("/proc/sys/vm/min_free_kbytes", "1024", 0, 0); /* 1 MByte */
 	}
 }
@@ -1347,11 +1352,11 @@ static void sysinit(void)
 
 	static const char *mkd[] = {
 		"/tmp/etc", "/tmp/var", "/tmp/home", "/tmp/mnt",
-		"/tmp/splashd", //!!Victek
-		"/tmp/share", "/var/webmon", // !!TB
+		"/tmp/splashd", /* !!Victek */
+		"/tmp/share", "/var/webmon", /* !!TB */
 		"/var/log", "/var/run", "/var/tmp", "/var/lib", "/var/lib/misc",
 		"/var/spool", "/var/spool/cron", "/var/spool/cron/crontabs",
-		"/tmp/var/wwwext", "/tmp/var/wwwext/cgi-bin",	// !!TB - CGI support
+		"/tmp/var/wwwext", "/tmp/var/wwwext/cgi-bin",	/* !!TB - CGI support */
 		NULL
 	};
 	umask(0);
@@ -1362,8 +1367,8 @@ static void sysinit(void)
 	mkdir("/var/tmp/dhcp", 0777);
 	mkdir("/home/root", 0700);
 	chmod("/tmp", 0777);
-	f_write("/etc/hosts", NULL, 0, 0, 0644);			// blank
-	f_write("/etc/fstab", NULL, 0, 0, 0644);			// !!TB - blank
+	f_write("/etc/hosts", NULL, 0, 0, 0644);			/* blank */
+	f_write("/etc/fstab", NULL, 0, 0, 0644);			/* !!TB - blank */
 	simple_unlock("cron");
 	simple_unlock("firewall");
 	simple_unlock("restrictions");
@@ -1423,7 +1428,7 @@ static void sysinit(void)
 	check_bootnv();
 
 #ifdef TCONFIG_IPV6
-	// disable IPv6 by default on all interfaces
+	/* disable IPv6 by default on all interfaces */
 	f_write_string("/proc/sys/net/ipv6/conf/default/disable_ipv6", "1", 0, 0);
 #endif
 
@@ -1433,7 +1438,7 @@ static void sysinit(void)
 	signal(SIGCHLD, handle_reap);
 
 #ifdef CONFIG_BCMWL5
-	// ctf must be loaded prior to any other modules
+	/* ctf must be loaded prior to any other modules */
 	if (nvram_invmatch("ctf_disable", "1"))
 		modprobe("ctf");
 #endif
@@ -1459,7 +1464,7 @@ static void sysinit(void)
 	eval("nvram", "defaults", "--initcheck");
 	init_nvram();
 
-	// set the packet size
+	/* set the packet size */
 	if (nvram_get_int("jumbo_frame_enable")) {
 		// only set the size here - 'enable' flag is set by the driver
 		// eval("et", "robowr", "0x40", "0x01", "0x1F"); // (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4)
@@ -1485,7 +1490,7 @@ static void sysinit(void)
 	led(LED_WHITE, (i & 2) != 0);
 	led(LED_AOSS, (i & 4) != 0);
 	led(LED_BRIDGE, (i & 8) != 0);
-	led(LED_DIAG, 1);
+	led(LED_DIAG, LED_ON);
 }
 
 int init_main(int argc, char *argv[])
@@ -1493,7 +1498,7 @@ int init_main(int argc, char *argv[])
 	int state, i;
 	sigset_t sigset;
 
-// AB - failsafe?
+	/* AB - failsafe? */
 	nvram_unset("debug_rc_svc");
 
 	sysinit();
@@ -1527,11 +1532,12 @@ int init_main(int argc, char *argv[])
 		case SIGINT:		/* STOP */
 		case SIGQUIT:		/* HALT */
 		case SIGTERM:		/* REBOOT */
-			led(LED_DIAG, 1);
+			led(LED_DIAG, LED_ON);
 			unlink("/var/notice/sysup");
 
-			if( nvram_match( "webmon_bkp", "1" ) )
-				xstart( "/usr/sbin/webmon_bkp", "hourly" ); // make a copy before halt/reboot router
+			if (nvram_match( "webmon_bkp", "1" )) {
+				xstart( "/usr/sbin/webmon_bkp", "hourly" ); /* make a copy before halt/reboot router */
+			}
 
 			run_nvscript("script_shut", NULL, 10);
 
@@ -1553,7 +1559,7 @@ int init_main(int argc, char *argv[])
 				break;
 			}
 
-			// SIGHUP (RESTART) falls through
+			/* SIGHUP (RESTART) falls through */
 
 		case SIGUSR2:		/* START */
 			SET_LED(RELEASE_WAN_CONTROL);
@@ -1562,13 +1568,13 @@ int init_main(int argc, char *argv[])
 			load_files_from_nvram();
 
 			int fd = -1;
-			fd = file_lock("usb");	// hold off automount processing
+			fd = file_lock("usb"); /* hold off automount processing */
 			start_usb();
 
 			xstart("/usr/sbin/mymotd", "init");
 			run_nvscript("script_init", NULL, 2);
 
-			file_unlock(fd);	// allow to process usb hotplug events
+			file_unlock(fd); /* allow to process usb hotplug events */
 #ifdef TCONFIG_USB
 			/*
 			 * On RESTART some partitions can stay mounted if they are busy at the moment.
@@ -1576,7 +1582,7 @@ int init_main(int argc, char *argv[])
 			 * remount those drives that actually got unmounted. Make sure to remount ALL
 			 * partitions here by simulating hotplug event.
 			 */
-			if (state == SIGHUP /* RESTART */)
+			if (state == SIGHUP) /* RESTART */
 				add_remove_usbhost("-1", 1);
 #endif
 
@@ -1604,7 +1610,7 @@ int init_main(int argc, char *argv[])
 
 			syslog(LOG_INFO, "%s: FreshTomato %s", nvram_safe_get("t_model_name"), tomato_version);
 
-			led(LED_DIAG, 0);
+			led(LED_DIAG, LED_OFF);
 			switch(get_model())
 			{
 				case MODEL_E4200:
@@ -1615,7 +1621,7 @@ int init_main(int argc, char *argv[])
 			break;
 		}
 
-		chld_reap(0);		/* Periodically reap zombies. */
+		chld_reap(0); /* Periodically reap zombies. */
 		check_services();
 		sigwait(&sigset, &state);
 	}
