@@ -104,7 +104,7 @@ int nvget_gpio(const char *name, int *gpio, int *inv)
 
 	if (((p = nvram_get(name)) != NULL) && (*p)) {
 		n = strtoul(p, NULL, 0);
-		if ((n & 0xFFFFFF60) == 0) {		/* bin 0110 000 */
+		if ((n & 0xFFFFFF60) == 0) {		/* bin 0110 0000 */
 			*gpio = (n & TOMATO_GPIO_MAX);	/* bin 0001 1111 */
 			*inv = ((n & 0x80) != 0);	/* bin 1000 0000 */
 			/* 0x60 + 0x1F (dec 31) + 0x80 = 0xFF */
@@ -201,6 +201,12 @@ int led_bit(int b, int mode)
 
 int do_led(int which, int mode)
 {
+  /*
+   * valid GPIO values: 0 to 31 (default active LOW, inverted or active HIGH with -[value])
+   * value 255: not known / disabled / not possible
+   * value -99: special case for -0 substitute (active HIGH for GPIO 0)
+   * value 254: non GPIO LED (special case, to show there is something!)
+   */
 //				    WLAN  DIAG  WHITE AMBER  DMZ  AOSS  BRIDGE MYST/USB 5G
 //				    ----- ----- ----- -----  ---  ----  ------ -----    --
 	static int wrt54g[]	= { 255,    1,     2,    3,    7,  255,  255,  255,    255};
@@ -252,10 +258,14 @@ int do_led(int which, int mode)
 	int n;
 	int b = 255, c = 255;
 	int ret = 255;
+	int model;
 
 	if ((which < 0) || (which >= LED_COUNT)) return ret;
 
-	switch (nvram_match("led_override", "1") ? MODEL_UNKNOWN : get_model()) {
+	/* get router model */
+	model = get_model();
+
+	switch (nvram_match("led_override", "1") ? MODEL_UNKNOWN : model) {
 	case MODEL_WRT54G:
 		if (check_hw_type() == HW_BCM4702) {
 			/* G v1.x */

@@ -1254,7 +1254,6 @@ void start_wan_done(char *wan_ifname, char *prefix)
 		start_httpd();
 
 		if (wanup) {
-			SET_LED(GOT_IP);
 			notice_set(prefix, "");
 			run_nvscript("script_wanup", NULL, 0);
 		}
@@ -1423,5 +1422,4 @@ void stop_wan(void)
 	mwanlog(LOG_DEBUG, "MWAN: watchdog disabled");
 	xstart("watchdog", "del");
 
-	SET_LED(RELEASE_IP);
 }
