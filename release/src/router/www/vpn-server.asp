@@ -172,7 +172,10 @@ function verifyFields(focused, quiet) {
 		ncp = E('_vpn_'+t+'_ncp_enable').value;
 
 		elem.display(PR('_vpn_'+t+'_ca'), PR('_vpn_'+t+'_ca_key'), PR('_vpn_'+t+'_ca_key_div_help'),
-			     PR('_vpn_dhgen_'+t+'_button'), PR('_vpn_'+t+'_crt'), PR('_vpn_'+t+'_dh'),
+/* KEYGEN-BEGIN */
+			     PR('_vpn_dhgen_'+t+'_button'),
+/* KEYGEN-END */
+			     PR('_vpn_'+t+'_crt'), PR('_vpn_'+t+'_dh'),
 			     PR('_vpn_'+t+'_key'), PR('_vpn_'+t+'_hmac'), PR('_f_vpn_'+t+'_rgw'),
 			     PR('_vpn_'+t+'_reneg'), auth == "tls");
 		elem.display(PR('_vpn_'+t+'_static'), auth == "secret" || (auth == "tls" && hmac.value >= 0));
