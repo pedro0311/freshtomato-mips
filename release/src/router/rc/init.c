@@ -3862,6 +3862,9 @@ static void sysinit(void)
 
 	eval("buttons");
 
+	/* enable LED for LAN / Bridge */
+	eval("blink_br");
+
 	if (!noconsole) xstart("console");
 
 	i = nvram_get_int("sesx_led");

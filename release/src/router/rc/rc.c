@@ -110,6 +110,7 @@ static const applets_t applets[] = {
 	{ "mtd-unlock",			mtd_unlock_erase_main		},
 	{ "buttons",			buttons_main			},
 	{ "blink",			blink_main			},
+	{ "blink_br",			blink_br_main			},
 	{ "rcheck",			rcheck_main			},
 	{ "dhcpc-event",		dhcpc_event_main		},
 	{ "dhcpc-release",		dhcpc_release_main		},

@@ -412,6 +412,9 @@ extern int buttons_main(int argc, char *argv[]);
 /* blink.c */
 extern int blink_main(int argc, char *argv[]);
 
+/* blink_br.c */
+extern int blink_br_main(int argc, char *argv[]);
+
 /* led.c */
 extern int led_main(int argc, char *argv[]);
 
