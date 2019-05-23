@@ -258,12 +258,14 @@ int do_led(int which, int mode)
 	int n;
 	int b = 255, c = 255;
 	int ret = 255;
-	int model;
+	static int model = 0; /* initialize with 0 / MODEL_UNKNOWN */
 
 	if ((which < 0) || (which >= LED_COUNT)) return ret;
 
-	/* get router model */
-	model = get_model();
+	if (model == 0) { /* router model unknown OR detect router model for the first time at function do_led(). */
+		/* get router model */
+		model = get_model();
+	}
 
 	switch (nvram_match("led_override", "1") ? MODEL_UNKNOWN : model) {
 	case MODEL_WRT54G:

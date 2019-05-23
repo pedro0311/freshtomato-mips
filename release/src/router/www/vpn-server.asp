@@ -172,7 +172,10 @@ function verifyFields(focused, quiet) {
 		ncp = E('_vpn_'+t+'_ncp_enable').value;
 
 		elem.display(PR('_vpn_'+t+'_ca'), PR('_vpn_'+t+'_ca_key'), PR('_vpn_'+t+'_ca_key_div_help'),
-			     PR('_vpn_dhgen_'+t+'_button'), PR('_vpn_'+t+'_crt'), PR('_vpn_'+t+'_dh'),
+/* KEYGEN-BEGIN */
+			     PR('_vpn_dhgen_'+t+'_button'),
+/* KEYGEN-END */
+			     PR('_vpn_'+t+'_crt'), PR('_vpn_'+t+'_dh'),
 			     PR('_vpn_'+t+'_key'), PR('_vpn_'+t+'_hmac'), PR('_f_vpn_'+t+'_rgw'),
 			     PR('_vpn_'+t+'_reneg'), auth == "tls");
 		elem.display(PR('_vpn_'+t+'_static'), auth == "secret" || (auth == "tls" && hmac.value >= 0));
@@ -737,7 +740,7 @@ for (i = 0; i < tabs.length; ++i)
 		{ title: 'Allow Only These Clients', name: 'f_vpn_'+t+'_ccd_excl', type: 'checkbox', value: eval( 'nvram.vpn_'+t+'_ccd_excl' ) != 0 },
 		{ title: '', suffix: '<div class="tomato-grid" id="table_'+t+'_ccd"><\/div>' },
 		{ title: 'Allow User/Pass Auth', name: 'f_vpn_'+t+'_userpass', type: 'checkbox', value: eval( 'nvram.vpn_'+t+'_userpass' ) != 0 },
-		{ title: 'Allow Only User/Pass(Without cert) Auth', name: 'f_vpn_'+t+'_nocert', type: 'checkbox', value: eval( 'nvram.vpn_'+t+'_nocert' ) != 0 },
+		{ title: 'Allow Only User/Pass (without cert) Auth', name: 'f_vpn_'+t+'_nocert', type: 'checkbox', value: eval( 'nvram.vpn_'+t+'_nocert' ) != 0 },
 		{ title: '', suffix: '<div class="tomato-grid" id="table_'+t+'_users"><\/div>' },
 		{ title: 'Custom Configuration', name: 'vpn_'+t+'_custom', type: 'textarea', value: eval( 'nvram.vpn_'+t+'_custom' ) }
 	]);

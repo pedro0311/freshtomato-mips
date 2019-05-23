@@ -1070,8 +1070,6 @@ const defaults_t defaults[] = {
 	{ "vpn_server1_key",		""				},
 	{ "vpn_server1_dh",		""				},
 	{ "vpn_server1_br",		"br0"				},
-	{ "vpn_server1_route"		"0"				},
-	{ "vpn_server1_routing_val",	""				},
 	{ "vpn_server2_poll",		"0"				},
 	{ "vpn_server2_if",		"tun"				},
 	{ "vpn_server2_proto",		"udp"				},
@@ -1112,8 +1110,6 @@ const defaults_t defaults[] = {
 	{ "vpn_server2_key",		""				},
 	{ "vpn_server2_dh",		""				},
 	{ "vpn_server2_br",		"br0"				},
-	{ "vpn_server2_route"		"0"				},
-	{ "vpn_server2_routing_val",	""				},
 	{ "vpn_client_eas",		""				},
 	{ "vpn_client1_poll",		"0"				},
 	{ "vpn_client1_if",		"tun"				},
@@ -1150,6 +1146,7 @@ const defaults_t defaults[] = {
 	{ "vpn_client1_nobind",		"1"				},
 	{ "vpn_client1_route",		"0"				},
 	{ "vpn_client1_routing_val",	""				},
+	{ "vpn_client1_fw",		"1"				},
 	{ "vpn_client2_poll",		"0"				},
 	{ "vpn_client2_if",		"tun"				},
 	{ "vpn_client2_bridge",		"1"				},
@@ -1185,6 +1182,7 @@ const defaults_t defaults[] = {
 	{ "vpn_client2_nobind",		"1"				},
 	{ "vpn_client2_route",		"0"				},
 	{ "vpn_client2_routing_val",	""				},
+	{ "vpn_client2_fw",		"1"				},
 #endif
 
 #ifdef TCONFIG_PPTPD
