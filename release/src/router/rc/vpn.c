@@ -280,14 +280,15 @@ void start_vpnclient(int clientNum)
 			fprintf(fp, "route-noexec\n");
 	}
 	fprintf(fp, "verb 3\n");
+
+	sprintf(buffer, "/etc/openvpn/client%d/updown.sh", clientNum);
+	symlink("/rom/openvpn/updown.sh", buffer);
+	fprintf(fp, "script-security 2\n");
+	fprintf(fp, "up updown.sh\n");
+	fprintf(fp, "down updown.sh\n");
+
 	if (cryptMode == TLS)
 	{
-		sprintf(buffer, "/etc/openvpn/client%d/updown.sh", clientNum);
-		symlink("/rom/openvpn/updown.sh", buffer);
-		fprintf(fp, "script-security 2\n");
-		fprintf(fp, "up updown.sh\n");
-		fprintf(fp, "down updown.sh\n");
-
 		sprintf(buffer, "vpn_client%d_hmac", clientNum);
 		nvi = nvram_get_int(buffer);
 		sprintf(buffer, "vpn_client%d_static", clientNum);
@@ -327,7 +328,7 @@ void start_vpnclient(int clientNum)
 			fprintf(fp, "secret static.key\n");
 	}
 	fprintf(fp, "status-version 2\n");
-	fprintf(fp, "status status\n");
+	fprintf(fp, "status status 10\n");
 	fprintf(fp, "\n# Custom Configuration\n");
 	sprintf(buffer, "vpn_client%d_custom", clientNum);
 	fprintf(fp, "%s", nvram_safe_get(buffer));
@@ -981,7 +982,7 @@ void start_vpnserver(int serverNum)
 			fprintf(fp, "secret static.key\n");
 	}
 	fprintf(fp, "status-version 2\n");
-	fprintf(fp, "status status\n");
+	fprintf(fp, "status status 10\n");
 	fprintf(fp, "\n# Custom Configuration\n");
 	sprintf(buffer, "vpn_server%d_custom", serverNum);
 	fprintf(fp, "%s", nvram_safe_get(buffer));
