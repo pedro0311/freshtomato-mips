@@ -34,16 +34,20 @@ int led_main(int argc, char *argv[])
 
 	int i;
 	int j;
+	int model;
 	char *a;
 
 	if ((argc < 3) || ((argc % 2) != 1)) help();
 
+	/* get Router model */
+	model = get_model();
+
 	for (j = 1; j < argc; j += 2) {
-		a = argv[j];
+		a = argv[j]; /* led name */
 		for (i = 0; i < LED_COUNT; ++i) {
 			if (strncmp(led_names[i], a, 2) == 0) break;
 		}
-		a = argv[j + 1];
+		a = argv[j + 1]; /* action (on/off) */
 		if ((i >= LED_COUNT) || ((strcmp(a, "on") != 0) && (strcmp(a, "off") != 0))) help();
 
 		if (((i == LED_WLAN) || (i == LED_5G)) && nvram_get_int("blink_wl")) { /* For WLAN LEDs with blink turned on; If TRUE, stop/kill blink first */
@@ -73,7 +77,17 @@ int led_main(int argc, char *argv[])
 				help();
 			}
 		}
-		else if (!led(i, (a[1] == 'n'))) help();
+		else if ((i == LED_AOSS) &&
+			 (model == MODEL_RTN15U)) { /* special case for ASUS Router with FreshTomato: use LED_AOSS for Power LED (active LOW, inverted! --> see LED table at shared/led.c ) */
+
+			if (led(i, LED_PROBE)) { /* check for GPIO and non GPIO */
+				led(i, !(a[1] == 'n')); /* turn LED on/off (inverted!) */
+			}
+			else {
+				help();
+			}
+		}
+		else if (!led(i, (a[1] == 'n'))) help(); /* default case */
 	}
 
 	return 0;
