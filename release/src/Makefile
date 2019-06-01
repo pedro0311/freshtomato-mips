@@ -1102,52 +1102,52 @@ m:
 
 ## AIO MIPS2 for RT-N16
 r2z:
-	@$(MAKE) z MIPS32=r2
+	@$(MAKE) z MIPS32=r2 NVRAM_SIZE=32
 
 r2e:
-	@$(MAKE) e MIPS32=r2
+	@$(MAKE) e MIPS32=r2 NVRAM_SIZE=32
 
 r2a:
-	@$(MAKE) a MIPS32=r2
+	@$(MAKE) a MIPS32=r2 NVRAM_SIZE=32
 
 r2c:
-	@$(MAKE) c MIPS32=r2
+	@$(MAKE) c MIPS32=r2 NVRAM_SIZE=32
 
 r2u:
-	@$(MAKE) u MIPS32=r2
+	@$(MAKE) u MIPS32=r2 NVRAM_SIZE=32
 
 r2t:
-	@$(MAKE) t MIPS32=r2
+	@$(MAKE) t MIPS32=r2 NVRAM_SIZE=32
 
 r2d:
-	@$(MAKE) d MIPS32=r2
+	@$(MAKE) d MIPS32=r2 NVRAM_SIZE=32
 
 r2k:
-	@$(MAKE) k MIPS32=r2
+	@$(MAKE) k MIPS32=r2 NVRAM_SIZE=32
 
 r2g:
-	@$(MAKE) g MIPS32=r2
+	@$(MAKE) g MIPS32=r2 NVRAM_SIZE=32
 
 r2b:
-	@$(MAKE) b MIPS32=r2
+	@$(MAKE) b MIPS32=r2 NVRAM_SIZE=32
 
 r2o:
-	@$(MAKE) o MIPS32=r2
+	@$(MAKE) o MIPS32=r2 NVRAM_SIZE=32
 
 r2f:
-	@$(MAKE) f MIPS32=r2
+	@$(MAKE) f MIPS32=r2 NVRAM_SIZE=32
 
 r2i:
-	@$(MAKE) i MIPS32=r2
+	@$(MAKE) i MIPS32=r2 NVRAM_SIZE=32
 
 r2j:
-	@$(MAKE) j MIPS32=r2
+	@$(MAKE) j MIPS32=r2 NVRAM_SIZE=32
 
 r2v:
-	@$(MAKE) v MIPS32=r2
+	@$(MAKE) v MIPS32=r2 NVRAM_SIZE=32
 
 r2m:
-	@$(MAKE) m MIPS32=r2
+	@$(MAKE) m MIPS32=r2 NVRAM_SIZE=32
 
 
 ## Belkin
@@ -1253,10 +1253,10 @@ e1200v1i:
 
 ## Builds for WNR3500L v2
 v2z:
-	@$(MAKE) z MIPS32=r2 WNR3500LV2=1 NO_JFFS=y
+	@$(MAKE) z MIPS32=r2 WNR3500LV2=1 NVRAM_SIZE=32 NO_JFFS=y
 
 v2e:
-	@$(MAKE) e MIPS32=r2 WNR3500LV2=1 NO_JFFS=y
+	@$(MAKE) e MIPS32=r2 WNR3500LV2=1 NVRAM_SIZE=32 NO_JFFS=y
 
 
 ## Builds with wl_high module
