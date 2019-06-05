@@ -308,6 +308,7 @@ const defaults_t defaults[] = {
 	{ "ipv6_rtr_addr",		""				},	// defaults to $ipv6_prefix::1
 	{ "ipv6_radvd",			"1"				},	// Enable Router Advertisement (radvd)
 	{ "ipv6_dhcpd",			"1"				},	// Enable DHCPv6
+	{ "ipv6_lease_time",		"12"				},	// DHCP IPv6 default lease time in hours
 	{ "ipv6_accept_ra",		"1"				},	// Enable Accept RA on WAN (bit 0) and/or LAN (bit 1) interfaces (br0...br3 if available)
 	{ "ipv6_ifname",		"six0"				},	// The interface facing the rest of the IPv6 world
 	{ "ipv6_tun_v4end",		"0.0.0.0"			},	// Foreign IPv4 endpoint of SIT tunnel
