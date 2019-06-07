@@ -613,6 +613,7 @@ const defaults_t defaults[] = {
 	{ "multicast_lan1",		"0"				},	// on LAN1 (br1)
 	{ "multicast_lan2",		"0"				},	// on LAN2 (br2)
 	{ "multicast_lan3",		"0"				},	// on LAN3 (br3)
+	{ "multicast_quickleave",	"1"				},	// enable quickleave mode
 	{ "multicast_custom",		""				},	// custom config for IGMP proxy instead of default config
 	{ "udpxy_enable",		"0"				},
 	{ "udpxy_lan",			"0"				},	// listen on LAN (br0)
