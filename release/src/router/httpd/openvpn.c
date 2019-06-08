@@ -123,7 +123,7 @@ static void print_generated_keys_to_user(const char *prefix)
 #endif
 #endif
 
-void wo_vpn_status(char *url)
+void wo_ovpn_status(char *url)
 {
 #ifdef TCONFIG_OPENVPN
 	char buf[256];
@@ -159,7 +159,7 @@ void wo_vpn_status(char *url)
 #endif
 }
 
-void wo_vpn_genkey(char *url)
+void wo_ovpn_genkey(char *url)
 {
 #ifdef TCONFIG_OPENVPN
 	char buffer[72];
@@ -198,7 +198,7 @@ void wo_vpn_genkey(char *url)
 #endif
 }
 
-void wo_vpn_genclientconfig(char *url)
+void wo_ovpn_genclientconfig(char *url)
 {
 #ifdef TCONFIG_OPENVPN
 #ifdef TCONFIG_KEYGEN

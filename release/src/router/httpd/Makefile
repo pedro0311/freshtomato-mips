@@ -20,7 +20,7 @@ OBJS += nocat.o
 endif
 
 ifeq ($(TCONFIG_OPENVPN),y)
-OBJS += vpn.o
+OBJS += openvpn.o
 endif
 
 LIBS = -L$(TOP)/nvram -lnvram -L$(TOP)/shared -lshared
