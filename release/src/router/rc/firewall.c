@@ -2397,7 +2397,7 @@ int start_firewall(void)
 	unlink("/var/webmon/search");
 
 #ifdef TCONFIG_OPENVPN
-	run_vpn_firewall_scripts();
+	run_ovpn_firewall_scripts();
 #endif
 
 #ifdef TCONFIG_TINC
