@@ -73,14 +73,9 @@ startRouting() {
 		ip route add table $ID $ROUTE
 	done
 
-	modprobe ipt_set
-	modprobe ip_set
-	modprobe ip_set_iphash
 	ipset --create vpnrouting$ID iphash
 
 	echo "#!/bin/sh" > $FIREWALL_ROUTING
-	echo "echo 0 > /proc/sys/net/ipv4/conf/$IFACE/rp_filter" >> $FIREWALL_ROUTING
-	echo "echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter" >> $FIREWALL_ROUTING
 	echo "iptables -t mangle -A PREROUTING -m set --set vpnrouting$ID dst,src -j MARK --set-mark $ID" >> $FIREWALL_ROUTING
 
 	# example of routing_val: 1<2<8.8.8.8<1>1<1<1.2.3.4<0>1<3<domain.com<0>
