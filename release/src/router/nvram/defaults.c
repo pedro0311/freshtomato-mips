@@ -1016,6 +1016,7 @@ const defaults_t defaults[] = {
 	{ "script_shut",		""				},
 	{ "script_fire",		""				},
 	{ "script_wanup",		""				},
+	{ "script_mwanup",		""				},
 
 #ifdef TCONFIG_NFS
 	{ "nfs_enable",			"0"				},
