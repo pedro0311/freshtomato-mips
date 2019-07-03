@@ -3,6 +3,98 @@ FreshTomato-MIPS Changelog
 
 
 
+2019.3.118-beta 2019.07.06
+--------------------------
+
+Recommendations:
+- clear your NVRAM after upgrade!
+- users using OpenVPN client: check your settings!
+- GUI problems: use Ctrl+F5 and/or clean your browser cache.
+
+- kernel: backport ida_simple_* kernel functions
+- nano: update to 4.3
+- sqlite: update to 3.28.0
+- miniupnpd: update to 2.1.20190630
+- php: update to 7.2.19
+- tor: update to 0.4.0.5
+- nginx: update to 1.16.0 - Stable Branch
+- pcre: update to 8.43
+- xl2tpd: update to v1.3.14les
+- libcurl: update to 7.65.1
+- openssl: update to 1.0.2s
+- libcurl: update CA certificate bundle as of 2019-05-15
+- e2fsprogs: update to 1.45.2
+- pppd: various fixes for errors found by coverity static analysis
+- patches: update patch for xl2tpd + cosmetics
+- patches: cosmetics in php patch
+- patches: fixes in pppd patches
+- patches: ebtables: build ipv6 extension only if needed
+- patches: ebtables: build only needed extensions
+- libcurl: fix build break
+- ebtables: restore original Makefile in extensions subfolder
+- ebtables: restore original #include in ebt_ip.c
+- ppp: fix race condition between ppp watchdog and redial (for keepalive mode)
+- RT-N15U: change LED table - assign GPIO 6 for LED_AOSS / Power LED (active LOW, inverted) - assign GPIO 4 for LED_BRDIGE / LAN LED (active LOW)
+- GUI: fix removal of the WWAN SMS
+- GUI: fix undefined Modem Type on "WWAN Modem Status" (also lack of link to view WWAN SMS) when modem on different wan than the first one
+- GUI: OpenVPN server: fix JS error casued by commit #e43cf81 that make it impossible to save the configuration
+- GUI: OpenVPN server: fix JS error casued by commit #e43cf81 that make it impossible to save the configuration
+- GUI: OpenVPN Client: extend password field to 70 characters
+- GUI: add "Wifi Security Disabled" warning on Status Overview page (discussion: https://www.linksysinfo.org/index.php?threads/security-enhancement-lets-disable-the-aps-by-default.74557/)
+- GUI: advanced-dhcpdns.asp - add DHCP IPv6 lease time option
+- GUI: advanced-firewall.asp - add IGMP proxy option quickleave (default turned on (no change). The user can turn it off now if required)
+- GUI: advanced-firewall.asp - Add note for hidden IGMP proxy settings
+- GUI: status-overview.asp - extend Ethernet Ports State
+- IPv6: fix IPv6 6to4 tunnel (if remote host was on 6to4, the packets were dropped because of wrong routing and tunnel settings; this fixes issue #51; Reference: http://tomatousb.org/forum/t-461151/6to4-tunnel-in-tomatousb-is-done-wrong)
+- OpenVPN: fix generating an openvpn client configuration on server with TLS authorization [2]
+- OpenVPN: key generation: add also "key-direction" in the second case
+- OpenVPN: use of the OpenVPN scripting engine
+- OpenVPN: Routing Policy: copy routes from the main table to the alternate routing table
+- OpenVPN: configurable inbound allow/drop firewall policy for clients
+- OpenVPN: fix the visibility of the Routing Policy table and when the rules are to be applied
+- OpenVPN: "Manage Client-Specific Options" Fix bug when more than one subnet per client is defined in ccd (only the last one was stored in ccd).
+- OpenVPN: Client: also run up/down script for Static Key auth
+- OpenVPN: Client/Server: add tls-crypt as an option - encrypt and authenticate all control channel packets with the key (change the name of the option from "Extra HMAC authorization (tls-auth)" to "TLS control channel security (tls-auth/tls-crypt)", add warnings if exported client file will require OpenVPN 2.4.0 or newer)
+- OpenVPN: Client: move back firewall rules to vpn.c script
+- OpenVPN: Client: split updown script
+- OpenVPN: Client: simplify use of Routing Policy (remove route-nopull and route-noexec options, add in "Redirect Internet traffic" option "Routing Policy" instead, remove unused variables from NVRAM, fix links to OpenVPN howtos)
+- OpenVPN: rename files and functions from vpn to ovpn/openvpn for better consistency
+- OpenVPN: some improvements (updown-client.sh: remove unneeded dnsmasq restart; vpnrouting.sh: add a FW restart instead of a simple local script call - when kill switch will be ready, it can be change back)
+- Integrate OpenVPN 2.4.7 Tunnelblick XOR patch (allows using obfuscated servers)
+- Fix openvpn password validation to actually accept 70 characters
+- Adjust OpenVPN policy routing priority to come before multiwan rules
+- Fix OpenVPN policy based routing in case of using route-nopull or no pushed routes (Don't depend on $route_vpn_gateway because it is not passed by OpenVPN when no routes are pushed)
+- When OpenVPN inbound firewall is enabled, adjust fw rules to allow reply packets
+- Add routes for all LAN bridges when creating multiwan routing tables
+- Disable rp_filter on multiwan routing add to allow policy-based routing to work
+- Implement MultiWAN Up script (WAN number passed as $1) that runs regardless of which one is considered the "primary" one
+- Fix 4g wan restart causing wrong restart of wan1 due to dhcpc-event bound event behavior and missing wanX_iface nvram var
+- Makefile: cosmetic
+- Makefile: save space in NVRAM for routers with 32k NVRAM
+- Makefile: fix for commit https://bitbucket.org/pedro311/freshtomato-mips/commits/dedf5c4f288d03ebbfe877c0654b00b1b8a5e3bf (commit has made nvram size 32k for n60x/n64x builds tied to the r2x builds)
+- Makefile: separate Netgear WNDR3400/3700v3 builds from Netgear WNDR3400v2/v3 builds
+- router: clean-up of unused files and variables
+- router: Makefile: remove the patches in reverse order
+- router: Makefile: fix logic in applying/unapplaying the patches
+- router: Makefile: php: remove deprecated option - --without-mcrypt
+- router: Makefile: libcurl: clean build recipe (add --disable-threaded-resolver to fix possible build break; enable IPv6 only if IPv6 is really enabled; remove old option --disable-thread)
+- router: Makefile: clean-up and simplify libcurl recipe
+- router: Makefile: dnsmasq: skip gost validation with nettle, it's not supported anyway
+- router: rc: optimizing code, cosmetics (mainly for openvpn part; based on @RMerlin - thanks!)
+- router: rc: button.c - do some clean-up/cosmetic - use LED_ON and LED_OFF - call get_model() only once - add some comments
+- router: rc: init.c / shared: led.c - do some clean-up - use LED_ON and LED_OFF - cosmetic - add some comments
+- router: rc: rc.c / init.c / wan.c - remove obsolete SET_LED() and defines - clean-up
+- router: rc: blink_br.c: - introduce bridge LED for some Router (for example RT-N15U) - sync / catch up with ARM branch - LED_BRIDGE will turn on/off if a ethernet cable is connected/disconnected - add support for RT-N15U (full LED support now with this commit)
+- router: rc: led.c: - small optimization for led_main(), compare (full) led name only once (Hint: stay as close as possible to ARM branch)
+- router: rc: vpn.c: add missing closedir() in write_vpn_dnsmasq_config() function
+- router: rc: openvpn.c: Make firewall rules consistent in both IPv4 and IPv6
+- router: shared: led.c: - do call get_model() only once (only cosmetic / optimization)
+- router: shared: shared.h: - remove not used define LED_BLINK (and cosmetic)
+- router: www: basic-time.asp: fix javascript error caused by commit #20f1ca0
+- wwansignal: fix problems with signal level and LAC value on some modems (ie. Huawei E8372)
+- Revert "netfilter: ebtables: fix wrong name length while copying to user-space" (it breaks ebtables totally...)
+
+
 2019.2          2019.04.20
 --------------------------
 
