@@ -1,0 +1,20 @@
+--- ebtables/Makefile.am
++++ ebtables/Makefile.am
+@@ -34,13 +34,13 @@ lib_LTLIBRARIES = libebtc.la
+ libebtc_la_SOURCES = \
+ 	communication.c ebtables.c getethertype.c \
+ 	libebtc.c useful_functions.c \
+-	extensions/ebt_802_3.c extensions/ebt_among.c extensions/ebt_arp.c \
++	extensions/ebt_arp.c \
+ 	extensions/ebt_arpreply.c extensions/ebt_ip.c extensions/ebt_ip6.c \
+ 	extensions/ebt_limit.c extensions/ebt_log.c extensions/ebt_mark.c \
+-	extensions/ebt_mark_m.c extensions/ebt_nat.c extensions/ebt_nflog.c \
++	extensions/ebt_nat.c \
+ 	extensions/ebt_pkttype.c extensions/ebt_redirect.c \
+-	extensions/ebt_standard.c extensions/ebt_stp.c extensions/ebt_string.c \
+-	extensions/ebt_ulog.c extensions/ebt_vlan.c extensions/ebt_AUDIT.c \
++	extensions/ebt_standard.c extensions/ebt_stp.c \
++	extensions/ebt_vlan.c \
+ 	extensions/ebtable_broute.c extensions/ebtable_filter.c \
+ 	extensions/ebtable_nat.c
+ # Make sure ebtables.c can be built twice
