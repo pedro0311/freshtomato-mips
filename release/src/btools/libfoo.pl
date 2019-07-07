@@ -290,6 +290,9 @@ sub fixDyn
 
 # iperf (pedro)
 	fixDynDep("iperf", "libiperf.so.0.0.0");
+
+# ebtables (pedro)
+	fixDynDep("ebtables-legacy", "libebtc.so.0.0.0");
 }
 
 sub usersOf
