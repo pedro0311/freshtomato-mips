@@ -865,6 +865,7 @@ dnsmasq-clean:
 	$(call unpatch_files,dnsmasq)
 
 nettle/stamp-h1: gmp
+	$(call patch_files,nettle)
 	@cd nettle && CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) \
 	CPPFLAGS="-I$(TOP)/gmp" \
 	CFLAGS="-Os -Wall $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections" \
@@ -881,6 +882,7 @@ nettle-clean:
 	-@$(MAKE) -C nettle clean
 	@rm -f nettle/stamp-h1
 	@rm -rf nettle/include nettle/lib nettle/bin nettle/share
+	$(call unpatch_files,nettle)
 
 gmp/stamp-h1:
 	@cd gmp && autoreconf -fvi && CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) \
