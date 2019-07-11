@@ -77,6 +77,7 @@
 .deps/
 .libs/
 /aclocal.m4
+/autoconf-archive
 /autom4te.cache
 /config.guess
 /config.h.in
@@ -102,6 +103,7 @@
 /stamp-h2
 
 # cmake auto-generated files
+/build
 /CMakeCache.txt
 /CMakeFiles
 /cmake_install.cmake
