@@ -2398,13 +2398,7 @@ nfs-utils-install:
 	install -D nfs-utils/utils/exportfs/exportfs $(INSTALLDIR)/nfs-utils/usr/sbin/exportfs
 	install -D nfs-utils/utils/statd/statd $(INSTALLDIR)/nfs-utils/usr/sbin/statd
 	install -D nfs-utils/utils/mountd/mountd $(INSTALLDIR)/nfs-utils/usr/sbin/mountd
-	install -D nfs-utils/nfs.rc $(INSTALLDIR)/nfs-utils/usr/sbin/nfs.rc
-	$(STRIP) -s $(INSTALLDIR)/nfs-utils/usr/sbin/mount.nfs
-	$(STRIP) -s $(INSTALLDIR)/nfs-utils/usr/sbin/nfsd
-	$(STRIP) -s $(INSTALLDIR)/nfs-utils/usr/sbin/showmount
-	$(STRIP) -s $(INSTALLDIR)/nfs-utils/usr/sbin/exportfs
-	$(STRIP) -s $(INSTALLDIR)/nfs-utils/usr/sbin/statd
-	$(STRIP) -s $(INSTALLDIR)/nfs-utils/usr/sbin/mountd
+	$(STRIP) -s $(INSTALLDIR)/nfs-utils/usr/sbin/*
 
 tinc/stamp-h1: openssl zlib lzo
 	$(call patch_files,tinc)
