@@ -142,7 +142,6 @@ void auth_unix_gid(FILE *f)
 	pw = getpwuid(uid);
 	if (!pw)
 		rv = -1;
-#ifndef __UCLIBC__
 	else {
 		rv = getgrouplist(pw->pw_name, pw->pw_gid, groups, &ngroups);
 		if (rv == -1 && ngroups >= 100) {
@@ -154,7 +153,6 @@ void auth_unix_gid(FILE *f)
 						  groups, &ngroups);
 		}
 	}
-#endif /* __UCLIBC__ */
 	qword_printint(f, uid);
 	qword_printint(f, time(0)+30*60);
 	if (rv >= 0) {
@@ -566,7 +564,7 @@ static void write_fsloc(FILE *f, struct exportent *ep, char *path)
 	release_replicas(servers);
 }
 
-static void write_secinfo(FILE *f, struct exportent *ep)
+static void write_secinfo(FILE *f, struct exportent *ep, int flag_mask)
 {
 	struct sec_entry *p;
 
@@ -580,7 +578,7 @@ static void write_secinfo(FILE *f, struct exportent *ep)
 	qword_printint(f, p - ep->e_secinfo);
 	for (p = ep->e_secinfo; p->flav; p++) {
 		qword_printint(f, p->flav->fnum);
-		qword_printint(f, p->flags);
+		qword_printint(f, p->flags & flag_mask);
 	}
 
 }
@@ -592,16 +590,14 @@ static int dump_to_cache(FILE *f, char *domain, char *path, struct exportent *ex
 	qword_printint(f, time(0)+30*60);
 	if (exp) {
 		int different_fs = strcmp(path, exp->e_path) != 0;
-		
-		if (different_fs)
-			qword_printint(f, exp->e_flags & ~NFSEXP_FSID);
-		else
-			qword_printint(f, exp->e_flags);
+		int flag_mask = different_fs ? ~NFSEXP_FSID : ~0;
+
+		qword_printint(f, exp->e_flags & flag_mask);
 		qword_printint(f, exp->e_anonuid);
 		qword_printint(f, exp->e_anongid);
 		qword_printint(f, exp->e_fsid);
 		write_fsloc(f, exp, path);
-		write_secinfo(f, exp);
+		write_secinfo(f, exp, flag_mask);
  		if (exp->e_uuid == NULL || different_fs) {
  			char u[16];
  			if (get_uuid(path, NULL, 16, u)) {
