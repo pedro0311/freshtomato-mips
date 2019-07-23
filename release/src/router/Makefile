@@ -2626,7 +2626,8 @@ udpxy/stamp-h1:
 
 udpxy: udpxy/stamp-h1
 	@$(SEP)
-	$(MAKE) -C udpxy lean CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
+	$(MAKE) -C udpxy lean CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections"
 
 udpxy-clean:
