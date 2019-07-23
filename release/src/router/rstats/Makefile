@@ -1,8 +1,8 @@
 include ../common.mak
 
 CFLAGS	= -Os -Wall $(EXTRACFLAGS) #-mips32
-CFLAGS	+= -I$(SRCBASE)/include -I$(TOP)/shared
-LDFLAGS	=
+CFLAGS	+= -I$(SRCBASE)/include -I$(TOP)/shared -ffunction-sections -fdata-sections
+LDFLAGS	= -ffunction-sections -fdata-sections -Wl,--gc-sections
 
 OBJS = rstats.o
 
@@ -10,7 +10,7 @@ all: rstats
 
 rstats: $(OBJS)
 	@echo " [rstats] CC -o $@"
-	@$(CC) $(LDFLAGS) -o $@ $(OBJS) -L../nvram -lnvram -L../shared -lshared
+	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJS) -L../nvram -lnvram -L../shared -lshared
 
 	$(SIZECHECK)
 	$(CPTMP)
