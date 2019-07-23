@@ -1223,7 +1223,9 @@ zebra-install:
 xl2tpd: pppd
 	@$(SEP)
 	$(call patch_files,xl2tpd)
-	CFLAGS="-g $(EXTRACFLAGS)" $(MAKE) -C $@ PREFIX=/usr xl2tpd $(PARALLEL_BUILD)
+	CFLAGS="-Os -g $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
+	$(MAKE) -C $@ PREFIX=/usr xl2tpd $(PARALLEL_BUILD)
 
 xl2tpd-install:
 	install -D xl2tpd/xl2tpd $(INSTALLDIR)/xl2tpd/usr/sbin/xl2tpd
