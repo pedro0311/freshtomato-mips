@@ -835,20 +835,21 @@ mdu:	shared mssl
 rc: nvram shared
 
 bridge/Makefile:
-	cd bridge && autoreconf -fsi && CFLAGS="-Os -g $(EXTRACFLAGS)" \
+	cd bridge && autoreconf -fsi && CFLAGS="-Os -g $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	$(CONFIGURE) --prefix="" --with-linux-headers=$(LINUXDIR)/include
 
 bridge: bridge/Makefile
 	@$(SEP)
 	@$(MAKE) -C bridge
 
-bridge-clean:
-	-@$(MAKE) -C bridge clean
-	@rm -f bridge/Makefile
-
 bridge-install:
 	install -D bridge/brctl/brctl $(INSTALLDIR)/bridge/usr/sbin/brctl
 	$(STRIP) $(INSTALLDIR)/bridge/usr/sbin/brctl
+
+bridge-clean:
+	-@$(MAKE) -C bridge clean
+	@rm -f bridge/Makefile
 
 dnsmasq: $(if $(TCONFIG_DNSSEC),nettle,)
 	@$(SEP)
