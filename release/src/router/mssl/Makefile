@@ -1,8 +1,8 @@
 include ../common.mak
 
-CFLAGS	= -Os -Wall $(EXTRACFLAGS) -fPIC
+CFLAGS	= -Os -Wall $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections
 LIBS =
-LDFLAGS	=
+LDFLAGS	= -ffunction-sections -fdata-sections -Wl,--gc-sections
 
 ifeq ($(FULL_OPENSSL),y)
 CFLAGS	+= -I$(TOP)/openssl/include -DUSE_OPENSSL
@@ -18,7 +18,7 @@ OBJ = mssl.o
 all: libmssl.so libmssl.a
 
 libmssl.so: $(OBJ)
-	$(CC) -shared -o $@ $^ $(LIBS)
+	$(CC) -shared -o $@ $^ $(LDFLAGS) $(LIBS)
 	$(STRIP) $@
 	$(CPTMP)
 
