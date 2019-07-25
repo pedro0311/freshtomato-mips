@@ -164,8 +164,10 @@ void wo_ovpn_genkey(char *url)
 #ifdef TCONFIG_OPENVPN
 	char buffer[72];
 	char *modeStr;
+#ifdef TCONFIG_KEYGEN
 	char *serverStr;
 	int server;
+#endif
 	strlcpy(buffer, webcgi_safeget("_mode", ""), sizeof(buffer));
 	modeStr = js_string(buffer);	/* quicky scrub */
 	if (modeStr == NULL) {
