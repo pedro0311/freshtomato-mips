@@ -3,6 +3,13 @@ include ../common.mak
 all:
 
 install:
+	for F in $(wildcard *); do \
+		if [ $$F = "Makefile" ]; then \
+			continue; \
+		fi; \
+		sed -i $$F -e "/^#!/p" -e "/^\s*#/d"; \
+	done
+
 	install -d $(INSTALLDIR)/sbin
 	install -d $(INSTALLDIR)/usr/sbin
 	install -d $(INSTALLDIR)/lib
