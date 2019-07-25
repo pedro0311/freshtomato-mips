@@ -1143,7 +1143,9 @@ accel-pptp: pppd accel-pptp/Makefile
 	@$(MAKE) -C accel-pptp
 
 accel-pptp/Makefile: accel-pptp/Makefile.in $(LINUXDIR)/include/linux/version.h
-	cd accel-pptp && CFLAGS="-g -Os $(EXTRACFLAGS)" \
+	cd accel-pptp && CFLAGS="-g -Os $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+	CPPFLAGS="-Os -ffunction-sections -fdata-sections" \
+	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	$(CONFIGURE) --prefix=/usr KDIR=$(LINUXDIR) PPPDIR=$(TOP)/pppd
 
 accel-pptp-clean:
