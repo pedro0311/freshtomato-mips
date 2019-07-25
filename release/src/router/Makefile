@@ -952,7 +952,9 @@ ppp-%:
 
 rp-pppoe/src/stamp-h1: rp-pppoe/src/Makefile.in
 	$(call patch_files,rp-pppoe)
-	cd rp-pppoe/src && CFLAGS="-g -Os $(EXTRACFLAGS)" \
+	cd rp-pppoe/src && CFLAGS="-g -Os $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+	CPPFLAGS="-Os -ffunction-sections -fdata-sections" \
+	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	$(CONFIGURE) --prefix=/usr --enable-plugin=$(TOP)/pppd \
 	ac_cv_linux_kernel_pppoe=yes rpppoe_cv_pack_bitfields=rev
 	@touch rp-pppoe/src/stamp-h1
@@ -1182,11 +1184,6 @@ pppd: pppd/Makefile
 	@$(SEP)
 	@$(MAKE) -C pppd MFLAGS='$(if $(TCONFIG_IPV6),HAVE_INET6=y,) EXTRACFLAGS="$(EXTRACFLAGS)"'
 
-pppd-clean:
-	-@$(MAKE) -C pppd clean
-	@rm -f pppd/Makefile
-	$(call unpatch_files,pppd)
-
 pppd-install:
 	install -D pppd/pppd/pppd $(INSTALLDIR)/pppd/usr/sbin/pppd
 	$(STRIP) $(INSTALLDIR)/pppd/usr/sbin/pppd
@@ -1196,6 +1193,11 @@ ifeq ($(TCONFIG_L2TP),y)
 	install -D pppd/pppd/plugins/pppol2tp/pppol2tp.so $(INSTALLDIR)/pppd/usr/lib/pppd/pppol2tp.so
 	$(STRIP) $(INSTALLDIR)/pppd/usr/lib/pppd/*.so
 endif
+
+pppd-clean:
+	-@$(MAKE) -C pppd clean
+	@rm -f pppd/Makefile
+	$(call unpatch_files,pppd)
 
 zebra/stamp-h1:
 	@cd $(TOP)/zebra && rm -f config.cache && \
