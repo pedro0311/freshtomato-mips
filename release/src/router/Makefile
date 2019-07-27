@@ -2467,7 +2467,8 @@ sd-idle-install: sd-idle/stamp-h1
 
 snmp/stamp-h1:
 	cd snmp && autoreconf -fsi && \
-	CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
+	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	$(CONFIGURE) --prefix=/usr --with-endianness=little --enable-mini-agent --disable-debugging \
 	--disable-privacy --without-opaque-special-types --with-persistent-directory=/tmp/snmp-persist \
 	--with-default-snmp-version=3 --with-sys-contact=root --with-sys-location=Unknown --with-logfile=/dev/null \
