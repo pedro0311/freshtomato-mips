@@ -1197,18 +1197,16 @@ ifeq ($(TCONFIG_L2TP),y)
 endif
 
 zebra/stamp-h1:
-	@cd zebra && rm -f config.cache && \
-	CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) \
-	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+	@cd $(TOP)/zebra && rm -f config.cache && \
+	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
-	$(CONFIGURE) --sysconfdir=/etc \
-	--enable-netlink $(if $(TCONFIG_IPV6),--enable-ipv6,--disable-ipv6) --disable-ripngd --disable-ospfd --disable-doc \
-	--disable-ospf6d --disable-bgpd --disable-bgpd-announce
+	$(CONFIGURE) --sysconfdir=/etc --enable-netlink $(if $(TCONFIG_IPV6),--enable-ipv6,--disable-ipv6) --disable-ripngd \
+		--disable-ospfd --disable-ospf6d --disable-bgpd --disable-bgp-announce --disable-dependency-tracking
 	@touch zebra/stamp-h1
 
 zebra: zebra/stamp-h1
 	@$(SEP)
-	@$(MAKE) -C zebra CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD)
+	@$(MAKE) -C zebra
 
 zebra-clean:
 	-@$(MAKE) -C zebra clean
