@@ -1425,8 +1425,11 @@ endif
 	@true
 
 jpeg/stamp-h1:
-	cd jpeg && \
-	CFLAGS="-Os $(EXTRACFLAGS) -fPIC" CC=$(CC) AR2="touch" $(CONFIGURE) --enable-shared --enable-static --prefix=''
+	cd $(TOP)/jpeg && \
+	CFLAGS="-Os $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections" \
+	LDFLAGS="-fPIC -ffunction-sections -fdata-sections" \
+	AR2="touch" \
+	$(CONFIGURE) --enable-shared --enable-static --prefix=''
 	touch jpeg/stamp-h1
 
 jpeg: jpeg/stamp-h1
