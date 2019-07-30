@@ -1482,8 +1482,11 @@ endif
 	@true
 
 zlib/stamp-h1:
-	cd zlib && \
-	CC=$(CC) RANLIB=$(RANLIB) LD=$(LD) CFLAGS="-Os -Wall $(EXTRACFLAGS) -fPIC" LDSHAREDLIBC="$(EXTRALDFLAGS)" \
+	cd $(TOP)/zlib && \
+	CFLAGS="-Os -Wall $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections" \
+	CPPLAGS="-Os -Wall -fPIC -ffunction-sections -fdata-sections" \
+	LDFLAGS="-fPIC -ffunction-sections -fdata-sections -Wl,--gc-sections" \
+	LDSHAREDLIBC="$(EXTRALDFLAGS)" \
 	./configure --shared --prefix=/usr --libdir=/usr/lib
 	touch zlib/stamp-h1
 
