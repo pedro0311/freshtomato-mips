@@ -1522,11 +1522,12 @@ endif
 
 libid3tag/stamp-h1: zlib
 	$(call patch_files,libid3tag)
-	cd libid3tag && \
-	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" CPPFLAGS="-I$(TOP)/zlib" \
+	cd $(TOP)/libid3tag && autoreconf -fsi && \
+	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+	CPPFLAGS="-Os -Wall -ffunction-sections -fdata-sections -I$(TOP)/zlib" \
 	LDFLAGS="-L$(TOP)/zlib -fPIC -ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	$(CONFIGURE) --enable-shared --enable-static --prefix='' \
-		--disable-debugging --disable-profiling
+		--disable-debugging --disable-profiling --disable-dependency-tracking
 	touch libid3tag/stamp-h1
 
 libid3tag: libid3tag/stamp-h1 zlib
