@@ -165,7 +165,6 @@ endif
 
 obj-$(NEED_SAMBA3) += samba3
 obj-$(TCONFIG_NTFS) += ntfs-3g
-
 obj-$(TCONFIG_EBTABLES) += ebtables
 obj-$(TCONFIG_IPV6) += dhcpv6
 
@@ -1638,13 +1637,17 @@ wanuptime-install:
 	$(STRIP) $(INSTALLDIR)/wanuptime/usr/sbin/wanuptime
 
 ebtables/stamp-h1: dummy
+ifeq ($(TCONFIG_IPV6),y)
+	mv patches/ebtables/104-do-not-build-ipv6-extension.patch patches/ebtables/104-do-not-build-ipv6-extension.patch.tmp || true
+else
+	mv patches/ebtables/104-do-not-build-ipv6-extension.patch.tmp patches/ebtables/104-do-not-build-ipv6-extension.patch || true
+endif
 	$(call patch_files,ebtables)
-	cd $(TOP)/ebtables && CC=$(CC) LD=$(LD) STRIP=$(CROSS_COMPILE)strip \
-	./autogen.sh && \
+	cd $(TOP)/ebtables && ./autogen.sh && \
 	$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --sysconfdir=/etc --libdir=/usr/lib \
-	CFLAGS="-Os $(EXTRACFLAGS) -DEBT_MIN_ALIGN=4 -ffunction-sections -fdata-sections" \
-	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
-	LOCKFILE="/var/lock/ebtables"
+		CFLAGS="-Os $(EXTRACFLAGS) -DEBT_MIN_ALIGN=4 -ffunction-sections -fdata-sections" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
+		LOCKFILE="/var/lock/ebtables"
 	touch ebtables/stamp-h1
 
 ebtables: ebtables/stamp-h1
