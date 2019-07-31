@@ -15,7 +15,7 @@ diff -Naurp openvpn/src/openvpn/route.c openvpn/src/openvpn/route.c
 diff -Naurp openvpn/src/openvpn/tun.c openvpn/src/openvpn/tun.c
 --- openvpn/src/openvpn/tun.c	2017-03-22 16:34:21.000000000 +0100
 +++ openvpn/src/openvpn/tun.c	2018-04-17 17:15:46.767444024 +0200
-@@ -2054,6 +2054,20 @@ open_tun(const char *dev, const char *de
+@@ -2069,6 +2069,20 @@ open_tun(const char *dev, const char *de
  
  #ifdef ENABLE_FEATURE_TUN_PERSIST
  

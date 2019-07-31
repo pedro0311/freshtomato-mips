@@ -166,6 +166,12 @@ else
 TCONFIG_RAID :=
 endif
 
+ifeq ($(TCONFIG_AIO),y)
+export CFLAG_OPTIMIZE = -O3
+else
+export CFLAG_OPTIMIZE = -Os
+endif
+
 obj-$(NEED_SAMBA3) += samba3
 
 ifeq ($(CONFIG_BCMWL6),y)
@@ -1174,8 +1180,7 @@ accel-pptp-install:
 pptpd/stamp-h1:
 	$(call patch_files,pptpd)
 	ln -sf ../../pppd/pppd/ pptpd/plugins/pppd
-	cd pptpd && $(CONFIGURE) --prefix=$(INSTALLDIR)/pptpd --enable-bcrelay CC=$(CC) \
-		STRIP=$(CROSS_COMPILE)strip AR=$(AR) LD=$(LD) NM=$(NM) RANLIB=$(RANLIB)
+	cd $(TOP)/pptpd && $(CONFIGURE) --prefix=$(INSTALLDIR)/pptpd --enable-bcrelay
 	touch pptpd/stamp-h1
 
 pptpd: pptpd/stamp-h1
@@ -1183,13 +1188,10 @@ pptpd: pptpd/stamp-h1
 	@$(MAKE) -C pptpd
 
 pptpd-install:
-	@echo pptpd
 	@install -D pptpd/pptpd $(INSTALLDIR)/pptpd/usr/sbin/pptpd
 	@install -D pptpd/bcrelay $(INSTALLDIR)/pptpd/usr/sbin/bcrelay
 	@install -D pptpd/pptpctrl $(INSTALLDIR)/pptpd/usr/sbin/pptpctrl
-	@$(STRIP) $(INSTALLDIR)/pptpd/usr/sbin/pptpd
-	@$(STRIP) $(INSTALLDIR)/pptpd/usr/sbin/bcrelay
-	@$(STRIP) $(INSTALLDIR)/pptpd/usr/sbin/pptpctrl
+	@$(STRIP) $(INSTALLDIR)/pptpd/usr/sbin/*
 
 pptpd-clean:
 	-@$(MAKE) -C pptpd clean
@@ -1221,18 +1223,16 @@ ifeq ($(TCONFIG_L2TP),y)
 endif
 
 zebra/stamp-h1:
-	@cd zebra && rm -f config.cache && \
-	CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) \
-	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+	@cd $(TOP)/zebra && rm -f config.cache && \
+	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
-	$(CONFIGURE) --sysconfdir=/etc \
-	--enable-netlink $(if $(TCONFIG_IPV6),--enable-ipv6,--disable-ipv6) --disable-ripngd --disable-ospfd --disable-doc \
-	--disable-ospf6d --disable-bgpd --disable-bgpd-announce
+	$(CONFIGURE) --sysconfdir=/etc --enable-netlink $(if $(TCONFIG_IPV6),--enable-ipv6,--disable-ipv6) --disable-ripngd \
+		--disable-ospfd --disable-ospf6d --disable-bgpd --disable-bgp-announce --disable-dependency-tracking
 	@touch zebra/stamp-h1
 
 zebra: zebra/stamp-h1
 	@$(SEP)
-	@$(MAKE) -C zebra CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD)
+	@$(MAKE) -C zebra
 
 zebra-clean:
 	-@$(MAKE) -C zebra clean
@@ -1358,7 +1358,7 @@ FFMPEG_DISABLED_DEMUXERS:=amr apc ape ass bethsoftvid bfi c93 daud dnxhd dsicin 
 FFMPEG_CONFIGURE_DEMUXERS:=$(call FFMPEG_FILTER_CONFIG,disable-demuxer,$(FFMPEG_DISABLED_DEMUXERS))
 
 ffmpeg/stamp-h1: zlib
-	cd ffmpeg && symver_asm_label=no symver_gnu_asm=no symver=no CC=$(CC) \
+	cd $(TOP)/ffmpeg && symver_asm_label=no symver_gnu_asm=no symver=no \
 		./configure --enable-cross-compile --arch=$(ARCH) --target_os=linux \
 		--cross-prefix=$(CROSS_COMPILE) --enable-shared --enable-gpl --disable-doc \
 		--enable-pthreads --enable-small --disable-encoders --disable-filters \
@@ -1418,14 +1418,13 @@ endif
 	@true
 
 flac/stamp-h1: libogg
-	cd flac && \
-	autoreconf -fsi && \
+	cd $(TOP)/flac && autoreconf -fsi && \
 	CFLAGS="-Os $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections" \
 	CPPFLAGS="-I$(TOP)/libogg/include -I$(LINUXDIR)/include" \
 	LDFLAGS="-L$(TOP)/libogg/src/.libs -fPIC -ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	$(CONFIGURE) --enable-shared --enable-static --prefix='' --disable-rpath \
-		--disable-doxygen-docs --disable-xmms-plugin --disable-cpplibs \
-		--without-libiconv-prefix --disable-altivec --disable-3dnow --disable-sse
+		--disable-doxygen-docs --disable-xmms-plugin --disable-cpplibs --disable-thorough-tests \
+		--without-libiconv-prefix --disable-altivec --disable-sse --disable-dependency-tracking
 	touch flac/stamp-h1
 
 flac: flac/stamp-h1 libogg
@@ -1663,13 +1662,17 @@ wanuptime-install:
 	$(STRIP) $(INSTALLDIR)/wanuptime/usr/sbin/wanuptime
 
 ebtables/stamp-h1: dummy
+ifeq ($(TCONFIG_IPV6),y)
+	mv patches/ebtables/104-do-not-build-ipv6-extension.patch patches/ebtables/104-do-not-build-ipv6-extension.patch.tmp || true
+else
+	mv patches/ebtables/104-do-not-build-ipv6-extension.patch.tmp patches/ebtables/104-do-not-build-ipv6-extension.patch || true
+endif
 	$(call patch_files,ebtables)
-	cd $(TOP)/ebtables && CC=$(CC) LD=$(LD) STRIP=$(CROSS_COMPILE)strip \
-	./autogen.sh && \
+	cd $(TOP)/ebtables && ./autogen.sh && \
 	$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --sysconfdir=/etc --libdir=/usr/lib \
-	CFLAGS="-Os $(EXTRACFLAGS) -DEBT_MIN_ALIGN=4 -ffunction-sections -fdata-sections" \
-	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
-	LOCKFILE="/var/lock/ebtables"
+		CFLAGS="-Os $(EXTRACFLAGS) -DEBT_MIN_ALIGN=4 -ffunction-sections -fdata-sections" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
+		LOCKFILE="/var/lock/ebtables"
 	touch ebtables/stamp-h1
 
 ebtables: ebtables/stamp-h1
@@ -1765,6 +1768,7 @@ nocat-install:
 
 #Tomato RAF
 pcre/stamp-h1:
+	$(call patch_files,pcre)
 	cd pcre && \
 	autoreconf -fsi && \
 	CC=$(CC) CXX=$(HOST)-g++ AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
@@ -1792,6 +1796,7 @@ pcre-clean:
 		$(MAKE) -C pcre clean; \
 		rm -rf pcre/stamp-h1; \
 	fi )
+	$(call unpatch_files,pcre)
 
 libxml2/stamp-h1:
 	$(call patch_files,libxml2)
@@ -2120,8 +2125,11 @@ mysql-install:
 	cp -arfpu $(TOP)/mysql/staged/usr/share/mysql/mysql_system_tables_data.sql .
 
 lzo/stamp-h1:
-	cd lzo && \
-	CFLAGS="-Os -Wall -fPIC $(EXTRACFLAGS)" $(CONFIGURE) --enable-shared --enable-static
+	cd $(TOP)/lzo && \
+	CFLAGS="$(CFLAG_OPTIMIZE) -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC" \
+	CPPFLAGS="$(CFLAG_OPTIMIZE) -Wall -ffunction-sections -fdata-sections -fPIC" \
+	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
+	$(CONFIGURE) --enable-shared --enable-static
 	touch lzo/stamp-h1
 
 lzo: lzo/stamp-h1
@@ -2142,15 +2150,13 @@ lzo-install:
 openvpn/.conf: openssl lzo
 	$(call patch_files,openvpn)
 	cd openvpn && autoreconf && \
-	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+	CFLAGS="$(CFLAG_OPTIMIZE) -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 	LDFLAGS="-L$(TOP)/openssl -L$(TOP)/lzo/src/.libs -ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	CPPFLAGS="-I$(TOP)/lzo/include -I$(TOP)/openssl/include" \
-	$(CONFIGURE) --prefix= \
-	--with-crypto-library=openssl \
-	--disable-debug --disable-plugin-auth-pam --disable-plugin-down-root --with-plugindir=/lib --enable-management \
-	OPENSSL_SSL_CFLAGS="-I$(TOP)/openssl/include" \
-	OPENSSL_SSL_LIBS="-L$(TOP)/openssl -lssl" \
-	ac_cv_lib_resolv_gethostbyname=no
+	$(CONFIGURE) --prefix= --with-crypto-library=openssl --disable-debug \
+		--disable-plugin-auth-pam --disable-plugin-down-root --enable-management \
+		OPENSSL_SSL_CFLAGS="-I$(TOP)/openssl/include" OPENSSL_SSL_LIBS="-L$(TOP)/openssl -lssl" \
+		PLUGINDIR="/lib" ac_cv_lib_resolv_gethostbyname=no
 	touch openvpn/.conf
 
 openvpn: openvpn/.conf
@@ -2334,9 +2340,8 @@ btgui-install:
 	install -D patches/transmission/btcheck $(INSTALLDIR)/btgui/usr/bin/btcheck
 
 libnfsidmap/stamp-h1:
-	cd libnfsidmap && \
+	cd libnfsidmap && autoreconf -fsi && \
 	CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
-	autoreconf -fsi && \
 	ac_cv_func_malloc_0_nonnull=yes \
 	ac_cv_func_realloc_0_nonnull=yes \
 	$(CONFIGURE) --prefix=/usr --enable-shared --enable-static
@@ -2619,13 +2624,13 @@ getdns-clean:
 	$(call unpatch_files,getdns)
 
 tor/stamp-h1: openssl zlib libevent
-	cd $(TOP)/tor && CC=$(CC) STRIP=$(CROSS_COMPILE)strip \
-	autoreconf && \
+	cd $(TOP)/tor && autoreconf -fsi && \
 	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	$(CONFIGURE) --prefix=/usr --with-libevent-dir=$(TOP)/libevent/staged/usr/local \
 		--with-openssl-dir=$(TOP)/openssl --with-zlib-dir=$(TOP)/zlib \
-		--disable-asciidoc --disable-tool-name-check --disable-unittests --disable-lzma
+		--disable-asciidoc --disable-tool-name-check --disable-unittests --disable-lzma \
+		--disable-seccomp --disable-libscrypt --disable-zstd-advanced-apis --disable-dependency-tracking
 	touch tor/stamp-h1
 
 tor: tor/stamp-h1

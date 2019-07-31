@@ -5,7 +5,7 @@ srcdir=source3
 
 export PARALLEL_BUILD := -j`grep -c '^processor' /proc/cpuinfo`
 
-SMBCFLAGS = $(EXTRACFLAGS) -Os -ffunction-sections -fdata-sections -I$(TOP)/libiconv/include
+SMBCFLAGS = $(EXTRACFLAGS) $(CFLAG_OPTIMIZE) -ffunction-sections -fdata-sections -I$(TOP)/libiconv/include
 SMBLDFLAGS = -ffunction-sections -fdata-sections -Wl,--gc-sections -L$(TOP)/libiconv/lib/.libs
 
 SMB_USE_MULTICALL=1

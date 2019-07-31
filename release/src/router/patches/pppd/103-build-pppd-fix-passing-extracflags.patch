@@ -38,7 +38,7 @@ index bf5134c..4b0ea89 100644
 +++ pppd/pppd/plugins/pppol2tp/Makefile.linux
 @@ -1,7 +1,7 @@
  #CC	= gcc
- COPTS	= -O2 -g
+ COPTS	= -Os -g -ffunction-sections -fdata-sections
 -CFLAGS	= $(COPTS) -I. -I../.. -I$(LINUXDIR)/include -fPIC
 -LDFLAGS	= -shared
 +CFLAGS	= $(COPTS) -I. -I../.. -I$(LINUXDIR)/include -fPIC $(EXTRACFLAGS)

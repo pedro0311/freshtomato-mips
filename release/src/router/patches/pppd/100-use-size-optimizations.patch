@@ -1,11 +1,40 @@
---- pppd/pppd/Makefile.linux	2018-06-24 09:33:51.000000000 +0200
-+++ pppd/pppd/Makefile.linux	2018-06-24 09:33:06.000000000 +0200
+--- pppd/pppd/Makefile.linux
++++ pppd/pppd/Makefile.linux
 @@ -32,7 +32,7 @@ endif
  
  # CC = gcc
  #
 -COPTS = -O2 -pipe -Wall -g
-+COPTS = -Os -pipe -Wall -g
++COPTS = -Os -pipe -Wall -g -ffunction-sections -fdata-sections
  LIBS =
  
  # Uncomment the next 2 lines to include support for Microsoft's
+@@ -172,7 +172,7 @@ endif
+ 
+ ifdef PLUGIN
+ CFLAGS	+= -DPLUGIN
+-LDFLAGS	+= -Wl,-E
++LDFLAGS	+= -Wl,-E -ffunction-sections -fdata-sections -Wl,--gc-sections
+ LIBS	+= -ldl
+ endif
+ 
+--- pppd/pppd/plugins/pppol2tp/Makefile.linux
++++ pppd/pppd/plugins/pppol2tp/Makefile.linux
+@@ -1,5 +1,5 @@
+ #CC	= gcc
+-COPTS	= -O2 -g
++COPTS	= -Os -g -ffunction-sections -fdata-sections
+ CFLAGS	= $(COPTS) -I. -I../.. -I../../../include -fPIC
+ LDFLAGS	= -shared
+ INSTALL	= install
+--- pppd/chat/Makefile.linux
++++ pppd/chat/Makefile.linux
+@@ -10,7 +10,7 @@ CDEF3=	-UNO_SLEEP			# Use the usleep fun
+ CDEF4=	-DFNDELAY=O_NDELAY		# Old name value
+ CDEFS=	$(CDEF1) $(CDEF2) $(CDEF3) $(CDEF4)
+ 
+-COPTS=	-O2 -g -pipe
++COPTS=	-Os -g -pipe -ffunction-sections -fdata-sections
+ CFLAGS=	$(COPTS) $(CDEFS)
+ 
+ INSTALL= install
