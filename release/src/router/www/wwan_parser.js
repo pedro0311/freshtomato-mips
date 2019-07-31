@@ -1,13 +1,13 @@
 function createWWANTableItem(value, unit, bar) {
-	let retVal = '<td class="content">';
-	let calculatedMargin = 4;
+	var retVal = '<td class="content">';
+	var calculatedMargin = 4;
 
 	if (unit.length < 3) {	/* FIXME: db vs dBm width calculation...Crazy logic :/ */
 		calculatedMargin += (3 - unit.length) * 8;
 	}
 	retVal += '<span style="width: 34px;display:inline-block">' + value + '</span><small style="margin-right: ' + calculatedMargin + 'px;">' + unit + '</small>';
 	if (bar) {
-		let altText = getAltText(bar);
+		var altText = getAltText(bar);
 		retVal += '<img src="' + bar + '" alt="' + altText + '" title="' + altText + '"/>';
 	}
 	retVal += '</td>';
@@ -15,18 +15,18 @@ function createWWANTableItem(value, unit, bar) {
 }
 
 function getAltText(bar) {
-	let altTextMap = {"bar6.gif" : "6/6", "bar5.gif" : "5/6", "bar4.gif" : "4/6", "bar3.gif" : "3/6", "bar2.gif" : "2/6", "bar1.gif" : "1/6"};
+	var altTextMap = {"bar6.gif" : "6/6", "bar5.gif" : "5/6", "bar4.gif" : "4/6", "bar3.gif" : "3/6", "bar2.gif" : "2/6", "bar1.gif" : "1/6"};
 	return altTextMap[bar];
 }
 
 function createWWANStatusSection(wannum, wwanstatus) {
-	let wanNumStr = 'wan'+(wannum > 1 ? wannum : '');
-	let code = '<table class="fields"><tbody>';
+	var wanNumStr = 'wan'+(wannum > 1 ? wannum : '');
+	var code = '<table class="fields"><tbody>';
+	var valMap = [];
 	code += '<tr><td class="title indent1">Modem type</td>';
 	code += '<td class="content">' + nvram[wanNumStr + '_modem_type'] + '</td></tr>';
 	code += '<tr><td class="title indent1">Current Mode</td>';
 	code += '<td class="content">' + wwan_getCurrentMode(wwanstatus) + '</td></tr>';
-	let valMap = [];
 	wwan_getSignalStrengthMap(wwanstatus, valMap);
 	if (valMap['RSSI']) {
 		code += '<tr><td class="title indent1">RSSI</td>';
@@ -110,8 +110,8 @@ function createWWANStatusSection(wannum, wwanstatus) {
 	}
 
 	code += '</tbody>'
-	let modemType = nvram[wanNumStr + '_modem_type'];
-	let connType = nvram[wanNumStr + '_proto'];
+	var modemType = nvram[wanNumStr + '_modem_type'];
+	var connType = nvram[wanNumStr + '_proto'];
 	if (connType == 'ppp3g' || modemType == 'non-hilink' || modemType == 'hw-ether') {
 			code += '<tr><td class="title indent1"></td>';
 			code += '<td class="content"> \
@@ -128,20 +128,20 @@ function showSMSForWWAN(wwannum) {
 }
 
 function wwan_getSignalStrengthMap(buffer, returnMap) {
-	let itemsToFind = ['RSSI', 'RSRP', 'RSRQ', 'RSSP', 'RSCP', 'SINR', 'CQI1', 'CQI2', 'ECIO'];
+	var itemsToFind = ['RSSI', 'RSRP', 'RSRQ', 'RSSP', 'RSCP', 'SINR', 'CQI1', 'CQI2', 'ECIO'];
 	for (index = 0; index < itemsToFind.length; ++index) {
-		let element = itemsToFind[index];
+		var element = itemsToFind[index];
 	returnMap[element] = extractStringItem(element, buffer);
 	}
 }
 
 function wwan_getLocationMap(buffer, returnMap) {
-	let itemsToFind = ['LAC', 'CID', 'PCI', 'Cell ID'];
+	var itemsToFind = ['LAC', 'CID', 'PCI', 'Cell ID'];
 	for (index = 0; index < itemsToFind.length; ++index) {
-		let element = itemsToFind[index];
+		var element = itemsToFind[index];
 		returnMap[element] = extractLocationItem(element, buffer);
 	}
-	let extractedMCCMap = extractMCCMNC(buffer);
+	var extractedMCCMap = extractMCCMNC(buffer);
 	if (extractedMCCMap) {
 		returnMap['MCC'] = extractedMCCMap['MCC'];
 		returnMap['MNC'] = extractedMCCMap['MNC'];
@@ -150,7 +150,7 @@ function wwan_getLocationMap(buffer, returnMap) {
 
 function extractStringItem(tag, buffer) {
 	var regExtract = new RegExp(tag + " (.*?)(?:(\\s|\\,|$))", "gm");
-	let matchedArrs = regExtract.exec(buffer);
+	var matchedArrs = regExtract.exec(buffer);
 	if (matchedArrs) {
 		return matchedArrs[1];
 	}
@@ -159,10 +159,10 @@ function extractStringItem(tag, buffer) {
 
 function extractMCCMNC(buffer) {
 	var regExtract = new RegExp("MCCMNC (\\d*)(?:\\,?)", "gm");
-	let matchedArrs = regExtract.exec(buffer);
+	var matchedArrs = regExtract.exec(buffer);
 	if (matchedArrs) {
-		let returnMap = [];
-		let mccmncstring = matchedArrs[1];
+		var returnMap = [];
+		var mccmncstring = matchedArrs[1];
 		returnMap['MCC'] = mccmncstring.substr(0, mccmncstring.length - 2);
 		returnMap['MNC'] = mccmncstring.substr(-2);
 		return returnMap;
@@ -172,9 +172,9 @@ function extractMCCMNC(buffer) {
 
 function extractLocationItem(tag, buffer) {
 	var regExtract = new RegExp(tag + " ((.*?))\\((.*?)\\)", "gm");
-	let matchedArrs = regExtract.exec(buffer);
+	var matchedArrs = regExtract.exec(buffer);
 	if (matchedArrs) {
-		let returnMap = [];
+		var returnMap = [];
 		returnMap['HEX'] = matchedArrs[1].trim();
 		returnMap['DEC'] = matchedArrs[3];
 		return returnMap;
@@ -184,9 +184,9 @@ function extractLocationItem(tag, buffer) {
 
 function wwan_getCarrierMap(buffer) {
 	var regExtract = new RegExp("MODEM Carrier: (.[0-9]) \\((.*) MHz\\)\\, Downlink FQ (.*) MHz, Uplink FQ (.*) MHz, Downlink BW (.*) MHz, Uplink BW (.*) MHz", "gm");
-	let matchedArrs = regExtract.exec(buffer);
+	var matchedArrs = regExtract.exec(buffer);
 	if (matchedArrs) {
-		let returnMap = [];
+		var returnMap = [];
 		returnMap['BBAND'] = matchedArrs[1];
 		returnMap['BBAND_FREQ'] = matchedArrs[2];
 		returnMap['DOWN_FREQ'] = matchedArrs[3];
