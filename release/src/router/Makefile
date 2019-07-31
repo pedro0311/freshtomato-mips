@@ -1012,8 +1012,8 @@ endif
 miniupnpd: iptables miniupnpd-config
 	@$(SEP)
 	$(MAKE) -C miniupnpd miniupnpd -f Makefile.linux CC=$(CC) \
-		CFLAGS="$(EXTRACFLAGS) -I$(TOP)/iptables/include" \
-		LDFLAGS="-L$(TOP)/iptables -liptc" LIBS="" $(PARALLEL_BUILD)
+		CFLAGS="-Os $(EXTRACFLAGS) -I$(TOP)/iptables/include -ffunction-sections -fdata-sections" \
+		LDFLAGS="-L$(TOP)/iptables -liptc -ffunction-sections -fdata-sections -Wl,--gc-sections" LIBS="" $(PARALLEL_BUILD)
 
 miniupnpd-clean:
 	-@$(MAKE) -C miniupnpd -f Makefile.linux clean
