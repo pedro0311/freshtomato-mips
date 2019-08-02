@@ -2290,8 +2290,7 @@ libiconv-install:
 		ln -sf libiconv.so.2.6.1 libiconv.so
 
 transmission/stamp-h1: openssl libcurl libevent zlib
-	cd transmission && CC=$(CC) STRIP=$(CROSS_COMPILE)strip \
-		autoreconf -f && \
+	cd $(TOP)/transmission && autoreconf -f && \
 		CFLAGS="-Os -Wall -fno-delete-null-pointer-checks -funit-at-a-time \
 			--param large-function-growth=800 --param max-inline-insns-single=3000 \
 			-ffunction-sections -fdata-sections" \
