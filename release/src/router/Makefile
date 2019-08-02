@@ -1863,13 +1863,19 @@ libatomic_ops-clean:
 	-@$(MAKE) -C libatomic_ops clean
 	@rm -f libatomic_ops/stamp-h1
 
+ifeq ($(TCONFIG_AIO),y)
+LDFPHPADD:=-Wl,-rpath,$(TOP)/openssl
+else
+LDFPHPADD:=
+endif
+
 php/stamp-h1: pcre zlib libiconv sqlite libxml2 libpng jpeg libcurl
 	$(call patch_files,php)
 	cd php && CC=$(CC) CXX=$(ARCH)-g++ AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) \
 	CFLAGS="-Os -Wall -I$(TOP)/zlib -I$(TOP)/libxml2/include/libxml -I$(TOP)/libxml2/include -I$(TOP)/pcre -I$(TOP)/libiconv/include \
 		-I$(TOP)/libpng/staged/usr/include -I$(TOP)/libcurl/staged/usr/include" \
 	LDFLAGS="-L$(TOP)/pcre/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/zlib -L$(TOP)/libxml2/.libs -L$(TOP)/libiconv/lib/.libs \
-		-L$(TOP)/libpng/.libs -L$(TOP)/libcurl/staged/usr/lib" \
+		-L$(TOP)/libpng/.libs -L$(TOP)/libcurl/staged/usr/lib $(LDFPHPADD)" \
 	CPPFLAGS="-L$(TOP)/pcre/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/zlib -L$(TOP)/libxml2/.libs -L$(TOP)/libiconv/lib/.libs -L$(TOP)/libpng/.libs" \
 	LIBS="-L$(TOP)/pcre/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/zlib -L$(TOP)/libxml2/.libs -L$(TOP)/libiconv/lib/.libs -L$(TOP)/libpng/.libs -L$(TOP)/libcurl/lib/.libs \
 		-lz -lsqlite3 -ldl -lpthread -liconv -lxml2 -lstdc++ -lcurl" \
@@ -2193,26 +2199,29 @@ nano-install:
 
 ifeq ($(TCONFIG_AIO),y)
 CACERT:=--with-ca-bundle=/rom/cacert.pem
+CPPFADD:=-I$(TOP)/openssl/include
+LDFADD:=-L$(TOP)/openssl -Wl,-rpath,$(TOP)/openssl
 else
 CACERT:=
+CPPFADD:=
+LDFADD:=
 endif
 
 libcurl/stamp-h1: zlib openssl
 	$(call patch_files,libcurl)
-	cd libcurl && CC=$(CC) STRIP=$(CROSS_COMPILE)strip \
-		./buildconf && \
-		CFLAGS="-Os -Wall -ffunction-sections -fdata-sections" \
-		CPPFLAGS="$(EXTRACFLAGS)" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
+	cd $(TOP)/libcurl && ./buildconf && \
+		CFLAGS="-Os -Wall -pipe -funit-at-a-time -Wno-pointer-sign -mtune=mips32 -mips32 -ffunction-sections -fdata-sections" \
+		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections $(CPPFADD)" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC $(LDFADD)" \
 		$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib \
-		--enable-shared --enable-static --enable-cookies --enable-crypto-auth \
-		--enable-nonblocking --enable-file --enable-ftp --enable-http --enable-tftp \
-		$(if $(TCONFIG_IPV6),--enable-ipv6,) \
-		--disable-nls --disable-dict --disable-debug --disable-gopher --disable-threaded-resolver \
-		--disable-ldap --disable-proxy --disable-manual --disable-libcurl-option --disable-telnet --disable-verbose \
-		--with-random="/dev/urandom" --with-ssl="$(TOP)/openssl/ssl" \
-		--without-gnutls --without-krb4 --without-libidn \
-		--with-linux-headers=$(LINUXDIR)/include $(CACERT)
+			--enable-shared --enable-static --enable-cookies --enable-crypto-auth \
+			--enable-nonblocking --enable-file --enable-ftp --enable-http --enable-tftp \
+			$(if $(TCONFIG_IPV6),--enable-ipv6,) \
+			--with-random="/dev/urandom" --with-ssl="$(TOP)/openssl/ssl" --with-zlib="$(TOP)/zlib/staged/usr" \
+			--disable-nls --disable-dict --disable-debug --disable-gopher --disable-threaded-resolver \
+			--disable-ldap --disable-proxy --disable-manual --disable-libcurl-option --disable-telnet --disable-verbose \
+			--without-gnutls --without-krb4 --without-libidn2 --without-libpsl --disable-tls-srp \
+			--with-linux-headers=$(LINUXDIR)/include $(CACERT)
 		touch libcurl/stamp-h1
 
 libcurl: libcurl/stamp-h1
