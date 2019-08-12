@@ -2744,6 +2744,50 @@ static int init_nvram(void)
 			nvram_set("sb/1/macaddr", s);				/* fix WL mac for 2,4G */
 			inc_mac(s, +4);						/* do not overlap with VIFs */
 			nvram_set("pci/1/1/macaddr", s);			/* fix WL mac for 5G */
+
+			/* power settings for 2,4 and 5 GHz WiFi */
+			nvram_set("pci/1/1/pa2gw0a0", "0xfe8c");
+			nvram_set("pci/1/1/pa2gw1a0", "0x1b20");
+			nvram_set("pci/1/1/pa2gw2a0", "0xf98c");
+			nvram_set("pci/1/1/pa2gw0a1", "0xfe98");
+			nvram_set("pci/1/1/pa2gw1a1", "0x19ae");
+			nvram_set("pci/1/1/pa2gw2a1", "0xf9ab");
+
+			nvram_set("pci/1/1/pa5gw0a0", "0xfe52");
+			nvram_set("pci/1/1/pa5gw1a0", "0x163e");
+			nvram_set("pci/1/1/pa5gw2a0", "0xfa59");
+			nvram_set("pci/1/1/pa5gw0a1", "0xfe63");
+			nvram_set("pci/1/1/pa5gw1a1", "0x1584");
+			nvram_set("pci/1/1/pa5gw2a1", "0xfa92");
+			nvram_set("pci/1/1/pa5gw0a2", "0xfe7c");
+			nvram_set("pci/1/1/pa5gw1a2", "0x1720");
+			nvram_set("pci/1/1/pa5gw2a2", "0xfa4a");
+
+			nvram_set("pci/1/1/pa5ghw0a0", "0xfe6a");
+			nvram_set("pci/1/1/pa5ghw1a0", "0x163c");
+			nvram_set("pci/1/1/pa5ghw2a0", "0xfa69");
+			nvram_set("pci/1/1/pa5ghw0a1", "0xfe67");
+			nvram_set("pci/1/1/pa5ghw1a1", "0x160e");
+			nvram_set("pci/1/1/pa5ghw2a1", "0xfa6a");
+			nvram_set("pci/1/1/pa5ghw0a2", "0xfe76");
+			nvram_set("pci/1/1/pa5ghw1a2", "0x1766");
+			nvram_set("pci/1/1/pa5ghw2a2", "0xfa2c");
+
+			nvram_set("pci/1/1/pa05gidx", "5");
+			nvram_set("pci/1/1/pa05glidx", "0");
+			nvram_set("pci/1/1/pa05ghidx", "7");
+			nvram_set("pci/1/1/pa15gidx", "0");
+			nvram_set("pci/1/1/pa15glidx", "0");
+			nvram_set("pci/1/1/pa15ghidx", "3");
+			nvram_set("pci/1/1/pa25gidx", "5");
+			nvram_set("pci/1/1/pa25glidx", "0");
+			nvram_set("pci/1/1/pa25ghidx", "9");
+
+			/* WiFi settings/channels */
+			nvram_set("pci/1/1/ccode", "ALL");
+			nvram_set("sb/1/ccode", "ALL");
+			nvram_set("pci/1/1/regrev", "0");
+			nvram_set("sb/1/regrev", "0");
 		}
 		break;
 	case MODEL_WNDR4000:
