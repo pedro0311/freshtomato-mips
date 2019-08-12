@@ -781,9 +781,9 @@ static void check_bootnv(void)
 		if (strncasecmp(nvram_safe_get("pci/1/1/macaddr"), "00:90:4c", 8) == 0 ||
 		    strncasecmp(nvram_safe_get("sb/1/macaddr"), "00:90:4c", 8) == 0) {
 			strcpy(mac, nvram_safe_get("et0macaddr"));
-			inc_mac(mac, 2);
+			inc_mac(mac, +2);
 			dirty |= check_nv("sb/1/macaddr", mac);
-			inc_mac(mac, 1);
+			inc_mac(mac, +4);
 			dirty |= check_nv("pci/1/1/macaddr", mac);
 		}
 		break;
@@ -2737,6 +2737,13 @@ static int init_nvram(void)
 			nvram_set("lan_ifnames", "vlan1 eth1 eth2");
 			nvram_set("wan_ifnameX", "vlan2");
 			nvram_set("wl_ifname", "eth1");
+
+			/* fix MAC addresses */
+			strcpy(s, nvram_safe_get("et0macaddr"));		/* get et0 MAC address for LAN */
+			inc_mac(s, +2);						/* MAC + 1 will be for WAN */
+			nvram_set("sb/1/macaddr", s);				/* fix WL mac for 2,4G */
+			inc_mac(s, +4);						/* do not overlap with VIFs */
+			nvram_set("pci/1/1/macaddr", s);			/* fix WL mac for 5G */
 		}
 		break;
 	case MODEL_WNDR4000:
