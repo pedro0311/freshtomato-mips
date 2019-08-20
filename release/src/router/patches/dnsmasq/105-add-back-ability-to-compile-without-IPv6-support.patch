@@ -1,6 +1,5 @@
-diff -daurpN dnsmasq/src/arp.c dnsmasq/src/arp.c
---- dnsmasq/src/arp.c	2018-10-23 23:10:17.000000000 +0200
-+++ dnsmasq/src/arp.c	2018-10-22 19:21:48.000000000 +0200
+--- dnsmasq/src/arp.c
++++ dnsmasq/src/arp.c
 @@ -44,6 +44,11 @@ static int filter_mac(int family, char *
    if (maclen > DHCP_CHADDR_MAX)
      return 1;
@@ -61,9 +60,8 @@ diff -daurpN dnsmasq/src/arp.c dnsmasq/src/arp.c
      }
  	  
     return 0;
-diff -daurpN dnsmasq/src/auth.c dnsmasq/src/auth.c
---- dnsmasq/src/auth.c	2018-10-23 23:10:17.000000000 +0200
-+++ dnsmasq/src/auth.c	2018-10-22 19:21:48.000000000 +0200
+--- dnsmasq/src/auth.c
++++ dnsmasq/src/auth.c
 @@ -33,8 +33,10 @@ static struct addrlist *find_addrlist(st
  	if  (is_same_net(addr, list->addr.addr4, netmask))
  	  return list;
@@ -219,9 +217,8 @@ diff -daurpN dnsmasq/src/auth.c dnsmasq/src/auth.c
  			}
  		    }
  		}
-diff -daurpN dnsmasq/src/bpf.c dnsmasq/src/bpf.c
---- dnsmasq/src/bpf.c	2018-10-23 23:10:17.000000000 +0200
-+++ dnsmasq/src/bpf.c	2018-10-22 19:21:48.000000000 +0200
+--- dnsmasq/src/bpf.c
++++ dnsmasq/src/bpf.c
 @@ -31,7 +31,9 @@
  #  include <net/if_var.h> 
  #endif
@@ -269,9 +266,8 @@ diff -daurpN dnsmasq/src/bpf.c dnsmasq/src/bpf.c
  		 else
  		   del_family = 0;
  	       }
-diff -daurpN dnsmasq/src/cache.c dnsmasq/src/cache.c
---- dnsmasq/src/cache.c	2018-10-23 23:10:17.000000000 +0200
-+++ dnsmasq/src/cache.c	2018-10-22 19:21:48.000000000 +0200
+--- dnsmasq/src/cache.c
++++ dnsmasq/src/cache.c
 @@ -415,8 +415,11 @@ static struct crec *cache_scan_free(char
    else
      {
@@ -384,9 +380,8 @@ diff -daurpN dnsmasq/src/cache.c dnsmasq/src/cache.c
      }
    else
      dest = arg;
-diff -daurpN dnsmasq/src/config.h dnsmasq/src/config.h
---- dnsmasq/src/config.h	2018-10-23 23:10:17.000000000 +0200
-+++ dnsmasq/src/config.h	2018-10-22 19:21:48.000000000 +0200
+--- dnsmasq/src/config.h
++++ dnsmasq/src/config.h
 @@ -135,6 +135,7 @@ HAVE_INOTIFY
  
  NO_ID
@@ -455,9 +450,8 @@ diff -daurpN dnsmasq/src/config.h dnsmasq/src/config.h
  "IPv6 "
  #ifndef HAVE_GETOPT_LONG
  "no-"
-diff -daurpN dnsmasq/src/conntrack.c dnsmasq/src/conntrack.c
---- dnsmasq/src/conntrack.c	2018-10-23 23:10:17.000000000 +0200
-+++ dnsmasq/src/conntrack.c	2018-10-22 19:21:48.000000000 +0200
+--- dnsmasq/src/conntrack.c
++++ dnsmasq/src/conntrack.c
 @@ -36,6 +36,7 @@ int get_incoming_mark(union mysockaddr *
        nfct_set_attr_u8(ct, ATTR_L4PROTO, istcp ? IPPROTO_TCP : IPPROTO_UDP);
        nfct_set_attr_u16(ct, ATTR_PORT_DST, htons(daemon->port));
@@ -474,9 +468,8 @@ diff -daurpN dnsmasq/src/conntrack.c dnsmasq/src/conntrack.c
  	{
  	  nfct_set_attr_u8(ct, ATTR_L3PROTO, AF_INET);
  	  nfct_set_attr_u32(ct, ATTR_IPV4_SRC, peer_addr->in.sin_addr.s_addr);
-diff -daurpN dnsmasq/src/dbus.c dnsmasq/src/dbus.c
---- dnsmasq/src/dbus.c	2018-10-23 23:10:17.000000000 +0200
-+++ dnsmasq/src/dbus.c	2018-10-22 19:21:48.000000000 +0200
+--- dnsmasq/src/dbus.c
++++ dnsmasq/src/dbus.c
 @@ -185,6 +185,9 @@ static void dbus_read_servers(DBusMessag
  		}
  	    }
@@ -495,10 +488,9 @@ diff -daurpN dnsmasq/src/dbus.c dnsmasq/src/dbus.c
  	}
        else
  	/* At the end */
-diff -daurpN dnsmasq/src/dnsmasq.c dnsmasq/src/dnsmasq.c
---- dnsmasq/src/dnsmasq.c	2018-10-23 23:10:17.000000000 +0200
-+++ dnsmasq/src/dnsmasq.c	2018-10-22 19:21:48.000000000 +0200
-@@ -1815,11 +1815,11 @@ static void check_dns_listeners(time_t n
+--- dnsmasq/src/dnsmasq.c
++++ dnsmasq/src/dnsmasq.c
+@@ -1842,11 +1842,11 @@ static void check_dns_listeners(time_t n
  		  indextoname(listener->tcpfd, if_index, intr_name))
  		{
  		  union all_addr addr;
@@ -513,9 +505,8 @@ diff -daurpN dnsmasq/src/dnsmasq.c dnsmasq/src/dnsmasq.c
  		  
  		  for (iface = daemon->interfaces; iface; iface = iface->next)
  		    if (iface->index == if_index)
-diff -daurpN dnsmasq/src/dnsmasq.h dnsmasq/src/dnsmasq.h
---- dnsmasq/src/dnsmasq.h	2018-10-23 23:10:17.000000000 +0200
-+++ dnsmasq/src/dnsmasq.h	2018-10-22 19:21:48.000000000 +0200
+--- dnsmasq/src/dnsmasq.h
++++ dnsmasq/src/dnsmasq.h
 @@ -126,7 +126,9 @@ typedef unsigned long long u64;
  #include <net/if_arp.h>
  #include <netinet/in_systm.h>
@@ -584,7 +575,7 @@ diff -daurpN dnsmasq/src/dnsmasq.h dnsmasq/src/dnsmasq.h
    int is6, indexed;
    struct cond_domain *next;
  }; 
-@@ -1175,7 +1185,9 @@ void blockdata_free(struct blockdata *bl
+@@ -1191,7 +1201,9 @@ void blockdata_free(struct blockdata *bl
  
  /* domain.c */
  char *get_domain(struct in_addr addr);
@@ -594,7 +585,7 @@ diff -daurpN dnsmasq/src/dnsmasq.h dnsmasq/src/dnsmasq.h
  int is_name_synthetic(int flags, char *name, union all_addr *addr);
  int is_rev_synth(int flag, union all_addr *addr, char *name);
  
-@@ -1256,9 +1268,11 @@ int hostname_issubdomain(char *a, char *
+@@ -1272,9 +1284,11 @@ int hostname_issubdomain(char *a, char *
  time_t dnsmasq_time(void);
  int netmask_length(struct in_addr mask);
  int is_same_net(struct in_addr a, struct in_addr b, struct in_addr mask);
@@ -606,7 +597,7 @@ diff -daurpN dnsmasq/src/dnsmasq.h dnsmasq/src/dnsmasq.h
  int retry_send(ssize_t rc);
  void prettyprint_time(char *buf, unsigned int t);
  int prettyprint_addr(union mysockaddr *addr, char *buf);
-@@ -1337,7 +1351,9 @@ int loopback_exception(int fd, int famil
+@@ -1353,7 +1367,9 @@ int loopback_exception(int fd, int famil
  int label_exception(int index, int family, union all_addr *addr);
  int fix_fd(int fd);
  int tcp_interface(int fd, int af);
@@ -616,9 +607,8 @@ diff -daurpN dnsmasq/src/dnsmasq.h dnsmasq/src/dnsmasq.h
  #ifdef HAVE_DHCP6
  void join_multicast(int dienow);
  #endif
-diff -daurpN dnsmasq/src/domain.c dnsmasq/src/domain.c
---- dnsmasq/src/domain.c	2018-10-23 23:10:17.000000000 +0200
-+++ dnsmasq/src/domain.c	2018-10-22 19:21:48.000000000 +0200
+--- dnsmasq/src/domain.c
++++ dnsmasq/src/domain.c
 @@ -18,14 +18,21 @@
  
  
@@ -746,9 +736,8 @@ diff -daurpN dnsmasq/src/domain.c dnsmasq/src/domain.c
    return daemon->domain_suffix;
  } 
 +#endif
-diff -daurpN dnsmasq/src/dump.c dnsmasq/src/dump.c
---- dnsmasq/src/dump.c	2018-10-23 23:10:17.000000000 +0200
-+++ dnsmasq/src/dump.c	2018-10-22 19:21:48.000000000 +0200
+--- dnsmasq/src/dump.c
++++ dnsmasq/src/dump.c
 @@ -82,8 +82,10 @@ void dump_init(void)
  void dump_packet(int mask, void *packet, size_t len, union mysockaddr *src, union mysockaddr *dst)
  {
@@ -776,9 +765,8 @@ diff -daurpN dnsmasq/src/dump.c dnsmasq/src/dump.c
      {
        iphdr = &ip;
        ipsz = sizeof(ip);
-diff -daurpN dnsmasq/src/edns0.c dnsmasq/src/edns0.c
---- dnsmasq/src/edns0.c	2018-10-23 23:10:17.000000000 +0200
-+++ dnsmasq/src/edns0.c	2018-10-22 19:21:48.000000000 +0200
+--- dnsmasq/src/edns0.c
++++ dnsmasq/src/edns0.c
 @@ -301,14 +301,20 @@ static size_t add_mac(struct dns_header
  
  struct subnet_opt {
@@ -829,9 +817,8 @@ diff -daurpN dnsmasq/src/edns0.c dnsmasq/src/edns0.c
    
    len = 0;
    
-diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
---- dnsmasq/src/forward.c	2018-10-23 23:10:17.000000000 +0200
-+++ dnsmasq/src/forward.c	2018-10-22 19:21:48.000000000 +0200
+--- dnsmasq/src/forward.c
++++ dnsmasq/src/forward.c
 @@ -38,7 +38,9 @@ int send_from(int fd, int nowild, char *
  #elif defined(IP_SENDSRCADDR)
      char control[CMSG_SPACE(sizeof(struct in_addr))];
@@ -842,7 +829,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
    } control_u;
    
    iov[0].iov_base = packet;
-@@ -77,6 +79,7 @@ int send_from(int fd, int nowild, char *
+@@ -79,6 +81,7 @@ int send_from(int fd, int nowild, char *
  #endif
  	}
        else
@@ -850,7 +837,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  	{
  	  struct in6_pktinfo p;
  	  p.ipi6_ifindex = iface; /* Need iface for IPv6 to handle link-local addrs */
-@@ -86,6 +89,9 @@ int send_from(int fd, int nowild, char *
+@@ -89,6 +92,9 @@ int send_from(int fd, int nowild, char *
  	  cmptr->cmsg_type = daemon->v6pktinfo;
  	  cmptr->cmsg_level = IPPROTO_IPV6;
  	}
@@ -860,7 +847,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
      }
    
    while (retry_send(sendmsg(fd, &msg, 0)));
-@@ -138,8 +144,10 @@ static unsigned int search_servers(time_
+@@ -141,8 +147,10 @@ static unsigned int search_servers(time_
  		flags = sflag;
  		if (serv->addr.sa.sa_family == AF_INET) 
  		  *addrpp = (union all_addr *)&serv->addr.in.sin_addr;
@@ -871,7 +858,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  	      }
  	    else if (!flags || (flags & F_NXDOMAIN))
  	      flags = F_NOERR;
-@@ -196,8 +204,10 @@ static unsigned int search_servers(time_
+@@ -199,8 +207,10 @@ static unsigned int search_servers(time_
  			    flags = sflag;
  			    if (serv->addr.sa.sa_family == AF_INET) 
  			      *addrpp = (union all_addr *)&serv->addr.in.sin_addr;
@@ -882,7 +869,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  			  }
  			else if (!flags || (flags & F_NXDOMAIN))
  			  flags = F_NOERR;
-@@ -226,8 +236,10 @@ static unsigned int search_servers(time_
+@@ -229,8 +239,10 @@ static unsigned int search_servers(time_
  	   /* handle F_IPV4 and F_IPV6 set on ANY query to 0.0.0.0/:: domain. */
  	   if (flags & F_IPV4)
  	     log_query((flags | F_CONFIG | F_FORWARD) & ~F_IPV6, qdomain, *addrpp, NULL);
@@ -893,7 +880,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  	 }
      }
    else if ((*type) & SERV_USE_RESOLV)
-@@ -290,17 +302,20 @@ static int forward_query(int udpfd, unio
+@@ -293,17 +305,20 @@ static int forward_query(int udpfd, unio
  	  
  	  if (forward->sentto->addr.sa.sa_family == AF_INET) 
  	    log_query(F_NOEXTRA | F_DNSSEC | F_IPV4, "retry", (union all_addr *)&forward->sentto->addr.in.sin_addr, "dnssec");
@@ -915,7 +902,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  		fd = forward->rfd4->fd;
  	    }
  	  
-@@ -460,6 +475,7 @@ static int forward_query(int udpfd, unio
+@@ -463,6 +478,7 @@ static int forward_query(int udpfd, unio
  		fd = start->sfd->fd;
  	      else 
  		{
@@ -923,7 +910,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  		  if (start->addr.sa.sa_family == AF_INET6)
  		    {
  		      if (!forward->rfd6 &&
-@@ -469,6 +485,7 @@ static int forward_query(int udpfd, unio
+@@ -472,6 +488,7 @@ static int forward_query(int udpfd, unio
  		      fd = forward->rfd6->fd;
  		    }
  		  else
@@ -931,7 +918,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  		    {
  		      if (!forward->rfd4 &&
  			  !(forward->rfd4 = allocate_rfd(AF_INET)))
-@@ -524,9 +541,11 @@ static int forward_query(int udpfd, unio
+@@ -527,9 +544,11 @@ static int forward_query(int udpfd, unio
  		  if (start->addr.sa.sa_family == AF_INET)
  		    log_query(F_SERVER | F_IPV4 | F_FORWARD, daemon->namebuff, 
  			      (union all_addr *)&start->addr.in.sin_addr, NULL); 
@@ -943,7 +930,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  		  start->queries++;
  		  forwarded = 1;
  		  forward->sentto = start;
-@@ -769,8 +788,11 @@ void reply_query(int fd, int family, tim
+@@ -772,8 +791,11 @@ void reply_query(int fd, int family, tim
    daemon->srv_save = NULL;
    
    /* Determine the address of the server replying  so that we can mark that as good */
@@ -956,7 +943,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
    
    header = (struct dns_header *)daemon->packet;
  
-@@ -856,6 +878,7 @@ void reply_query(int fd, int family, tim
+@@ -859,6 +881,7 @@ void reply_query(int fd, int family, tim
  	    fd = start->sfd->fd;
  	  else
  	    {
@@ -964,7 +951,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  	      if (start->addr.sa.sa_family == AF_INET6)
  		{
  		  /* may have changed family */
-@@ -864,6 +887,7 @@ void reply_query(int fd, int family, tim
+@@ -867,6 +890,7 @@ void reply_query(int fd, int family, tim
  		  fd = forward->rfd6->fd;
  		}
  	      else
@@ -972,7 +959,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  		{
  		  /* may have changed family */
  		  if (!forward->rfd4)
-@@ -878,8 +902,10 @@ void reply_query(int fd, int family, tim
+@@ -881,8 +905,10 @@ void reply_query(int fd, int family, tim
  	  
  	  if (start->addr.sa.sa_family == AF_INET) 
  	    log_query(F_NOEXTRA | F_DNSSEC | F_IPV4, "retry", (union all_addr *)&start->addr.in.sin_addr, "dnssec");
@@ -983,7 +970,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  	  
  	  return;
  	}
-@@ -1072,7 +1098,9 @@ void reply_query(int fd, int family, tim
+@@ -1075,7 +1101,9 @@ void reply_query(int fd, int family, tim
  		      
  		      new->sentto = server;
  		      new->rfd4 = NULL;
@@ -993,7 +980,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  		      new->flags &= ~(FREC_DNSKEY_QUERY | FREC_DS_QUERY | FREC_HAS_EXTRADATA);
  		      new->forwardall = 0;
  		      
-@@ -1096,9 +1124,11 @@ void reply_query(int fd, int family, tim
+@@ -1099,9 +1127,11 @@ void reply_query(int fd, int family, tim
  		      if (server->addr.sa.sa_family == AF_INET) 
  			log_query(F_NOEXTRA | F_DNSSEC | F_IPV4, daemon->keyname, (union all_addr *)&(server->addr.in.sin_addr),
  				  querystr("dnssec-query", querytype));
@@ -1005,7 +992,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
    
  		      if ((hash = hash_questions(header, nn, daemon->namebuff)))
  			memcpy(new->hash, hash, HASH_SIZE);
-@@ -1116,12 +1146,14 @@ void reply_query(int fd, int family, tim
+@@ -1119,12 +1149,14 @@ void reply_query(int fd, int family, tim
  		      else
  			{
  			  fd = -1;
@@ -1020,7 +1007,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  			    {
  			      if (new->rfd4 || (new->rfd4 = allocate_rfd(AF_INET)))
  				fd = new->rfd4->fd;
-@@ -1257,7 +1289,9 @@ void receive_query(struct listener *list
+@@ -1260,7 +1292,9 @@ void receive_query(struct listener *list
    struct cmsghdr *cmptr;
    union {
      struct cmsghdr align; /* this ensures alignment */
@@ -1030,7 +1017,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  #if defined(HAVE_LINUX_NETWORK)
      char control[CMSG_SPACE(sizeof(struct in_pktinfo))];
  #elif defined(IP_RECVDSTADDR) && defined(HAVE_SOLARIS_NETWORK)
-@@ -1268,8 +1302,12 @@ void receive_query(struct listener *list
+@@ -1271,8 +1305,12 @@ void receive_query(struct listener *list
  		 CMSG_SPACE(sizeof(struct sockaddr_dl))];
  #endif
    } control_u;
@@ -1043,7 +1030,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  
    /* packet buffer overwritten */
    daemon->srv_save = NULL;
-@@ -1320,6 +1358,7 @@ void receive_query(struct listener *list
+@@ -1323,6 +1361,7 @@ void receive_query(struct listener *list
        if (source_addr.in.sin_port == 0)
  	return;
      }
@@ -1051,7 +1038,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
    else
      {
        /* Source-port == 0 is an error, we can't send back to that. */
-@@ -1327,12 +1366,13 @@ void receive_query(struct listener *list
+@@ -1330,12 +1369,13 @@ void receive_query(struct listener *list
  	return;
        source_addr.in6.sin6_flowinfo = 0;
      }
@@ -1066,7 +1053,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
        if (listen->family == AF_INET6) 
  	{
  	  for (addr = daemon->interface_addrs; addr; addr = addr->next)
-@@ -1341,6 +1381,7 @@ void receive_query(struct listener *list
+@@ -1344,6 +1384,7 @@ void receive_query(struct listener *list
  	      break;
  	}
        else
@@ -1074,7 +1061,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  	{
  	  struct in_addr netmask;
  	  for (addr = daemon->interface_addrs; addr; addr = addr->next)
-@@ -1409,6 +1450,7 @@ void receive_query(struct listener *list
+@@ -1412,6 +1453,7 @@ void receive_query(struct listener *list
  	}
  #endif
        
@@ -1082,7 +1069,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
        if (listen->family == AF_INET6)
  	{
  	  for (cmptr = CMSG_FIRSTHDR(&msg); cmptr; cmptr = CMSG_NXTHDR(&msg, cmptr))
-@@ -1424,6 +1466,7 @@ void receive_query(struct listener *list
+@@ -1427,6 +1469,7 @@ void receive_query(struct listener *list
  		if_index = p.p->ipi6_ifindex;
  	      }
  	}
@@ -1090,7 +1077,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
        
        /* enforce available interface configuration */
        
-@@ -1487,9 +1530,11 @@ void receive_query(struct listener *list
+@@ -1490,9 +1533,11 @@ void receive_query(struct listener *list
        if (listen->family == AF_INET) 
  	log_query(F_QUERY | F_IPV4 | F_FORWARD, daemon->namebuff, 
  		  (union all_addr *)&source_addr.in.sin_addr, types);
@@ -1102,7 +1089,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  
  #ifdef HAVE_AUTH
        /* find queries for zones we're authoritative for, and answer them directly */
-@@ -1714,9 +1759,11 @@ static int tcp_key_recurse(time_t now, i
+@@ -1717,9 +1762,11 @@ static int tcp_key_recurse(time_t now, i
  	  if (server->addr.sa.sa_family == AF_INET) 
  	    log_query(F_NOEXTRA | F_DNSSEC | F_IPV4, keyname, (union all_addr *)&(server->addr.in.sin_addr),
  		      querystr("dnssec-query", new_status == STAT_NEED_KEY ? T_DNSKEY : T_DS));
@@ -1114,7 +1101,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  	  
  	  server->flags |= SERV_GOT_TCP;
  	  
-@@ -1781,10 +1828,11 @@ unsigned char *tcp_request(int confd, ti
+@@ -1784,10 +1831,11 @@ unsigned char *tcp_request(int confd, ti
    if (option_bool(OPT_CONNTRACK))
      {
        union all_addr local;
@@ -1127,7 +1114,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  	local.addr4 = local_addr->in.sin_addr;
        
        have_mark = get_incoming_mark(&peer_addr, &local, 1, &mark);
-@@ -1795,7 +1843,7 @@ unsigned char *tcp_request(int confd, ti
+@@ -1798,7 +1846,7 @@ unsigned char *tcp_request(int confd, ti
    if (option_bool(OPT_LOCAL_SERVICE))
      {
        struct addrlist *addr;
@@ -1136,7 +1123,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
        if (peer_addr.sa.sa_family == AF_INET6) 
  	{
  	  for (addr = daemon->interface_addrs; addr; addr = addr->next)
-@@ -1804,6 +1852,7 @@ unsigned char *tcp_request(int confd, ti
+@@ -1807,6 +1855,7 @@ unsigned char *tcp_request(int confd, ti
  	      break;
  	}
        else
@@ -1144,7 +1131,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  	{
  	  struct in_addr netmask;
  	  for (addr = daemon->interface_addrs; addr; addr = addr->next)
-@@ -1858,9 +1907,11 @@ unsigned char *tcp_request(int confd, ti
+@@ -1861,9 +1910,11 @@ unsigned char *tcp_request(int confd, ti
  	  if (peer_addr.sa.sa_family == AF_INET) 
  	    log_query(F_QUERY | F_IPV4 | F_FORWARD, daemon->namebuff, 
  		      (union all_addr *)&peer_addr.in.sin_addr, types);
@@ -1156,7 +1143,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  	  
  #ifdef HAVE_AUTH
  	  /* find queries for zones we're authoritative for, and answer them directly */
-@@ -2052,9 +2103,11 @@ unsigned char *tcp_request(int confd, ti
+@@ -2055,9 +2106,11 @@ unsigned char *tcp_request(int confd, ti
  		      if (last_server->addr.sa.sa_family == AF_INET)
  			log_query(F_SERVER | F_IPV4 | F_FORWARD, daemon->namebuff, 
  				  (union all_addr *)&last_server->addr.in.sin_addr, NULL); 
@@ -1168,7 +1155,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  
  #ifdef HAVE_DNSSEC
  		      if (option_bool(OPT_DNSSEC_VALID) && !checking_disabled && (last_server->flags & SERV_DO_DNSSEC))
-@@ -2153,7 +2206,9 @@ static struct frec *allocate_frec(time_t
+@@ -2156,7 +2209,9 @@ static struct frec *allocate_frec(time_t
        f->sentto = NULL;
        f->rfd4 = NULL;
        f->flags = 0;
@@ -1178,7 +1165,7 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  #ifdef HAVE_DNSSEC
        f->dependent = NULL;
        f->blocking_query = NULL;
-@@ -2213,8 +2268,11 @@ static void free_frec(struct frec *f)
+@@ -2216,8 +2271,11 @@ static void free_frec(struct frec *f)
    f->rfd4 = NULL;
    f->sentto = NULL;
    f->flags = 0;
@@ -1190,9 +1177,8 @@ diff -daurpN dnsmasq/src/forward.c dnsmasq/src/forward.c
  
  #ifdef HAVE_DNSSEC
    if (f->stash)
-diff -daurpN dnsmasq/src/helper.c dnsmasq/src/helper.c
---- dnsmasq/src/helper.c	2018-10-23 23:10:17.000000000 +0200
-+++ dnsmasq/src/helper.c	2018-10-22 19:21:48.000000000 +0200
+--- dnsmasq/src/helper.c
++++ dnsmasq/src/helper.c
 @@ -64,7 +64,9 @@ struct script_data
  #ifdef HAVE_TFTP
    off_t file_len;
@@ -1236,9 +1222,8 @@ diff -daurpN dnsmasq/src/helper.c dnsmasq/src/helper.c
    
    memcpy(buf->hwaddr, mac, maclen);
    
-diff -daurpN dnsmasq/src/ipset.c dnsmasq/src/ipset.c
---- dnsmasq/src/ipset.c	2018-10-23 23:10:17.000000000 +0200
-+++ dnsmasq/src/ipset.c	2018-10-22 19:21:48.000000000 +0200
+--- dnsmasq/src/ipset.c
++++ dnsmasq/src/ipset.c
 @@ -120,8 +120,13 @@ static int new_add_to_ipset(const char *
    struct my_nfgenmsg *nfg;
    struct my_nlattr *nested[2];
@@ -1270,9 +1255,8 @@ diff -daurpN dnsmasq/src/ipset.c dnsmasq/src/ipset.c
    
    if (ret != -1) 
      ret = old_kernel ? old_add_to_ipset(setname, ipaddr, remove) : new_add_to_ipset(setname, ipaddr, af, remove);
-diff -daurpN dnsmasq/src/netlink.c dnsmasq/src/netlink.c
---- dnsmasq/src/netlink.c	2018-10-23 23:10:17.000000000 +0200
-+++ dnsmasq/src/netlink.c	2018-10-22 19:21:48.000000000 +0200
+--- dnsmasq/src/netlink.c
++++ dnsmasq/src/netlink.c
 @@ -51,10 +51,11 @@ void netlink_init(void)
    addr.nl_groups = RTMGRP_IPV4_ROUTE;
    if (option_bool(OPT_CLEVERBIND))
@@ -1302,9 +1286,8 @@ diff -daurpN dnsmasq/src/netlink.c dnsmasq/src/netlink.c
  	      }
  	  }
  	else if (h->nlmsg_type == RTM_NEWNEIGH && family == AF_UNSPEC)
-diff -daurpN dnsmasq/src/network.c dnsmasq/src/network.c
---- dnsmasq/src/network.c	2018-10-23 23:10:17.000000000 +0200
-+++ dnsmasq/src/network.c	2018-10-22 19:21:48.000000000 +0200
+--- dnsmasq/src/network.c
++++ dnsmasq/src/network.c
 @@ -137,10 +137,12 @@ int iface_check(int family, struct all_a
  	      if (family == AF_INET &&
  		  tmp->addr.in.sin_addr.s_addr == addr->addr4.s_addr)
@@ -1607,10 +1590,9 @@ diff -daurpN dnsmasq/src/network.c dnsmasq/src/network.c
  
        add_update_server(SERV_FROM_RESOLV, &addr, &source_addr, NULL, NULL);
        gotone = 1;
-diff -daurpN dnsmasq/src/option.c dnsmasq/src/option.c
---- dnsmasq/src/option.c	2018-10-23 23:10:17.000000000 +0200
-+++ dnsmasq/src/option.c	2018-10-22 19:21:48.000000000 +0200
-@@ -767,8 +767,10 @@ static char *parse_mysockaddr(char *arg,
+--- dnsmasq/src/option.c
++++ dnsmasq/src/option.c
+@@ -770,8 +770,10 @@ static char *parse_mysockaddr(char *arg,
  {
    if (inet_pton(AF_INET, arg, &addr->in.sin_addr) > 0)
      addr->sa.sa_family = AF_INET;
@@ -1621,7 +1603,7 @@ diff -daurpN dnsmasq/src/option.c dnsmasq/src/option.c
    else
      return _("bad address");
     
-@@ -780,8 +782,10 @@ char *parse_server(char *arg, union myso
+@@ -783,8 +785,10 @@ char *parse_server(char *arg, union myso
    int source_port = 0, serv_port = NAMESERVER_PORT;
    char *portno, *source;
    char *interface_opt = NULL;
@@ -1632,7 +1614,7 @@ diff -daurpN dnsmasq/src/option.c dnsmasq/src/option.c
    
    if (!arg || strlen(arg) == 0)
      {
-@@ -799,7 +803,9 @@ char *parse_server(char *arg, union myso
+@@ -802,7 +806,9 @@ char *parse_server(char *arg, union myso
        !atoi_check16(portno, &serv_port))
      return _("bad port");
    
@@ -1642,7 +1624,7 @@ diff -daurpN dnsmasq/src/option.c dnsmasq/src/option.c
    
    if (source) {
      interface_opt = split_chr(source, '@');
-@@ -843,6 +849,7 @@ char *parse_server(char *arg, union myso
+@@ -846,6 +852,7 @@ char *parse_server(char *arg, union myso
  	    }
  	}
      }
@@ -1650,7 +1632,7 @@ diff -daurpN dnsmasq/src/option.c dnsmasq/src/option.c
    else if (inet_pton(AF_INET6, arg, &addr->in6.sin6_addr) > 0)
      {
        if (scope_id && (scope_index = if_nametoindex(scope_id)) == 0)
-@@ -877,6 +884,7 @@ char *parse_server(char *arg, union myso
+@@ -880,6 +887,7 @@ char *parse_server(char *arg, union myso
  	    }
  	}
      }
@@ -1658,7 +1640,7 @@ diff -daurpN dnsmasq/src/option.c dnsmasq/src/option.c
    else
      return _("bad address");
  
-@@ -2007,8 +2015,10 @@ static int one_opt(int option, char *arg
+@@ -2010,8 +2018,10 @@ static int one_opt(int option, char *arg
  	  unhide_metas(arg);
  	  if (inet_pton(AF_INET, arg, &new->addr.in.sin_addr) > 0)
  	    new->addr.sa.sa_family = AF_INET;
@@ -1669,7 +1651,7 @@ diff -daurpN dnsmasq/src/option.c dnsmasq/src/option.c
  	  else
  	    {
  	      char *fam = split_chr(arg, '/');
-@@ -2018,8 +2028,10 @@ static int one_opt(int option, char *arg
+@@ -2021,8 +2031,10 @@ static int one_opt(int option, char *arg
  		{
  		  if (strcmp(fam, "4") == 0)
  		    new->addr.sa.sa_family = AF_INET;
@@ -1680,7 +1662,7 @@ diff -daurpN dnsmasq/src/option.c dnsmasq/src/option.c
  		  else
  		  {
  		    free(new->name);
-@@ -2088,12 +2100,14 @@ static int one_opt(int option, char *arg
+@@ -2091,12 +2103,14 @@ static int one_opt(int option, char *arg
  		subnet->prefixlen = (prefixlen == 0) ? 24 : prefixlen;
  		subnet->flags = ADDRLIST_LITERAL;
  	      }
@@ -1695,7 +1677,7 @@ diff -daurpN dnsmasq/src/option.c dnsmasq/src/option.c
  	    else 
  	      {
  		struct auth_name_list *name =  opt_malloc(sizeof(struct auth_name_list));
-@@ -2105,8 +2119,10 @@ static int one_opt(int option, char *arg
+@@ -2108,8 +2122,10 @@ static int one_opt(int option, char *arg
  		  {
  		    if (prefixlen == 4)
  		      name->flags &= ~AUTH6;
@@ -1706,7 +1688,7 @@ diff -daurpN dnsmasq/src/option.c dnsmasq/src/option.c
  		    else
  		      ret_err(gen_err);
  		  }
-@@ -2227,6 +2243,7 @@ static int one_opt(int option, char *arg
+@@ -2230,6 +2246,7 @@ static int one_opt(int option, char *arg
  				}
  			    }
  			}
@@ -1714,7 +1696,7 @@ diff -daurpN dnsmasq/src/option.c dnsmasq/src/option.c
  		      else if (inet_pton(AF_INET6, comma, &new->start6))
  			{
  			  u64 mask = (1LLU << (128 - msize)) - 1LLU;
-@@ -2270,6 +2287,7 @@ static int one_opt(int option, char *arg
+@@ -2273,6 +2290,7 @@ static int one_opt(int option, char *arg
  				}
  			    }
  			}
@@ -1722,7 +1704,7 @@ diff -daurpN dnsmasq/src/option.c dnsmasq/src/option.c
  		      else
  			ret_err_free(gen_err, new);
  		    }
-@@ -2287,6 +2305,7 @@ static int one_opt(int option, char *arg
+@@ -2290,6 +2308,7 @@ static int one_opt(int option, char *arg
  			  else if (!inet_pton(AF_INET, arg, &new->end))
  			    ret_err_free(gen_err, new);
  			}
@@ -1730,7 +1712,7 @@ diff -daurpN dnsmasq/src/option.c dnsmasq/src/option.c
  		      else if (inet_pton(AF_INET6, comma, &new->start6))
  			{
  			  new->is6 = 1;
-@@ -2295,6 +2314,7 @@ static int one_opt(int option, char *arg
+@@ -2298,6 +2317,7 @@ static int one_opt(int option, char *arg
  			  else if (!inet_pton(AF_INET6, arg, &new->end6))
  			    ret_err_free(gen_err, new);
  			}
@@ -1738,7 +1720,7 @@ diff -daurpN dnsmasq/src/option.c dnsmasq/src/option.c
  		      else 
  			ret_err_free(gen_err, new);
  
-@@ -2453,6 +2473,7 @@ static int one_opt(int option, char *arg
+@@ -2456,6 +2476,7 @@ static int one_opt(int option, char *arg
  	    new->addr.in.sin_len = sizeof(new->addr.in);
  #endif
  	  }
@@ -1746,7 +1728,7 @@ diff -daurpN dnsmasq/src/option.c dnsmasq/src/option.c
  	else if (arg && inet_pton(AF_INET6, arg, &new->addr.in6.sin6_addr) > 0)
  	  {
  	    new->addr.sa.sa_family = AF_INET6;
-@@ -2463,6 +2484,7 @@ static int one_opt(int option, char *arg
+@@ -2466,6 +2487,7 @@ static int one_opt(int option, char *arg
  	    new->addr.in6.sin6_len = sizeof(new->addr.in6);
  #endif
  	  }
@@ -1754,7 +1736,7 @@ diff -daurpN dnsmasq/src/option.c dnsmasq/src/option.c
  	else
  	  ret_err_free(gen_err, new);
  
-@@ -2581,7 +2603,9 @@ static int one_opt(int option, char *arg
+@@ -2584,7 +2606,9 @@ static int one_opt(int option, char *arg
  	int size;
  	struct server *serv;
  	struct in_addr addr4;
@@ -1764,7 +1746,7 @@ diff -daurpN dnsmasq/src/option.c dnsmasq/src/option.c
   
  	unhide_metas(arg);
  	if (!arg || !(comma=split(arg)) || !(string = split_chr(arg, '/')) || !atoi_check(string, &size))
-@@ -2593,8 +2617,10 @@ static int one_opt(int option, char *arg
+@@ -2596,8 +2620,10 @@ static int one_opt(int option, char *arg
  	    if (!serv)
  	      ret_err(_("bad prefix"));
  	  }
@@ -1775,7 +1757,7 @@ diff -daurpN dnsmasq/src/option.c dnsmasq/src/option.c
  	else
  	  ret_err(gen_err);
   
-@@ -3961,8 +3987,10 @@ err:
+@@ -4002,8 +4028,10 @@ err:
  	  {
  	    if (strcmp(arg, "4") == 0)
  	      new->family = AF_INET;
@@ -1786,7 +1768,7 @@ diff -daurpN dnsmasq/src/option.c dnsmasq/src/option.c
  	    else
  	      ret_err_free(gen_err, new);
  	  } 
-@@ -4282,8 +4310,10 @@ err:
+@@ -4323,8 +4351,10 @@ err:
  	      new->ttl = atoi(arg);
  	    else if (inet_pton(AF_INET, arg, &addr.addr4))
  	      new->addr = addr.addr4;
@@ -1797,7 +1779,7 @@ diff -daurpN dnsmasq/src/option.c dnsmasq/src/option.c
  	    else
  	      {
  		int nomem;
-@@ -5005,8 +5035,10 @@ void read_opts(int argc, char **argv, ch
+@@ -5051,8 +5081,10 @@ void read_opts(int argc, char **argv, ch
  	  {
  	    if (tmp->source_addr.sa.sa_family == AF_INET)
  	      tmp->source_addr.in.sin_port = htons(daemon->query_port);
@@ -1808,7 +1790,7 @@ diff -daurpN dnsmasq/src/option.c dnsmasq/src/option.c
  	  }
      } 
    
-@@ -5067,8 +5099,10 @@ void read_opts(int argc, char **argv, ch
+@@ -5113,8 +5145,10 @@ void read_opts(int argc, char **argv, ch
        for(tmp = daemon->if_addrs; tmp; tmp = tmp->next)
  	if (tmp->addr.sa.sa_family == AF_INET)
  	  tmp->addr.in.sin_port = htons(daemon->port);
@@ -1819,9 +1801,8 @@ diff -daurpN dnsmasq/src/option.c dnsmasq/src/option.c
      }
  	
    /* create default, if not specified */
-diff -daurpN dnsmasq/src/rfc1035.c dnsmasq/src/rfc1035.c
---- dnsmasq/src/rfc1035.c	2018-10-23 23:10:17.000000000 +0200
-+++ dnsmasq/src/rfc1035.c	2018-10-22 19:21:48.000000000 +0200
+--- dnsmasq/src/rfc1035.c
++++ dnsmasq/src/rfc1035.c
 @@ -198,6 +198,7 @@ int in_arpa_name_2_addr(char *namein, st
  
        return F_IPV4;
@@ -2012,9 +1993,8 @@ diff -daurpN dnsmasq/src/rfc1035.c dnsmasq/src/rfc1035.c
  	    if (crecp->flags & F_NEG)
  	      continue;
  
-diff -daurpN dnsmasq/src/tables.c dnsmasq/src/tables.c
---- dnsmasq/src/tables.c	2018-10-23 23:10:17.000000000 +0200
-+++ dnsmasq/src/tables.c	2018-10-22 19:21:48.000000000 +0200
+--- dnsmasq/src/tables.c
++++ dnsmasq/src/tables.c
 @@ -108,7 +108,7 @@ int add_to_ipset(const char *setname, co
      my_syslog(LOG_INFO, _("info: table created"));
   
@@ -2032,9 +2012,8 @@ diff -daurpN dnsmasq/src/tables.c dnsmasq/src/tables.c
      {
        addr.pfra_af = AF_INET;
        addr.pfra_net = 0x20;
-diff -daurpN dnsmasq/src/tftp.c dnsmasq/src/tftp.c
---- dnsmasq/src/tftp.c	2018-10-23 23:10:17.000000000 +0200
-+++ dnsmasq/src/tftp.c	2018-10-22 19:21:48.000000000 +0200
+--- dnsmasq/src/tftp.c
++++ dnsmasq/src/tftp.c
 @@ -60,11 +60,17 @@ void tftp_request(struct listener *liste
    char *prefix = daemon->tftp_prefix;
    struct tftp_prefix *pref;
@@ -2109,9 +2088,8 @@ diff -daurpN dnsmasq/src/tftp.c dnsmasq/src/tftp.c
  		  continue;
  		}
  	      my_syslog(MS_TFTP | LOG_ERR, _("unable to get free port for TFTP"));
-diff -daurpN dnsmasq/src/util.c dnsmasq/src/util.c
---- dnsmasq/src/util.c	2018-10-23 23:10:17.000000000 +0200
-+++ dnsmasq/src/util.c	2018-10-22 19:21:48.000000000 +0200
+--- dnsmasq/src/util.c
++++ dnsmasq/src/util.c
 @@ -320,12 +320,13 @@ int sockaddr_isequal(union mysockaddr *s
  	  s1->in.sin_port == s2->in.sin_port &&
  	  s1->in.sin_addr.s_addr == s2->in.sin_addr.s_addr)
