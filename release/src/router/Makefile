@@ -1260,13 +1260,20 @@ libbcm-install:
 
 iproute2:
 	@$(SEP)
-	@$(MAKE) -C $@ KERNEL_INCLUDE=$(LINUXDIR)/include EXTRACFLAGS="$(EXTRACFLAGS) $(if $(TCONFIG_IPV6),-DUSE_IPV6,-DNO_IPV6)"
+	$(call patch_files,iproute2)
+	@$(MAKE) -C $@ KERNEL_INCLUDE=$(LINUXDIR)/include \
+		EXTRACFLAGS="$(EXTRACFLAGS) -ffunction-sections -fdata-sections $(if $(TCONFIG_IPV6),-DUSE_IPV6,-DNO_IPV6) $(OPTSIZE_FLAG)" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections"
 
 iproute2-install:
 	install -D iproute2/tc/tc $(INSTALLDIR)/iproute2/usr/sbin/tc
 	$(STRIP) $(INSTALLDIR)/iproute2/usr/sbin/tc
 	install -D iproute2/ip/ip $(INSTALLDIR)/iproute2/usr/sbin/ip
 	$(STRIP) $(INSTALLDIR)/iproute2/usr/sbin/ip
+
+iproute2-clean:
+	-@$(MAKE) -C iproute2 clean
+	$(call unpatch_files,iproute2)
 
 dropbear: dropbear/config.h
 	@$(SEP)
