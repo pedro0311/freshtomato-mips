@@ -417,6 +417,10 @@ define RouterOptions
 		sed -i "/TCONFIG_AIO/d" $(1); \
 		echo "TCONFIG_AIO=y" >>$(1); \
 	fi; \
+	if [ "$(BUILD_DESC)" = "AIO" ] || [ "$(BUILD_DESC)" = "Mega-VPN" ]; then \
+		sed -i "/TCONFIG_OPTIMIZE_SIZE/d" $(1); \
+		echo "# TCONFIG_OPTIMIZE_SIZE is not set" >>$(1); \
+	fi; \
 	if [ "$(CTF)" = "y" ]; then \
 		sed -i "/TCONFIG_CTF/d" $(1); \
 		echo "TCONFIG_CTF=y" >>$(1); \

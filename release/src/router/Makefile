@@ -41,6 +41,12 @@ SEP=`$(eval progress=$(shell echo $$(($(progress)+1))))` \
 echo "\033[41;1m   $@ ${progress}$\/${totalSteps} \033[0m\033]2;Building $@ ${progress}$\/${totalSteps}\007"
 
 
+ifeq ($(TCONFIG_OPTIMIZE_SIZE),y)
+OPTSIZE_FLAG :=
+else
+export OPTSIZE_FLAG := -DNO_OPTSIZE
+endif
+
 #
 # standard packages
 #

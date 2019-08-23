@@ -222,3 +222,7 @@ config TCONFIG_TERMLIB
 config TCONFIG_NVRAM_32K
 	bool "NVRAM_32K"
 	default n
+
+config TCONFIG_OPTIMIZE_SIZE
+	bool "Flag to detect small targets used for size optimization"
+	default y
