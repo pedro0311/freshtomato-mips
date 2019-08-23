@@ -1,0 +1,307 @@
+--- pppd/chat/chat.c
++++ pppd/chat/chat.c
+@@ -485,9 +485,15 @@ char *chat_file;
+  */
+ void usage()
+ {
++#ifdef NO_OPTSIZE
+     fprintf(stderr, "\
+ Usage: %s [-e] [-E] [-v] [-V] [-t timeout] [-r report-file]\n\
+      [-T phone-number] [-U phone-number2] {-f chat-file | chat-script}\n", program_name);
++#else
++    printf("\
++Usage: %s [-e] [-E] [-v] [-V] [-t timeout] [-r report-file]\n\
++     [-T phone-number] [-U phone-number2] {-f chat-file | chat-script}\n", program_name);
++#endif
+     exit(1);
+ }
+ 
+@@ -512,7 +518,11 @@ void msgf __V((const char *fmt, ...))
+     if (to_log)
+ 	syslog(LOG_INFO, "%s", line);
+     if (to_stderr)
++#ifdef NO_OPTSIZE
+ 	fprintf(stderr, "%s\n", line);
++#else
++	printf("%s\n", line);
++#endif
+     va_end(args);
+ }
+ 
+@@ -538,7 +548,11 @@ void fatal __V((int code, const char *fm
+     if (to_log)
+ 	syslog(LOG_ERR, "%s", line);
+     if (to_stderr)
++#ifdef NO_OPTSIZE
+ 	fprintf(stderr, "%s\n", line);
++#else
++	printf("%s\n", line);
++#endif
+     va_end(args);
+     terminate(code);
+ }
+--- pppd/pppd/main.c
++++ pppd/pppd/main.c
+@@ -1794,7 +1794,11 @@ device_script(program, in, out, dont_wai
+     setgid(getgid());
+     setuid(uid);
+     if (getuid() != uid) {
++#ifdef NO_OPTSIZE
+ 	fprintf(stderr, "pppd: setuid failed\n");
++#else
++	printf("pppd: setuid failed\n");
++#endif
+ 	exit(1);
+     }
+     update_system_environment();
+--- pppd/pppd/options.c
++++ pppd/pppd/options.c
+@@ -1069,7 +1069,11 @@ static void
+ usage()
+ {
+     if (phase == PHASE_INITIALIZE)
++#ifdef NO_OPTSIZE
+ 	fprintf(stderr, usage_string, VERSION, progname);
++#else
++	printf(usage_string, VERSION, progname);
++#endif
+ }
+ 
+ /*
+@@ -1094,7 +1098,11 @@ showversion(argv)
+     char **argv;
+ {
+     if (phase == PHASE_INITIALIZE) {
++#ifdef NO_OPTSIZE
+ 	fprintf(stderr, "pppd version %s\n", VERSION);
++#else
++	printf("pppd version %s\n", VERSION);
++#endif
+ 	exit(0);
+     }
+     return 0;
+@@ -1121,7 +1129,11 @@ option_error __V((char *fmt, ...))
+     vslprintf(buf, sizeof(buf), fmt, args);
+     va_end(args);
+     if (phase == PHASE_INITIALIZE)
++#ifdef NO_OPTSIZE
+ 	fprintf(stderr, "%s: %s\n", progname, buf);
++#else
++	printf("%s: %s\n", progname, buf);
++#endif
+     syslog(LOG_ERR, "%s", buf);
+ }
+ 
+--- pppd/pppd/plugins/rp-pppoe/pppoe-discovery.c
++++ pppd/pppd/plugins/rp-pppoe/pppoe-discovery.c
+@@ -81,7 +81,11 @@ etherType(PPPoEPacket *packet)
+ {
+     UINT16_t type = (UINT16_t) ntohs(packet->ethHdr.h_proto);
+     if (type != Eth_PPPOE_Discovery && type != Eth_PPPOE_Session) {
++#ifdef NO_OPTSIZE
+ 	fprintf(stderr, "Invalid ether type 0x%x\n", type);
++#else
++	printf("Invalid ether type 0x%x\n", type);
++#endif
+     }
+     return type;
+ }
+@@ -162,9 +166,17 @@ openInterface(char const *ifname, UINT16
+ 	fatalSys("ioctl(SIOCGIFMTU)");
+     }
+     if (ifr.ifr_mtu < ETH_DATA_LEN) {
++#ifdef NO_OPTSIZE
+ 	fprintf(stderr, "Interface %.16s has MTU of %d -- should be %d.\n",
++#else
++	printf("Interface %.16s has MTU of %d -- should be %d.\n",
++#endif
+ 	      ifname, ifr.ifr_mtu, ETH_DATA_LEN);
++#ifdef NO_OPTSIZE
+ 	fprintf(stderr, "You may have serious connection problems.\n");
++#else
++	printf("You may have serious connection problems.\n");
++#endif
+     }
+ 
+ #ifdef HAVE_STRUCT_SOCKADDR_LL
+@@ -267,19 +279,31 @@ parsePacket(PPPoEPacket *packet, ParseFu
+     UINT16_t tagType, tagLen;
+ 
+     if (PPPOE_VER(packet->vertype) != 1) {
++#ifdef NO_OPTSIZE
+ 	fprintf(stderr, "Invalid PPPoE version (%d)\n",
++#else
++	printf("Invalid PPPoE version (%d)\n",
++#endif
+ 		PPPOE_VER(packet->vertype));
+ 	return -1;
+     }
+     if (PPPOE_TYPE(packet->vertype) != 1) {
++#ifdef NO_OPTSIZE
+ 	fprintf(stderr, "Invalid PPPoE type (%d)\n",
++#else
++	printf("Invalid PPPoE type (%d)\n",
++#endif
+ 		PPPOE_TYPE(packet->vertype));
+ 	return -1;
+     }
+ 
+     /* Do some sanity checks on packet */
+     if (len > ETH_JUMBO_LEN - PPPOE_OVERHEAD) { /* 6-byte overhead for PPPoE header */
++#ifdef NO_OPTSIZE
+ 	fprintf(stderr, "Invalid PPPoE packet length (%u)\n", len);
++#else
++	printf("Invalid PPPoE packet length (%u)\n", len);
++#endif
+ 	return -1;
+     }
+ 
+@@ -293,7 +317,11 @@ parsePacket(PPPoEPacket *packet, ParseFu
+ 	    return 0;
+ 	}
+ 	if ((curTag - packet->payload) + tagLen + TAG_HDR_SIZE > len) {
++#ifdef NO_OPTSIZE
+ 	    fprintf(stderr, "Invalid PPPoE tag length (%u)\n", tagLen);
++#else
++	    printf("Invalid PPPoE tag length (%u)\n", tagLen);
++#endif
+ 	    return -1;
+ 	}
+ 	func(tagType, tagLen, curTag+TAG_HDR_SIZE, extra);
+@@ -547,7 +575,11 @@ waitForPADO(PPPoEConnection *conn, int t
+ 
+ 	/* Check length */
+ 	if (ntohs(packet.length) + HDR_SIZE > len) {
++#ifdef NO_OPTSIZE
+ 	    fprintf(stderr, "Bogus PPPoE length field (%u)\n",
++#else
++	    printf("Bogus PPPoE length field (%u)\n",
++#endif
+ 		   (unsigned int) ntohs(packet.length));
+ 	    continue;
+ 	}
+@@ -567,18 +603,30 @@ waitForPADO(PPPoEConnection *conn, int t
+ 
+ 	if (packet.code == CODE_PADO) {
+ 	    if (BROADCAST(packet.ethHdr.h_source)) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "Ignoring PADO packet from broadcast MAC address\n");
++#else
++		printf("Ignoring PADO packet from broadcast MAC address\n");
++#endif
+ 		continue;
+ 	    }
+ 	    parsePacket(&packet, parsePADOTags, &pc);
+ 	    if (conn->error)
+ 		return;
+ 	    if (!pc.seenACName) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "Ignoring PADO packet with no AC-Name tag\n");
++#else
++		printf("Ignoring PADO packet with no AC-Name tag\n");
++#endif
+ 		continue;
+ 	    }
+ 	    if (!pc.seenServiceName) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "Ignoring PADO packet with no Service-Name tag\n");
++#else
++		printf("Ignoring PADO packet with no Service-Name tag\n");
++#endif
+ 		continue;
+ 	    }
+ 	    conn->numPADOs++;
+@@ -623,7 +707,11 @@ discovery(PPPoEConnection *conn)
+     do {
+ 	padiAttempts++;
+ 	if (padiAttempts > MAX_PADI_ATTEMPTS) {
++#ifdef NO_OPTSIZE
+ 	    fprintf(stderr, "Timeout waiting for PADO packets\n");
++#else
++	    printf("Timeout waiting for PADO packets\n");
++#endif
+ 	    close(conn->discoverySocket);
+ 	    conn->discoverySocket = -1;
+ 	    return;
+@@ -659,7 +738,11 @@ int main(int argc, char *argv[])
+ 	case 'D':
+ 	    conn->debugFile = fopen(optarg, "w");
+ 	    if (!conn->debugFile) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "Could not open %s: %s\n",
++#else
++		printf("Could not open %s: %s\n",
++#endif
+ 			optarg, strerror(errno));
+ 		exit(1);
+ 	    }
+@@ -695,7 +778,11 @@ int main(int argc, char *argv[])
+ 
+ void rp_fatal(char const *str)
+ {
++#ifdef NO_OPTSIZE
+     fprintf(stderr, "%s\n", str);
++#else
++    printf("%s\n", str);
++#endif
+     exit(1);
+ }
+ 
+@@ -720,6 +807,11 @@ char *xstrdup(const char *s)
+ 
+ void usage(void)
+ {
++#ifdef NO_OPTSIZE
+     fprintf(stderr, "Usage: pppoe-discovery [options]\n");
+     fprintf(stderr, "\nVersion " RP_VERSION "\n");
++#else
++    printf("Usage: pppoe-discovery [options]\n");
++    printf("\nVersion " RP_VERSION "\n");
++#endif
+ }
+--- pppd/pppd/pppd.h
++++ pppd/pppd/pppd.h
+@@ -541,9 +541,17 @@ size_t strlcat __P((char *, const char *
+ void dbglog __P((char *, ...));	/* log a debug message */
+ void info __P((char *, ...));	/* log an informational message */
+ void notice __P((char *, ...));	/* log a notice-level message */
++
++#ifdef NO_OPTSIZE
+ void warn __P((char *, ...));	/* log a warning message */
+ void error __P((char *, ...));	/* log an error message */
+ void fatal __P((char *, ...));	/* log an error message and die(1) */
++#else
++#define warn(a,...)
++#define error(a,...) exit (-1)
++#define fatal(a,...) exit (-2)
++#endif
++
+ void init_pr_log __P((const char *, int)); /* initialize for using pr_log */
+ void pr_log __P((void *, char *, ...));	/* printer fn, output to syslog */
+ void end_pr_log __P((void));	/* finish up after using pr_log */
+--- pppd/pppd/srp-entry.c
++++ pppd/pppd/srp-entry.c
+@@ -85,7 +85,11 @@ static const char *myname;
+ static void
+ usage(void)
+ {
++#ifdef NO_OPTSIZE
+ 	(void) fprintf(stderr, "Usage:\n\t%s [-i index] [clientname]\n",
++#else
++	(void) printf("Usage:\n\t%s [-i index] [clientname]\n",
++#endif
+ 	    myname);
+ 	exit(1);
+ }
+@@ -133,7 +137,11 @@ main(int argc, char **argv)
+ 		tcent = &mytce;
+ 	}
+ 	if (tcent == NULL) {
++#ifdef NO_OPTSIZE
+ 		(void) fprintf(stderr, "SRP modulus/generator %d not found\n",
++#else
++		(void) printf("SRP modulus/generator %d not found\n",
++#endif
+ 		    idx);
+ 		exit(1);
+ 	}
