@@ -914,13 +914,14 @@ gmp-clean:
 	$(call unpatch_files,gmp)
 
 iptables:
+	$(call patch_files,iptables)
 ifeq ($(CONFIG_LINUX26),y)
 	cp -f iptables/extensions/libipt_ipp2p_K26.c iptables/extensions/libipt_ipp2p.c
 else
 	cp -f iptables/extensions/libipt_ipp2p_K24.c iptables/extensions/libipt_ipp2p.c
 endif
 	@$(SEP)
-	$(MAKE) -C iptables BINDIR=/usr/sbin LIBDIR=/usr/lib KERNEL_DIR=$(LINUXDIR) COPT_FLAGS="-Os $(EXTRACFLAGS) -U CONFIG_NVRAM_SIZE"
+	$(MAKE) -C iptables BINDIR=/usr/sbin LIBDIR=/usr/lib KERNEL_DIR=$(LINUXDIR) COPT_FLAGS="-Os $(EXTRACFLAGS) -U CONFIG_NVRAM_SIZE $(OPTSIZE_FLAG)"
 
 iptables-install:
 	install -D iptables/iptables $(INSTALLDIR)/iptables/usr/sbin/iptables
@@ -947,6 +948,7 @@ endif
 
 iptables-clean:
 	-@$(MAKE) -C iptables KERNEL_DIR=$(LINUXDIR) clean
+	$(call unpatch_files,iptables)
 
 ppp:
 	@$(SEP)

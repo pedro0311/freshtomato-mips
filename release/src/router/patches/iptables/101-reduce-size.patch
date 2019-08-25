@@ -1,0 +1,4567 @@
+--- iptables/extensions/libip6t_ah.c
++++ iptables/extensions/libip6t_ah.c
+@@ -9,6 +9,7 @@
+ #include <linux/netfilter_ipv6/ip6t_ah.h>
+                                         
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -19,6 +20,7 @@
+ " --ahres                       check the reserved filed, too\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ .name = "ahspi", .has_arg = 1, .flag = 0, .val = '1' },
+@@ -211,7 +213,9 @@
+ 	.version       = IPTABLES_VERSION,
+ 	.size          = IP6T_ALIGN(sizeof(struct ip6t_ah)),
+ 	.userspacesize = IP6T_ALIGN(sizeof(struct ip6t_ah)),
++#ifdef NO_OPTSIZE
+ 	.help          = &help,
++#endif /* NO_OPTSIZE */
+ 	.init          = &init,
+ 	.parse         = &parse,
+ 	.final_check   = &final_check,
+--- iptables/extensions/libip6t_condition.c
++++ iptables/extensions/libip6t_condition.c
+@@ -9,6 +9,7 @@
+ #include<linux/netfilter_ipv6/ip6t_condition.h>
+ 
+ 
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -17,6 +18,7 @@
+ 	       "Match on boolean value stored in /proc file\n",
+ 	       IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ 
+ static struct option opts[] = {
+@@ -90,7 +92,9 @@
+ 	.version = IPTABLES_VERSION,
+ 	.size = IP6T_ALIGN(sizeof(struct condition6_info)),
+ 	.userspacesize = IP6T_ALIGN(sizeof(struct condition6_info)),
++#ifdef NO_OPTSIZE
+ 	.help = &help,
++#endif /* NO_OPTSIZE */
+ 	.parse = &parse,
+ 	.final_check = &final_check,
+ 	.print = &print,
+--- iptables/extensions/libip6t_connbytes.c
++++ iptables/extensions/libip6t_connbytes.c
+@@ -10,6 +10,7 @@
+ #include <linux/netfilter_ipv4/ipt_connbytes.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -20,6 +21,7 @@
+ "     --connbytes-mode [packets, bytes, avgpkt]\n"
+ "\n", IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "connbytes", 1, 0, '1' },
+@@ -190,7 +192,9 @@
+ 	.version 	= IPTABLES_VERSION,
+ 	.size 		= IP6T_ALIGN(sizeof(struct ipt_connbytes_info)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ipt_connbytes_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libip6t_connlimit.c
++++ iptables/extensions/libip6t_connlimit.c
+@@ -9,6 +9,7 @@
+ #include <linux/netfilter/xt_connlimit.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void connlimit_help(void)
+ {
+ 	printf(
+@@ -18,6 +19,7 @@
+ "    --connlimit-mask n         group hosts using mask\n"
+ "\n", IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static const struct option connlimit_opts[] = {
+ 	{"connlimit-above", 1, 0, '1'},
+@@ -136,7 +138,9 @@
+ 	.version       = IPTABLES_VERSION,
+ 	.size          = IP6T_ALIGN(sizeof(struct xt_connlimit_info)),
+ 	.userspacesize = offsetof(struct xt_connlimit_info, data),
++#ifdef NO_OPTSIZE
+ 	.help          = connlimit_help,
++#endif /* NO_OPTSIZE */
+ 	.init          = connlimit_init,
+ 	.parse         = connlimit_parse,
+ 	.final_check   = connlimit_check,
+--- iptables/extensions/libip6t_connmark.c
++++ iptables/extensions/libip6t_connmark.c
+@@ -29,6 +29,7 @@
+ #include "../include/linux/netfilter_ipv4/ipt_connmark.h"
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -38,6 +39,7 @@
+ "\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "mark", 1, 0, '1' },
+@@ -136,7 +138,9 @@
+     .version       = IPTABLES_VERSION,
+     .size          = IP6T_ALIGN(sizeof(struct ipt_connmark_info)),
+     .userspacesize = IP6T_ALIGN(sizeof(struct ipt_connmark_info)),
++#ifdef NO_OPTSIZE
+     .help          = &help,
++#endif /* NO_OPTSIZE */
+     .init          = &init,
+     .parse         = &parse,
+     .final_check   = &final_check,
+--- iptables/extensions/libip6t_CONNMARK.c
++++ iptables/extensions/libip6t_CONNMARK.c
+@@ -36,6 +36,7 @@
+ #endif
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -48,6 +49,7 @@
+ "\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "set-mark", 1, 0, '1' },
+@@ -215,7 +217,9 @@
+     .version       = IPTABLES_VERSION,
+     .size          = IP6T_ALIGN(sizeof(struct ipt_connmark_target_info)),
+     .userspacesize = IP6T_ALIGN(sizeof(struct ipt_connmark_target_info)),
++#ifdef NO_OPTSIZE
+     .help          = &help,
++#endif /* NO_OPTSIZE */
+     .init          = &init,
+     .parse         = &parse,
+     .final_check   = &final_check,
+--- iptables/extensions/libip6t_CONNSECMARK.c
++++ iptables/extensions/libip6t_CONNSECMARK.c
+@@ -14,6 +14,7 @@
+ 
+ #define PFX "CONNSECMARK target: "
+ 
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf(
+@@ -23,6 +24,7 @@
+ "\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "save", 0, 0, '1' },
+@@ -111,7 +113,9 @@
+ 	.size		= IP6T_ALIGN(sizeof(struct xt_connsecmark_target_info)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct xt_connsecmark_target_info)),
+ 	.parse		= &parse,
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+ 	.save		= &save,
+--- iptables/extensions/libip6t_dscp.c
++++ iptables/extensions/libip6t_dscp.c
+@@ -24,6 +24,7 @@
+ /* This is evil, but it's my code - HW*/
+ #include "libipt_dscp_helper.c"
+ 
++#ifdef NO_OPTSIZE
+ static void help(void) 
+ {
+ 	printf(
+@@ -38,6 +39,7 @@
+ 				, IPTABLES_VERSION
+ );
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "dscp", 1, 0, 'F' },
+@@ -158,7 +160,9 @@
+ 	.version 	= IPTABLES_VERSION,
+ 	.size 		= IP6T_ALIGN(sizeof(struct xt_dscp_info)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct xt_dscp_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libip6t_dst.c
++++ iptables/extensions/libip6t_dst.c
+@@ -20,6 +20,7 @@
+ #endif
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -30,6 +31,7 @@
+ "                               Options and its length (list, max: %d)\n", 
+ IPTABLES_VERSION, IP6T_OPTS_OPTSNR);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ .name = LNAME "-len",        .has_arg = 1, .flag = 0, .val = '1' },
+@@ -253,7 +255,9 @@
+ 	.version       = IPTABLES_VERSION,
+ 	.size          = IP6T_ALIGN(sizeof(struct ip6t_opts)),
+ 	.userspacesize = IP6T_ALIGN(sizeof(struct ip6t_opts)),
++#ifdef NO_OPTSIZE
+ 	.help          = &help,
++#endif /* NO_OPTSIZE */
+ 	.init          = &init,
+ 	.parse         = &parse,
+ 	.final_check   = &final_check,
+--- iptables/extensions/libip6t_esp.c
++++ iptables/extensions/libip6t_esp.c
+@@ -9,6 +9,7 @@
+ #include <linux/netfilter_ipv6/ip6t_esp.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -17,6 +18,7 @@
+ " --espspi [!] spi[:spi]        match spi (range)\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ .name = "espspi", .has_arg = 1, .flag = 0, .val = '1' },
+@@ -169,7 +171,9 @@
+ 	.version       = IPTABLES_VERSION,
+ 	.size          = IP6T_ALIGN(sizeof(struct ip6t_esp)),
+ 	.userspacesize = IP6T_ALIGN(sizeof(struct ip6t_esp)),
++#ifdef NO_OPTSIZE
+ 	.help          = &help,
++#endif /* NO_OPTSIZE */
+ 	.init          = &init,
+ 	.parse         = &parse,
+ 	.final_check   = &final_check,
+--- iptables/extensions/libip6t_eui64.c
++++ iptables/extensions/libip6t_eui64.c
+@@ -12,6 +12,7 @@
+ #include <ip6tables.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -21,6 +22,7 @@
+ " This module checks for EUI64 IPv6 addresses\n"
+ "\n", IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{0}
+@@ -62,7 +64,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(int)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(int)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libip6t_frag.c
++++ iptables/extensions/libip6t_frag.c
+@@ -9,6 +9,7 @@
+ #include <linux/netfilter_ipv6/ip6t_frag.h>
+                                         
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -22,6 +23,7 @@
+ "                               is the last one\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ .name = "fragid",    .has_arg = 1, .flag = 0, .val = '1' },
+@@ -256,7 +258,9 @@
+ 	.version       = IPTABLES_VERSION,
+ 	.size          = IP6T_ALIGN(sizeof(struct ip6t_frag)),
+ 	.userspacesize = IP6T_ALIGN(sizeof(struct ip6t_frag)),
++#ifdef NO_OPTSIZE
+ 	.help          = &help,
++#endif /* NO_OPTSIZE */
+ 	.init          = &init,
+ 	.parse         = &parse,
+ 	.final_check   = &final_check,
+--- iptables/extensions/libip6t_fuzzy.c
++++ iptables/extensions/libip6t_fuzzy.c
+@@ -23,6 +23,7 @@
+ #include <linux/netfilter_ipv6/ip6t_fuzzy.h>
+ 
+ 
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -32,6 +33,7 @@
+ "                      --upper-limit number\n"
+ ,IPTABLES_VERSION);
+ };
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ .name = "lower-limit", .has_arg = 1, .flag = 0, .val = '1' },
+@@ -141,7 +143,9 @@
+ 	.version       = IPTABLES_VERSION,
+ 	.size          = IP6T_ALIGN(sizeof(struct ip6t_fuzzy_info)),
+ 	.userspacesize = IP6T_ALIGN(sizeof(struct ip6t_fuzzy_info)),
++#ifdef NO_OPTSIZE
+ 	.help          = &help,
++#endif /* NO_OPTSIZE */
+ 	.init          = &init,
+ 	.parse         = &parse,
+ 	.final_check   = &final_check,
+--- iptables/extensions/libip6t_hashlimit.c
++++ iptables/extensions/libip6t_hashlimit.c
+@@ -27,6 +27,7 @@
+ #define XT_HASHLIMIT_EXPIRE	10000
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -45,6 +46,7 @@
+ "[--hashlimit-htable-expire]	after which time are idle entries expired?\n"
+ "\n", IPTABLES_VERSION, XT_HASHLIMIT_BURST);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "hashlimit", 1, 0, '%' },
+@@ -354,7 +356,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct xt_hashlimit_info)),
+ 	.userspacesize	= offsetof(struct xt_hashlimit_info, hinfo),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libip6t_hbh.c
++++ iptables/extensions/libip6t_hbh.c
+@@ -18,6 +18,7 @@
+ #define LNAME		(HOPBYHOP ? "hbh" : "dst")
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -28,6 +29,7 @@
+ "                               Options and its length (list, max: %d)\n", 
+ UNAME , IPTABLES_VERSION, LNAME, LNAME, IP6T_OPTS_OPTSNR);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ #if HOPBYHOP
+ static struct option opts[] = {
+@@ -246,7 +248,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ip6t_opts)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ip6t_opts)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libip6t_hl.c
++++ iptables/extensions/libip6t_hl.c
+@@ -15,6 +15,7 @@
+ #include <linux/netfilter_ipv6/ip6_tables.h>
+ #include <linux/netfilter_ipv6/ip6t_hl.h>
+ 
++#ifdef NO_OPTSIZE
+ static void help(void) 
+ {
+ 	printf(
+@@ -24,6 +25,7 @@
+ "  --hl-gt value	Match HL > value\n"
+ , IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static int parse(int c, char **argv, int invert, unsigned int *flags,
+ 		const struct ip6t_entry *entry, unsigned int *nfcache,
+@@ -134,7 +136,9 @@
+ 	.version       = IPTABLES_VERSION,
+ 	.size          = IP6T_ALIGN(sizeof(struct ip6t_hl_info)),
+ 	.userspacesize = IP6T_ALIGN(sizeof(struct ip6t_hl_info)),
++#ifdef NO_OPTSIZE
+ 	.help          = &help,
++#endif /* NO_OPTSIZE */
+ 	.parse         = &parse,
+ 	.final_check   = &final_check,
+ 	.print         = &print,
+--- iptables/extensions/libip6t_HL.c
++++ iptables/extensions/libip6t_HL.c
+@@ -20,6 +20,7 @@
+ {
+ }
+ 
++#ifdef NO_OPTSIZE
+ static void help(void) 
+ {
+ 	printf(
+@@ -29,6 +30,7 @@
+ "  --hl-inc value		Increment HL by <value 1-255>\n"
+ , IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static int parse(int c, char **argv, int invert, unsigned int *flags,
+ 		const struct ip6t_entry *entry,
+@@ -151,7 +153,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ip6t_HL_info)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ip6t_HL_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help, 
++#endif /* NO_OPTSIZE */ 
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libip6t_icmp6.c
++++ iptables/extensions/libip6t_icmp6.c
+@@ -74,6 +74,7 @@
+ }
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -84,6 +85,7 @@
+ "\n", IPTABLES_VERSION);
+ 	print_icmpv6types();
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "icmpv6-type", 1, 0, '1' },
+@@ -263,7 +265,9 @@
+ 	.version 	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ip6t_icmp)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ip6t_icmp)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libip6t_IMQ.c
++++ iptables/extensions/libip6t_IMQ.c
+@@ -9,6 +9,7 @@
+ #include <linux/netfilter_ipv6/ip6t_IMQ.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -17,6 +18,7 @@
+ "  --todev <N>		enqueue to imq<N>, defaults to 0\n", 
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "todev", 1, 0, '1' },
+@@ -86,7 +88,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ip6t_imq_info)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ip6t_imq_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libip6t_iprange.c
++++ iptables/extensions/libip6t_iprange.c
+@@ -17,6 +17,7 @@
+ };
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -27,6 +28,7 @@
+ "\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "src-range", 1, 0, '1' },
+@@ -172,7 +174,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct xt_iprange_mtinfo)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct xt_iprange_mtinfo)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libip6t_ipv6header.c
++++ iptables/extensions/libip6t_ipv6header.c
+@@ -134,6 +134,7 @@
+ 	return flag;
+ }	
+ 
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -147,6 +148,7 @@
+ "--soft                    The header CONTAINS the specified extensions\n",
+ 	IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "header", 1, 0, '1' },
+@@ -301,7 +303,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ip6t_ipv6header_info)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ip6t_ipv6header_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libip6t_length.c
++++ iptables/extensions/libip6t_length.c
+@@ -10,6 +10,7 @@
+ #include <linux/netfilter_ipv6/ip6t_length.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -20,6 +21,7 @@
+ IPTABLES_VERSION);
+ 
+ }
++#endif /* NO_OPTSIZE */
+   
+ static struct option opts[] = {
+ 	{ "length", 1, 0, '1' },
+@@ -138,7 +140,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ip6t_length_info)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ip6t_length_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libip6t_limit.c
++++ iptables/extensions/libip6t_limit.c
+@@ -18,6 +18,7 @@
+ #define IP6T_LIMIT_BURST	5
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -29,6 +30,7 @@
+ "--limit-burst number		number to match in a burst, default %u\n"
+ "\n", IPTABLES_VERSION, IP6T_LIMIT_BURST);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "limit", 1, 0, '%' },
+@@ -180,7 +182,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ip6t_rateinfo)),
+ 	.userspacesize	= offsetof(struct ip6t_rateinfo, prev),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libip6t_LOG.c
++++ iptables/extensions/libip6t_LOG.c
+@@ -24,6 +24,7 @@
+ #define LOG_DEFAULT_LEVEL LOG_WARNING
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -38,6 +39,7 @@
+ " --log-macdecode		Decode MAC addresses and protocol.\n\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ .name = "log-level",        .has_arg = 1, .flag = 0, .val = '!' },
+@@ -299,7 +301,9 @@
+     .version       = IPTABLES_VERSION,
+     .size          = IP6T_ALIGN(sizeof(struct ip6t_log_info)),
+     .userspacesize = IP6T_ALIGN(sizeof(struct ip6t_log_info)),
++#ifdef NO_OPTSIZE
+     .help          = &help,
++#endif /* NO_OPTSIZE */
+     .init          = &init,
+     .parse         = &parse,
+     .final_check   = &final_check,
+--- iptables/extensions/libip6t_mac.c
++++ iptables/extensions/libip6t_mac.c
+@@ -13,6 +13,7 @@
+ #include <linux/netfilter_ipv6/ip6t_mac.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -22,6 +23,7 @@
+ "				Match source MAC address\n"
+ "\n", IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "mac-source", 1, 0, '1' },
+@@ -125,7 +127,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ip6t_mac_info)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ip6t_mac_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libip6t_mark.c
++++ iptables/extensions/libip6t_mark.c
+@@ -10,6 +10,7 @@
+ #include "../include/linux/netfilter_ipv6/ip6t_mark.h"
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -19,6 +20,7 @@
+ "\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "mark", 1, 0, '1' },
+@@ -128,7 +130,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ip6t_mark_info)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ip6t_mark_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libip6t_MARK.c
++++ iptables/extensions/libip6t_MARK.c
+@@ -10,6 +10,7 @@
+ #include "../include/linux/netfilter_ipv6/ip6t_MARK.h"
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -19,6 +20,7 @@
+ "\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ .name = "set-mark", .has_arg = 1, .flag = 0, .val = '1' },
+@@ -116,7 +118,9 @@
+ 	.version       = IPTABLES_VERSION,
+ 	.size          = IP6T_ALIGN(sizeof(struct ip6t_mark_target_info)),
+ 	.userspacesize = IP6T_ALIGN(sizeof(struct ip6t_mark_target_info)),
++#ifdef NO_OPTSIZE
+ 	.help          = &help,
++#endif /* NO_OPTSIZE */
+ 	.init          = &init,
+ 	.parse         = &parse,
+ 	.final_check   = &final_check,
+--- iptables/extensions/libip6t_mh.c
++++ iptables/extensions/libip6t_mh.c
+@@ -44,6 +44,7 @@
+ 	/* Alias */ { "be", 7, },
+ };
+ 
++#ifdef NO_OPTSIZE
+ static void print_types_all(void)
+ {
+ 	unsigned int i;
+@@ -66,6 +67,7 @@
+ IPTABLES_VERSION);
+ 	print_types_all();
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static void init(struct ip6t_entry_match *m, unsigned int *nfcache)
+ {
+@@ -237,7 +239,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ip6t_mh)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ip6t_mh)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libip6t_multiport.c
++++ iptables/extensions/libip6t_multiport.c
+@@ -28,6 +28,7 @@
+ }
+ #endif
+ 
++#ifdef NO_OPTSIZE
+ static void
+ help_v1(void)
+ {
+@@ -43,6 +44,7 @@
+ "				match both source and destination port(s)\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "source-ports", 1, 0, '1' },
+@@ -436,7 +438,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ip6t_multiport)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ip6t_multiport)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+@@ -453,7 +457,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ip6t_multiport_v1)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ip6t_multiport_v1)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help_v1,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse_v1,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libip6t_NFLOG.c
++++ iptables/extensions/libip6t_NFLOG.c
+@@ -21,6 +21,7 @@
+ 	{ "nflog-threshold", 1, 0, NFLOG_THRESHOLD },
+ };
+ 
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf("NFLOG v%s options:\n"
+@@ -30,6 +31,7 @@
+ 	       " --nflog-prefix STRING		Prefix string for log messages\n\n",
+ 	       IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static void init(struct ip6t_entry_target *t, unsigned int *nfcache)
+ {
+@@ -146,7 +148,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= XT_ALIGN(sizeof(struct xt_nflog_info)),
+ 	.userspacesize	= XT_ALIGN(sizeof(struct xt_nflog_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= help,
++#endif /* NO_OPTSIZE */
+ 	.init		= init,
+ 	.parse		= parse,
+ 	.final_check	= final_check,
+--- iptables/extensions/libip6t_NFQUEUE.c
++++ iptables/extensions/libip6t_NFQUEUE.c
+@@ -18,6 +18,7 @@
+ {
+ }
+ 
++#ifdef NO_OPTSIZE
+ static void help(void) 
+ {
+ 	printf(
+@@ -26,6 +27,7 @@
+ "  		                Valid queue numbers are 0-65535\n"
+ );
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "queue-num", 1, 0, 'F' },
+@@ -99,7 +101,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ipt_NFQ_info)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ipt_NFQ_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libip6t_nth.c
++++ iptables/extensions/libip6t_nth.c
+@@ -24,6 +24,7 @@
+ 
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -41,6 +42,7 @@
+ "                                Nth-1 inclusively.\n",
+ IPTABLES_VERSION, IP6T_NTH_NUM_COUNTERS-1);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "every", 1, 0, '1' },
+@@ -215,7 +217,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ip6t_nth_info)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ip6t_nth_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libip6t_owner.c
++++ iptables/extensions/libip6t_owner.c
+@@ -11,6 +11,7 @@
+ #include <linux/netfilter_ipv6/ip6t_owner.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -35,6 +36,7 @@
+ IPTABLES_VERSION);
+ #endif /* IP6T_OWNER_COMM */
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "uid-owner", 1, 0, '1' },
+@@ -234,7 +236,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ip6t_owner_info)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ip6t_owner_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libip6t_physdev.c
++++ iptables/extensions/libip6t_physdev.c
+@@ -12,6 +12,7 @@
+ #include <linux/if_ether.h>
+ #endif
+ 
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -24,6 +25,7 @@
+ " [!] --physdev-is-bridged		it's a bridged packet\n"
+ "\n", IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "physdev-in", 1, 0, '1' },
+@@ -177,7 +179,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ip6t_physdev_info)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ip6t_physdev_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libip6t_policy.c
++++ iptables/extensions/libip6t_policy.c
+@@ -22,6 +22,7 @@
+  */
+ static struct ip6t_policy_info *policy_info;
+ 
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf(
+@@ -40,6 +41,7 @@
+ "  --next 			begin next element in policy\n",
+ 	IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] =
+ {
+@@ -463,7 +465,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ip6t_policy_info)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ip6t_policy_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= help,
++#endif /* NO_OPTSIZE */
+ 	.init		= init,
+ 	.parse		= parse,
+ 	.final_check	= final_check,
+--- iptables/extensions/libip6t_random.c
++++ iptables/extensions/libip6t_random.c
+@@ -31,6 +31,7 @@
+ 
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -41,6 +42,7 @@
+ "                               Percentage must be within : 1 <= percent <= 99.\n\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "average", 1, 0, '1' },
+@@ -135,7 +137,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ip6t_rand_info)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ip6t_rand_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libip6t_recent.c
++++ iptables/extensions/libip6t_recent.c
+@@ -43,6 +43,7 @@
+ };
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -71,6 +72,7 @@
+ IPTABLES_VERSION);
+ 
+ }
++#endif /* NO_OPTSIZE */
+   
+ /* Initialize the match. */
+ static void
+@@ -230,7 +232,9 @@
+     .version       = XTABLES_VERSION,
+     .size          = IP6T_ALIGN(sizeof(struct xt_recent_mtinfo)),
+     .userspacesize = IP6T_ALIGN(sizeof(struct xt_recent_mtinfo)),
++#ifdef NO_OPTSIZE
+     .help          = &help,
++#endif /* NO_OPTSIZE */
+     .init          = &init,
+     .parse         = &parse,
+     .final_check   = &final_check,
+--- iptables/extensions/libip6t_REJECT.c
++++ iptables/extensions/libip6t_REJECT.c
+@@ -37,6 +37,7 @@
+ 		IP6T_TCP_RESET, "TCP RST packet"}
+ };
+ 
++#ifdef NO_OPTSIZE
+ static void
+ print_reject_types()
+ {
+@@ -64,6 +65,7 @@
+ 
+ 	print_reject_types();
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "reject-with", 1, 0, '1' },
+@@ -155,7 +157,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size 		= IP6T_ALIGN(sizeof(struct ip6t_reject_info)),
+ 	.userspacesize 	= IP6T_ALIGN(sizeof(struct ip6t_reject_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libip6t_ROUTE.c
++++ iptables/extensions/libip6t_ROUTE.c
+@@ -26,6 +26,7 @@
+ #endif
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -42,6 +43,7 @@
+ "\n",
+ "1.11");
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "oif", 1, 0, '1' },
+@@ -249,7 +251,9 @@
+ 	.version	= XTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ip6t_route_target_info)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ip6t_route_target_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libip6t_rt.c
++++ iptables/extensions/libip6t_rt.c
+@@ -15,6 +15,7 @@
+ /*#define DEBUG	1*/
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -28,6 +29,7 @@
+ " --rt-0-not-strict             List of Type=0 addresses not a strict list\n",
+ IPTABLES_VERSION, IP6T_RT_HOPS);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "rt-type", 1, 0, '1' },
+@@ -346,7 +348,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ip6t_rt)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ip6t_rt)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libip6t_sctp.c
++++ iptables/extensions/libip6t_sctp.c
+@@ -56,6 +56,7 @@
+ 	}
+ }
+ 
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf(
+@@ -69,6 +70,7 @@
+ "chunktypes - DATA INIT INIT_ACK SACK HEARTBEAT HEARTBEAT_ACK ABORT SHUTDOWN SHUTDOWN_ACK ERROR COOKIE_ECHO COOKIE_ACK ECN_ECNE ECN_CWR SHUTDOWN_COMPLETE ASCONF ASCONF_ACK ALL NONE\n",
+ 	IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ .name = "source-port", .has_arg = 1, .flag = 0, .val = '1' },
+@@ -534,7 +536,9 @@
+     .version       = IPTABLES_VERSION,
+     .size          = IP6T_ALIGN(sizeof(struct xt_sctp_info)),
+     .userspacesize = IP6T_ALIGN(sizeof(struct xt_sctp_info)),
++#ifdef NO_OPTSIZE
+     .help          = &help,
++#endif /* NO_OPTSIZE */
+     .init          = &init,
+     .parse         = &parse,
+     .final_check   = &final_check,
+--- iptables/extensions/libip6t_SECMARK.c
++++ iptables/extensions/libip6t_SECMARK.c
+@@ -16,6 +16,7 @@
+ 
+ #define PFX "SECMARK target: "
+ 
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf(
+@@ -24,6 +25,7 @@
+ "\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "selctx", 1, 0, '1' },
+@@ -110,7 +112,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct xt_secmark_target_info)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct xt_secmark_target_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libip6t_standard.c
++++ iptables/extensions/libip6t_standard.c
+@@ -8,6 +8,7 @@
+ #include <ip6tables.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -15,6 +16,7 @@
+ "Standard v%s options:\n"
+ "(If target is DROP, ACCEPT, RETURN or nothing)\n", IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{0}
+@@ -52,7 +54,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(int)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(int)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libip6t_state.c
++++ iptables/extensions/libip6t_state.c
+@@ -13,6 +13,7 @@
+ #endif
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -22,6 +23,7 @@
+ "				State(s) to match\n"
+ "\n", IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "state", 1, 0, '1' },
+@@ -149,7 +151,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ipt_state_info)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ipt_state_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libip6t_string.c
++++ iptables/extensions/libip6t_string.c
+@@ -32,6 +32,7 @@
+ #include <linux/netfilter_ipv4/ipt_string.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -44,6 +45,7 @@
+ "--hex-string [!] string      Match a hex string in a packet\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "from", 1, 0, '1' },
+@@ -339,7 +341,9 @@
+     .version		= IPTABLES_VERSION,
+     .size		= IP6T_ALIGN(sizeof(struct ipt_string_info)),
+     .userspacesize	= offsetof(struct ipt_string_info, config),
++#ifdef NO_OPTSIZE
+     .help		= help,
++#endif /* NO_OPTSIZE */
+     .init		= init,
+     .parse		= parse,
+     .final_check	= final_check,
+--- iptables/extensions/libip6t_tcp.c
++++ iptables/extensions/libip6t_tcp.c
+@@ -8,6 +8,7 @@
+ #include <linux/netfilter_ipv6/ip6_tables.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -26,6 +27,7 @@
+ " --tcp-option [!] number       match if TCP option set\n\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "source-port", 1, 0, '1' },
+@@ -400,7 +402,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ip6t_tcp)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ip6t_tcp)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libip6t_TCPMSS.c
++++ iptables/extensions/libip6t_TCPMSS.c
+@@ -17,6 +17,7 @@
+ };
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -26,6 +27,7 @@
+ "  --clamp-mss-to-pmtu           automatically clamp MSS value to (path_MTU - 60)\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "set-mss", 1, 0, '1' },
+@@ -119,7 +121,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ip6t_tcpmss_info)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ip6t_tcpmss_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libip6t_TRACE.c
++++ iptables/extensions/libip6t_TRACE.c
+@@ -8,6 +8,7 @@
+ #include <linux/netfilter_ipv6/ip6_tables.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -15,6 +16,7 @@
+ "TRACE target v%s takes no options\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ 0 }
+@@ -48,7 +50,9 @@
+ 	.version = IPTABLES_VERSION,
+ 	.size = IP6T_ALIGN(0),
+ 	.userspacesize = IP6T_ALIGN(0),
++#ifdef NO_OPTSIZE
+ 	.help = &help,
++#endif /* NO_OPTSIZE */
+ 	.init = &init,
+ 	.parse = &parse,
+ 	.final_check = &final_check,
+--- iptables/extensions/libip6t_udp.c
++++ iptables/extensions/libip6t_udp.c
+@@ -8,6 +8,7 @@
+ #include <linux/netfilter_ipv6/ip6_tables.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -21,6 +22,7 @@
+ "				match destination port(s)\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "source-port", 1, 0, '1' },
+@@ -212,7 +214,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IP6T_ALIGN(sizeof(struct ip6t_udp)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ip6t_udp)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libip6t_web.c
++++ iptables/extensions/libip6t_web.c
+@@ -20,6 +20,7 @@
+ #undef IPTABLES_SAVE
+ 
+ 
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf(
+@@ -38,6 +39,7 @@
+ 		"  text$   ends with\n"
+ 		"  ^text$  exact match\n");
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static void init(struct ip6t_entry_match *m, unsigned int *nfcache)
+ {
+@@ -200,7 +202,9 @@
+ 	.version       = IPTABLES_VERSION,
+ 	.size          = IP6T_ALIGN(sizeof(struct ipt_web_info)),
+ 	.userspacesize = IP6T_ALIGN(sizeof(struct ipt_web_info)),
++#ifdef NO_OPTSIZE
+ 	.help          = &help,
++#endif /* NO_OPTSIZE */
+ 	.init          = &init,
+ 	.parse         = &parse,
+ 	.final_check   = &final_check,
+--- iptables/extensions/libip6t_webmon.c
++++ iptables/extensions/libip6t_webmon.c
+@@ -68,10 +68,12 @@
+ static uint32_t global_max_searches = DEFAULT_MAX;
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf(	"webmon options:\n");
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = 
+ {
+@@ -272,7 +274,9 @@
+ 	#endif
+ 	.size		= IP6T_ALIGN(sizeof(struct ipt_webmon_info)),
+ 	.userspacesize	= IP6T_ALIGN(sizeof(struct ipt_webmon_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init           = &webmon_init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_account.c
++++ iptables/extensions/libipt_account.c
+@@ -30,6 +30,7 @@
+   ((unsigned char *)&addr)[0]
+ #endif
+         
++#ifdef NO_OPTSIZE
+ static void help(void) {
+   printf(
+       "account v%s options:\n"
+@@ -49,6 +50,7 @@
+ #endif
+   );
+ };
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+   { .name = "aaddr",  .has_arg = 1, .flag = NULL, .val = 201 },
+@@ -331,7 +333,9 @@
+   .version = IPTABLES_VERSION,
+   .size = IPT_ALIGN(sizeof(struct t_ipt_account_info)),
+   .userspacesize = IPT_ALIGN(sizeof(struct t_ipt_account_info)),
++#ifdef NO_OPTSIZE
+   .help = &help,
++#endif /* NO_OPTSIZE */
+   .init = &init,
+   .parse = &parse,
+   .final_check = &final_check,
+--- iptables/extensions/libipt_addrtype.c
++++ iptables/extensions/libipt_addrtype.c
+@@ -28,6 +28,7 @@
+ 	NULL
+ };
+ 
++#ifdef NO_OPTSIZE
+ static void help_types(void)
+ {
+ 	int i;
+@@ -47,6 +48,7 @@
+ , IPTABLES_VERSION);
+ 	help_types();
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static int
+ parse_type(const char *name, size_t strlen, u_int16_t *mask)
+@@ -192,7 +194,9 @@
+ 	.version 	= IPTABLES_VERSION,
+ 	.size 		= IPT_ALIGN(sizeof(struct ipt_addrtype_info)),
+ 	.userspacesize 	= IPT_ALIGN(sizeof(struct ipt_addrtype_info)),
++#ifdef NO_OPTSIZE
+ 	.help 		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse 		= &parse,
+ 	.final_check 	= &final_check,
+ 	.print 		= &print,
+--- iptables/extensions/libipt_ah.c
++++ iptables/extensions/libipt_ah.c
+@@ -9,6 +9,7 @@
+ #include <linux/netfilter_ipv4/ipt_ah.h>
+                                         
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -18,6 +19,7 @@
+ "				match spi (range)\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "ahspi", 1, 0, '1' },
+@@ -174,7 +176,9 @@
+ 	.version 	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_ah)),
+ 	.userspacesize 	= IPT_ALIGN(sizeof(struct ipt_ah)),
++#ifdef NO_OPTSIZE
+ 	.help 		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init 		= &init,
+ 	.parse 		= &parse,
+ 	.final_check 	= &final_check,
+--- iptables/extensions/libipt_autofw.c
++++ iptables/extensions/libipt_autofw.c
+@@ -26,6 +26,7 @@
+ #include <linux/netfilter_ipv4/ip_autofw.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -39,6 +40,7 @@
+ "				Port range to map related destination port range to.\n\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "related-proto", 1, 0, '1' },
+@@ -177,7 +179,9 @@
+     IPTABLES_VERSION,
+     IPT_ALIGN(sizeof(struct ip_autofw_info)),
+     IPT_ALIGN(sizeof(struct ip_autofw_info)),
++#ifdef NO_OPTSIZE
+     &help,
++#endif /* NO_OPTSIZE */
+     &init,
+     &parse,
+     &final_check,
+--- iptables/extensions/libipt_BALANCE.c
++++ iptables/extensions/libipt_BALANCE.c
+@@ -11,6 +11,7 @@
+ #define BREAKUP_IP(x) (x)>>24, ((x)>>16) & 0xFF, ((x)>>8) & 0xFF, (x) & 0xFF
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -20,6 +21,7 @@
+ "				Addresses to map destination to.\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "to-destination", 1, 0, '1' },
+@@ -135,7 +137,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ip_nat_multi_range)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ip_nat_multi_range)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_bcount.c
++++ iptables/extensions/libipt_bcount.c
+@@ -18,6 +18,7 @@
+ #undef IPTABLES_SAVE
+ 
+ 
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf(
+@@ -25,6 +26,7 @@
+ 		"[!] --range min:max (upper range of 0x0FFFFFFF or more means unlimited)\n"
+ 	);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static void init(struct ipt_entry_match *match, unsigned int *nfcache)
+ {
+@@ -110,7 +112,9 @@
+ 	.version       = IPTABLES_VERSION,
+ 	.size          = IPT_ALIGN(sizeof(struct ipt_bcount_match)),
+ 	.userspacesize = IPT_ALIGN(sizeof(struct ipt_bcount_match)),
++#ifdef NO_OPTSIZE
+ 	.help          = &help,
++#endif /* NO_OPTSIZE */
+ 	.init          = &init,
+ 	.parse         = &parse,
+ 	.final_check   = &final_check,
+--- iptables/extensions/libipt_BCOUNT.c
++++ iptables/extensions/libipt_BCOUNT.c
+@@ -14,10 +14,12 @@
+ #include <iptables.h>
+ #include <linux/netfilter_ipv4/ipt_BCOUNT.h>
+ 
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf("BCOUNT target (experimental) v0.01\nCopyright (C) 2006 Jonathan Zarate\n");
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static void init(struct ipt_entry_target *t, unsigned int *nfcache)
+ {
+@@ -41,7 +43,9 @@
+ 	.version = IPTABLES_VERSION,
+ 	.size = IPT_ALIGN(sizeof(struct ipt_BCOUNT_target)),
+ 	.userspacesize = IPT_ALIGN(sizeof(struct ipt_BCOUNT_target)),
++#ifdef NO_OPTSIZE
+ 	.help = &help,
++#endif /* NO_OPTSIZE */
+ 	.init = &init,
+ 	.parse = &parse,
+ 	.final_check = &final_check,
+--- iptables/extensions/libipt_childlevel.c
++++ iptables/extensions/libipt_childlevel.c
+@@ -25,6 +25,7 @@
+ #include <linux/netfilter_ipv4/ipt_childlevel.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf(
+@@ -33,6 +34,7 @@
+ 	IPTABLES_VERSION);
+ 	fputc('\n', stdout);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ .name = "level", .has_arg = 1, .flag = 0, .val = '1' },
+@@ -101,7 +103,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_childlevel_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_childlevel_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_CLASSIFY.c
++++ iptables/extensions/libipt_CLASSIFY.c
+@@ -11,6 +11,7 @@
+ #include <linux/pkt_sched.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -20,6 +21,7 @@
+ "\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "set-class", 1, 0, '1' },
+@@ -114,7 +116,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_classify_target_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_classify_target_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_CLUSTERIP.c
++++ iptables/extensions/libipt_CLUSTERIP.c
+@@ -19,6 +19,7 @@
+ #include <linux/netfilter_ipv4/ip_tables.h>
+ #include "../include/linux/netfilter_ipv4/ipt_CLUSTERIP.h"
+ 
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -36,6 +37,7 @@
+ "\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ #define	PARAM_NEW	0x0001
+ #define PARAM_HMODE	0x0002
+@@ -253,7 +255,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_clusterip_tgt_info)),
+ 	.userspacesize	= offsetof(struct ipt_clusterip_tgt_info, config),
++#ifdef NO_OPTSIZE
+  	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_comment.c
++++ iptables/extensions/libipt_comment.c
+@@ -15,6 +15,7 @@
+ #include <linux/netfilter_ipv4/ipt_comment.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -23,6 +24,7 @@
+ 		"--comment COMMENT             Attach a comment to a rule\n\n"
+ 		);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "comment", 1, 0, '1' },
+@@ -105,7 +107,9 @@
+     .version 		= IPTABLES_VERSION,
+     .size 		= IPT_ALIGN(sizeof(struct ipt_comment_info)),
+     .userspacesize	= IPT_ALIGN(sizeof(struct ipt_comment_info)),
++#ifdef NO_OPTSIZE
+     .help		= &help,
++#endif /* NO_OPTSIZE */
+     .parse 		= &parse,
+     .final_check 	= &final_check,
+     .print 		= &print,
+--- iptables/extensions/libipt_condition.c
++++ iptables/extensions/libipt_condition.c
+@@ -9,6 +9,7 @@
+ #include<linux/netfilter_ipv4/ipt_condition.h>
+ 
+ 
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -17,6 +18,7 @@
+ 	       "Match on boolean value stored in /proc file\n",
+ 	       IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ 
+ static struct option opts[] = {
+@@ -90,7 +92,9 @@
+ 	.version 	= IPTABLES_VERSION,
+ 	.size 		= IPT_ALIGN(sizeof(struct condition_info)),
+ 	.userspacesize 	= IPT_ALIGN(sizeof(struct condition_info)),
++#ifdef NO_OPTSIZE
+ 	.help 		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse 		= &parse,
+ 	.final_check	= &final_check,
+ 	.print 		= &print,
+--- iptables/extensions/libipt_connbytes.c
++++ iptables/extensions/libipt_connbytes.c
+@@ -9,6 +9,7 @@
+ #include <linux/netfilter_ipv4/ipt_connbytes.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -19,6 +20,7 @@
+ "     --connbytes-mode [packets, bytes, avgpkt]\n"
+ "\n", IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "connbytes", 1, 0, '1' },
+@@ -189,7 +191,9 @@
+ 	.version 	= IPTABLES_VERSION,
+ 	.size 		= IPT_ALIGN(sizeof(struct ipt_connbytes_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_connbytes_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_connlimit.c
++++ iptables/extensions/libipt_connlimit.c
+@@ -10,6 +10,7 @@
+ #include <linux/netfilter_ipv4/ipt_connlimit.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -19,6 +20,7 @@
+ " --connlimit-mask n		group hosts using mask\n"
+ "\n", IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "connlimit-above", 1, 0, '1' },
+@@ -121,7 +123,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_connlimit_info)),
+ 	.userspacesize 	= offsetof(struct ipt_connlimit_info,data),
++#ifdef NO_OPTSIZE
+ 	.help		= help,
++#endif /* NO_OPTSIZE */
+ 	.init		= connlimit_init,
+ 	.parse 		= parse,
+ 	.final_check	= final_check,
+--- iptables/extensions/libipt_connmark.c
++++ iptables/extensions/libipt_connmark.c
+@@ -29,6 +29,7 @@
+ #include "../include/linux/netfilter_ipv4/ipt_connmark.h"
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -38,6 +39,7 @@
+ "\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "mark", 1, 0, '1' },
+@@ -136,7 +138,9 @@
+     .version       = IPTABLES_VERSION,
+     .size          = IPT_ALIGN(sizeof(struct ipt_connmark_info)),
+     .userspacesize = IPT_ALIGN(sizeof(struct ipt_connmark_info)),
++#ifdef NO_OPTSIZE
+     .help          = &help,
++#endif /* NO_OPTSIZE */
+     .init          = &init,
+     .parse         = &parse,
+     .final_check   = &final_check,
+--- iptables/extensions/libipt_CONNMARK.c
++++ iptables/extensions/libipt_CONNMARK.c
+@@ -36,6 +36,7 @@
+ #endif
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -48,6 +49,7 @@
+ "\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "set-mark", 1, 0, '1' },
+@@ -217,7 +219,9 @@
+     .version       = IPTABLES_VERSION,
+     .size          = IPT_ALIGN(sizeof(struct ipt_connmark_target_info)),
+     .userspacesize = IPT_ALIGN(sizeof(struct ipt_connmark_target_info)),
++#ifdef NO_OPTSIZE
+     .help          = &help,
++#endif /* NO_OPTSIZE */
+     .init          = &init,
+     .parse         = &parse,
+     .final_check   = &final_check,
+--- iptables/extensions/libipt_connrate.c
++++ iptables/extensions/libipt_connrate.c
+@@ -17,6 +17,7 @@
+ #include <linux/netfilter_ipv4/ipt_connrate.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -28,6 +29,7 @@
+ "				expressible value.\n"
+ "\n", IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "connrate", 1, 0, '1' },
+@@ -165,7 +167,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_connrate_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_connrate_info)),
++#ifdef NO_OPTSIZE
+ 	.help 		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_CONNSECMARK.c
++++ iptables/extensions/libipt_CONNSECMARK.c
+@@ -14,6 +14,7 @@
+ 
+ #define PFX "CONNSECMARK target: "
+ 
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf(
+@@ -23,6 +24,7 @@
+ "\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "save", 0, 0, '1' },
+@@ -113,7 +115,9 @@
+ 	.size		= IPT_ALIGN(sizeof(struct xt_connsecmark_target_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct xt_connsecmark_target_info)),
+ 	.parse		= &parse,
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+ 	.save		= &save,
+--- iptables/extensions/libipt_conntrack.c
++++ iptables/extensions/libipt_conntrack.c
+@@ -18,6 +18,7 @@
+ #endif
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -40,6 +41,7 @@
+ "				value or range of values (inclusive)\n"
+ "\n", IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ 
+ 
+@@ -535,7 +537,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_conntrack_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_conntrack_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_dccp.c
++++ iptables/extensions/libipt_dccp.c
+@@ -34,6 +34,7 @@
+ 	memset(einfo, 0, sizeof(struct ipt_dccp_info));
+ }
+ 
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf(
+@@ -45,6 +46,7 @@
+ ,
+ 	IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ .name = "source-port", .has_arg = 1, .flag = 0, .val = '1' },
+@@ -358,7 +360,9 @@
+     .version       = IPTABLES_VERSION,
+     .size          = IPT_ALIGN(sizeof(struct ipt_dccp_info)),
+     .userspacesize = IPT_ALIGN(sizeof(struct ipt_dccp_info)),
++#ifdef NO_OPTSIZE
+     .help          = &help,
++#endif /* NO_OPTSIZE */
+     .init          = &init,
+     .parse         = &parse,
+     .final_check   = &final_check,
+--- iptables/extensions/libipt_DNAT.c
++++ iptables/extensions/libipt_DNAT.c
+@@ -20,6 +20,7 @@
+ };
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -31,6 +32,7 @@
+ "\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "to-destination", 1, 0, '1' },
+@@ -254,7 +256,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ip_nat_multi_range)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ip_nat_multi_range)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_dscp.c
++++ iptables/extensions/libipt_dscp.c
+@@ -24,6 +24,7 @@
+ /* This is evil, but it's my code - HW*/
+ #include "libipt_dscp_helper.c"
+ 
++#ifdef NO_OPTSIZE
+ static void help(void) 
+ {
+ 	printf(
+@@ -38,6 +39,7 @@
+ 				, IPTABLES_VERSION
+ );
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "dscp", 1, 0, 'F' },
+@@ -158,7 +160,9 @@
+ 	.version 	= IPTABLES_VERSION,
+ 	.size 		= IPT_ALIGN(sizeof(struct ipt_dscp_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_dscp_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_DSCP.c
++++ iptables/extensions/libipt_DSCP.c
+@@ -26,6 +26,7 @@
+ {
+ }
+ 
++#ifdef NO_OPTSIZE
+ static void help(void) 
+ {
+ 	printf(
+@@ -41,6 +42,7 @@
+ "				These two options are mutually exclusive !\n"
+ );
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "set-dscp", 1, 0, 'F' },
+@@ -149,7 +151,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_DSCP_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_DSCP_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_dstlimit.c
++++ iptables/extensions/libipt_dstlimit.c
+@@ -25,6 +25,7 @@
+ #define IPT_DSTLIMIT_EXPIRE	10000
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -46,6 +47,7 @@
+ "[--dstlimit-htable-expire]	after which time are idle entries expired?\n"
+ "\n", IPTABLES_VERSION, IPT_DSTLIMIT_BURST);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "dstlimit", 1, 0, '%' },
+@@ -325,7 +327,9 @@
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_dstlimit_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_dstlimit_info)),
+ 	//offsetof(struct ipt_dstlimit_info, prev),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_ecn.c
++++ iptables/extensions/libipt_ecn.c
+@@ -16,6 +16,7 @@
+ #include <linux/netfilter_ipv4/ip_tables.h>
+ #include <linux/netfilter_ipv4/ipt_ecn.h>
+ 
++#ifdef NO_OPTSIZE
+ static void help(void) 
+ {
+ 	printf(
+@@ -25,6 +26,7 @@
+ "[!] --ecn-ip-ect [0..3]	Match ECN codepoint in IPv4 header\n",
+ 	IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ .name = "ecn-tcp-cwr", .has_arg = 0, .flag = 0, .val = 'F' },
+@@ -157,7 +159,9 @@
+     .version       = IPTABLES_VERSION,
+     .size          = IPT_ALIGN(sizeof(struct ipt_ecn_info)),
+     .userspacesize = IPT_ALIGN(sizeof(struct ipt_ecn_info)),
++#ifdef NO_OPTSIZE
+     .help          = &help,
++#endif /* NO_OPTSIZE */
+     .parse         = &parse,
+     .final_check   = &final_check,
+     .print         = &print,
+--- iptables/extensions/libipt_ECN.c
++++ iptables/extensions/libipt_ECN.c
+@@ -21,6 +21,7 @@
+ {
+ }
+ 
++#ifdef NO_OPTSIZE
+ static void help(void) 
+ {
+ 	printf(
+@@ -28,6 +29,7 @@
+ "  --ecn-tcp-remove		Remove all ECN bits from TCP header\n",
+ 		IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ #if 0
+ "ECN target v%s EXPERIMENTAL options (use with extreme care!)\n"
+@@ -170,7 +172,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_ECN_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_ECN_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_esp.c
++++ iptables/extensions/libipt_esp.c
+@@ -9,6 +9,7 @@
+ #include <linux/netfilter_ipv4/ipt_esp.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -18,6 +19,7 @@
+ "				match spi (range)\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "espspi", 1, 0, '1' },
+@@ -177,7 +179,9 @@
+ 	.version 	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_esp)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_esp)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_exp.c
++++ iptables/extensions/libipt_exp.c
+@@ -14,12 +14,14 @@
+ #include <linux/netfilter_ipv4/ipt_exp.h>
+ 
+ 
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf(
+ 		"exp match v0.00 options:\n"
+ 		"  how should I know?!\n");
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static void init(struct ipt_entry_match *m, unsigned int *nfcache)
+ {
+@@ -69,7 +71,9 @@
+ 	.version       = IPTABLES_VERSION,
+ 	.size          = IPT_ALIGN(sizeof(struct ipt_exp_info)),
+ 	.userspacesize = IPT_ALIGN(sizeof(struct ipt_exp_info)),
++#ifdef NO_OPTSIZE
+ 	.help          = &help,
++#endif /* NO_OPTSIZE */
+ 	.init          = &init,
+ 	.parse         = &parse,
+ 	.final_check   = &final_check,
+--- iptables/extensions/libipt_FTOS.c
++++ iptables/extensions/libipt_FTOS.c
+@@ -25,6 +25,7 @@
+ {
+ }
+ 
++#ifdef NO_OPTSIZE
+ static void help(void) 
+ {
+ 	printf(
+@@ -34,6 +35,7 @@
+ "               		or in hex (ex: 0x20)\n"
+ );
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "set-ftos", 1, 0, 'F' },
+@@ -118,7 +120,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_FTOS_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_FTOS_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_fuzzy.c
++++ iptables/extensions/libipt_fuzzy.c
+@@ -22,6 +22,7 @@
+ #include <linux/netfilter_ipv4/ipt_fuzzy.h>
+ 
+ 
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -31,6 +32,7 @@
+ "                      --upper-limit number\n"
+ ,IPTABLES_VERSION);
+ };
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "lower-limit", 1 , 0 , '1' } ,
+@@ -143,7 +145,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_fuzzy_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_fuzzy_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_geoip.c
++++ iptables/extensions/libipt_geoip.c
+@@ -25,6 +25,7 @@
+ #include <iptables.h>
+ #include <linux/netfilter_ipv4/ipt_geoip.h>
+ 
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+    printf (
+@@ -42,6 +43,7 @@
+             "\n", IPTABLES_VERSION
+          );
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+    {  "dst-cc",  1, 0, '2'  }, /* Alias for --destination-country */
+@@ -323,7 +325,9 @@
+     .version         = IPTABLES_VERSION,
+     .size            = IPT_ALIGN(sizeof(struct ipt_geoip_info)),
+     .userspacesize   = offsetof(struct ipt_geoip_info, mem),
++#ifdef NO_OPTSIZE
+     .help            = &help,
++#endif /* NO_OPTSIZE */
+     .init            = &init,
+     .parse           = &parse,
+     .final_check     = &final_check,
+--- iptables/extensions/libipt_hashlimit.c
++++ iptables/extensions/libipt_hashlimit.c
+@@ -27,6 +27,7 @@
+ #define IPT_HASHLIMIT_EXPIRE	10000
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -45,6 +46,7 @@
+ "[--hashlimit-htable-expire]	after which time are idle entries expired?\n"
+ "\n", IPTABLES_VERSION, IPT_HASHLIMIT_BURST);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "hashlimit", 1, 0, '%' },
+@@ -354,7 +356,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_hashlimit_info)),
+ 	.userspacesize	= offsetof(struct ipt_hashlimit_info, hinfo),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_helper.c
++++ iptables/extensions/libipt_helper.c
+@@ -9,6 +9,7 @@
+ #include <linux/netfilter_ipv4/ipt_helper.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -18,6 +19,7 @@
+ "\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "helper", 1, 0, '1' },
+@@ -87,7 +89,9 @@
+ 	.name		= "helper",
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_helper_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_icmp.c
++++ iptables/extensions/libipt_icmp.c
+@@ -76,6 +76,7 @@
+ 	{ "address-mask-reply", 18, 0, 0xFF }
+ };
+ 
++#ifdef NO_OPTSIZE
+ static void
+ print_icmptypes()
+ {
+@@ -108,6 +109,7 @@
+ "\n", IPTABLES_VERSION);
+ 	print_icmptypes();
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "icmp-type", 1, 0, '1' },
+@@ -292,7 +294,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_icmp)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_icmp)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_IMQ.c
++++ iptables/extensions/libipt_IMQ.c
+@@ -9,6 +9,7 @@
+ #include <linux/netfilter_ipv4/ipt_IMQ.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -17,6 +18,7 @@
+ "  --todev <N>		enqueue to imq<N>, defaults to 0\n", 
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "todev", 1, 0, '1' },
+@@ -86,7 +88,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_imq_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_imq_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_IPMARK.c
++++ iptables/extensions/libipt_IPMARK.c
+@@ -24,6 +24,7 @@
+ };
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -35,6 +36,7 @@
+ "\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "addr", 1, 0, '1' },
+@@ -153,7 +155,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_ipmark_target_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_ipmark_target_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_ipp2p_K24.c
++++ iptables/extensions/libipt_ipp2p_K24.c
+@@ -18,6 +18,7 @@
+ #define xtables_register_match register_match
+ #endif
+ 
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -50,6 +51,7 @@
+     " iptables -A FORWARD -p tcp -m ipp2p --edk --soul -j DROP\n\n"
+     , IPP2P_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+         { "ipp2p", 0, 0, '1' },
+@@ -406,7 +408,9 @@
+     .version        = XTABLES_VERSION,
+     .size           = IPT_ALIGN(sizeof(struct ipt_p2p_info)),
+     .userspacesize  = IPT_ALIGN(sizeof(struct ipt_p2p_info)),
++#ifdef NO_OPTSIZE
+     .help           = &help,
++#endif /* NO_OPTSIZE */
+     .init           = &init,
+     .parse          = &parse,
+     .final_check    = &final_check,
+--- iptables/extensions/libipt_ipp2p_K26.c
++++ iptables/extensions/libipt_ipp2p_K26.c
+@@ -9,6 +9,7 @@
+ 
+ #include <linux/netfilter_ipv4/ipt_ipp2p.h>
+ 
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -43,6 +44,7 @@
+     " iptables -A FORWARD -p tcp -m ipp2p --edk --soul -j DROP\n\n"
+     , IPP2P_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+         { "ipp2p", 0, 0, '1' },
+@@ -371,7 +373,9 @@
+     .version        = IPTABLES_VERSION,
+     .size           = IPT_ALIGN(sizeof(struct ipt_p2p_info)),
+     .userspacesize  = IPT_ALIGN(sizeof(struct ipt_p2p_info)),
++#ifdef NO_OPTSIZE
+     .help           = &help,
++#endif /* NO_OPTSIZE */
+     .init           = &init,
+     .parse          = &parse,
+     .final_check    = &final_check,
+--- iptables/extensions/libipt_iprange.c
++++ iptables/extensions/libipt_iprange.c
+@@ -9,6 +9,7 @@
+ #include <linux/netfilter_ipv4/ipt_iprange.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -19,6 +20,7 @@
+ "\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "src-range", 1, 0, '1' },
+@@ -170,7 +172,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_iprange_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_iprange_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_ipv4options.c
++++ iptables/extensions/libipt_ipv4options.c
+@@ -18,6 +18,7 @@
+ #endif
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -32,6 +33,7 @@
+ "  [!] --any-opt (match any option or no option at all if used with '!')\n",
+ XTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "ssrr", 0, 0, '1' },
+@@ -319,7 +321,9 @@
+ 	.version	= XTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_ipv4options_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_ipv4options_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_IPV4OPTSSTRIP.c
++++ iptables/extensions/libipt_IPV4OPTSSTRIP.c
+@@ -13,11 +13,13 @@
+ #include <iptables.h>
+ #include <linux/netfilter_ipv4/ip_tables.h>
+ 
++#ifdef NO_OPTSIZE
+ static void help(void) 
+ {
+ 	printf("IPV4OPTSSTRIP v%s target takes no option !! Make sure you use it in the mangle table.\n",
+ 	       IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ 0 }
+@@ -60,7 +62,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(0),
+ 	.userspacesize	= IPT_ALIGN(0),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_layer7.c
++++ iptables/extensions/libipt_layer7.c
+@@ -31,6 +31,7 @@
+ static char l7dir[MAX_FN_LEN] = "\0";
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf(
+@@ -43,6 +44,7 @@
+ 	IPTABLES_VERSION);
+ 	fputc('\n', stdout);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ .name = "l7proto", .has_arg = 1, .flag = 0, .val = '1' },
+@@ -390,7 +392,9 @@
+     .version       = IPTABLES_VERSION,
+     .size          = IPT_ALIGN(sizeof(struct ipt_layer7_info)),
+     .userspacesize = IPT_ALIGN(sizeof(struct ipt_layer7_info)),
++#ifdef NO_OPTSIZE
+     .help          = &help,
++#endif /* NO_OPTSIZE */
+     .parse         = &parse,
+     .final_check   = &final_check,
+     .print         = &print,
+--- iptables/extensions/libipt_length.c
++++ iptables/extensions/libipt_length.c
+@@ -9,6 +9,7 @@
+ #include <linux/netfilter_ipv4/ipt_length.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -19,6 +20,7 @@
+ IPTABLES_VERSION);
+ 
+ }
++#endif /* NO_OPTSIZE */
+   
+ static struct option opts[] = {
+ 	{ "length", 1, 0, '1' },
+@@ -137,7 +139,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_length_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_length_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_limit.c
++++ iptables/extensions/libipt_limit.c
+@@ -18,6 +18,7 @@
+ #define IPT_LIMIT_BURST	5
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -29,6 +30,7 @@
+ "--limit-burst number		number to match in a burst, default %u\n"
+ "\n", IPTABLES_VERSION, IPT_LIMIT_BURST);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "limit", 1, 0, '%' },
+@@ -181,7 +183,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_rateinfo)),
+ 	.userspacesize	= offsetof(struct ipt_rateinfo, prev),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_LOG.c
++++ iptables/extensions/libipt_LOG.c
+@@ -24,6 +24,7 @@
+ #endif
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -38,6 +39,7 @@
+ " --log-macdecode		Decode MAC addresses and protocol.\n\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ .name = "log-level",        .has_arg = 1, .flag = 0, .val = '!' },
+@@ -299,7 +301,9 @@
+     .version       = IPTABLES_VERSION,
+     .size          = IPT_ALIGN(sizeof(struct ipt_log_info)),
+     .userspacesize = IPT_ALIGN(sizeof(struct ipt_log_info)),
++#ifdef NO_OPTSIZE
+     .help          = &help,
++#endif /* NO_OPTSIZE */
+     .init          = &init,
+     .parse         = &parse,
+     .final_check   = &final_check,
+--- iptables/extensions/libipt_mac.c
++++ iptables/extensions/libipt_mac.c
+@@ -13,6 +13,7 @@
+ #include <linux/netfilter_ipv4/ipt_mac.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -22,6 +23,7 @@
+ "				Match source MAC address\n"
+ "\n", IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "mac-source", 1, 0, '1' },
+@@ -126,7 +128,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_mac_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_mac_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_macsave.c
++++ iptables/extensions/libipt_macsave.c
+@@ -15,6 +15,7 @@
+ #include <linux/netfilter_ipv4/ipt_macsave.h>
+ 
+ 
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf(
+@@ -23,6 +24,7 @@
+ 		"Options:\n"
+ 		"[!] --mac <mac address>\n");
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static void init(struct ipt_entry_match *m, unsigned int *nfcache)
+ {
+@@ -96,7 +98,9 @@
+ 	.version       = IPTABLES_VERSION,
+ 	.size          = IPT_ALIGN(sizeof(struct ipt_macsave_match_info)),
+ 	.userspacesize = IPT_ALIGN(sizeof(struct ipt_macsave_match_info)),
++#ifdef NO_OPTSIZE
+ 	.help          = &help,
++#endif /* NO_OPTSIZE */
+ 	.init          = &init,
+ 	.parse         = &parse,
+ 	.final_check   = &final_check,
+--- iptables/extensions/libipt_MACSAVE.c
++++ iptables/extensions/libipt_MACSAVE.c
+@@ -14,6 +14,7 @@
+ #include <iptables.h>
+ #include <linux/netfilter_ipv4/ipt_MACSAVE.h>
+ 
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf(
+@@ -21,6 +22,7 @@
+ 		"Copyright (C) 2006 Jonathan Zarate\n"
+ 		"Options: none\n");
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static void init(struct ipt_entry_target *t, unsigned int *nfcache)
+ {
+@@ -44,7 +46,9 @@
+ 	.version = IPTABLES_VERSION,
+ 	.size = IPT_ALIGN(sizeof(struct ipt_MACSAVE_target_info)),
+ 	.userspacesize = IPT_ALIGN(sizeof(struct ipt_MACSAVE_target_info)),
++#ifdef NO_OPTSIZE
+ 	.help = &help,
++#endif /* NO_OPTSIZE */
+ 	.init = &init,
+ 	.parse = &parse,
+ 	.final_check = &final_check,
+--- iptables/extensions/libipt_mark.c
++++ iptables/extensions/libipt_mark.c
+@@ -10,6 +10,7 @@
+ #include "../include/linux/netfilter_ipv4/ipt_mark.h"
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -19,6 +20,7 @@
+ "\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "mark", 1, 0, '1' },
+@@ -129,7 +131,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_mark_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_mark_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_MARK.c
++++ iptables/extensions/libipt_MARK.c
+@@ -10,6 +10,7 @@
+ #include "../include/linux/netfilter_ipv4/ipt_MARK.h"
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -24,6 +25,7 @@
+ "\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "set-mark", 1, 0, '1' },
+@@ -263,7 +265,9 @@
+ 	.revision	= 0,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_mark_target_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_mark_target_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse_v0,
+ 	.final_check	= &final_check,
+@@ -280,7 +284,9 @@
+ 	.revision	= 1,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_mark_target_info_v1)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_mark_target_info_v1)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse_v1,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_MASQUERADE.c
++++ iptables/extensions/libipt_MASQUERADE.c
+@@ -9,6 +9,7 @@
+ #include <linux/netfilter/nf_nat.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -22,6 +23,7 @@
+ ,
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "to-ports", 1, 0, '1' },
+@@ -165,7 +167,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ip_nat_multi_range)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ip_nat_multi_range)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_MIRROR.c
++++ iptables/extensions/libipt_MIRROR.c
+@@ -8,6 +8,7 @@
+ #include <linux/netfilter_ipv4/ip_tables.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -15,6 +16,7 @@
+ "MIRROR target v%s takes no options\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ 0 }
+@@ -47,7 +49,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(0),
+ 	.userspacesize	= IPT_ALIGN(0),
++#ifdef NO_OPTSIZE
+  	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+  	.parse		= &parse,
+ 	.final_check 	= &final_check,
+--- iptables/extensions/libipt_mport.c
++++ iptables/extensions/libipt_mport.c
+@@ -8,6 +8,7 @@
+ #include <linux/netfilter_ipv4/ipt_mport.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -23,6 +24,7 @@
+ "				match both source and destination port(s)\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "source-ports", 1, 0, '1' },
+@@ -271,7 +273,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_mport)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_mport)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_multiport.c
++++ iptables/extensions/libipt_multiport.c
+@@ -28,6 +28,7 @@
+ }
+ #endif
+ 
++#ifdef NO_OPTSIZE
+ static void
+ help_v1(void)
+ {
+@@ -43,6 +44,7 @@
+ "				match both source and destination port(s)\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "source-ports", 1, 0, '1' },
+@@ -445,7 +447,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_multiport)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_multiport)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+@@ -462,7 +466,9 @@
+ 	.revision	= 1,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_multiport_v1)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_multiport_v1)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help_v1,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse_v1,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_NETLINK.c
++++ iptables/extensions/libipt_NETLINK.c
+@@ -10,6 +10,7 @@
+ #include <linux/netfilter_ipv4/ip_tables.h>
+ #include <linux/netfilter_ipv4/ipt_NETLINK.h>
+ 
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf("NETLINK v%s options:\n"
+@@ -18,6 +19,7 @@
+ 		" --nlsize <bytes>	Limit packet size\n",
+ 	       IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{"nldrop", 0, 0, 'd'},
+@@ -141,7 +143,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_nldata)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_nldata)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_NETMAP.c
++++ iptables/extensions/libipt_NETMAP.c
+@@ -19,6 +19,7 @@
+ };
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -27,6 +28,7 @@
+ 	       "				Network address to map to.\n\n",
+ 	       IPTABLES_VERSION, opts[0].name);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static u_int32_t
+ bits2netmask(int bits)
+@@ -183,7 +185,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ip_nat_multi_range)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ip_nat_multi_range)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_NFLOG.c
++++ iptables/extensions/libipt_NFLOG.c
+@@ -21,6 +21,7 @@
+ 	{ "nflog-threshold", 1, 0, NFLOG_THRESHOLD },
+ };
+ 
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf("NFLOG v%s options:\n"
+@@ -30,6 +31,7 @@
+ 	       " --nflog-prefix STRING		Prefix string for log messages\n\n",
+ 	       IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static void init(struct xt_entry_target *t, unsigned int *nfcache)
+ {
+@@ -146,7 +148,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= XT_ALIGN(sizeof(struct xt_nflog_info)),
+ 	.userspacesize	= XT_ALIGN(sizeof(struct xt_nflog_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= help,
++#endif /* NO_OPTSIZE */
+ 	.init		= init,
+ 	.parse		= parse,
+ 	.final_check	= final_check,
+--- iptables/extensions/libipt_NFQUEUE.c
++++ iptables/extensions/libipt_NFQUEUE.c
+@@ -18,6 +18,7 @@
+ {
+ }
+ 
++#ifdef NO_OPTSIZE
+ static void help(void) 
+ {
+ 	printf(
+@@ -26,6 +27,7 @@
+ "  		                Valid queue numbers are 0-65535\n"
+ );
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "queue-num", 1, 0, 'F' },
+@@ -99,7 +101,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_NFQ_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_NFQ_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_NOTRACK.c
++++ iptables/extensions/libipt_NOTRACK.c
+@@ -8,6 +8,7 @@
+ #include <linux/netfilter_ipv4/ip_tables.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -15,6 +16,7 @@
+ "NOTRACK target v%s takes no options\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ 0 }
+@@ -48,7 +50,9 @@
+ 	.version = IPTABLES_VERSION,
+ 	.size = IPT_ALIGN(0),
+ 	.userspacesize = IPT_ALIGN(0),
++#ifdef NO_OPTSIZE
+ 	.help = &help,
++#endif /* NO_OPTSIZE */
+ 	.init = &init,
+ 	.parse = &parse,
+ 	.final_check = &final_check,
+--- iptables/extensions/libipt_nth.c
++++ iptables/extensions/libipt_nth.c
+@@ -24,6 +24,7 @@
+ 
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -41,6 +42,7 @@
+ "                                Nth-1 inclusively.\n",
+ IPTABLES_VERSION, IPT_NTH_NUM_COUNTERS-1);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "every", 1, 0, '1' },
+@@ -216,7 +218,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_nth_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_nth_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_osf.c
++++ iptables/extensions/libipt_osf.c
+@@ -33,6 +33,7 @@
+ #include <iptables.h>
+ #include <linux/netfilter_ipv4/ipt_osf.h>
+ 
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf("OS fingerprint match options:\n"
+@@ -45,6 +46,7 @@
+ 		"--connector		Log through kernel connector [in 2.6.12-mm+].\n"
+ 		);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ 
+ static struct option opts[] = {
+@@ -150,7 +152,9 @@
+     .version       = IPTABLES_VERSION,
+     .size          = IPT_ALIGN(sizeof(struct ipt_osf_info)),
+     .userspacesize = IPT_ALIGN(sizeof(struct ipt_osf_info)),
++#ifdef NO_OPTSIZE
+     .help          = &help,
++#endif /* NO_OPTSIZE */
+     .parse         = &parse,
+     .final_check   = &final_check,
+     .print         = &print,
+--- iptables/extensions/libipt_owner.c
++++ iptables/extensions/libipt_owner.c
+@@ -11,6 +11,7 @@
+ #include <linux/netfilter_ipv4/ipt_owner.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -37,6 +38,7 @@
+ IPTABLES_VERSION);
+ #endif /* IPT_OWNER_COMM */
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "uid-owner", 1, 0, '1' },
+@@ -236,7 +238,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_owner_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_owner_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_physdev.c
++++ iptables/extensions/libipt_physdev.c
+@@ -12,6 +12,7 @@
+ #include <linux/if_ether.h>
+ #endif
+ 
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -24,6 +25,7 @@
+ " [!] --physdev-is-bridged		it's a bridged packet\n"
+ "\n", IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "physdev-in", 1, 0, '1' },
+@@ -178,7 +180,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_physdev_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_physdev_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_pkttype.c
++++ iptables/extensions/libipt_pkttype.c
+@@ -55,6 +55,7 @@
+ }
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf(
+@@ -63,6 +64,7 @@
+ "\n", PKTTYPE_VERSION);
+ 	print_types();
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{"pkt-type", 1, 0, '1'},
+@@ -153,7 +155,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_pkttype_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_pkttype_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse, 
+ 	.final_check	= &final_check, 
+ 	.print		= &print,
+--- iptables/extensions/libipt_policy.c
++++ iptables/extensions/libipt_policy.c
+@@ -21,6 +21,7 @@
+  */
+ static struct ipt_policy_info *policy_info;
+ 
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf(
+@@ -39,6 +40,7 @@
+ "  --next 			begin next element in policy\n",
+ 	IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] =
+ {
+@@ -421,7 +423,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_policy_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_policy_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= help,
++#endif /* NO_OPTSIZE */
+ 	.init		= init,
+ 	.parse		= parse,
+ 	.final_check	= final_check,
+--- iptables/extensions/libipt_psd.c
++++ iptables/extensions/libipt_psd.c
+@@ -26,6 +26,7 @@
+ 
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -37,6 +38,7 @@
+ " --psd-hi-ports-weight  hi          High ports weight\n\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "psd-weight-threshold", 1, 0, '1' },
+@@ -179,7 +181,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_psd_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_psd_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_quota.c
++++ iptables/extensions/libipt_quota.c
+@@ -17,12 +17,14 @@
+ };
+ 
+ /* print usage */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+         printf("quota options:\n"
+                " --quota quota			quota (bytes)\n" "\n");
+ }
++#endif /* NO_OPTSIZE */
+ 
+ /* print matchinfo */
+ static void
+@@ -91,7 +93,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof (struct ipt_quota_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof (struct ipt_quota_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_random.c
++++ iptables/extensions/libipt_random.c
+@@ -30,6 +30,7 @@
+ 
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -40,6 +41,7 @@
+ "                               Percentage must be within : 1 <= percent <= 99.\n\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "average", 1, 0, '1' },
+@@ -135,7 +137,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_rand_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_rand_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_realm.c
++++ iptables/extensions/libipt_realm.c
+@@ -15,6 +15,7 @@
+ #include <linux/netfilter_ipv4/ipt_realm.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -24,6 +25,7 @@
+ "				Match realm\n"
+ "\n", IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "realm", 1, 0, '1' },
+@@ -256,7 +258,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_realm_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_realm_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_recent.c
++++ iptables/extensions/libipt_recent.c
+@@ -37,6 +37,7 @@
+ };
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -65,6 +66,7 @@
+ IPTABLES_VERSION);
+ 
+ }
++#endif /* NO_OPTSIZE */
+   
+ /* Initialize the match. */
+ static void
+@@ -225,7 +227,9 @@
+     .version       = IPTABLES_VERSION,
+     .size          = IPT_ALIGN(sizeof(struct ipt_recent_info)),
+     .userspacesize = IPT_ALIGN(sizeof(struct ipt_recent_info)),
++#ifdef NO_OPTSIZE
+     .help          = &help,
++#endif /* NO_OPTSIZE */
+     .init          = &init,
+     .parse         = &parse,
+     .final_check   = &final_check,
+--- iptables/extensions/libipt_record_rpc.c
++++ iptables/extensions/libipt_record_rpc.c
+@@ -4,6 +4,7 @@
+ #include <iptables.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -11,6 +12,7 @@
+ "record_rpc v%s takes no options\n"
+ "\n", IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{0}
+@@ -51,7 +53,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(0),
+ 	.userspacesize	= IPT_ALIGN(0),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_REDIRECT.c
++++ iptables/extensions/libipt_REDIRECT.c
+@@ -12,6 +12,7 @@
+ #define IPT_REDIRECT_OPT_RANDOM	0x02
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -21,6 +22,7 @@
+ "				Port (range) to map to.\n\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "to-ports", 1, 0, '1' },
+@@ -174,7 +176,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ip_nat_multi_range)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ip_nat_multi_range)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+  	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_REJECT.c
++++ iptables/extensions/libipt_REJECT.c
+@@ -50,6 +50,7 @@
+ 	 IPT_ICMP_ADMIN_PROHIBITED, "ICMP administratively prohibited (*)"}
+ };
+ 
++#ifdef NO_OPTSIZE
+ static void
+ print_reject_types()
+ {
+@@ -79,6 +80,7 @@
+ 
+ 	printf("(*) See man page or read the INCOMPATIBILITES file for compatibility issues.\n");
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "reject-with", 1, 0, '1' },
+@@ -174,7 +176,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_reject_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_reject_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_ROUTE.c
++++ iptables/extensions/libipt_ROUTE.c
+@@ -31,6 +31,7 @@
+ #endif
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -47,6 +48,7 @@
+ "\n",
+ "1.11");
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "oif", 1, 0, '1' },
+@@ -276,7 +278,9 @@
+ 	.version	= XTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_route_target_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_route_target_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_rpc.c
++++ iptables/extensions/libipt_rpc.c
+@@ -153,6 +153,7 @@
+ }
+ 
+ 
++#ifdef NO_OPTSIZE
+ static void help(void) 
+ {
+ 	printf(
+@@ -166,6 +167,7 @@
+ 		"\t\t\t\tnot containing \"get\" portmapper requests.\n",
+ 		IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ 
+ static struct option opts[] = {
+@@ -356,7 +358,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_rpc_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_rpc_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_SAME.c
++++ iptables/extensions/libipt_SAME.c
+@@ -11,6 +11,7 @@
+ #include "../include/linux/netfilter_ipv4/ipt_SAME.h"
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -28,6 +29,7 @@
+ ,
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "to", 1, 0, '1' },
+@@ -221,7 +223,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_same_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_same_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_sctp.c
++++ iptables/extensions/libipt_sctp.c
+@@ -56,6 +56,7 @@
+ 	}
+ }
+ 
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf(
+@@ -69,6 +70,7 @@
+ "chunktypes - DATA INIT INIT_ACK SACK HEARTBEAT HEARTBEAT_ACK ABORT SHUTDOWN SHUTDOWN_ACK ERROR COOKIE_ECHO COOKIE_ACK ECN_ECNE ECN_CWR SHUTDOWN_COMPLETE ASCONF ASCONF_ACK ALL NONE\n",
+ 	IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ .name = "source-port", .has_arg = 1, .flag = 0, .val = '1' },
+@@ -534,7 +536,9 @@
+     .version       = IPTABLES_VERSION,
+     .size          = IPT_ALIGN(sizeof(struct ipt_sctp_info)),
+     .userspacesize = IPT_ALIGN(sizeof(struct ipt_sctp_info)),
++#ifdef NO_OPTSIZE
+     .help          = &help,
++#endif /* NO_OPTSIZE */
+     .init          = &init,
+     .parse         = &parse,
+     .final_check   = &final_check,
+--- iptables/extensions/libipt_SECMARK.c
++++ iptables/extensions/libipt_SECMARK.c
+@@ -14,6 +14,7 @@
+ 
+ #define PFX "SECMARK target: "
+ 
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf(
+@@ -22,6 +23,7 @@
+ "\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "selctx", 1, 0, '1' },
+@@ -110,7 +112,9 @@
+ 	.revision	= 0,
+ 	.size		= IPT_ALIGN(sizeof(struct xt_secmark_target_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct xt_secmark_target_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_set.c
++++ iptables/extensions/libipt_set.c
+@@ -22,6 +22,7 @@
+ #include "libipt_set.h"
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf("set v%s options:\n"
+@@ -31,6 +32,7 @@
+ 	       "		'src' and 'dst'.\n"
+ 	       "\n", IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{"set", 1, 0, '1'},
+@@ -151,7 +153,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_set_info_match)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_set_info_match)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_SET.c
++++ iptables/extensions/libipt_SET.c
+@@ -23,6 +23,7 @@
+ #include "libipt_set.h"
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf("SET v%s options:\n"
+@@ -33,6 +34,7 @@
+ 	       "		'src' and 'dst'.\n"
+ 	       "\n", IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{"add-set",   1, 0, '1'},
+@@ -164,7 +166,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_set_info_target)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_set_info_target)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_SNAT.c
++++ iptables/extensions/libipt_SNAT.c
+@@ -20,6 +20,7 @@
+ };
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -31,6 +32,7 @@
+ "\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "to-source", 1, 0, '1' },
+@@ -255,7 +257,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ip_nat_multi_range)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ip_nat_multi_range)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_standard.c
++++ iptables/extensions/libipt_standard.c
+@@ -8,6 +8,7 @@
+ #include <iptables.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -15,6 +16,7 @@
+ "Standard v%s options:\n"
+ "(If target is DROP, ACCEPT, RETURN or nothing)\n", IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{0}
+@@ -54,7 +56,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(int)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(int)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_state.c
++++ iptables/extensions/libipt_state.c
+@@ -13,6 +13,7 @@
+ #endif
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -22,6 +23,7 @@
+ "				State(s) to match\n"
+ "\n", IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "state", 1, 0, '1' },
+@@ -149,7 +151,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_state_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_state_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_statistic.c
++++ iptables/extensions/libipt_statistic.c
+@@ -8,6 +8,7 @@
+ #include <iptables.h>
+ #include <linux/netfilter/xt_statistic.h>
+ 
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -22,6 +23,7 @@
+ "\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "mode", 1, 0, '1' },
+@@ -161,7 +163,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct xt_statistic_info)),
+ 	.userspacesize	= offsetof(struct xt_statistic_info, u.nth.count),
++#ifdef NO_OPTSIZE
+ 	.help		= help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= parse,
+ 	.final_check	= final_check,
+ 	.print		= print,
+--- iptables/extensions/libipt_string.c
++++ iptables/extensions/libipt_string.c
+@@ -31,6 +31,7 @@
+ #include <linux/netfilter_ipv4/ipt_string.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -43,6 +44,7 @@
+ "--hex-string [!] string      Match a hex string in a packet\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "from", 1, 0, '1' },
+@@ -338,7 +340,9 @@
+     .version		= IPTABLES_VERSION,
+     .size		= IPT_ALIGN(sizeof(struct ipt_string_info)),
+     .userspacesize	= offsetof(struct ipt_string_info, config),
++#ifdef NO_OPTSIZE
+     .help		= help,
++#endif /* NO_OPTSIZE */
+     .init		= init,
+     .parse		= parse,
+     .final_check	= final_check,
+--- iptables/extensions/libipt_TARPIT.c
++++ iptables/extensions/libipt_TARPIT.c
+@@ -12,6 +12,7 @@
+ #define xtables_register_target register_target
+ #endif
+ 
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -19,6 +20,7 @@
+ "TARPIT takes no options\n"
+ "\n", stdout);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ 0 }
+@@ -69,7 +71,9 @@
+ 	.version	= XTABLES_VERSION,
+ 	.size		= IPT_ALIGN(0),
+ 	.userspacesize	= IPT_ALIGN(0),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_tcp.c
++++ iptables/extensions/libipt_tcp.c
+@@ -8,6 +8,7 @@
+ #include <linux/netfilter_ipv4/ip_tables.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -26,6 +27,7 @@
+ " --tcp-option [!] number       match if TCP option set\n\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "source-port", 1, 0, '1' },
+@@ -400,7 +402,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_tcp)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_tcp)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_TCPLAG.c
++++ iptables/extensions/libipt_TCPLAG.c
+@@ -39,12 +39,14 @@
+  * This merely dumps out text for the user
+  * (saves keeping the manpage up to date)
+  */
++#ifdef NO_OPTSIZE
+ static void help( void )
+ {
+ 	printf( "TCPLAG options:\n"
+ 			" --log-level=n    Set the syslog level to n (integer 0 to 7)\n\n"
+ 			" --log-prefix=xx  Prefix log messages with xx\n" );
+ }
++#endif /* NO_OPTSIZE */
+ 
+ /*
+  * See "man getopt_long" for an explanation of this structure
+@@ -198,7 +200,9 @@
+ version:          IPTABLES_VERSION,
+ size:             IPT_ALIGN( sizeof( struct ipt_tcplag )),
+ userspacesize:    IPT_ALIGN( sizeof( struct ipt_tcplag )),
++#ifdef NO_OPTSIZE
+ help:             &help,
++#endif /* NO_OPTSIZE */
+ init:             &init,
+ parse:            &parse,
+ final_check:      &final_check,
+--- iptables/extensions/libipt_tcpmss.c
++++ iptables/extensions/libipt_tcpmss.c
+@@ -9,6 +9,7 @@
+ #include <linux/netfilter_ipv4/ipt_tcpmss.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -18,6 +19,7 @@
+ "				(only valid for TCP SYN or SYN/ACK packets)\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "mss", 1, 0, '1' },
+@@ -138,7 +140,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_tcpmss_match_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_tcpmss_match_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_TCPMSS.c
++++ iptables/extensions/libipt_TCPMSS.c
+@@ -17,6 +17,7 @@
+ };
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -26,6 +27,7 @@
+ "  --clamp-mss-to-pmtu           automatically clamp MSS value to (path_MTU - 40)\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "set-mss", 1, 0, '1' },
+@@ -119,7 +121,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_tcpmss_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_tcpmss_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_time.c
++++ iptables/extensions/libipt_time.c
+@@ -13,6 +13,7 @@
+ static int globaldays;
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -41,6 +42,7 @@ help(void)
+ "                            not specified, then default to their smallest\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "timestart", 1, 0, '1' },
+@@ -183,7 +185,9 @@ parse_days_string(int *days, const char
+ {
+ 	int len;
+ 	int i=0;
++#ifdef NO_OPTSIZE
+ 	char *err = "invalid days `%s' specified, should be Sun,Mon,Tue... format";
++#endif /* NO_OPTSIZE */
+ 
+ 	len = strlen(daystring);
+ 	if (len < 3)
+@@ -534,7 +538,9 @@ struct iptables_match timestruct = {
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_time_info)),
+ 	.userspacesize	= offsetof(struct ipt_time_info, kerneltime),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_tos.c
++++ iptables/extensions/libipt_tos.c
+@@ -23,6 +23,7 @@
+ };
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -41,6 +42,7 @@
+                        TOS_values[i].TOS);
+ 	fputc('\n', stdout);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "tos", 1, 0, '1' },
+@@ -158,7 +160,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_tos_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_tos_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_TOS.c
++++ iptables/extensions/libipt_TOS.c
+@@ -28,6 +28,7 @@
+ };
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -46,6 +47,7 @@
+                        TOS_values[i].TOS);
+ 	fputc('\n', stdout);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "set-tos", 1, 0, '1' },
+@@ -159,7 +161,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_tos_target_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_tos_target_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_TRACE.c
++++ iptables/extensions/libipt_TRACE.c
+@@ -8,6 +8,7 @@
+ #include <linux/netfilter_ipv4/ip_tables.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -15,6 +16,7 @@
+ "TRACE target v%s takes no options\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ 0 }
+@@ -48,7 +50,9 @@
+ 	.version = IPTABLES_VERSION,
+ 	.size = IPT_ALIGN(0),
+ 	.userspacesize = IPT_ALIGN(0),
++#ifdef NO_OPTSIZE
+ 	.help = &help,
++#endif /* NO_OPTSIZE */
+ 	.init = &init,
+ 	.parse = &parse,
+ 	.final_check = &final_check,
+--- iptables/extensions/libipt_TRIGGER.c
++++ iptables/extensions/libipt_TRIGGER.c
+@@ -17,6 +17,7 @@
+ #include <linux/netfilter_ipv4/ipt_TRIGGER.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -32,6 +33,7 @@
+ "				Port range to map related destination port range to.\n\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "trigger-type", 1, 0, '1' },
+@@ -193,7 +195,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_trigger_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_trigger_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_ttl.c
++++ iptables/extensions/libipt_ttl.c
+@@ -14,6 +14,7 @@
+ #include <linux/netfilter_ipv4/ip_tables.h>
+ #include <linux/netfilter_ipv4/ipt_ttl.h>
+ 
++#ifdef NO_OPTSIZE
+ static void help(void) 
+ {
+ 	printf(
+@@ -23,6 +24,7 @@
+ "  --ttl-gt value	Match TTL > value\n"
+ , IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static int parse(int c, char **argv, int invert, unsigned int *flags,
+ 		const struct ipt_entry *entry, unsigned int *nfcache,
+@@ -157,7 +159,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_ttl_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_ttl_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_TTL.c
++++ iptables/extensions/libipt_TTL.c
+@@ -20,6 +20,7 @@
+ {
+ }
+ 
++#ifdef NO_OPTSIZE
+ static void help(void) 
+ {
+ 	printf(
+@@ -29,6 +30,7 @@
+ "  --ttl-inc value		Increment TTL by <value 1-255>\n"
+ , IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static int parse(int c, char **argv, int invert, unsigned int *flags,
+ 		const struct ipt_entry *entry,
+@@ -151,7 +153,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_TTL_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_TTL_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_u32.c
++++ iptables/extensions/libipt_u32.c
+@@ -18,6 +18,7 @@
+ #include <ctype.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -30,6 +31,7 @@
+ 		" operator := & | << | >> | @\n"
+ 		,IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ /* defined in /usr/include/getopt.h maybe in man getopt */
+ static struct option opts[] = {
+@@ -249,7 +251,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_u32)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_u32)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/extensions/libipt_udp.c
++++ iptables/extensions/libipt_udp.c
+@@ -8,6 +8,7 @@
+ #include <linux/netfilter_ipv4/ip_tables.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -21,6 +22,7 @@
+ "				match destination port(s)\n",
+ IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "source-port", 1, 0, '1' },
+@@ -214,7 +216,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_udp)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_udp)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_ULOG.c
++++ iptables/extensions/libipt_ULOG.c
+@@ -34,6 +34,7 @@
+ }
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf("ULOG v%s options:\n"
+@@ -43,6 +44,7 @@
+ 	       " --ulog-prefix prefix		Prefix log messages with this prefix.\n\n",
+ 	       IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{"ulog-nlgroup", 1, 0, '!'},
+@@ -222,7 +224,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_ulog_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_ulog_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_unclean.c
++++ iptables/extensions/libipt_unclean.c
+@@ -5,6 +5,7 @@
+ #include <iptables.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+@@ -12,6 +13,7 @@
+ "unclean v%s takes no options\n"
+ "\n", IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{0}
+@@ -40,7 +42,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(0),
+ 	.userspacesize	= IPT_ALIGN(0),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= NULL,
+--- iptables/extensions/libipt_web.c
++++ iptables/extensions/libipt_web.c
+@@ -19,6 +19,7 @@
+ #undef IPTABLES_SAVE
+ 
+ 
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf(
+@@ -37,6 +38,7 @@
+ 		"  text$   ends with\n"
+ 		"  ^text$  exact match\n");
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static void init(struct ipt_entry_match *m, unsigned int *nfcache)
+ {
+@@ -199,7 +201,9 @@
+ 	.version       = IPTABLES_VERSION,
+ 	.size          = IPT_ALIGN(sizeof(struct ipt_web_info)),
+ 	.userspacesize = IPT_ALIGN(sizeof(struct ipt_web_info)),
++#ifdef NO_OPTSIZE
+ 	.help          = &help,
++#endif /* NO_OPTSIZE */
+ 	.init          = &init,
+ 	.parse         = &parse,
+ 	.final_check   = &final_check,
+--- iptables/extensions/libipt_webmon.c
++++ iptables/extensions/libipt_webmon.c
+@@ -65,10 +65,12 @@
+ static uint32_t global_max_searches = DEFAULT_MAX;
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf(	"webmon options:\n");
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = 
+ {
+@@ -267,7 +269,9 @@
+ 	#endif
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_webmon_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_webmon_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init           = &webmon_init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/libipt_webstr.c
++++ iptables/extensions/libipt_webstr.c
+@@ -30,6 +30,7 @@
+ #include <linux/netfilter_ipv4/ipt_webstr.h>
+ 
+ /* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ static void help(void)
+ {
+ 	printf(
+@@ -39,6 +40,7 @@
+ 		"[!] --content ##         Match Java, ActiveX, proxy. See code for details.\n\n",
+ 		IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static struct option opts[] = {
+ 	{ "host", 1, 0, '1' },
+@@ -147,7 +149,9 @@
+ 		IPTABLES_VERSION,
+ 		IPT_ALIGN(sizeof(struct ipt_webstr_info)),
+ 		IPT_ALIGN(sizeof(struct ipt_webstr_info)),
++#ifdef NO_OPTSIZE
+ 		&help,
++#endif /* NO_OPTSIZE */
+ 		&init,
+ 		&parse,
+ 		&final_check,
+--- iptables/extensions/libipt_XOR.c
++++ iptables/extensions/libipt_XOR.c
+@@ -23,6 +23,7 @@
+ {
+ }
+ 
++#ifdef NO_OPTSIZE
+ static void help(void) 
+ {
+ 	printf(
+@@ -31,6 +32,7 @@
+ 		"  --block-size		  Set block size\n",
+ 		IPTABLES_VERSION);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static int parse(int c, char **argv, int invert, unsigned int *flags,
+ 		const struct ipt_entry *entry, 
+@@ -99,7 +101,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof(struct ipt_XOR_info)),
+ 	.userspacesize	= IPT_ALIGN(sizeof(struct ipt_XOR_info)),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.init		= &init,
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+--- iptables/extensions/x_libipt_quota.c
++++ iptables/extensions/x_libipt_quota.c
+@@ -18,12 +18,14 @@
+ };
+ 
+ /* print usage */
++#ifdef NO_OPTSIZE
+ static void
+ help(void)
+ {
+         printf("quota options:\n"
+                " --quota quota			quota (bytes)\n" "\n");
+ }
++#endif /* NO_OPTSIZE */
+ 
+ /* print matchinfo */
+ static void
+@@ -92,7 +94,9 @@
+ 	.version	= IPTABLES_VERSION,
+ 	.size		= IPT_ALIGN(sizeof (struct xt_quota_info)),
+ 	.userspacesize	= offsetof(struct xt_quota_info, quota),
++#ifdef NO_OPTSIZE
+ 	.help		= &help,
++#endif /* NO_OPTSIZE */
+ 	.parse		= &parse,
+ 	.final_check	= &final_check,
+ 	.print		= &print,
+--- iptables/include/ip6tables.h
++++ iptables/include/ip6tables.h
+@@ -60,7 +60,9 @@
+ 	size_t userspacesize;
+ 
+ 	/* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ 	void (*help)(void);
++#endif /* NO_OPTSIZE */
+ 
+ 	/* Initialize the match. */
+ 	void (*init)(struct ip6t_entry_match *m, unsigned int *nfcache);
+@@ -110,7 +112,9 @@
+ 	size_t userspacesize;
+ 
+ 	/* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ 	void (*help)(void);
++#endif /* NO_OPTSIZE */
+ 
+ 	/* Initialize the target. */
+ 	void (*init)(struct ip6t_entry_target *t, unsigned int *nfcache);
+--- iptables/include/iptables_common.h
++++ iptables/include/iptables_common.h
+@@ -12,8 +12,14 @@
+ /* this is a special 64bit data type that is 8-byte aligned */
+ #define aligned_u64 unsigned long long __attribute__((aligned(8)))
+ 
++#ifdef NO_OPTSIZE
+ extern void exit_printhelp() __attribute__((noreturn));
+ extern void exit_tryhelp(int) __attribute__((noreturn));
++#else
++#define exit_printhelp(a) exit(-1)
++#define exit_tryhelp(a) exit(-1)
++#endif /* NO_OPTSIZE */
++
+ int check_inverse(const char option[], int *invert, int *optind, int argc);
+ extern int string_to_number(const char *, 
+ 			    unsigned int, 
+@@ -30,8 +36,14 @@
+ extern int
+ iptables_insmod(const char *modname, const char *modprobe, int quiet);
+ extern int load_iptables_ko(const char *modprobe, int quiet);
++
++#ifdef NO_OPTSIZE
+ void exit_error(enum exittype, char *, ...)__attribute__((noreturn,
+ 							  format(printf,2,3)));
++#else
++#define exit_error(exittype, args...) exit(-1)
++#endif /* NO_OPTSIZE */
++
+ extern const char *program_name, *program_version;
+ extern char *lib_dir;
+ 
+--- iptables/include/iptables.h
++++ iptables/include/iptables.h
+@@ -60,7 +60,9 @@
+ 	size_t userspacesize;
+ 
+ 	/* Function which prints out usage message. */
++#ifdef NO_OPTSIZE
+ 	void (*help)(void);
++#endif /* NO_OPTSIZE */
+ 
+ 	/* Initialize the match. */
+ 	void (*init)(struct ipt_entry_match *m, unsigned int *nfcache);
+--- iptables/ip6tables.c
++++ iptables/ip6tables.c
+@@ -296,6 +296,7 @@
+ 	}
+ }
+ 
++#ifdef NO_OPTSIZE
+ void
+ exit_error(enum exittype status, char *msg, ...)
+ {
+@@ -412,6 +413,7 @@
+ 	}
+ 	exit(0);
+ }
++#endif /* NO_OPTSIZE */ /* NO_OPTSIZE */
+ 
+ static void
+ generic_opt_check(int command, int options)
+--- iptables/ip6tables-restore.c
++++ iptables/ip6tables-restore.c
+@@ -42,7 +42,11 @@
+ 
+ static void print_usage(const char *name, const char *version)
+ {
++#ifdef NO_OPTSIZE
+ 	fprintf(stderr, "Usage: %s [-b] [-c] [-v] [-t] [-h]\n"
++#else
++	printf("Usage: %s [-b] [-c] [-v] [-t] [-h]\n"
++#endif /* NO_OPTSIZE */
+ 			"	   [ --binary ]\n"
+ 			"	   [ --counters ]\n"
+ 			"	   [ --verbose ]\n"
+--- iptables/iptables.c
++++ iptables/iptables.c
+@@ -376,6 +376,7 @@ static void free_opts(int reset_offset)
+ 	}
+ }
+ 
++#ifdef NO_OPTSIZE
+ void
+ exit_error(enum exittype status, char *msg, ...)
+ {
+@@ -492,6 +493,7 @@ exit_printhelp(struct iptables_rule_matc
+ 	}
+ 	exit(0);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ static void
+ generic_opt_check(int command, int options)
+@@ -529,6 +531,7 @@ generic_opt_check(int command, int optio
+ 	}
+ }
+ 
++#ifdef NO_OPTSIZE
+ static char
+ opt2char(int option)
+ {
+@@ -546,6 +549,7 @@ cmd2char(int option)
+ 
+ 	return *ptr;
+ }
++#endif /* NO_OPTSIZE */ /* NO_OPTSIZE */
+ 
+ static void
+ add_command(unsigned int *cmd, const int newcmd, const int othercmds, 
+--- iptables/iptables-restore.c
++++ iptables/iptables-restore.c
+@@ -39,7 +39,11 @@
+ 
+ static void print_usage(const char *name, const char *version)
+ {
++#ifdef NO_OPTSIZE
+ 	fprintf(stderr, "Usage: %s [-b] [-c] [-v] [-t] [-h]\n"
++#else
++	printf("Usage: %s [-b] [-c] [-v] [-t] [-h]\n"
++#endif /* NO_OPTSIZE */
+ 			"	   [ --binary ]\n"
+ 			"	   [ --counters ]\n"
+ 			"	   [ --verbose ]\n"
