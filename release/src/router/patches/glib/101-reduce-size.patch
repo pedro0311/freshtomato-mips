@@ -1,0 +1,42 @@
+--- glib/glib.h
++++ glib/glib.h
+@@ -1277,6 +1277,8 @@ void		g_log_default_handler	(const gchar
+ 					 GLogLevelFlags	 log_level,
+ 					 const gchar	*message,
+ 					 gpointer	 unused_data);
++
++#ifdef NO_OPTSIZE
+ void		g_log			(const gchar	*log_domain,
+ 					 GLogLevelFlags	 log_level,
+ 					 const gchar	*format,
+@@ -1285,6 +1287,11 @@ void		g_logv			(const gchar	*log_domain,
+ 					 GLogLevelFlags	 log_level,
+ 					 const gchar	*format,
+ 					 va_list	 args);
++#else
++#define g_log(domain, level, format, ...) do { } while(0)
++#define g_logv(domain, level, format, ...) do { } while(0)
++#endif /* NO_OPTSIZE */
++
+ GLogLevelFlags	g_log_set_fatal_mask	(const gchar	*log_domain,
+ 					 GLogLevelFlags	 fatal_mask);
+ GLogLevelFlags	g_log_set_always_fatal	(GLogLevelFlags	 fatal_mask);
+--- glib/gmessages.c
++++ glib/gmessages.c
+@@ -323,6 +323,7 @@ g_log_remove_handler (const gchar    *lo
+ 	     log_domain);
+ }
+ 
++#ifdef NO_OPTSIZE
+ void
+ g_logv (const gchar    *log_domain,
+ 	GLogLevelFlags	log_level,
+@@ -408,6 +409,8 @@ g_log (const gchar    *log_domain,
+   g_logv (log_domain, log_level, format, args);
+   va_end (args);
+ }
++#endif /* NO_OPTSIZE */
++
+ 
+ void
+ g_log_default_handler (const gchar    *log_domain,

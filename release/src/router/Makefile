@@ -116,6 +116,7 @@ obj-$(TCONFIG_NFS) += libnfsidmap
 obj-$(TCONFIG_NFS) += nfs-utils
 
 #Roadkill
+obj-$(TCONFIG_NOCAT) += glib
 obj-$(TCONFIG_NOCAT) += nocat
 
 # !!TB
@@ -1724,8 +1725,9 @@ spawn-fcgi-install:
 	$(STRIP) -s $(INSTALLDIR)/spawn-fcgi/usr/bin/spawn-fcgi
 
 glib/stamp-h1:
+	$(call patch_files,glib)
 	@cd glib && \
-	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections $(OPTSIZE_FLAG)" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
 	$(CONFIGURE) --prefix=/usr glib_cv_prog_cc_ansi_proto=no glib_cv_has__inline=yes glib_cv_has__inline__=yes glib_cv_hasinline=yes \
 		glib_cv_sane_realloc=yes glib_cv_va_copy=no glib_cv___va_copy=yes glib_cv_va_val_copy=yes glib_cv_rtldglobal_broken=no \
@@ -1742,6 +1744,7 @@ glib: glib/stamp-h1
 glib-clean:
 	-@$(MAKE) -C glib clean
 	rm -f glib/stamp-h1
+	$(call unpatch_files,glib)
 
 glib-install: glib
 	@$(MAKE) -C glib DESTDIR=$(INSTALLDIR)/glib install
@@ -1772,6 +1775,7 @@ nocat-install:
 	$(STRIP) $(INSTALLDIR)/nocat/usr/sbin/splashd
 	mkdir -p $(INSTALLDIR)/nocat/usr/libexec/nocat
 	install -D nocat/libexec/iptables/* $(INSTALLDIR)/nocat/usr/libexec/nocat
+	rm -rf $(INSTALLDIR)/glib/*
 
 #Tomato RAF
 pcre/stamp-h1:
