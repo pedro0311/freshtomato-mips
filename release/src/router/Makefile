@@ -1235,7 +1235,7 @@ zebra-install:
 xl2tpd: pppd
 	@$(SEP)
 	$(call patch_files,xl2tpd)
-	CFLAGS="-Os -g $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+	CFLAGS="-Os -g $(EXTRACFLAGS) -ffunction-sections -fdata-sections $(OPTSIZE_FLAG)" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
 	$(MAKE) -C $@ PREFIX=/usr xl2tpd $(PARALLEL_BUILD)
 
@@ -1244,6 +1244,7 @@ xl2tpd-install:
 	$(STRIP) $(INSTALLDIR)/xl2tpd/usr/sbin/xl2tpd
 
 xl2tpd-clean:
+	-@$(MAKE) -C xl2tpd clean
 	$(call unpatch_files,xl2tpd)
 
 bpalogin-install:

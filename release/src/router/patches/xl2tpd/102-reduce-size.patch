@@ -1,0 +1,606 @@
+--- xl2tpd/call.h
++++ xl2tpd/call.h
+@@ -107,6 +107,12 @@ extern struct call *get_call (int tunnel
+ extern struct call *get_tunnel (int, unsigned int, int);
+ extern void destroy_call (struct call *);
+ extern struct call *new_call (struct tunnel *);
++
++#ifdef NO_OPTSIZE
+ extern void set_error (struct call *, int, const char *, ...);
++#else
++#define set_error(a, b, fmt, ...) while(0) {}
++#endif
++
+ void *call_thread_init (void *);
+ void call_close (struct call *);
+--- xl2tpd/file.c
++++ xl2tpd/file.c
+@@ -30,7 +30,13 @@ struct lac *laclist;
+ struct lns *deflns;
+ struct lac *deflac;
+ struct global gconfig;
++
++#ifdef NO_OPTSIZE
+ char filerr[STRLEN];
++#define my_snprintf snprintf
++#else
++#define my_snprintf(p, fmt, ...) do { } while(0)
++#endif
+ 
+ int parse_config (FILE *);
+ struct keyword words[];
+@@ -193,7 +199,7 @@ int set_boolean (char *word, char *value
+ #endif /* ; */
+     if ((val = yesno (value)) < 0)
+     {
+-        snprintf (filerr, sizeof (filerr), "%s must be 'yes' or 'no'\n",
++        my_snprintf (filerr, sizeof (filerr), "%s must be 'yes' or 'no'\n",
+                   word);
+         return -1;
+     }
+@@ -209,7 +215,7 @@ int set_int (char *word, char *value, in
+ #endif /* ; */
+     if ((val = atoi (value)) < 0)
+     {
+-        snprintf (filerr, sizeof (filerr), "%s must be a number\n", word);
++        my_snprintf (filerr, sizeof (filerr), "%s must be a number\n", word);
+         return -1;
+     }
+     *ptr = val;
+@@ -238,7 +244,7 @@ int set_port (char *word, char *value, i
+         set_int (word, value, &(((struct global *) item)->port));
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -249,7 +255,7 @@ int set_rtimeout (char *word, char *valu
+ {
+     if (atoi (value) < 1)
+     {
+-        snprintf (filerr, sizeof (filerr),
++        my_snprintf (filerr, sizeof (filerr),
+                   "rtimeout value must be at least 1\n");
+         return -1;
+     }
+@@ -263,7 +269,7 @@ int set_rtimeout (char *word, char *valu
+         set_int (word, value, &(((struct lac *) item)->rtimeout));
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -274,7 +280,7 @@ int set_rws (char *word, char *value, in
+ {
+     if (atoi (value) < -1)
+     {
+-        snprintf (filerr, sizeof (filerr),
++        my_snprintf (filerr, sizeof (filerr),
+                   "receive window size must be at least -1\n");
+         return -1;
+     }
+@@ -288,7 +294,7 @@ int set_rws (char *word, char *value, in
+             set_int (word, value, &(((struct lac *) item)->tun_rws));
+             if (((struct lac *) item)->tun_rws < 1)
+             {
+-                snprintf (filerr, sizeof (filerr),
++                my_snprintf (filerr, sizeof (filerr),
+                           "receive window size for tunnels must be at least 1\n");
+                 return -1;
+             }
+@@ -302,14 +308,14 @@ int set_rws (char *word, char *value, in
+             set_int (word, value, &(((struct lns *) item)->tun_rws));
+             if (((struct lns *) item)->tun_rws < 1)
+             {
+-                snprintf (filerr, sizeof (filerr),
++                my_snprintf (filerr, sizeof (filerr),
+                           "receive window size for tunnels must be at least 1\n");
+                 return -1;
+             }
+         }
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -320,7 +326,7 @@ int set_speed (char *word, char *value,
+ {
+     if (atoi (value) < 1 )
+     {
+-        snprintf (filerr, sizeof (filerr),
++        my_snprintf (filerr, sizeof (filerr),
+                   "bps must be greater than zero\n");
+         return -1;
+     }
+@@ -349,7 +355,7 @@ int set_speed (char *word, char *value,
+ 	}
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -368,7 +374,7 @@ int set_maxretries (char *word, char *va
+         set_int (word, value, &(((struct global *) item)->max_retries));
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -388,7 +394,7 @@ int set_capbackoff (char *word, char *va
+         set_int (word, value, &(((struct global *) item)->cap_backoff));
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -400,7 +406,7 @@ int set_rmax (char *word, char *value, i
+ {
+     if (atoi (value) < 1)
+     {
+-        snprintf (filerr, sizeof (filerr), "rmax value must be at least 1\n");
++        my_snprintf (filerr, sizeof (filerr), "rmax value must be at least 1\n");
+         return -1;
+     }
+     switch (context & ~CONTEXT_DEFAULT)
+@@ -412,7 +418,7 @@ int set_rmax (char *word, char *value, i
+         set_int (word, value, &(((struct lac *) item)->rmax));
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -423,7 +429,7 @@ int set_authfile (char *word, char *valu
+ {
+     if (!strlen (value))
+     {
+-        snprintf (filerr, sizeof (filerr),
++        my_snprintf (filerr, sizeof (filerr),
+                   "no filename specified for authentication\n");
+         return -1;
+     }
+@@ -438,7 +444,7 @@ int set_authfile (char *word, char *valu
+                  sizeof (((struct global *)item)->authfile));
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -454,7 +460,7 @@ int set_autodial (char *word, char *valu
+             return -1;
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -492,7 +498,7 @@ int set_flow (char *word, char *value, i
+         }
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -508,7 +514,7 @@ int set_defaultroute (char *word, char *
+             return -1;
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -530,7 +536,7 @@ int set_authname (char *word, char *valu
+             return -1;
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -552,7 +558,7 @@ int set_hostname (char *word, char *valu
+             return -1;
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -568,7 +574,7 @@ int set_passwdauth (char *word, char *va
+             return -1;
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -588,7 +594,7 @@ int set_hbit (char *word, char *value, i
+             return -1;
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -608,7 +614,7 @@ int set_challenge (char *word, char *val
+             return -1;
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -628,7 +634,7 @@ int set_lbit (char *word, char *value, i
+             return -1;
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -649,7 +655,7 @@ int set_debug (char *word, char *value,
+             return -1;
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -669,7 +675,7 @@ int set_pass_peer (char *word, char *val
+             return -1;
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -691,7 +697,7 @@ int set_pppoptfile (char *word, char *va
+             return -1;
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -743,7 +749,7 @@ int set_papchap (char *word, char *value
+             n->chap_require = result;
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -759,7 +765,7 @@ int set_redial (char *word, char *value,
+             return -1;
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -776,7 +782,7 @@ int set_accesscontrol (char *word, char
+             return -1;
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -793,7 +799,7 @@ int set_userspace (char *word, char *val
+             return -1;
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -810,7 +816,7 @@ int set_debugavp (char *word, char *valu
+             return -1;
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -827,7 +833,7 @@ int set_debugnetwork (char *word, char *
+             return -1;
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -844,7 +850,7 @@ int set_debugpacket (char *word, char *v
+             return -1;
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -861,7 +867,7 @@ int set_debugtunnel (char *word, char *v
+             return -1;
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -878,7 +884,7 @@ int set_debugstate (char *word, char *va
+             return -1;
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -894,7 +900,7 @@ int set_assignip (char *word, char *valu
+             return -1;
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -919,7 +925,7 @@ struct iprange *set_range (char *word, c
+     }
+     if (!strlen (value) || (c && !strlen (d)))
+     {
+-        snprintf (filerr, sizeof (filerr),
++        my_snprintf (filerr, sizeof (filerr),
+                   "format is '%s <host or ip> - <host or ip>'\n", word);
+         return NULL;
+     }
+@@ -928,7 +934,7 @@ struct iprange *set_range (char *word, c
+     hp = gethostbyname (value);
+     if (!hp)
+     {
+-        snprintf (filerr, sizeof (filerr), "Unknown host %s\n", value);
++        my_snprintf (filerr, sizeof (filerr), "Unknown host %s\n", value);
+         free (ipr);
+         return NULL;
+     }
+@@ -960,7 +966,7 @@ struct iprange *set_range (char *word, c
+         hp = gethostbyname (d);
+         if (!hp)
+         {
+-            snprintf (filerr, sizeof (filerr), "Unknown host %s\n", d);
++            my_snprintf (filerr, sizeof (filerr), "Unknown host %s\n", d);
+             free (ipr);
+             return NULL;
+         }
+@@ -970,7 +976,7 @@ struct iprange *set_range (char *word, c
+         ipr->end = ipr->start;
+     if (ntohl (ipr->start) > ntohl (ipr->end))
+     {
+-        snprintf (filerr, sizeof (filerr), "start is greater than end!\n");
++        my_snprintf (filerr, sizeof (filerr), "start is greater than end!\n");
+         free (ipr);
+         return NULL;
+     }
+@@ -998,7 +1004,7 @@ int set_iprange (char *word, char *value
+     case CONTEXT_LNS:
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -1020,13 +1026,13 @@ int set_localiprange (char *word, char *
+     case CONTEXT_LNS:
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+ 
+     if (lns->localaddr) {
+-        snprintf (filerr, sizeof (filerr), "'local ip range' and 'local ip' are mutually exclusive\n");
++        my_snprintf (filerr, sizeof (filerr), "'local ip range' and 'local ip' are mutually exclusive\n");
+ 	return -1;
+     }
+ 
+@@ -1048,7 +1054,7 @@ int set_lac (char *word, char *value, in
+     case CONTEXT_LNS:
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -1071,7 +1077,7 @@ int set_exclusive (char *word, char *val
+             return -1;
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -1085,7 +1091,7 @@ int set_ip (char *word, char *value, uns
+     hp = gethostbyname (value);
+     if (!hp)
+     {
+-        snprintf (filerr, sizeof (filerr), "%s: host '%s' not found\n",
++        my_snprintf (filerr, sizeof (filerr), "%s: host '%s' not found\n",
+                   __FUNCTION__, value);
+         return -1;
+     }
+@@ -1106,7 +1112,7 @@ int set_listenaddr (char *word, char *va
+ 		return -1;
+ 	break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -1125,13 +1131,13 @@ int set_localaddr (char *word, char *val
+     case CONTEXT_LNS:
+         n = (struct lns *) item;
+         if (n->localrange) {
+-            snprintf (filerr, sizeof (filerr),
++            my_snprintf (filerr, sizeof (filerr),
+                     "'local ip range' and 'local ip' are mutually exclusive\n");
+             return -1;
+         }
+         return set_ip (word, value, &(n->localaddr));
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -1147,7 +1153,7 @@ int set_remoteaddr (char *word, char *va
+         l = (struct lac *) item;
+         return set_ip (word, value, &(l->remoteaddr));
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -1180,7 +1186,7 @@ int set_lns (char *word, char *value, in
+         hp = gethostbyname (value);
+         if (!hp)
+         {
+-            snprintf (filerr, sizeof (filerr), "no such host '%s'\n", value);
++            my_snprintf (filerr, sizeof (filerr), "no such host '%s'\n", value);
+             return -1;
+         }
+ #endif
+@@ -1204,7 +1210,7 @@ int set_lns (char *word, char *value, in
+             ipr->port = UDP_LISTEN_PORT;
+         break;
+     default:
+-        snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++        my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+                   word);
+         return -1;
+     }
+@@ -1237,7 +1243,7 @@ int set_ipsec_saref (char *word, char *v
+ 	    }
+ 	    break;
+     default:
+-	    snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
++	    my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n",
+ 		      word);
+ 	    return -1;
+     }
+@@ -1253,7 +1259,7 @@ int set_saref_num (char *word, char *val
+ 		set_int (word, value, &(((struct global *) item)->sarefnum));
+ 		break;
+ 	default:
+-		snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n", word);
++		my_snprintf (filerr, sizeof (filerr), "'%s' not valid in this context\n", word);
+ 		return -1;
+ 	}
+     return 0;
+@@ -1304,7 +1310,7 @@ int set_rand_source (char *word, char *v
+     /* WORKING HERE */
+     if (strlen(value) == 0)
+     {
+-        snprintf(filerr, sizeof (filerr), "no randomness source specified\n");
++        my_snprintf(filerr, sizeof (filerr), "no randomness source specified\n");
+         return -1;
+     }
+     if (strncmp(value, "egd", 3) == 0)
+--- xl2tpd/misc.c
++++ xl2tpd/misc.c
+@@ -31,6 +31,7 @@
+ 
+ /* prevent deadlock that occurs when a signal handler, which interrupted a
+  * call to syslog(), attempts to call syslog(). */
++#ifdef NO_OPTSIZE
+ static int syslog_nesting = 0;
+ #define SYSLOG_CALL(code) do {      \
+     if (++syslog_nesting < 2) {     \
+@@ -38,9 +39,11 @@ static int syslog_nesting = 0;
+     }                               \
+     --syslog_nesting;               \
+ } while(0)
++#endif /* NO_OPTSIZE */
+ 
+ #define UNUSED(x) (void)(x)
+ 
++#ifdef NO_OPTSIZE
+ void init_log()
+ {
+     static int logopen=0;
+@@ -79,6 +82,7 @@ void set_error (struct call *c, int erro
+         c->errormsg[strlen (c->errormsg) - 1] = 0;
+     va_end (args);
+ }
++#endif /* NO_OPTSIZE */
+ 
+ struct buffer *new_buf (int size)
+ {
+--- xl2tpd/misc.h
++++ xl2tpd/misc.h
+@@ -44,7 +44,11 @@ struct ppp_opts
+ 
+ #define IPADDY(a) inet_ntoa(*((struct in_addr *)&(a)))
+ 
++#ifdef NO_OPTSIZE
+ #define DEBUG c ? c->debug || t->debug : t->debug
++#else
++#define DEBUG 0
++#endif
+ 
+ #ifdef USE_SWAPS_INSTEAD
+ #define SWAPS(a) ((((a) & 0xFF) << 8 ) | (((a) >> 8) & 0xFF))
+@@ -61,7 +65,13 @@ struct ppp_opts
+ #define halt() printf("Halted.\n") ; for(;;)
+ 
+ extern char hostname[];
++
++#ifdef NO_OPTSIZE
+ extern void l2tp_log (int level, const char *fmt, ...);
++#else
++#define l2tp_log(level, fmt, ...) do { } while(0)
++#endif
++
+ extern struct buffer *new_buf (int);
+ extern void udppush_handler (int);
+ extern int addfcs (struct buffer *buf);
