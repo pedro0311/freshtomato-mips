@@ -1344,34 +1344,40 @@ endif
 
 FFMPEG_FILTER_CONFIG= $(foreach c, $(2), --$(1)="$(c)")
 
-FFMPEG_DECODERS:=aac ac3 atrac3 flac h264 jpegls mp3 mpeg1video mpeg2video mpeg4 mpeg4aac mpegvideo png wmav1 wmav2
-FFMPEG_CONFIGURE_DECODERS:=$(call FFMPEG_FILTER_CONFIG,enable-decoder,$(FFMPEG_DECODERS))
-
+FFMPEG_DEMUXERS:=aac ac3 avi flac h264 matroska mov mp3 mpegvideo vc1
 FFMPEG_PARSERS:=aac ac3 h264 mpeg4video mpegaudio mpegvideo
-FFMPEG_CONFIGURE_PARSERS:=$(call FFMPEG_FILTER_CONFIG,enable-parser,$(FFMPEG_PARSERS))
-
+FFMPEG_DECODERS:=aac ac3 flac h264 jpegls mp3 mpeg1video mpeg2video mpeg4 mpegvideo png wmav1 wmav2
 FFMPEG_PROTOCOLS:=file
+
+ifneq ($(TCONFIG_OPTIMIZE_SIZE),y)
+FFMPEG_DEMUXERS+=aea aiff anm asf au avs bink caf cavsvideo cdg dts dv ea ea_cdata eac3 filmstrip flic flv fourxm h261 h263 iss iv8 m4v mjpeg mlp mpc mpc8 mpegps \
+		 mpegts mpegtsraw mvi nc nuv ogg pcm_alaw pcm_f32be pcm_f32le pcm_f64be pcm_f64le pcm_mulaw pcm_s16be pcm_s16le pcm_s24be pcm_s24le pcm_s32be pcm_s32le \
+		 pcm_s8 pcm_u16be pcm_u16le pcm_u24be pcm_u24le pcm_u32be pcm_u32le pcm_u8 qcp r3d rm sox swf tmv truehd vc1t vqf w64 wav wv yop
+FFMPEG_PARSERS+=h261 h263 mjpeg mlp
+FFMPEG_DECODERS+=atrac3 h261 h263
+endif
+
+FFMPEG_CONFIGURE_DEMUXERS:=$(call FFMPEG_FILTER_CONFIG,enable-demuxer,$(FFMPEG_DEMUXERS))
+FFMPEG_CONFIGURE_PARSERS:=$(call FFMPEG_FILTER_CONFIG,enable-parser,$(FFMPEG_PARSERS))
+FFMPEG_CONFIGURE_DECODERS:=$(call FFMPEG_FILTER_CONFIG,enable-decoder,$(FFMPEG_DECODERS))
 FFMPEG_CONFIGURE_PROTOCOLS:=$(call FFMPEG_FILTER_CONFIG,enable-protocol,$(FFMPEG_PROTOCOLS))
 
-FFMPEG_DISABLED_DEMUXERS:=amr apc ape ass bethsoftvid bfi c93 daud dnxhd dsicin dxa ffm gsm gxf idcin iff image2 image2pipe ingenient ipmovie lmlm4 mm mmf msnwc_tcp mtv mxf nsv nut oma pva rawvideo rl2 roq rpl segafilm shorten siff smacker sol str thp tiertexseq tta txd vmd voc wc3 wsaud wsvqa xa yuv4mpegpipe
-FFMPEG_CONFIGURE_DEMUXERS:=$(call FFMPEG_FILTER_CONFIG,disable-demuxer,$(FFMPEG_DISABLED_DEMUXERS))
-
 ffmpeg/stamp-h1: zlib
+	$(call patch_files,ffmpeg)
 	cd $(TOP)/ffmpeg && symver_asm_label=no symver_gnu_asm=no symver=no \
-		./configure --enable-cross-compile --arch=$(ARCH) --target_os=linux \
-		--cross-prefix=$(CROSS_COMPILE) --enable-shared --enable-gpl --disable-doc \
-		--enable-pthreads --enable-small --disable-encoders --disable-filters \
-		--disable-muxers --disable-devices --disable-ffmpeg --disable-ffplay \
-		--disable-ffserver --disable-ffprobe --disable-avdevice --disable-swscale \
-		--disable-hwaccels --disable-network --disable-bsfs --disable-mpegaudio-hp \
-		--enable-demuxers $(FFMPEG_CONFIGURE_DEMUXERS) \
-		--disable-decoders $(FFMPEG_CONFIGURE_DECODERS) \
-		--disable-parsers $(FFMPEG_CONFIGURE_PARSERS) \
-		--disable-protocols $(FFMPEG_CONFIGURE_PROTOCOLS) \
+		./configure --enable-cross-compile --arch=$(ARCH) --target_os=linux --prefix='' \
+		--cross-prefix=$(CROSS_COMPILE) --enable-shared --enable-gpl --enable-small --enable-pthreads \
+		--disable-doc --disable-avdevice --disable-avfilter --disable-swscale --disable-postproc \
+		--disable-dxva2 --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver \
+		--disable-altivec --disable-mpegaudio-hp --disable-network --disable-everything \
+		$(FFMPEG_CONFIGURE_DEMUXERS) \
+		$(FFMPEG_CONFIGURE_PARSERS) \
+		$(FFMPEG_CONFIGURE_DECODERS) \
+		$(FFMPEG_CONFIGURE_PROTOCOLS) \
 		--extra-cflags="-Os $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC -I$(TOP)/zlib" \
 		--extra-ldflags="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
 		--extra-libs="-L$(TOP)/zlib -lz" \
-		--enable-zlib --disable-debug --prefix=''
+		--enable-zlib --disable-debug
 	touch ffmpeg/stamp-h1
 
 ffmpeg: ffmpeg/stamp-h1 zlib
@@ -1381,6 +1387,7 @@ ffmpeg: ffmpeg/stamp-h1 zlib
 ffmpeg-clean:
 	-@$(MAKE) -C ffmpeg clean
 	@rm -f ffmpeg/stamp-h1 ffmpeg/config.h ffmpeg/config.mak
+	$(call unpatch_files,ffmpeg)
 
 ffmpeg-install:
 ifneq ($(MEDIA_SERVER_STATIC),y)
