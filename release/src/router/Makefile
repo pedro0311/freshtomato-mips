@@ -2503,8 +2503,9 @@ sd-idle-install: sd-idle/stamp-h1
 	$(STRIP) -s $(INSTALLDIR)/sd-idle/usr/bin/sd-idle
 
 snmp/stamp-h1:
-	cd snmp && autoreconf -fsi && \
-	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+	$(call patch_files,snmp)
+	cd $(TOP)/snmp && autoreconf -fsi && \
+	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections $(OPTSIZE_FLAG)" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	$(CONFIGURE) --prefix=/usr --with-endianness=little --enable-mini-agent --disable-debugging \
 	--disable-privacy --without-opaque-special-types --with-persistent-directory=/tmp/snmp-persist \
@@ -2523,6 +2524,7 @@ snmp: snmp/stamp-h1
 snmp-clean:
 	-@$(MAKE) -C snmp clean
 	@rm -f snmp/stamp-h1
+	$(call unpatch_files,snmp)
 
 snmp-install:
 	install -D snmp/agent/snmpd $(INSTALLDIR)/snmp/usr/sbin/snmpd
