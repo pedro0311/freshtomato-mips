@@ -1049,10 +1049,11 @@ vsftpd-clean:
 	$(call unpatch_files,vsftpd)
 
 ntfs-3g/Makefile:
-	cd ntfs-3g && \
-	CC=$(CC) CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
-		$(CONFIGURE) --enable-shared=no --enable-static=no \
+	$(call patch_files,ntfs-3g)
+	cd $(TOP)/ntfs-3g && \
+	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections $(OPTSIZE_FLAG)" \
+	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
+	$(CONFIGURE) --enable-shared=no --enable-static=no \
 		--disable-library --disable-ldconfig --disable-mount-helper --with-fuse=internal \
 		--disable-ntfsprogs --disable-crypto --without-uuid \
 		--disable-posix-acls --disable-nfconv --disable-dependency-tracking
@@ -1064,6 +1065,7 @@ ntfs-3g: ntfs-3g/Makefile
 ntfs-3g-clean:
 	-@$(MAKE) -C ntfs-3g clean
 	@rm -f ntfs-3g/Makefile
+	$(call unpatch_files,ntfs-3g)
 
 ntfs-3g-install:
 	install -D ntfs-3g/src/ntfs-3g $(INSTALLDIR)/ntfs-3g/bin/ntfs-3g
