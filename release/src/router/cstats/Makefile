@@ -1,8 +1,8 @@
 include ../common.mak
 
-CFLAGS	= -O2 -Wall $(EXTRACFLAGS) #-mips32
-CFLAGS	+= -I$(SRCBASE)/include -I$(TOP)/shared
-LDFLAGS	=
+CFLAGS	= -Os -Wall
+CFLAGS	+= -I$(SRCBASE)/include -I$(TOP)/shared -ffunction-sections -fdata-sections
+LDFLAGS	= -ffunction-sections -fdata-sections -Wl,--gc-sections
 
 OBJS = cstats.o
 

@@ -41,6 +41,12 @@ SEP=`$(eval progress=$(shell echo $$(($(progress)+1))))` \
 echo "\033[41;1m   $@ ${progress}$\/${totalSteps} \033[0m\033]2;Building $@ ${progress}$\/${totalSteps}\007"
 
 
+ifeq ($(TCONFIG_OPTIMIZE_SIZE),y)
+OPTSIZE_FLAG :=
+else
+export OPTSIZE_FLAG := -DNO_OPTSIZE
+endif
+
 #
 # standard packages
 #
@@ -110,6 +116,7 @@ obj-$(TCONFIG_NFS) += libnfsidmap
 obj-$(TCONFIG_NFS) += nfs-utils
 
 #Roadkill
+obj-$(TCONFIG_NOCAT) += glib
 obj-$(TCONFIG_NOCAT) += nocat
 
 # !!TB
@@ -244,7 +251,6 @@ obj-$(TCONFIG_NANO) += nano
 
 obj-$(TCONFIG_BBT) += libcurl
 obj-$(TCONFIG_BBT) += transmission
-obj-$(TCONFIG_BT) += btgui
 
 obj-$(CONFIG_LINUX26) += hotplug2
 obj-$(CONFIG_LINUX26) += udevtrigger
@@ -855,26 +861,27 @@ mdu:	shared mssl
 rc: nvram shared
 
 bridge/Makefile:
-	cd bridge && autoreconf -fsi && CFLAGS="-Os -g $(EXTRACFLAGS)" \
+	cd bridge && autoreconf -fsi && CFLAGS="-Os -g $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	$(CONFIGURE) --prefix="" --with-linux-headers=$(LINUXDIR)/include
 
 bridge: bridge/Makefile
 	@$(SEP)
 	@$(MAKE) -C bridge
 
-bridge-clean:
-	-@$(MAKE) -C bridge clean
-	@rm -f bridge/Makefile
-
 bridge-install:
 	install -D bridge/brctl/brctl $(INSTALLDIR)/bridge/usr/sbin/brctl
 	$(STRIP) $(INSTALLDIR)/bridge/usr/sbin/brctl
+
+bridge-clean:
+	-@$(MAKE) -C bridge clean
+	@rm -f bridge/Makefile
 
 dnsmasq: $(if $(TCONFIG_DNSSEC),nettle,)
 	@$(SEP)
 	$(call patch_files,dnsmasq)
 	@$(MAKE) -C dnsmasq $(PARALLEL_BUILD) \
-	CFLAGS="-Os -ffunction-sections -fdata-sections $(EXTRACFLAGS)" \
+	CFLAGS="-Os -ffunction-sections -fdata-sections $(EXTRACFLAGS) $(OPTSIZE_FLAG)" \
 	COPTS="-DNO_INOTIFY -DHAVE_BROKEN_RTC -DHAVE_TOMATO -DNO_DUMPFILE -DNO_ID -DNO_GMP -DUSE_IPSET \
 		$(if $(TCONFIG_DNSSEC),-I$(TOP)/nettle/include -I$(TOP)/gmp -DHAVE_DNSSEC -DHAVE_DNSSEC_STATIC -DNO_GOST,) \
 		$(if $(TCONFIG_IPV6),-DUSE_IPV6,-DNO_IPV6)" \
@@ -887,6 +894,7 @@ dnsmasq-install:
 	$(STRIP) $(INSTALLDIR)/dnsmasq/usr/sbin/dnsmasq
 
 dnsmasq-clean:
+	-@$(MAKE) -C dnsmasq clean
 	$(call unpatch_files,dnsmasq)
 
 nettle/stamp-h1: gmp
@@ -927,13 +935,14 @@ gmp-clean:
 	$(call unpatch_files,gmp)
 
 iptables:
+	$(call patch_files,iptables)
 ifeq ($(CONFIG_LINUX26),y)
 	cp -f iptables/extensions/libipt_ipp2p_K26.c iptables/extensions/libipt_ipp2p.c
 else
 	cp -f iptables/extensions/libipt_ipp2p_K24.c iptables/extensions/libipt_ipp2p.c
 endif
 	@$(SEP)
-	$(MAKE) -C iptables BINDIR=/usr/sbin LIBDIR=/usr/lib KERNEL_DIR=$(LINUXDIR) COPT_FLAGS="-Os $(EXTRACFLAGS) -U CONFIG_NVRAM_SIZE"
+	$(MAKE) -C iptables BINDIR=/usr/sbin LIBDIR=/usr/lib KERNEL_DIR=$(LINUXDIR) COPT_FLAGS="-Os $(EXTRACFLAGS) -U CONFIG_NVRAM_SIZE $(OPTSIZE_FLAG)"
 
 iptables-install:
 	install -D iptables/iptables $(INSTALLDIR)/iptables/usr/sbin/iptables
@@ -960,6 +969,7 @@ endif
 
 iptables-clean:
 	-@$(MAKE) -C iptables KERNEL_DIR=$(LINUXDIR) clean
+	$(call unpatch_files,iptables)
 
 ppp:
 	@$(SEP)
@@ -971,7 +981,9 @@ ppp-%:
 
 rp-pppoe/src/stamp-h1: rp-pppoe/src/Makefile.in
 	$(call patch_files,rp-pppoe)
-	cd rp-pppoe/src && CFLAGS="-g -Os $(EXTRACFLAGS)" \
+	cd rp-pppoe/src && CFLAGS="-g -Os $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+	CPPFLAGS="-Os -ffunction-sections -fdata-sections" \
+	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	$(CONFIGURE) --prefix=/usr --enable-plugin=$(TOP)/pppd \
 	ac_cv_linux_kernel_pppoe=yes rpppoe_cv_pack_bitfields=rev
 	@touch rp-pppoe/src/stamp-h1
@@ -1029,8 +1041,8 @@ endif
 miniupnpd: iptables miniupnpd-config
 	@$(SEP)
 	$(MAKE) -C miniupnpd miniupnpd -f Makefile.linux CC=$(CC) \
-		CFLAGS="$(EXTRACFLAGS) -I$(TOP)/iptables/include" \
-		LDFLAGS="-L$(TOP)/iptables -liptc" LIBS="" $(PARALLEL_BUILD)
+		CFLAGS="-Os $(EXTRACFLAGS) -I$(TOP)/iptables/include -ffunction-sections -fdata-sections" \
+		LDFLAGS="-L$(TOP)/iptables -liptc -ffunction-sections -fdata-sections -Wl,--gc-sections" LIBS="" $(PARALLEL_BUILD)
 
 miniupnpd-clean:
 	-@$(MAKE) -C miniupnpd -f Makefile.linux clean
@@ -1063,10 +1075,11 @@ ufsd-install: ufsd
 	@$(MAKE) -C ufsd install INSTALLDIR=$(INSTALLDIR)/ufsd
 
 ntfs-3g/Makefile:
-	cd ntfs-3g && \
-	CC=$(CC) CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
-		$(CONFIGURE) --enable-shared=no --enable-static=no \
+	$(call patch_files,ntfs-3g)
+	cd $(TOP)/ntfs-3g && \
+	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections $(OPTSIZE_FLAG)" \
+	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
+	$(CONFIGURE) --enable-shared=no --enable-static=no \
 		--disable-library --disable-ldconfig --disable-mount-helper --with-fuse=internal \
 		--disable-ntfsprogs --disable-crypto --without-uuid \
 		--disable-posix-acls --disable-nfconv --disable-dependency-tracking
@@ -1078,6 +1091,7 @@ ntfs-3g: ntfs-3g/Makefile
 ntfs-3g-clean:
 	-@$(MAKE) -C ntfs-3g clean
 	@rm -f ntfs-3g/Makefile
+	$(call unpatch_files,ntfs-3g)
 
 ntfs-3g-install:
 	install -D ntfs-3g/src/ntfs-3g $(INSTALLDIR)/ntfs-3g/bin/ntfs-3g
@@ -1087,8 +1101,10 @@ ntfs-3g-install:
 		ln -sf ../bin/ntfs-3g mount.ntfs
 
 libusb10/Makefile: libusb10/Makefile.in
-	cd libusb10 && CFLAGS="-Os -Wall $(EXTRACFLAGS)" LIBS="-lpthread" \
-	autoreconf -fsi && \
+	cd libusb10 && autoreconf -fsi && \
+	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
+	LIBS="-lpthread" \
 	$(CONFIGURE) --disable-udev --prefix=/usr ac_cv_lib_rt_clock_gettime=no
 
 libusb10: libusb10/Makefile
@@ -1098,8 +1114,7 @@ libusb10: libusb10/Makefile
 libusb10-install:
 	install -D libusb10/libusb/.libs/libusb-1.0.so $(INSTALLDIR)/libusb10/usr/lib/libusb-1.0.so
 	$(STRIP) $(INSTALLDIR)/libusb10/usr/lib/*.so
-	cd $(INSTALLDIR)/libusb10/usr/lib && \
-		ln -sf libusb-1.0.so libusb-1.0.so.1
+	cd $(INSTALLDIR)/libusb10/usr/lib && ln -sf libusb-1.0.so libusb-1.0.so.1
 
 libusb10-clean:
 	-@$(MAKE) -C $@ clean
@@ -1166,7 +1181,9 @@ accel-pptp: pppd accel-pptp/Makefile
 	@$(MAKE) -C accel-pptp
 
 accel-pptp/Makefile: accel-pptp/Makefile.in $(LINUXDIR)/include/linux/version.h
-	cd accel-pptp && CFLAGS="-g -Os $(EXTRACFLAGS)" \
+	cd accel-pptp && CFLAGS="-g -Os $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+	CPPFLAGS="-Os -ffunction-sections -fdata-sections" \
+	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	$(CONFIGURE) --prefix=/usr KDIR=$(LINUXDIR) PPPDIR=$(TOP)/pppd
 
 accel-pptp-clean:
@@ -1205,12 +1222,7 @@ pppd/Makefile: pppd/linux/Makefile.top
 
 pppd: pppd/Makefile
 	@$(SEP)
-	@$(MAKE) -C pppd MFLAGS='$(if $(TCONFIG_IPV6),HAVE_INET6=y,) EXTRACFLAGS="$(EXTRACFLAGS)"'
-
-pppd-clean:
-	-@$(MAKE) -C pppd clean
-	@rm -f pppd/Makefile
-	$(call unpatch_files,pppd)
+	@$(MAKE) -C pppd MFLAGS='$(if $(TCONFIG_IPV6),HAVE_INET6=y,) EXTRACFLAGS="$(EXTRACFLAGS) $(OPTSIZE_FLAG)"'
 
 pppd-install:
 	install -D pppd/pppd/pppd $(INSTALLDIR)/pppd/usr/sbin/pppd
@@ -1221,6 +1233,11 @@ ifeq ($(TCONFIG_L2TP),y)
 	install -D pppd/pppd/plugins/pppol2tp/pppol2tp.so $(INSTALLDIR)/pppd/usr/lib/pppd/pppol2tp.so
 	$(STRIP) $(INSTALLDIR)/pppd/usr/lib/pppd/*.so
 endif
+
+pppd-clean:
+	-@$(MAKE) -C pppd clean
+	@rm -f pppd/Makefile
+	$(call unpatch_files,pppd)
 
 zebra/stamp-h1:
 	@cd $(TOP)/zebra && rm -f config.cache && \
@@ -1249,13 +1266,16 @@ zebra-install:
 xl2tpd: pppd
 	@$(SEP)
 	$(call patch_files,xl2tpd)
-	CFLAGS="-g $(EXTRACFLAGS)" $(MAKE) -C $@ PREFIX=/usr xl2tpd $(PARALLEL_BUILD)
+	CFLAGS="-Os -g $(EXTRACFLAGS) -ffunction-sections -fdata-sections $(OPTSIZE_FLAG)" \
+	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
+	$(MAKE) -C $@ PREFIX=/usr xl2tpd $(PARALLEL_BUILD)
 
 xl2tpd-install:
 	install -D xl2tpd/xl2tpd $(INSTALLDIR)/xl2tpd/usr/sbin/xl2tpd
 	$(STRIP) $(INSTALLDIR)/xl2tpd/usr/sbin/xl2tpd
 
 xl2tpd-clean:
+	-@$(MAKE) -C xl2tpd clean
 	$(call unpatch_files,xl2tpd)
 
 bpalogin-install:
@@ -1272,13 +1292,20 @@ libbcm-install:
 
 iproute2:
 	@$(SEP)
-	@$(MAKE) -C $@ KERNEL_INCLUDE=$(LINUXDIR)/include EXTRACFLAGS="$(EXTRACFLAGS) $(if $(TCONFIG_IPV6),-DUSE_IPV6,-DNO_IPV6)"
+	$(call patch_files,iproute2)
+	@$(MAKE) -C $@ KERNEL_INCLUDE=$(LINUXDIR)/include \
+		EXTRACFLAGS="$(EXTRACFLAGS) -ffunction-sections -fdata-sections $(if $(TCONFIG_IPV6),-DUSE_IPV6,-DNO_IPV6) $(OPTSIZE_FLAG)" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections"
 
 iproute2-install:
 	install -D iproute2/tc/tc $(INSTALLDIR)/iproute2/usr/sbin/tc
 	$(STRIP) $(INSTALLDIR)/iproute2/usr/sbin/tc
 	install -D iproute2/ip/ip $(INSTALLDIR)/iproute2/usr/sbin/ip
 	$(STRIP) $(INSTALLDIR)/iproute2/usr/sbin/ip
+
+iproute2-clean:
+	-@$(MAKE) -C iproute2 clean
+	$(call unpatch_files,iproute2)
 
 dropbear: dropbear/config.h
 	@$(SEP)
@@ -1345,34 +1372,40 @@ endif
 
 FFMPEG_FILTER_CONFIG= $(foreach c, $(2), --$(1)="$(c)")
 
-FFMPEG_DECODERS:=aac ac3 atrac3 flac h264 jpegls mp3 mpeg1video mpeg2video mpeg4 mpeg4aac mpegvideo png wmav1 wmav2
-FFMPEG_CONFIGURE_DECODERS:=$(call FFMPEG_FILTER_CONFIG,enable-decoder,$(FFMPEG_DECODERS))
-
+FFMPEG_DEMUXERS:=aac ac3 avi flac h264 matroska mov mp3 mpegvideo vc1
 FFMPEG_PARSERS:=aac ac3 h264 mpeg4video mpegaudio mpegvideo
-FFMPEG_CONFIGURE_PARSERS:=$(call FFMPEG_FILTER_CONFIG,enable-parser,$(FFMPEG_PARSERS))
-
+FFMPEG_DECODERS:=aac ac3 flac h264 jpegls mp3 mpeg1video mpeg2video mpeg4 mpegvideo png wmav1 wmav2
 FFMPEG_PROTOCOLS:=file
+
+ifneq ($(TCONFIG_OPTIMIZE_SIZE),y)
+FFMPEG_DEMUXERS+=aea aiff anm asf au avs bink caf cavsvideo cdg dts dv ea ea_cdata eac3 filmstrip flic flv fourxm h261 h263 iss iv8 m4v mjpeg mlp mpc mpc8 mpegps \
+		 mpegts mpegtsraw mvi nc nuv ogg pcm_alaw pcm_f32be pcm_f32le pcm_f64be pcm_f64le pcm_mulaw pcm_s16be pcm_s16le pcm_s24be pcm_s24le pcm_s32be pcm_s32le \
+		 pcm_s8 pcm_u16be pcm_u16le pcm_u24be pcm_u24le pcm_u32be pcm_u32le pcm_u8 qcp r3d rm sox swf tmv truehd vc1t vqf w64 wav wv yop
+FFMPEG_PARSERS+=h261 h263 mjpeg mlp
+FFMPEG_DECODERS+=atrac3 h261 h263
+endif
+
+FFMPEG_CONFIGURE_DEMUXERS:=$(call FFMPEG_FILTER_CONFIG,enable-demuxer,$(FFMPEG_DEMUXERS))
+FFMPEG_CONFIGURE_PARSERS:=$(call FFMPEG_FILTER_CONFIG,enable-parser,$(FFMPEG_PARSERS))
+FFMPEG_CONFIGURE_DECODERS:=$(call FFMPEG_FILTER_CONFIG,enable-decoder,$(FFMPEG_DECODERS))
 FFMPEG_CONFIGURE_PROTOCOLS:=$(call FFMPEG_FILTER_CONFIG,enable-protocol,$(FFMPEG_PROTOCOLS))
 
-FFMPEG_DISABLED_DEMUXERS:=amr apc ape ass bethsoftvid bfi c93 daud dnxhd dsicin dxa ffm gsm gxf idcin iff image2 image2pipe ingenient ipmovie lmlm4 mm mmf msnwc_tcp mtv mxf nsv nut oma pva rawvideo rl2 roq rpl segafilm shorten siff smacker sol str thp tiertexseq tta txd vmd voc wc3 wsaud wsvqa xa yuv4mpegpipe
-FFMPEG_CONFIGURE_DEMUXERS:=$(call FFMPEG_FILTER_CONFIG,disable-demuxer,$(FFMPEG_DISABLED_DEMUXERS))
-
 ffmpeg/stamp-h1: zlib
+	$(call patch_files,ffmpeg)
 	cd $(TOP)/ffmpeg && symver_asm_label=no symver_gnu_asm=no symver=no \
-		./configure --enable-cross-compile --arch=$(ARCH) --target_os=linux \
-		--cross-prefix=$(CROSS_COMPILE) --enable-shared --enable-gpl --disable-doc \
-		--enable-pthreads --enable-small --disable-encoders --disable-filters \
-		--disable-muxers --disable-devices --disable-ffmpeg --disable-ffplay \
-		--disable-ffserver --disable-ffprobe --disable-avdevice --disable-swscale \
-		--disable-hwaccels --disable-network --disable-bsfs --disable-mpegaudio-hp \
-		--enable-demuxers $(FFMPEG_CONFIGURE_DEMUXERS) \
-		--disable-decoders $(FFMPEG_CONFIGURE_DECODERS) \
-		--disable-parsers $(FFMPEG_CONFIGURE_PARSERS) \
-		--disable-protocols $(FFMPEG_CONFIGURE_PROTOCOLS) \
+		./configure --enable-cross-compile --arch=$(ARCH) --target_os=linux --prefix='' \
+		--cross-prefix=$(CROSS_COMPILE) --enable-shared --enable-gpl --enable-small --enable-pthreads \
+		--disable-doc --disable-avdevice --disable-avfilter --disable-swscale --disable-postproc \
+		--disable-dxva2 --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver \
+		--disable-altivec --disable-mpegaudio-hp --disable-network --disable-everything \
+		$(FFMPEG_CONFIGURE_DEMUXERS) \
+		$(FFMPEG_CONFIGURE_PARSERS) \
+		$(FFMPEG_CONFIGURE_DECODERS) \
+		$(FFMPEG_CONFIGURE_PROTOCOLS) \
 		--extra-cflags="-Os $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC -I$(TOP)/zlib" \
 		--extra-ldflags="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
 		--extra-libs="-L$(TOP)/zlib -lz" \
-		--enable-zlib --disable-debug --prefix=''
+		--enable-zlib --disable-debug
 	touch ffmpeg/stamp-h1
 
 ffmpeg: ffmpeg/stamp-h1 zlib
@@ -1382,6 +1415,7 @@ ffmpeg: ffmpeg/stamp-h1 zlib
 ffmpeg-clean:
 	-@$(MAKE) -C ffmpeg clean
 	@rm -f ffmpeg/stamp-h1 ffmpeg/config.h ffmpeg/config.mak
+	$(call unpatch_files,ffmpeg)
 
 ffmpeg-install:
 ifneq ($(MEDIA_SERVER_STATIC),y)
@@ -1443,8 +1477,11 @@ endif
 	@true
 
 jpeg/stamp-h1:
-	cd jpeg && \
-	CFLAGS="-Os $(EXTRACFLAGS) -fPIC" CC=$(CC) AR2="touch" $(CONFIGURE) --enable-shared --enable-static --prefix=''
+	cd $(TOP)/jpeg && \
+	CFLAGS="-Os $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections" \
+	LDFLAGS="-fPIC -ffunction-sections -fdata-sections" \
+	AR2="touch" \
+	$(CONFIGURE) --enable-shared --enable-static --prefix=''
 	touch jpeg/stamp-h1
 
 jpeg: jpeg/stamp-h1
@@ -1497,8 +1534,11 @@ endif
 	@true
 
 zlib/stamp-h1:
-	cd zlib && \
-	CC=$(CC) RANLIB=$(RANLIB) LD=$(LD) CFLAGS="-Os -Wall $(EXTRACFLAGS) -fPIC" LDSHAREDLIBC="$(EXTRALDFLAGS)" \
+	cd $(TOP)/zlib && \
+	CFLAGS="-Os -Wall $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections" \
+	CPPLAGS="-Os -Wall -fPIC -ffunction-sections -fdata-sections" \
+	LDFLAGS="-fPIC -ffunction-sections -fdata-sections -Wl,--gc-sections" \
+	LDSHAREDLIBC="$(EXTRALDFLAGS)" \
 	./configure --shared --prefix=/usr --libdir=/usr/lib
 	touch zlib/stamp-h1
 
@@ -1537,11 +1577,12 @@ endif
 
 libid3tag/stamp-h1: zlib
 	$(call patch_files,libid3tag)
-	cd libid3tag && \
-	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" CPPFLAGS="-I$(TOP)/zlib" \
+	cd $(TOP)/libid3tag && autoreconf -fsi && \
+	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+	CPPFLAGS="-Os -Wall -ffunction-sections -fdata-sections -I$(TOP)/zlib" \
 	LDFLAGS="-L$(TOP)/zlib -fPIC -ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	$(CONFIGURE) --enable-shared --enable-static --prefix='' \
-		--disable-debugging --disable-profiling
+		--disable-debugging --disable-profiling --disable-dependency-tracking
 	touch libid3tag/stamp-h1
 
 libid3tag: libid3tag/stamp-h1 zlib
@@ -1632,7 +1673,8 @@ udev-install:
 
 hotplug2:
 	@$(SEP)
-	$(MAKE) -C $@ CROSS_COMPILE=$(CROSS_COMPILE) CC=$(CC) EXTRACFLAGS="$(EXTRACFLAGS)"
+	$(MAKE) -C $@ CROSS_COMPILE=$(CROSS_COMPILE) CC=$(CC) EXTRACFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections"
 
 hotplug2-install:
 	$(MAKE) -C hotplug2 install PREFIX=$(INSTALLDIR)/hotplug2 SUBDIRS=""
@@ -1717,10 +1759,12 @@ spawn-fcgi-install:
 	install spawn-fcgi/src/spawn-fcgi $(INSTALLDIR)/spawn-fcgi/usr/bin/spawn-fcgi
 	$(STRIP) -s $(INSTALLDIR)/spawn-fcgi/usr/bin/spawn-fcgi
 
-#Roadkill
 glib/stamp-h1:
-	@cd glib && CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
-		$(CONFIGURE) --prefix=/usr glib_cv_prog_cc_ansi_proto=no glib_cv_has__inline=yes glib_cv_has__inline__=yes glib_cv_hasinline=yes \
+	$(call patch_files,glib)
+	@cd glib && \
+	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections $(OPTSIZE_FLAG)" \
+	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
+	$(CONFIGURE) --prefix=/usr glib_cv_prog_cc_ansi_proto=no glib_cv_has__inline=yes glib_cv_has__inline__=yes glib_cv_hasinline=yes \
 		glib_cv_sane_realloc=yes glib_cv_va_copy=no glib_cv___va_copy=yes glib_cv_va_val_copy=yes glib_cv_rtldglobal_broken=no \
 		glib_cv_uscore=no glib_cv_func_pthread_mutex_trylock_posix=yes glib_cv_func_pthread_cond_timedwait_posix=yes glib_cv_sizeof_gmutex=24 \
 		glib_cv_byte_contents_gmutex="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0" glib_cv_sys_pthread_getspecific_posix=yes \
@@ -1735,6 +1779,7 @@ glib: glib/stamp-h1
 glib-clean:
 	-@$(MAKE) -C glib clean
 	rm -f glib/stamp-h1
+	$(call unpatch_files,glib)
 
 glib-install: glib
 	@$(MAKE) -C glib DESTDIR=$(INSTALLDIR)/glib install
@@ -1765,6 +1810,7 @@ nocat-install:
 	$(STRIP) $(INSTALLDIR)/nocat/usr/sbin/splashd
 	mkdir -p $(INSTALLDIR)/nocat/usr/libexec/nocat
 	install -D nocat/libexec/iptables/* $(INSTALLDIR)/nocat/usr/libexec/nocat
+	rm -rf $(INSTALLDIR)/glib/*
 
 #Tomato RAF
 pcre/stamp-h1:
@@ -1872,13 +1918,19 @@ libatomic_ops-clean:
 	-@$(MAKE) -C libatomic_ops clean
 	@rm -f libatomic_ops/stamp-h1
 
+ifeq ($(TCONFIG_AIO),y)
+LDFPHPADD:=-Wl,-rpath,$(TOP)/openssl
+else
+LDFPHPADD:=
+endif
+
 php/stamp-h1: pcre zlib libiconv sqlite libxml2 libpng jpeg libcurl
 	$(call patch_files,php)
 	cd php && CC=$(CC) CXX=$(ARCH)-g++ AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) \
 	CFLAGS="-Os -Wall -I$(TOP)/zlib -I$(TOP)/libxml2/include/libxml -I$(TOP)/libxml2/include -I$(TOP)/pcre -I$(TOP)/libiconv/include \
 		-I$(TOP)/libpng/staged/usr/include -I$(TOP)/libcurl/staged/usr/include" \
 	LDFLAGS="-L$(TOP)/pcre/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/zlib -L$(TOP)/libxml2/.libs -L$(TOP)/libiconv/lib/.libs \
-		-L$(TOP)/libpng/.libs -L$(TOP)/libcurl/staged/usr/lib" \
+		-L$(TOP)/libpng/.libs -L$(TOP)/libcurl/staged/usr/lib $(LDFPHPADD)" \
 	CPPFLAGS="-L$(TOP)/pcre/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/zlib -L$(TOP)/libxml2/.libs -L$(TOP)/libiconv/lib/.libs -L$(TOP)/libpng/.libs" \
 	LIBS="-L$(TOP)/pcre/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/zlib -L$(TOP)/libxml2/.libs -L$(TOP)/libiconv/lib/.libs -L$(TOP)/libpng/.libs -L$(TOP)/libcurl/lib/.libs \
 		-lz -lsqlite3 -ldl -lpthread -liconv -lxml2 -lstdc++ -lcurl" \
@@ -2202,26 +2254,29 @@ nano-install:
 
 ifeq ($(TCONFIG_AIO),y)
 CACERT:=--with-ca-bundle=/rom/cacert.pem
+CPPFADD:=-I$(TOP)/openssl/include
+LDFADD:=-L$(TOP)/openssl -Wl,-rpath,$(TOP)/openssl
 else
 CACERT:=
+CPPFADD:=
+LDFADD:=
 endif
 
 libcurl/stamp-h1: zlib openssl
 	$(call patch_files,libcurl)
-	cd libcurl && CC=$(CC) STRIP=$(CROSS_COMPILE)strip \
-		./buildconf && \
-		CFLAGS="-Os -Wall -ffunction-sections -fdata-sections" \
-		CPPFLAGS="$(EXTRACFLAGS)" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
+	cd $(TOP)/libcurl && ./buildconf && \
+		CFLAGS="-Os -Wall -pipe -funit-at-a-time -Wno-pointer-sign -mtune=mips32 -mips32 -ffunction-sections -fdata-sections" \
+		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections $(CPPFADD)" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC $(LDFADD)" \
 		$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib \
-		--enable-shared --enable-static --enable-cookies --enable-crypto-auth \
-		--enable-nonblocking --enable-file --enable-ftp --enable-http --enable-tftp \
-		$(if $(TCONFIG_IPV6),--enable-ipv6,) \
-		--disable-nls --disable-dict --disable-debug --disable-gopher --disable-threaded-resolver \
-		--disable-ldap --disable-proxy --disable-manual --disable-libcurl-option --disable-telnet --disable-verbose \
-		--with-random="/dev/urandom" --with-ssl="$(TOP)/openssl/ssl" \
-		--without-gnutls --without-krb4 --without-libidn \
-		--with-linux-headers=$(LINUXDIR)/include $(CACERT)
+			--enable-shared --enable-static --enable-cookies --enable-crypto-auth \
+			--enable-nonblocking --enable-file --enable-ftp --enable-http --enable-tftp \
+			$(if $(TCONFIG_IPV6),--enable-ipv6,) \
+			--with-random="/dev/urandom" --with-ssl="$(TOP)/openssl/ssl" --with-zlib="$(TOP)/zlib/staged/usr" \
+			--disable-nls --disable-dict --disable-debug --disable-gopher --disable-threaded-resolver \
+			--disable-ldap --disable-proxy --disable-manual --disable-libcurl-option --disable-telnet --disable-verbose \
+			--without-gnutls --without-krb4 --without-libidn2 --without-libpsl --disable-tls-srp \
+			--with-linux-headers=$(LINUXDIR)/include $(CACERT)
 		touch libcurl/stamp-h1
 
 libcurl: libcurl/stamp-h1
@@ -2290,8 +2345,7 @@ libiconv-install:
 		ln -sf libiconv.so.2.6.1 libiconv.so
 
 transmission/stamp-h1: openssl libcurl libevent zlib
-	cd transmission && CC=$(CC) STRIP=$(CROSS_COMPILE)strip \
-		autoreconf -f && \
+	cd $(TOP)/transmission && autoreconf -f && \
 		CFLAGS="-Os -Wall -fno-delete-null-pointer-checks -funit-at-a-time \
 			--param large-function-growth=800 --param max-inline-insns-single=3000 \
 			-ffunction-sections -fdata-sections" \
@@ -2331,13 +2385,6 @@ transmission-install:
 ifneq ($(TCONFIG_TR_EXTRAS),y)
 	@rm -rf $(INSTALLDIR)/transmission/usr/bin/transmission-remote
 endif
-
-btgui:
-	@$(SEP)
-
-btgui-install:
-	install -d $(INSTALLDIR)/btgui/usr/bin
-	install -D patches/transmission/btcheck $(INSTALLDIR)/btgui/usr/bin/btcheck
 
 libnfsidmap/stamp-h1:
 	cd libnfsidmap && autoreconf -fsi && \
@@ -2484,8 +2531,10 @@ sd-idle-install: sd-idle/stamp-h1
 	$(STRIP) -s $(INSTALLDIR)/sd-idle/usr/bin/sd-idle
 
 snmp/stamp-h1:
-	cd snmp && autoreconf -fsi && \
-	CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
+	$(call patch_files,snmp)
+	cd $(TOP)/snmp && autoreconf -fsi && \
+	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections $(OPTSIZE_FLAG)" \
+	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	$(CONFIGURE) --prefix=/usr --with-endianness=little --enable-mini-agent --disable-debugging \
 	--disable-privacy --without-opaque-special-types --with-persistent-directory=/tmp/snmp-persist \
 	--with-default-snmp-version=3 --with-sys-contact=root --with-sys-location=Unknown --with-logfile=/dev/null \
@@ -2503,6 +2552,7 @@ snmp: snmp/stamp-h1
 snmp-clean:
 	-@$(MAKE) -C snmp clean
 	@rm -f snmp/stamp-h1
+	$(call unpatch_files,snmp)
 
 snmp-install:
 	install -D snmp/agent/snmpd $(INSTALLDIR)/snmp/usr/sbin/snmpd
@@ -2652,7 +2702,8 @@ udpxy/stamp-h1:
 
 udpxy: udpxy/stamp-h1
 	@$(SEP)
-	$(MAKE) -C udpxy lean CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
+	$(MAKE) -C udpxy lean CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections"
 
 udpxy-clean:
@@ -2678,7 +2729,7 @@ mdadm-clean:
 
 ipset:
 	@$(SEP)
-	$(MAKE) -C ipset binaries COPT_FLAGS="-Os"
+	$(MAKE) -C ipset binaries COPT_FLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections"
 
 ipset-install:
 	install -D ipset/ipset $(INSTALLDIR)/ipset/usr/sbin/ipset
