@@ -401,7 +401,7 @@
     with something like "make COPTS=-DNO_SCRIPT" will do the trick.
  NO_GMP
     Don't use and link against libgmp, Useful if nettle is built with --enable-mini-gmp.
-@@ -297,9 +298,29 @@ HAVE_SOCKADDR_SA_LEN
+@@ -302,9 +303,29 @@ HAVE_SOCKADDR_SA_LEN
   
  #endif
  
@@ -431,7 +431,7 @@
  #ifdef NO_TFTP
  #undef HAVE_TFTP
  #endif
-@@ -309,7 +330,7 @@ HAVE_SOCKADDR_SA_LEN
+@@ -314,7 +335,7 @@ HAVE_SOCKADDR_SA_LEN
  #undef HAVE_DHCP6
  #endif
  
@@ -440,7 +440,7 @@
  #undef HAVE_DHCP6
  #endif
  
-@@ -358,6 +379,9 @@ HAVE_SOCKADDR_SA_LEN
+@@ -363,6 +384,9 @@ HAVE_SOCKADDR_SA_LEN
  #ifdef DNSMASQ_COMPILE_OPTS
  
  static char *compile_opts = 
@@ -517,7 +517,7 @@
  #include <netinet/ip_icmp.h>
  #include <netinet/tcp.h>
  #include <sys/uio.h>
-@@ -158,8 +160,6 @@ extern int capget(cap_user_header_t head
+@@ -159,8 +161,6 @@ extern int capget(cap_user_header_t head
  /* daemon is function in the C library.... */
  #define daemon dnsmasq_daemon
  
@@ -526,7 +526,7 @@
  /* Async event queue */
  struct event_desc {
    int event, data, msg_sz;
-@@ -282,6 +282,8 @@ struct event_desc {
+@@ -283,6 +283,8 @@ struct event_desc {
  union all_addr {
    struct in_addr addr4;
 +#ifdef HAVE_IPV6
@@ -535,7 +535,7 @@
    struct {
      union {
        struct crec *cache;
-@@ -403,7 +405,9 @@ struct host_record {
+@@ -404,7 +406,9 @@ struct host_record {
      struct name_list *next;
    } *names;
    struct in_addr addr;
@@ -545,7 +545,7 @@
    struct host_record *next;
  };
  
-@@ -494,7 +498,9 @@ struct crec {
+@@ -495,7 +499,9 @@ struct crec {
  union mysockaddr {
    struct sockaddr sa;
    struct sockaddr_in in;
@@ -555,7 +555,7 @@
  };
  
  /* bits in flag param to IPv6 callbacks from iface_enumerate() */
-@@ -656,7 +662,9 @@ struct frec {
+@@ -657,7 +663,9 @@ struct frec {
    union all_addr dest;
    struct server *sentto; /* NULL means free */
    struct randfd *rfd4;
@@ -565,7 +565,7 @@
    unsigned int iface;
    unsigned short orig_id, new_id;
    int log_id, fd, forwardall, flags;
-@@ -872,7 +880,9 @@ struct dhcp_bridge {
+@@ -873,7 +881,9 @@ struct dhcp_bridge {
  struct cond_domain {
    char *domain, *prefix;
    struct in_addr start, end;
@@ -575,7 +575,7 @@
    int is6, indexed;
    struct cond_domain *next;
  }; 
-@@ -1191,7 +1201,9 @@ void blockdata_free(struct blockdata *bl
+@@ -1192,7 +1202,9 @@ void blockdata_free(struct blockdata *bl
  
  /* domain.c */
  char *get_domain(struct in_addr addr);
@@ -585,7 +585,7 @@
  int is_name_synthetic(int flags, char *name, union all_addr *addr);
  int is_rev_synth(int flag, union all_addr *addr, char *name);
  
-@@ -1272,9 +1284,11 @@ int hostname_issubdomain(char *a, char *
+@@ -1273,9 +1285,11 @@ int hostname_issubdomain(char *a, char *
  time_t dnsmasq_time(void);
  int netmask_length(struct in_addr mask);
  int is_same_net(struct in_addr a, struct in_addr b, struct in_addr mask);
@@ -597,7 +597,7 @@
  int retry_send(ssize_t rc);
  void prettyprint_time(char *buf, unsigned int t);
  int prettyprint_addr(union mysockaddr *addr, char *buf);
-@@ -1353,7 +1367,9 @@ int loopback_exception(int fd, int famil
+@@ -1354,7 +1368,9 @@ int loopback_exception(int fd, int famil
  int label_exception(int index, int family, union all_addr *addr);
  int fix_fd(int fd);
  int tcp_interface(int fd, int af);
@@ -1189,7 +1189,7 @@
  #ifdef HAVE_DHCP6
    int iaid, vendorclass_count;
  #endif
-@@ -300,8 +302,10 @@ int create_helper(int event_fd, int err_
+@@ -306,8 +308,10 @@ int create_helper(int event_fd, int err_
      
        if (!is6)
  	inet_ntop(AF_INET, &data.addr, daemon->addrbuff, ADDRSTRLEN);
@@ -1200,7 +1200,7 @@
  
  #ifdef HAVE_TFTP
        /* file length */
-@@ -822,8 +826,10 @@ void queue_tftp(off_t file_len, char *fi
+@@ -828,8 +832,10 @@ void queue_tftp(off_t file_len, char *fi
  
    if ((buf->flags = peer->sa.sa_family) == AF_INET)
      buf->addr = peer->in.sin_addr;
@@ -1211,7 +1211,7 @@
  
    memcpy((unsigned char *)(buf+1), filename, filename_len);
    
-@@ -845,8 +851,10 @@ void queue_arp(int action, unsigned char
+@@ -851,8 +857,10 @@ void queue_arp(int action, unsigned char
    buf->hwaddr_type =  ARPHRD_ETHER; 
    if ((buf->flags = family) == AF_INET)
      buf->addr = addr->addr4;
@@ -1757,7 +1757,7 @@
  	else
  	  ret_err(gen_err);
   
-@@ -4002,8 +4028,10 @@ err:
+@@ -4010,8 +4036,10 @@ err:
  	  {
  	    if (strcmp(arg, "4") == 0)
  	      new->family = AF_INET;
@@ -1768,7 +1768,7 @@
  	    else
  	      ret_err_free(gen_err, new);
  	  } 
-@@ -4323,8 +4351,10 @@ err:
+@@ -4331,8 +4359,10 @@ err:
  	      new->ttl = atoi(arg);
  	    else if (inet_pton(AF_INET, arg, &addr.addr4))
  	      new->addr = addr.addr4;
@@ -1779,7 +1779,7 @@
  	    else
  	      {
  		int nomem;
-@@ -5051,8 +5081,10 @@ void read_opts(int argc, char **argv, ch
+@@ -5059,8 +5089,10 @@ void read_opts(int argc, char **argv, ch
  	  {
  	    if (tmp->source_addr.sa.sa_family == AF_INET)
  	      tmp->source_addr.in.sin_port = htons(daemon->query_port);
@@ -1790,7 +1790,7 @@
  	  }
      } 
    
-@@ -5113,8 +5145,10 @@ void read_opts(int argc, char **argv, ch
+@@ -5121,8 +5153,10 @@ void read_opts(int argc, char **argv, ch
        for(tmp = daemon->if_addrs; tmp; tmp = tmp->next)
  	if (tmp->addr.sa.sa_family == AF_INET)
  	  tmp->addr.in.sin_port = htons(daemon->port);
