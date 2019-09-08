@@ -2274,7 +2274,7 @@ libcurl/stamp-h1: zlib openssl
 			$(if $(TCONFIG_IPV6),--enable-ipv6,) \
 			--with-random="/dev/urandom" --with-ssl="$(TOP)/openssl/ssl" --with-zlib="$(TOP)/zlib/staged/usr" \
 			--disable-nls --disable-dict --disable-debug --disable-gopher --disable-threaded-resolver \
-			--disable-ldap --disable-proxy --disable-manual --disable-libcurl-option --disable-telnet --disable-verbose \
+			--disable-ldap --disable-manual --disable-telnet --disable-verbose \
 			--without-gnutls --without-krb4 --without-libidn2 --without-libpsl --disable-tls-srp \
 			--with-linux-headers=$(LINUXDIR)/include $(CACERT)
 		touch libcurl/stamp-h1
