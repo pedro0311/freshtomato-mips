@@ -20,10 +20,10 @@
  CFLAGS += -Wall
  CFLAGS += -Wextra -Wstrict-prototypes -Wdeclaration-after-statement
  #CFLAGS += -Wno-missing-field-initializers
-@@ -157,7 +157,7 @@ LDLIBS += $(shell $(PKG_CONFIG) --static
- LDLIBS += $(shell $(PKG_CONFIG) --static --libs-only-l libnetfilter_conntrack)
- endif # ($(TEST),1)
+@@ -162,7 +162,7 @@ LDLIBS += $(shell $(PKG_CONFIG) --static
  
+ # OpenWrt packager disables https server for IGD v2 and hardcodes libuuid support
+ ifeq ($(TARGET_OPENWRT),)
 -LDLIBS += $(shell $(PKG_CONFIG) --static --libs-only-l libssl)
 +#LDLIBS += $(shell $(PKG_CONFIG) --static --libs-only-l libssl)
  
