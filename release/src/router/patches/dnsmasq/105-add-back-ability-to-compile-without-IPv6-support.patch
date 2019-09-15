@@ -1836,7 +1836,7 @@
  
  static unsigned char *do_doctor(unsigned char *p, int count, struct dns_header *header, size_t qlen, char *name, int *doctored)
  {
-@@ -733,11 +738,13 @@ int extract_addresses(struct dns_header
+@@ -736,11 +741,13 @@ int extract_addresses(struct dns_header
  	      addrlen = INADDRSZ;
  	      flags |= F_IPV4;
  	    }
@@ -1850,7 +1850,7 @@
  	  else if (qtype == T_SRV)
  	    flags |= F_SRV;
  	  else
-@@ -834,6 +841,7 @@ int extract_addresses(struct dns_header
+@@ -843,6 +850,7 @@ int extract_addresses(struct dns_header
  				  private_net(addr.addr4, !option_bool(OPT_LOCAL_REBIND)))
  				return 1;
  			      
@@ -1858,7 +1858,7 @@
  			      if ((flags & F_IPV6) &&
  				  IN6_IS_ADDR_V4MAPPED(&addr.addr6))
  				{
-@@ -842,6 +850,7 @@ int extract_addresses(struct dns_header
+@@ -851,6 +859,7 @@ int extract_addresses(struct dns_header
  				  if (private_net(v4, !option_bool(OPT_LOCAL_REBIND)))
  				    return 1;
  				}
@@ -1866,7 +1866,7 @@
  			    }
  			  
  #ifdef HAVE_IPSET
-@@ -988,6 +997,7 @@ size_t setup_reply(struct dns_header *he
+@@ -997,6 +1006,7 @@ size_t setup_reply(struct dns_header *he
  	  add_resource_record(header, NULL, NULL, sizeof(struct dns_header), &p, ttl, NULL, T_A, C_IN, "4", addrp);
  	}
        
@@ -1874,7 +1874,7 @@
        if (flags & F_IPV6)
  	{
  	  SET_RCODE(header, NOERROR);
-@@ -995,6 +1005,7 @@ size_t setup_reply(struct dns_header *he
+@@ -1004,6 +1014,7 @@ size_t setup_reply(struct dns_header *he
  	  header->hb3 |= HB3_AA;
  	  add_resource_record(header, NULL, NULL, sizeof(struct dns_header), &p, ttl, NULL, T_AAAA, C_IN, "6", addrp);
  	}
@@ -1882,7 +1882,7 @@
      }
    else /* nowhere to forward to */
      {
-@@ -1184,12 +1195,14 @@ int add_resource_record(struct dns_heade
+@@ -1193,12 +1204,14 @@ int add_resource_record(struct dns_heade
    for (; *format; format++)
      switch (*format)
        {
@@ -1897,7 +1897,7 @@
  	
        case '4':
          CHECK_LIMIT(INADDRSZ);
-@@ -1451,6 +1464,7 @@ size_t answer_request(struct dns_header
+@@ -1460,6 +1473,7 @@ size_t answer_request(struct dns_header
  		      while (intr->next && strcmp(intr->intr, intr->next->intr) == 0)
  			intr = intr->next;
  		  }
@@ -1905,7 +1905,7 @@
  	      else if (is_arpa == F_IPV6)
  		for (intr = daemon->int_names; intr; intr = intr->next)
  		  {
-@@ -1466,6 +1480,7 @@ size_t answer_request(struct dns_header
+@@ -1475,6 +1489,7 @@ size_t answer_request(struct dns_header
  		      while (intr->next && strcmp(intr->intr, intr->next->intr) == 0)
  			intr = intr->next;
  		  }
@@ -1913,7 +1913,7 @@
  	      
  	      if (intr)
  		{
-@@ -1557,7 +1572,9 @@ size_t answer_request(struct dns_header
+@@ -1566,7 +1581,9 @@ size_t answer_request(struct dns_header
  		    }
  		}
  	      else if (option_bool(OPT_BOGUSPRIV) && (
@@ -1923,7 +1923,7 @@
  		       (is_arpa == F_IPV4 && private_net(addr.addr4, 1))))
  		{
  		  struct server *serv;
-@@ -1598,9 +1615,16 @@ size_t answer_request(struct dns_header
+@@ -1607,9 +1624,16 @@ size_t answer_request(struct dns_header
  	  
  	  for (flag = F_IPV4; flag; flag = (flag == F_IPV4) ? F_IPV6 : 0)
  	    {
@@ -1941,7 +1941,7 @@
  	      if (qtype != type && qtype != T_ANY)
  		continue;
  	      
-@@ -1623,26 +1647,31 @@ size_t answer_request(struct dns_header
+@@ -1632,26 +1656,31 @@ size_t answer_request(struct dns_header
  		    for (intr = daemon->int_names; intr; intr = intr->next)
  		      if (hostname_isequal(name, intr->name))
  			for (addrlist = intr->addr; addrlist; addrlist = addrlist->next)
@@ -1980,7 +1980,7 @@
  			      ans = 1;	
  			      sec_data = 0;
  			      if (!dryrun)
-@@ -1993,8 +2022,11 @@ size_t answer_request(struct dns_header
+@@ -2002,8 +2031,11 @@ size_t answer_request(struct dns_header
  	crecp = NULL;
  	while ((crecp = cache_find_by_name(crecp, rec->target, now, F_IPV4 | F_IPV6)))
  	  {
