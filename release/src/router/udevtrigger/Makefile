@@ -1,4 +1,5 @@
-CFLAGS	= -Os -Wall $(EXTRACFLAGS)
+CFLAGS	= -Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections
+LDFLAGS	= -ffunction-sections -fdata-sections -Wl,--gc-sections
 
 OBJS = udevtrigger.o
 
