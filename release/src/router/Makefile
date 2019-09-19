@@ -70,7 +70,6 @@ obj-y += bridge
 obj-$(TCONFIG_DNSSEC) += nettle
 obj-y += dnsmasq
 obj-y += etc
-# obj-y += vlan # use Busybox vconfig
 obj-y += pppd
 obj-y += rp-pppoe
 obj-y += utils
@@ -1141,14 +1140,6 @@ samba3:
 nvram: shared
 
 prebuilt: shared
-
-vlan:
-	@$(SEP)
-	@$(MAKE) -C vlan CROSS=$(CROSS_COMPILE)	# STRIPTOOL=$(STRIP)
-
-vlan-install:
-	$(MAKE) -C vlan CROSS=$(CROSS_COMPILE) INSTALLDIR=$(INSTALLDIR) install	# STRIPTOOL=$(STRIP)
-	$(STRIP) $(INSTALLDIR)/vlan/usr/sbin/vconfig
 
 accel-pptp: pppd accel-pptp/Makefile
 	@$(SEP)
