@@ -345,6 +345,11 @@ else
 	sed -i $(INSTALLDIR)/www/tools-shell.asp -e "/TERMLIB0-BEGIN/,/TERMLIB0-END/d"
 endif
 
+# Only include more info on about.asp page if size opt is not required
+ifeq ($(TCONFIG_OPTIMIZE_SIZE),y)
+	sed -i $(INSTALLDIR)/www/about.asp -e "/OPTSIZE-BEGIN/,/OPTSIZE-END/d"
+endif
+
 # Clean-up compiler directives
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp *.js *.jsx *.html); do \
@@ -366,7 +371,7 @@ endif
 		-e "/OPENVPN-BEGIN/d"	-e "/OPENVPN-END/d" \
 		-e "/AES-BEGIN/d"	-e "/AES-END/d" \
 		-e "/PPTPD-BEGIN/d"	-e "/PPTPD-END/d"\
-		-e "/VPN-BEGIN/,/VPN-END/d" \
+		-e "/VPN-BEGIN/d"	-e "/VPN-END/d" \
 		-e "/IPV6-BEGIN/d"	-e "/IPV6-END/d" \
 		-e "/CTF-BEGIN/d"	-e "/CTF-END/d" \
 		-e "/BBT-BEGIN/d"	-e "/BBT-END/d" \
@@ -388,6 +393,7 @@ endif
 		-e "/KEYGEN-BEGIN/d"	-e "/KEYGEN-END/d"\
 		-e "/TERMLIB-BEGIN/d"	-e "/TERMLIB-END/d"\
 		-e "/TERMLIB0-BEGIN/d"	-e "/TERMLIB0-END/d"\
+		-e "/OPTSIZE-BEGIN/d"	-e "/OPTSIZE-END/d" \
 		|| true; \
 	done
 
