@@ -59,6 +59,7 @@
 
 #define PPPOEWAN	0
 #define PPPOEWAN2	1
+
 #ifdef TCONFIG_MULTIWAN
 #define PPPOEWAN3	2
 #define PPPOEWAN4	3
@@ -100,6 +101,7 @@ extern int start_vlan(void);
 extern int stop_vlan(void);
 extern int config_vlan(void);
 extern void config_loopback(void);
+
 #ifdef TCONFIG_IPV6
 extern int ipv6_mapaddr4(struct in6_addr *addr6, int ip6len, struct in_addr *addr4, int ip4mask);
 #endif
@@ -111,6 +113,7 @@ extern int listen_main(int argc, char **argv);
 extern int ipup_main(int argc, char **argv);
 extern int ipdown_main(int argc, char **argv);
 extern int pppevent_main(int argc, char **argv);
+
 #ifdef TCONFIG_IPV6
 extern int ip6up_main(int argc, char **argv);
 extern int ip6down_main(int argc, char **argv);
@@ -133,9 +136,11 @@ extern void start_wan(int mode);
 extern void start_wan_done(char *ifname,char *prefix);
 extern void start_wanall_done(void);
 extern char *wan_gateway(char *prefix);
+
 #ifdef TCONFIG_IPV6
 extern void start_wan6_done(const char *wan_ifname);
 #endif
+
 extern void stop_wan_if(char *prefix);
 extern void stop_wan();
 extern void force_to_dial(char *prefix);
@@ -170,6 +175,7 @@ extern void start_wireless(void);
 extern void start_wl(void);
 extern void unload_wl(void);
 extern void load_wl(void);
+
 #ifdef TCONFIG_IPV6
 extern void enable_ipv6(int enable);
 extern void accept_ra(const char *ifname);
@@ -186,6 +192,7 @@ extern int dhcpc_release_main(int argc, char **argv);
 extern int dhcpc_renew_main(int argc, char **argv);
 extern void start_dhcpc(char *prefix);
 extern void stop_dhcpc(char *prefix);
+
 #ifdef TCONFIG_IPV6
 extern int dhcp6c_state_main(int argc, char **argv);
 extern void start_dhcp6c(void);
@@ -197,10 +204,12 @@ extern void start_cron(void);
 extern void stop_cron(void);
 extern void start_adblock(int update);
 extern void stop_adblock(void);
+
 #ifdef TCONFIG_ZEBRA
 extern void start_zebra(void);
 extern void stop_zebra(void);
 #endif
+
 extern void start_upnp(void);
 extern void stop_upnp(void);
 extern void start_syslog(void);
@@ -227,15 +236,16 @@ extern void restart_service(const char *name);
 extern void start_services(void);
 extern void stop_services(void);
 /* !!TB - USB and NAS */
+
 #ifdef TCONFIG_USB
 extern void restart_nas_services(int stop, int start);
 #else
 #define restart_nas_services(args...) do { } while(0)
 #endif
-#ifdef LINUX26
+
 extern void start_hotplug2();
 extern void stop_hotplug2(void);
-#endif
+
 #ifdef TCONFIG_IPV6
 extern void start_ipv6_tunnel(void);
 extern void stop_ipv6_tunnel(void);
@@ -270,14 +280,18 @@ extern void notify_nas(const char *ifname);
 /* firewall.c */
 extern wanface_list_t wanfaces;
 extern wanface_list_t wan2faces;
+
 #ifdef TCONFIG_MULTIWAN
 extern wanface_list_t wan3faces;
 extern wanface_list_t wan4faces;
 #endif
+
 extern char lanface[];
+
 #ifdef TCONFIG_IPV6
 extern char wan6face[];
 #endif
+
 extern char lan_cclass[];
 extern const char *chain_in_accept;
 extern const char *chain_out_drop;
@@ -286,13 +300,16 @@ extern const char *chain_out_reject;
 extern char **layer7_in;
 
 extern void enable_ip_forward(void);
+
 #ifdef TCONFIG_IPV6
 extern void enable_ip6_forward(void);
 extern void enable_ndp_proxy(void);
 #endif
+
 extern void ipt_write(const char *format, ...);
 extern void ip6t_write(const char *format, ...);
-#if defined(TCONFIG_IPV6) && defined(LINUX26)
+
+#if defined(TCONFIG_IPV6)
 #define ip46t_write(args...) do { ipt_write(args); ip6t_write(args); } while(0)
 // #define ip46t_flagged_write(do_ip4t, do_ip6t, args...) do { if (do_ip4t) ipt_write(args); if (do_ip6t) ip6t_write(args); } while(0)
 #define ip46t_flagged_write(do_ip46t, args...) do { if (do_ip46t & IPT_V4) ipt_write(args); if (do_ip46t & IPT_V6) ip6t_write(args); } while(0)
@@ -303,6 +320,7 @@ extern void ip6t_write(const char *format, ...);
 #define ip46t_flagged_write(do_ip46t, args...) do { if (do_ip46t & IPT_V4) ipt_write(args); } while(0)
 #define ip46t_cond_write(do_ip6t, args...) ipt_write(args)
 #endif
+
 extern void ipt_log_unresolved(const char *addr, const char *addrtype, const char *categ, const char *name);
 extern int ipt_addr(char *addr, int maxlen, const char *s, const char *dir, int af, int strict, const char *categ, const char *name);
 extern int ipt_dscp(const char *v, char *opt);
@@ -311,13 +329,13 @@ extern int ipt_layer7(const char *v, char *opt);
 extern void ipt_layer7_inbound(void);
 extern int start_firewall(void);
 extern int stop_firewall(void);
+
 #ifdef DEBUG_IPTFILE
 extern void create_test_iptfile(void);
 #endif
-#ifdef LINUX26
+
 extern void allow_fastnat(const char *service, int allow);
 extern void try_enabling_fastnat(void);
-#endif
 
 /* forward.c */
 extern void ipt_forward(ipt_table_t table);

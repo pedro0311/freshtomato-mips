@@ -46,10 +46,9 @@ char wan6face[IFNAMSIZ + 1];
 #ifdef TCONFIG_PPTPD
 char *pptpcface;
 #endif
+
 char lan_cclass[sizeof("xxx.xxx.xxx.") + 1];
-#ifdef LINUX26
 static int can_enable_fastnat;
-#endif
 
 #ifdef DEBUG_IPTFILE
 static int debug_only = 0;
@@ -94,7 +93,6 @@ struct {
 
 // -----------------------------------------------------------------------------
 
-#ifdef LINUX26
 static const char *fastnat_run_dir = "/var/run/fastnat";
 
 void allow_fastnat(const char *service, int allow)
@@ -137,7 +135,6 @@ void try_enabling_fastnat(void)
 	f_write_string("/proc/sys/net/ipv4/netfilter/ip_conntrack_fastnat",
 		fastnat_allowed() ? "1" : "0", 0, 0);
 }
-#endif
 
 void enable_ip_forward(void)
 {
@@ -324,11 +321,8 @@ int ipt_dscp(const char *v, char *opt)
 	if (n > 63) n = 63;
 	sprintf(opt, " -m dscp --dscp 0x%02X", n);
 
-#ifdef LINUX26
 	modprobe("xt_dscp");
-#else
-	modprobe("ipt_dscp");
-#endif
+
 	return 1;
 }
 
@@ -362,10 +356,8 @@ int ipt_ipp2p(const char *v, char *opt)
 		if (n & 0x0200) strcat(opt, "--waste ");
 		if (n & 0x0400) strcat(opt, "--winmx ");
 		if (n & 0x0800) strcat(opt, "--xdcc ");
-#ifdef LINUX26
 		if (n & 0x1000) strcat(opt, "--pp ");
 		if (n & 0x2000) strcat(opt, "--xunlei ");
-#endif
 	}
 
 	modprobe("ipt_ipp2p");
@@ -430,9 +422,7 @@ void ipt_layer7_inbound(void)
 	while (*p) {
 		if (en) {
 			ipt_write("-A L7in %s -j RETURN\n", *p);
-#ifdef LINUX26
 			can_enable_fastnat = 0;
-#endif
 		}
 		free(*p);
 		++p;
@@ -477,11 +467,8 @@ int ipt_layer7(const char *v, char *opt)
 		}
 	}
 
-#ifdef LINUX26
 	modprobe("xt_layer7");
-#else
-	modprobe("ipt_layer7");
-#endif
+
 	return 1;
 }
 
@@ -546,9 +533,7 @@ static void ipt_webmon()
 
 	if (!nvram_get_int("log_wm")) return;
 
-#ifdef LINUX26
 	can_enable_fastnat = 0;
-#endif
 	wmtype = nvram_get_int("log_wmtype");
 	clear = nvram_get_int("log_wmclear");
 
@@ -637,13 +622,7 @@ static void ipt_webmon()
 	if( nvram_match( "webmon_bkp", "1" ) )
 		xstart( "/usr/sbin/webmon_bkp", "hourly" ); // make a copy immediately
 
-
-#ifdef LINUX26
 	modprobe("xt_webmon");
-#else
-	modprobe("ipt_webmon");
-#endif
-
 }
 
 
@@ -694,11 +673,8 @@ static void mangle_table(void)
 		else p = NULL;
 
 		if (p) {
-#ifdef LINUX26
 			modprobe("xt_HL");
-#else
-			modprobe("ipt_TTL");
-#endif
+
 			if(wanup){
 			// set TTL on primary WAN iface only
 			wanface = wanfaces.iface[0].name;
@@ -752,11 +728,8 @@ static void mangle_table(void)
 		}
 // Reset Incoming DSCP to 0x00
 	if (nvram_match("DSCP_fix_enable", "1")) {
-#ifdef LINUX26
 		modprobe("xt_DSCP");
-#else
-		modprobe("ipt_DSCP");
-#endif
+
 		if(wanup) {
 			ipt_write("-I PREROUTING -i %s -j DSCP --set-dscp 0\n", wanface);
 		}
@@ -1356,11 +1329,7 @@ static void filter_input(void)
 		if (nvram_get_int("telnetd_eas"))
 		if (nvram_get_int("sshd_eas"))
 */
-#ifdef LINUX26
 		modprobe("xt_recent");
-#else
-		modprobe("ipt_recent");
-#endif
 
 		ipt_write(
 			"-N shlimit\n"
@@ -1380,11 +1349,7 @@ static void filter_input(void)
 #ifdef TCONFIG_FTP
 	strlcpy(s, nvram_safe_get("ftp_limit"), sizeof(s));
 	if ((vstrsep(s, ",", &en, &hit, &sec) == 3) && (atoi(en)) && (nvram_get_int("ftp_enable") == 1)) {
-#ifdef LINUX26
 		modprobe("xt_recent");
-#else
-		modprobe("ipt_recent");
-#endif
 
 		ipt_write(
 			"-N ftplimit\n"
@@ -1706,10 +1671,8 @@ static void filter_forward(void)
 //		ip6t_write("-A FORWARD -o %s ! -i %s -j %s\n", wan6face, lanface, chain_in_drop); //shibby - we cant drop connections from WAN to LAN1-3
 		ip6t_write("-A FORWARD -o %s -i %s -j %s\n", wan6face, wan6face, chain_in_drop); //shibby - drop connection from WAN -> WAN only
 
-#ifdef LINUX26
 	modprobe("xt_length");
 	ip6t_write("-A FORWARD -p ipv6-nonxt -m length --length 40 -j ACCEPT\n");
-#endif
 
 	// ICMPv6 rules
 	for (i = 0; i < sizeof(allowed_icmpv6)/sizeof(int); ++i) {
@@ -1877,16 +1840,12 @@ static void filter_log(void)
 		ip46t_write(
 			":logdrop - [0:0]\n"
 			"-A logdrop -m state --state NEW %s -j LOG --log-prefix \"DROP \""
-#ifdef LINUX26
 				" --log-macdecode"
-#endif
 				" --log-tcp-sequence --log-tcp-options --log-ip-options\n"
 			"-A logdrop -j DROP\n"
 			":logreject - [0:0]\n"
 			"-A logreject %s -j LOG --log-prefix \"REJECT \""
-#ifdef LINUX26
 				" --log-macdecode"
-#endif
 				" --log-tcp-sequence --log-tcp-options --log-ip-options\n"
 			"-A logreject -p tcp -j REJECT --reject-with tcp-reset\n",
 			limit, limit);
@@ -1895,9 +1854,7 @@ static void filter_log(void)
 		ip46t_write(
 			":logaccept - [0:0]\n"
 			"-A logaccept -m state --state NEW %s -j LOG --log-prefix \"ACCEPT \""
-#ifdef LINUX26
 				" --log-macdecode"
-#endif
 				" --log-tcp-sequence --log-tcp-options --log-ip-options\n"
 			"-A logaccept -j ACCEPT\n",
 			limit);
@@ -1927,18 +1884,12 @@ static void filter6_input(void)
 		"-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT\n",
 		chain_in_drop);
 
-#ifdef LINUX26
 	modprobe("xt_length");
 	ip6t_write("-A INPUT -p ipv6-nonxt -m length --length 40 -j ACCEPT\n");
-#endif
 
 	strlcpy(s, nvram_safe_get("ne_shlimit"), sizeof(s));
 	if ((vstrsep(s, ",", &en, &hit, &sec) == 3) && ((n = atoi(en) & 3) != 0)) {
-#ifdef LINUX26
 		modprobe("xt_recent");
-#else
-		modprobe("ipt_recent");
-#endif
 
 		ip6t_write(
 			"-N shlimit\n"
@@ -1958,11 +1909,7 @@ static void filter6_input(void)
 #ifdef TCONFIG_FTP
 	strlcpy(s, nvram_safe_get("ftp_limit"), sizeof(s));
 	if ((vstrsep(s, ",", &en, &hit, &sec) == 3) && (atoi(en)) && (nvram_get_int("ftp_enable") == 1)) {
-#ifdef LINUX26
 		modprobe("xt_recent");
-#else
-		modprobe("ipt_recent");
-#endif
 
 		ip6t_write(
 			"-N ftplimit\n"
@@ -2189,9 +2136,7 @@ int start_firewall(void)
 	strlcpy(wan6face, get_wan6face(), sizeof(wan6face));
 #endif
 
-#ifdef LINUX26
 	can_enable_fastnat = 1;
-#endif
 
 	strlcpy(s, nvram_safe_get("lan_ipaddr"), sizeof(s));
 	if ((c = strrchr(s, '.')) != NULL) *(c + 1) = 0;
@@ -2308,11 +2253,7 @@ int start_firewall(void)
 //	modprobe("imq", numdevs );
 
 	modprobe("imq");
-#ifdef LINUX26
 	modprobe("xt_IMQ");
-#else
-	modprobe("ipt_IMQ");
-#endif
 //	}
 
 	mangle_table();
@@ -2411,7 +2352,7 @@ int start_firewall(void)
 	modprobe_r("ip6t_LOG");
 	modprobe_r("ip6t_REJECT");
 #endif
-#ifdef LINUX26
+
 	modprobe_r("xt_layer7");
 	modprobe_r("xt_recent");
 	modprobe_r("xt_HL");
@@ -2419,14 +2360,6 @@ int start_firewall(void)
 	modprobe_r("xt_web");
 	modprobe_r("xt_webmon");
 	modprobe_r("xt_dscp");
-#else
-	modprobe_r("ipt_layer7");
-	modprobe_r("ipt_recent");
-	modprobe_r("ipt_TTL");
-	modprobe_r("ipt_web");
-	modprobe_r("ipt_webmon");
-	modprobe_r("ipt_dscp");
-#endif
 	modprobe_r("ipt_ipp2p");
 
 	unlink("/var/webmon/domain");
@@ -2442,10 +2375,9 @@ int start_firewall(void)
 
 	run_nvscript("script_fire", NULL, 1);
 
-#ifdef LINUX26
 	allow_fastnat("firewall", can_enable_fastnat);
 	try_enabling_fastnat();
-#endif
+
 	simple_unlock("firewall");
 	return 0;
 }

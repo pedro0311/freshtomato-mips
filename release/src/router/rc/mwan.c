@@ -107,9 +107,13 @@ int checkConnect(char *sPrefix)
 	get_wan_info(sPrefix); // here for mwan_load_balance IP / dev info in case wan is down
 
 	if(check_wanup(sPrefix)){
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		mwanlog(LOG_DEBUG, "checkConnect[i]: prefix=%s iface=%s ip/mask=%s/%s gateway=%s weight=%d", sPrefix, wan_info.wan_iface, wan_info.wan_ipaddr, wan_info.wan_netmask, wan_info.wan_gateway, wan_info.wan_weight);
+#endif
 		if(nvram_get_int("mwan_cktime") == 0){
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			mwanlog(LOG_DEBUG, "checkConnect[r]: [1], %s is connected [result from check_wanup(%s)] [mwan_cktime = 0]", sPrefix, sPrefix);
+#endif
 			return 1;
 		}
 
@@ -119,23 +123,31 @@ int checkConnect(char *sPrefix)
 		fclose(f);
 
 		if (result == 1) {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			mwanlog(LOG_DEBUG, "checkConnect[r]: [1], %s is connected [result from /tmp/state_%s]", sPrefix, sPrefix);
+#endif
 			return 1;
 		} else {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			mwanlog(LOG_DEBUG, "checkConnect[r]: [%d], %s is disconnected  [result from /tmp/state_%s]", result, sPrefix, sPrefix);
+#endif
 			return 0;
 		}
 
 	} else {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		mwanlog(LOG_DEBUG, "checkConnect[i]: prefix=%s iface=%s ip/mask=%s/%s gateway=%s weight=%d", sPrefix, wan_info.wan_iface, wan_info.wan_ipaddr, wan_info.wan_netmask, wan_info.wan_gateway, wan_info.wan_weight);
 		mwanlog(LOG_DEBUG, "checkConnect[r]: [0], %s is disconnected [result from check_wanup(%s)]", sPrefix, sPrefix);
+#endif
 		return 0;
 	}
 }
 
 void mwan_table_del(char *sPrefix)
 {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	mwanlog(LOG_DEBUG, "IN mwan_table_del");
+#endif
 
 	int wan_unit,table;
 	int i;
@@ -147,7 +159,9 @@ void mwan_table_del(char *sPrefix)
 	// ip rule del table WAN1 pref 101 (gateway)
 	memset(cmd, 0, 256);
 	sprintf(cmd, "ip rule del table %d pref 10%d", table, wan_unit);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	mwanlog(LOG_DEBUG, "%s, cmd=%s", sPrefix, cmd);
+#endif
 	system(cmd);
 	
 	// ip rule del table WAN1 pref 111 (dns)
@@ -158,23 +172,31 @@ void mwan_table_del(char *sPrefix)
 #endif
 		memset(cmd, 0, 256);
 		sprintf(cmd, "ip rule del table %d pref 11%d", table, wan_unit);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		mwanlog(LOG_DEBUG, "%s, cmd=%s", sPrefix, cmd);
+#endif
 		system(cmd);
 	}
 
 	// ip rule del fwmark 0x100/0xf00 table 1 pref 121 (mark)
 	memset(cmd, 0, 256);
 	sprintf(cmd, "ip rule del table %d pref 12%d", table, wan_unit);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	mwanlog(LOG_DEBUG, "%s, cmd=%s", sPrefix, cmd);
+#endif
 	system(cmd);
 
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	mwanlog(LOG_DEBUG, "OUT mwan_table_del");
+#endif
 }
 
 // set multiwan ip route table & ip rule table
 void mwan_table_add(char *sPrefix)
 {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	mwanlog(LOG_DEBUG, "IN mwan_table_add");
+#endif
 
 	int mwan_num;
 	int proto;
@@ -199,21 +221,27 @@ void mwan_table_add(char *sPrefix)
 		// ip rule add from WAN_IP table route_id pref 10X
 		memset(cmd, 0, 256);
 		sprintf(cmd, "ip rule add from %s table %d pref 10%d", wan_info.wan_ipaddr, table, wan_unit);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		mwanlog(LOG_DEBUG, "%s, cmd=%s", sPrefix, cmd);
+#endif
 		system(cmd);
 		
 		// set the routing rules of DNS
 		for (i = 0 ; i < wan_info.dns->count; ++i) {
 			memset(cmd, 0, 256);
 			sprintf(cmd, "ip rule add to %s table %d pref 11%d", inet_ntoa(wan_info.dns->dns[i].addr), table, wan_unit);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			mwanlog(LOG_DEBUG, "%s, cmd=%s", sPrefix, cmd);
+#endif
 			system(cmd);
 		}
 
 		// ip rule add fwmark 0x100/0xf00 table 1 pref 121
 		memset(cmd, 0, 256);
 		sprintf(cmd, "ip rule add fwmark 0x%d00/0xf00 table %d pref 12%d", wan_unit, table, wan_unit);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		mwanlog(LOG_DEBUG, "%s, cmd=%s", sPrefix, cmd);
+#endif
 		system(cmd);
 
 		for(wanid = 1 ; wanid <= mwan_num; ++wanid){
@@ -226,7 +254,9 @@ void mwan_table_add(char *sPrefix)
 			else {
 				sprintf(cmd, "ip route append %s dev %s proto kernel scope link src %s table %d", wan_info.wan_gateway, wan_info.wan_iface, wan_info.wan_ipaddr, wanid);
 			}
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			mwanlog(LOG_DEBUG, "%s, cmd=%s", sPrefix, cmd);
+#endif
 			system(cmd);
 		}
 
@@ -258,15 +288,19 @@ void mwan_table_add(char *sPrefix)
 			get_cidr(lan_ipaddr, lan_netmask, ip_cidr);
 			memset(cmd, 0, 256);
 			sprintf(cmd, "ip route append %s dev %s proto kernel scope link src %s table %d", ip_cidr, lan_ifname, lan_ipaddr, table);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			mwanlog(LOG_DEBUG, "%s, cmd=%s", sPrefix, cmd);
+#endif
 			system(cmd);
 		}
 
 		// ip route add 127.0.0.0/8 dev lo scope link table 1
 		memset(cmd, 0, 256);
 		sprintf(cmd, "ip route append 127.0.0.0/8 dev lo scope link table %d", table);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		mwanlog(LOG_DEBUG, "%s, cmd=%s", sPrefix, cmd);
-		system(cmd);			
+#endif
+		system(cmd);
 
 		// ip route add default via 10.0.10.1 dev ppp3 table route_id
 		memset(cmd, 0, 256);
@@ -274,11 +308,15 @@ void mwan_table_add(char *sPrefix)
 			(proto == WP_DHCP || proto == WP_LTE || proto == WP_STATIC) ? wan_info.wan_gateway : wan_info.wan_ipaddr,
 			wan_info.wan_iface,
 			table);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		mwanlog(LOG_DEBUG, "%s, cmd=%s", sPrefix, cmd);
+#endif
 		system(cmd);
 	}
 
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	mwanlog(LOG_DEBUG, "OUT mwan_table_add");
+#endif
 }
 
 void mwan_state_files(void)
@@ -307,7 +345,9 @@ void mwan_state_files(void)
 
 void mwan_status_update(void)
 {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	mwanlog(LOG_DEBUG, "IN mwan_status_update, mwan_curr=%s", mwan_curr);
+#endif
 	int mwan_num;
 	int wan_unit;
 	char prefix[] = "wanXX";
@@ -366,14 +406,18 @@ void mwan_status_update(void)
 	}
 
 	fclose(f);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	mwanlog(LOG_DEBUG, "OUT mwan_status_update, mwan_curr=%s", mwan_curr);
+#endif
 }
 
 void mwan_load_balance(void)
 {
 	if(nvram_get_int("mwan_num") == 1) return;
 
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	mwanlog(LOG_DEBUG, "IN mwan_load_balance, mwan_curr=%s", mwan_curr);
+#endif
 	int mwan_num,wan_unit;
 	int proto;
 	char prefix[] = "wanXX";
@@ -410,7 +454,9 @@ void mwan_load_balance(void)
 			sprintf(cmd, "ip route del default via %s dev %s",
 				(proto == WP_DHCP || proto == WP_LTE || proto == WP_STATIC) ? wan_info.wan_gateway : wan_info.wan_ipaddr,
 				wan_info.wan_iface);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			mwanlog(LOG_DEBUG, "%s, cmd=%s", prefix, cmd);
+#endif
 			system(cmd);
 		}
 	}
@@ -420,10 +466,14 @@ void mwan_load_balance(void)
 #else
 	if (strcmp(mwan_curr,"00")) {
 #endif
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		mwanlog(LOG_DEBUG, "load_balance, cmd=%s", lb_cmd);
+#endif
 		system(lb_cmd);
 	}
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	mwanlog(LOG_DEBUG, "OUT mwan_load_balance, mwan_curr=%s", mwan_curr);
+#endif
 }
 
 int mwan_route_main(int argc, char **argv)
@@ -433,7 +483,9 @@ int mwan_route_main(int argc, char **argv)
 
 	FILE *fp;
 
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	mwanlog(LOG_DEBUG, "MWAN: mwanroute launched");
+#endif
 
 	mkdir("/etc/iproute2", 0744);
 	if((fp = fopen("/etc/iproute2/rt_tables", "w")) != NULL) {

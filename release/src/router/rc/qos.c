@@ -175,9 +175,6 @@ void ipt_qos(void)
 
 		// dscp
 		if (ipt_dscp(dscp, s)) {
-#ifndef LINUX26
-			v4v6_ok &= ~IPT_V6; // dscp ipv6 match is not present in K2.4
-#endif
 			strcat(end, s);
 		}
 
@@ -474,7 +471,6 @@ void start_qos(char *prefix)
 #endif
 	// move me?
 	x = nvram_get_int("ne_vegas");
-#ifdef LINUX26
 	if (x) {
 		char alpha[10], beta[10], gamma[10];
 		sprintf(alpha, "alpha=%d", nvram_get_int("ne_valpha"));
@@ -487,14 +483,6 @@ void start_qos(char *prefix)
 		modprobe_r("tcp_vegas");
 		f_write_string("/proc/sys/net/ipv4/tcp_congestion_control", "", FW_NEWLINE, 0);
 	}
-#else
-	f_write_string("/proc/sys/net/ipv4/tcp_vegas_cong_avoid", x ? "1" : "0", 0, 0);
-	if (x) {
-		f_write_string("/proc/sys/net/ipv4/tcp_vegas_alpha", nvram_safe_get("ne_valpha"), 0, 0);
-		f_write_string("/proc/sys/net/ipv4/tcp_vegas_beta", nvram_safe_get("ne_vbeta"), 0, 0);
-		f_write_string("/proc/sys/net/ipv4/tcp_vegas_gamma", nvram_safe_get("ne_vgamma"), 0, 0);
-	}
-#endif
 
 	if (!nvram_get_int("qos_enable")) return;
 

@@ -60,12 +60,16 @@ int ipup_main(int argc, char **argv)
 
 	if (!wait_action_idle(10)) return -1;
 
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	mwanlog(LOG_DEBUG,"IN ipup_main IFNAME=%s DEVICE=%s LINKNAME=%s IPREMOTE=%s IPLOCAL=%s DNS1=%s DNS2=%s", getenv("IFNAME"), getenv("DEVICE"), getenv("LINKNAME"), getenv("IPREMOTE"), getenv("IPLOCAL"), getenv("DNS1"), getenv("DNS2"));
+#endif
 
 	wan_ifname = safe_getenv("IFNAME");
 	// ppp_prefix(safe_getenv("DEVICE"), prefix);
 	strcpy(prefix, safe_getenv("LINKNAME"));
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	mwanlog(LOG_DEBUG,"ipup_main, wan_ifname = %s, prefix = %s.", wan_ifname, prefix);
+#endif
 	if ((!wan_ifname) || (!*wan_ifname)) return -1;
 
 	nvram_set(strcat_r(prefix, "_iface", tmp), wan_ifname);	// ppp#
@@ -81,7 +85,9 @@ int ipup_main(int argc, char **argv)
 
 	if ((p = getenv("IPREMOTE"))) {
 		nvram_set(strcat_r(prefix, "_gateway_get", tmp), p);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		mwanlog(LOG_DEBUG,"!!! ipup_main: set %s_gateway_get=%s", prefix, p);
+#endif
 		TRACE_PT("IPREMOTE=%s\n", p);
 	}
 
@@ -130,7 +136,9 @@ int ipup_main(int argc, char **argv)
 	if ((value = getenv("SRV_NAME"))) nvram_set(strcat_r(prefix, "_ppp_get_srv", tmp), value);
 	if ((value = getenv("MTU"))) nvram_set(strcat_r(prefix, "_run_mtu", tmp), value);
 
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	mwanlog(LOG_DEBUG,"OUT ipup_main: to start_wan_done, ifname=%s prefix=%s ...", wan_ifname, prefix);
+#endif
 	start_wan_done(wan_ifname, prefix);
 
 	TRACE_PT("end\n");
@@ -170,26 +178,34 @@ int ipdown_main(int argc, char **argv)
 		if (proto == WP_L2TP) {
 			if (inet_pton(AF_INET, nvram_safe_get(strcat_r(prefix, "_l2tp_server_ip", tmp)), &(ipaddr.s_addr))) {
 				route_del(nvram_safe_get(strcat_r(prefix, "_ifname", tmp)), 0, nvram_safe_get(strcat_r(prefix, "_l2tp_server_ip", tmp)), nvram_safe_get(strcat_r(prefix, "_gateway", tmp)), "255.255.255.255"); // fixed routing problem in Israel by kanki
+#ifndef TCONFIG_OPTIMIZE_SIZE
 				mwanlog(LOG_DEBUG,"!!! ipdown_main: route_del(%s,0,%s,%s,255.255.255.255)", nvram_safe_get(strcat_r(prefix, "_ifname", tmp)), nvram_safe_get(strcat_r(prefix, "_l2tp_server_ip", tmp)), nvram_safe_get(strcat_r(prefix, "_gateway", tmp)));
+#endif
 			}
 		}
 
 		if (proto == WP_PPTP) {
 			if (inet_pton(AF_INET, nvram_safe_get(strcat_r(prefix, "_pptp_server_ip", tmp)), &(ipaddr.s_addr))) {
 				route_del(nvram_safe_get(strcat_r(prefix, "_ifname", tmp)), 0, nvram_safe_get(strcat_r(prefix, "_pptp_server_ip", tmp)), nvram_safe_get(strcat_r(prefix, "_gateway", tmp)), "255.255.255.255");
+#ifndef TCONFIG_OPTIMIZE_SIZE
 				mwanlog(LOG_DEBUG,"!!! ipdown_main: route_del(%s,0,%s,%s,255.255.255.255)", nvram_safe_get(strcat_r(prefix, "_ifname", tmp)), nvram_safe_get(strcat_r(prefix, "_pptp_server_ip", tmp)), nvram_safe_get(strcat_r(prefix, "_gateway", tmp)));
+#endif
 			}
 		}
 
 		if (!nvram_get_int(strcat_r(prefix, "_ppp_demand", tmp))) {	/* don't setup temp gateway for demand connections */
 			/* Restore the default gateway for WAN interface */
 			nvram_set(strcat_r(prefix, "_gateway_get", tmp), nvram_safe_get(strcat_r(prefix, "_gateway", tmp)));
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			mwanlog(LOG_DEBUG,"*** ipdown_main: restore default gateway: nvram_set(%s_gateway_get,%s)", prefix, nvram_safe_get(strcat_r(prefix, "_gateway", tmp)));
+#endif
 
 			/* Set default route to gateway if specified */
 			route_del(nvram_safe_get(strcat_r(prefix, "_ifname", tmp)), 0, "0.0.0.0", nvram_safe_get(strcat_r(prefix, "_gateway", tmp)), "0.0.0.0");
 			route_add(nvram_safe_get(strcat_r(prefix, "_ifname", tmp)), 0, "0.0.0.0", nvram_safe_get(strcat_r(prefix, "_gateway", tmp)), "0.0.0.0");
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			mwanlog(LOG_DEBUG,"!!! ipdown_main: route_add(%s,0,0.0.0.0,%s,0.0.0.0)", nvram_safe_get(strcat_r(prefix, "_ifname", tmp)), nvram_safe_get(strcat_r(prefix, "_gateway", tmp)));
+#endif
 		}
 
 		/* Unset received DNS entries (BAD for PPTP/L2TP here, it need DNS on reconnect!) */
