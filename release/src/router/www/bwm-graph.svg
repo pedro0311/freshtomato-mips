@@ -43,14 +43,6 @@ text {
 }
 </style>
 <script type='text/ecmascript'><![CDATA[
-/*
-
-	Hi there! What are you looking at? Messy isn't it?
-
-			^_^
-
-*/
-
 var week = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 var pointLoc = 0;
 var vWidth = 760;
@@ -93,7 +85,6 @@ function xps(n)
 
 function setText(e, text)
 {
-	// Adobe/IE doesn't do textContent=
 	if (e.firstChild) e.removeChild(e.firstChild);
 	e.appendChild(document.createTextNode(text));
 }
@@ -193,11 +184,9 @@ function updateSVG(rxData, txData, maxValue, mode, rxColor, txColor, intv, maxLe
 	unit = unitSamp;
 
 	tockD = clock;
-//	tockD = new Date();
 	tock = tockD.getTime();
 
 	if (intv < 60) {
-		// realtime
 		x = z = (vWidth / 5);
 		for (i = 0; i < 4; ++i) {
 			tickLines[i].setAttribute('x1', Math.round(x));
