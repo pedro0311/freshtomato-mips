@@ -23,11 +23,9 @@
 #include <sys/wait.h>
 #include <sys/reboot.h>
 #include <sys/klog.h>
-#ifdef LINUX26
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/sysinfo.h>
-#endif
 #include <wlutils.h>
 #include <bcmdevs.h>
 
@@ -3724,7 +3722,7 @@ static void load_files_from_nvram(void)
 		run_nvscript(".autorun", NULL, 3);
 }
 
-#if defined(LINUX26) && defined(TCONFIG_USB)
+#if defined(TCONFIG_USB)
 static inline void tune_min_free_kbytes(void)
 {
 	struct sysinfo info;
@@ -3762,8 +3760,6 @@ static void sysinit(void)
 
 	mount("proc", "/proc", "proc", 0, NULL);
 	mount("tmpfs", "/tmp", "tmpfs", 0, NULL);
-
-#ifdef LINUX26
 	mount("devfs", "/dev", "tmpfs", MS_MGC_VAL | MS_NOATIME, NULL);
 	mknod("/dev/null", S_IFCHR | 0666, makedev(1, 3));
 	mknod("/dev/console", S_IFCHR | 0600, makedev(5, 1));
@@ -3774,7 +3770,6 @@ static void sysinit(void)
 	mknod("/dev/pts/0", S_IRWXU|S_IFCHR, makedev(136, 0));
 	mknod("/dev/pts/1", S_IRWXU|S_IFCHR, makedev(136, 1));
 	mount("devpts", "/dev/pts", "devpts", MS_MGC_VAL, NULL);
-#endif
 
 	if (console_init()) noconsole = 1;
 
@@ -3827,7 +3822,6 @@ static void sysinit(void)
 	}
 #endif
 
-#ifdef LINUX26
 	static const char *dn[] = {
 		"null", "zero", "random", "urandom", "full", "ptmx", "nvram",
 		NULL
@@ -3837,7 +3831,6 @@ static void sysinit(void)
 		chmod(s, 0666);
 	}
 	chmod("/dev/gpio", 0660);
-#endif
 
 	set_action(ACT_IDLE);
 
@@ -3845,10 +3838,8 @@ static void sysinit(void)
 		putenv(defenv[i]);
 	}
 
-#ifdef LINUX26
 	eval("hotplug2", "--coldplug");
 	start_hotplug2();
-#endif
 
 	if (!noconsole) {
 		printf("\n\nHit ENTER for console...\n\n");
@@ -3903,7 +3894,7 @@ static void sysinit(void)
 
 	klogctl(8, NULL, nvram_get_int("console_loglevel"));
 
-#if defined(LINUX26) && defined(TCONFIG_USB)
+#if defined(TCONFIG_USB)
 	tune_min_free_kbytes();
 #endif
 	setup_conntrack();

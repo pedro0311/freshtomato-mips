@@ -8,8 +8,7 @@
 #include <time.h>
 #include "rc.h"
 
-
-//	#define DLOG(args...) syslog(LOG_DEBUG, args)
+//#define DLOG(args...) syslog(LOG_DEBUG, args)
 #define DLOG(fmt, args...) _dprintf(fmt"\n", args)
 
 static inline void unsched(const char *key)

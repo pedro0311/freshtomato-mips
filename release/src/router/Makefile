@@ -70,7 +70,6 @@ obj-y += bridge
 obj-$(TCONFIG_DNSSEC) += nettle
 obj-y += dnsmasq
 obj-y += etc
-# obj-y += vlan # use Busybox vconfig
 obj-y += pppd
 obj-y += rp-pppoe
 obj-y += utils
@@ -787,7 +786,7 @@ OPENSSL_CIPHERS:=no-dh no-idea no-rc2 no-rc5 no-engine no-aes192 no-cast
 endif
 
 ifeq ($(TCONFIG_KEYGEN),)
-OPENSSL_CIPHERS+=no-sha0 no-smime no-camellia no-krb5 no-rmd160 no-ripemd no-seed no-capieng no-gms no-gmp no-rfc3779 no-err no-hw no-jpake no-zlib no-engines no-sse2 no-libunbound no-ssl-trace no-dtls1 no-store no-psk no-md2 no-mdc2 no-ts
+OPENSSL_CIPHERS+=no-sha0 no-smime no-camellia no-krb5 no-rmd160 no-ripemd no-seed no-capieng no-gms no-gmp no-rfc3779 no-hw no-jpake no-zlib no-engines no-sse2 no-libunbound no-ssl-trace no-dtls1 no-store no-psk no-md2 no-mdc2 no-ts
 endif
 
 openssl/stamp-h1:
@@ -804,7 +803,7 @@ endif
 	RANLIB=$(RANLIB:$(CROSS_COMPILE)%=%) \
 	./Configure $(HOSTCONFIG) --openssldir=/etc \
 	-ffunction-sections -fdata-sections -Wl,--gc-sections \
-	shared $(OPENSSL_CIPHERS) no-ssl2 no-ssl3
+	shared $(OPENSSL_CIPHERS) no-ssl2 no-ssl3 no-err $(if $(TCONFIG_BBT),,no-rc4)
 ifeq ($(TCONFIG_KEYGEN),)
 	cd openssl && mkdir -p include/openssl && \
 	ln -sf ../../crypto/camellia/camellia.h include/openssl/camellia.h && \
@@ -1114,7 +1113,7 @@ libusb10: libusb10/Makefile
 libusb10-install:
 	install -D libusb10/libusb/.libs/libusb-1.0.so $(INSTALLDIR)/libusb10/usr/lib/libusb-1.0.so
 	$(STRIP) $(INSTALLDIR)/libusb10/usr/lib/*.so
-	cd $(INSTALLDIR)/libusb10/usr/lib && ln -sf libusb-1.0.so libusb-1.0.so.1
+	cd $(INSTALLDIR)/libusb10/usr/lib && ln -sf libusb-1.0.so libusb-1.0.so.0
 
 libusb10-clean:
 	-@$(MAKE) -C $@ clean
@@ -1167,14 +1166,6 @@ samba3:
 nvram: shared
 
 prebuilt: shared libbcmcrypto
-
-vlan:
-	@$(SEP)
-	@$(MAKE) -C vlan CROSS=$(CROSS_COMPILE)	# STRIPTOOL=$(STRIP)
-
-vlan-install:
-	$(MAKE) -C vlan CROSS=$(CROSS_COMPILE) INSTALLDIR=$(INSTALLDIR) install	# STRIPTOOL=$(STRIP)
-	$(STRIP) $(INSTALLDIR)/vlan/usr/sbin/vconfig
 
 accel-pptp: pppd accel-pptp/Makefile
 	@$(SEP)
@@ -2191,14 +2182,16 @@ lzo-install:
 
 openvpn/.conf: openssl lzo
 	$(call patch_files,openvpn)
-	cd openvpn && autoreconf && \
+	cd $(TOP)/openvpn && autoreconf && \
+	OPENSSL_CFLAGS="-I$(TOP)/openssl/include" \
+	OPENSSL_LIBS="-L$(TOP)/openssl -lcrypto -lssl" \
 	CFLAGS="$(CFLAG_OPTIMIZE) -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 	LDFLAGS="-L$(TOP)/openssl -L$(TOP)/lzo/src/.libs -ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	CPPFLAGS="-I$(TOP)/lzo/include -I$(TOP)/openssl/include" \
-	$(CONFIGURE) --prefix= --with-crypto-library=openssl --disable-debug \
-		--disable-plugin-auth-pam --disable-plugin-down-root --enable-management \
-		OPENSSL_SSL_CFLAGS="-I$(TOP)/openssl/include" OPENSSL_SSL_LIBS="-L$(TOP)/openssl -lssl" \
-		PLUGINDIR="/lib" ac_cv_lib_resolv_gethostbyname=no
+	PLUGINDIR="/lib" \
+	$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib \
+		--enable-management --disable-debug --disable-plugin-auth-pam --disable-plugin-down-root --disable-dependency-tracking \
+		ac_cv_lib_resolv_gethostbyname=no
 	touch openvpn/.conf
 
 openvpn: openvpn/.conf

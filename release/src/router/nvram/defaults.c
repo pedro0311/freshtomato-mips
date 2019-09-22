@@ -670,7 +670,7 @@ const defaults_t defaults[] = {
 	{ "wl_distance",		""				},
 
 /* forward-* */
-#ifdef TCONFIG_NVRAM_32K
+#if defined(TCONFIG_NVRAM_32K) || defined(TCONFIG_OPTIMIZE_SIZE)
 	{ "portforward",		""				},
 	{ "trigforward",		""				},
 #else
@@ -741,7 +741,7 @@ const defaults_t defaults[] = {
 
 /* access restrictions */
 	{ "rruleN",			"0"				},
-#ifdef TCONFIG_NVRAM_32K
+#if defined(TCONFIG_NVRAM_32K) || defined(TCONFIG_OPTIMIZE_SIZE)
 	{ "rrule0",			""				},
 #else
 	{ "rrule0",			"0|1320|300|31|||word text\n^begins-with.domain.\n.ends-with.net$\n^www.exact-domain.net$|0|example" },

@@ -9,7 +9,8 @@ STRIP = $(CROSS)strip
 
 ALL_OBJS = igsu.o igsu_linux.o
 
-CCFLAGS = -Os -Wall -I$(SRCBASE)/include -I$(TOP)/shared -I$(SRCBASE)/include/emf/igs $(EXTRACFLAGS)
+CCFLAGS = -Os -Wall -I$(SRCBASE)/include -I$(TOP)/shared -I$(SRCBASE)/include/emf/igs $(EXTRACFLAGS) -ffunction-sections -fdata-sections
+LDFLAGS += -ffunction-sections -fdata-sections -Wl,--gc-sections
 
 ifneq ($(wildcard ./prebuilt),)
 all:

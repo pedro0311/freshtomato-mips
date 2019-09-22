@@ -161,13 +161,12 @@ void start_dnsmasq()
 #endif
 #ifdef TCONFIG_TOR
 	if ((nvram_match("tor_enable", "1")) && (nvram_match("dnsmasq_onion_support", "1"))) {
-		char *t_ip;
+		char *t_ip = nvram_safe_get("lan_ipaddr");
 
-		if (nvram_match("tor_iface", "br0"))      { t_ip = nvram_safe_get("lan_ipaddr");  }
-		else if (nvram_match("tor_iface", "br1")) { t_ip = nvram_safe_get("lan1_ipaddr"); }
-		else if (nvram_match("tor_iface", "br2")) { t_ip = nvram_safe_get("lan2_ipaddr"); }
-		else if (nvram_match("tor_iface", "br3")) { t_ip = nvram_safe_get("lan3_ipaddr"); }
-		else                                      { t_ip = nvram_safe_get("lan_ipaddr");  }
+		if (nvram_match("tor_iface", "br0")) t_ip = nvram_safe_get("lan_ipaddr");
+		if (nvram_match("tor_iface", "br1")) t_ip = nvram_safe_get("lan1_ipaddr");
+		if (nvram_match("tor_iface", "br2")) t_ip = nvram_safe_get("lan2_ipaddr");
+		if (nvram_match("tor_iface", "br3")) t_ip = nvram_safe_get("lan3_ipaddr");
 
 		fprintf(f, "server=/onion/%s#%s\n", t_ip, nvram_safe_get("tor_dnsport"));
 	}
@@ -223,7 +222,7 @@ void start_dnsmasq()
 	char dhcpN_num[] = "dhcpXX_num";
 	char dhcpN_lease[] = "dhcpXX_lease";
 	char br;
-	for(br=0 ; br<=3 ; br++) {
+	for (br=0 ; br<=3 ; br++) {
 		char bridge[2] = "0";
 		if (br!=0)
 			bridge[0]+=br;
@@ -423,11 +422,11 @@ void start_dnsmasq()
 		}
 
 		if ((do_dhcpd_hosts > 0) && (*mac != 0) && (strcmp(mac, "00:00:00:00:00:00") != 0)) {
-			if (nvram_get_int("dhcpd_slt") == 0) {
-				fprintf(f, "dhcp-host=%s,%s\n", mac, ip);
-			} else {
-				fprintf(f, "dhcp-host=%s,%s,%s\n", mac, ip, sdhcp_lease);
+			fprintf(f, "dhcp-host=%s,%s", mac, ip);
+			if (nvram_get_int("dhcpd_slt") != 0) {
+				fprintf(f, ",%s", sdhcp_lease);
 			}
+			fprintf(f, "\n");
 		}
 	}
 
@@ -435,9 +434,7 @@ void start_dnsmasq()
 	if (hf) fclose(hf);
 
 	n = nvram_get_int("dhcpd_lmax");
-	fprintf(f,
-		"dhcp-lease-max=%d\n",
-		(n > 0) ? n : 255);
+	fprintf(f, "dhcp-lease-max=%d\n", (n > 0) ? n : 255);
 	if (nvram_get_int("dhcpd_auth") >= 0) {
 		fprintf(f, "dhcp-authoritative\n");
 	}
@@ -452,9 +449,10 @@ void start_dnsmasq()
 
 #ifdef TCONFIG_DNSSEC
 	if (nvram_match("dnssec_enable", "1")) {
-		fprintf(f, "conf-file=/etc/trust-anchors.conf\n"
-			   "dnssec\n"
-			   "dnssec-no-timecheck\n");
+		fprintf(f,
+			"conf-file=/etc/trust-anchors.conf\n"
+			"dnssec\n"
+			"dnssec-no-timecheck\n");
 	}
 #endif
 
@@ -647,7 +645,9 @@ void stop_dnsmasq(void)
 
 void clear_resolv(void)
 {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	dnslog(LOG_DEBUG, "*** clear_resolv, clear all DNS entries\n");
+#endif
 	f_write(dmresolv, NULL, 0, 0, 0);	/* blank */
 }
 
@@ -715,10 +715,14 @@ void dns_to_resolv(void)
 			get_wanx_proto(wan_prefix) != WP_L2TP &&
 			!nvram_get_int(strcat_r(wan_prefix, "_ppp_demand", tmp)))
 		{
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			dnslog(LOG_DEBUG, "*** dns_to_resolv: %s (proto:%d) is not UP, not P-t-P or On Demand, SKIP ADD\n", wan_prefix, get_wanx_proto(wan_prefix));
+#endif
 			continue;
 		} else {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			dnslog(LOG_DEBUG, "*** dns_to_resolv: %s (proto:%d) is OK to ADD\n", wan_prefix, get_wanx_proto(wan_prefix));
+#endif
 			append++;
 		}
 		m = umask(022);	/* 077 from pppoecd */
@@ -731,7 +735,9 @@ void dns_to_resolv(void)
 #endif
 				);
 
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			dnslog(LOG_DEBUG, "exclusive: %d", exclusive);
+#endif
 			if (!exclusive) { /* exclusive check */
 #ifdef TCONFIG_IPV6
 				if (write_ipv6_dns_servers(f, "nameserver ", nvram_safe_get("ipv6_dns"), "\n", 0) == 0 || nvram_get_int("dns_addget"))
@@ -755,7 +761,9 @@ void dns_to_resolv(void)
 							 * Also add possibility to change that IP (198.51.100.1) in GUI by the user
 							 */
 							trig_ip = nvram_safe_get(strcat_r(wan_prefix, "_ppp_demand_dnsip", tmp));
+#ifndef TCONFIG_OPTIMIZE_SIZE
 							dnslog(LOG_DEBUG, "*** dns_to_resolv: no servers for %s: put a pseudo DNS (non-routable on public internet) IP %s to trigger Connect On Demand", wan_prefix, trig_ip);
+#endif
 							fprintf(f, "nameserver %s\n", trig_ip);
 							break;
 						}
@@ -765,7 +773,9 @@ void dns_to_resolv(void)
 					for (i = 0; i < dns->count; i++) {
 						if (dns->dns[i].port == 53) {	/* resolv.conf doesn't allow for an alternate port */
 							fprintf(f, "nameserver %s\n", inet_ntoa(dns->dns[i].addr));
+#ifndef TCONFIG_OPTIMIZE_SIZE
 							dnslog(LOG_DEBUG, "*** dns_to_resolv, %s DNS %s to %s [%s]", (append == 1) ? "write" : "append", inet_ntoa(dns->dns[i].addr), dmresolv, wan_prefix);
+#endif
 						}
 					}
 				}
@@ -1742,7 +1752,9 @@ void start_udpxy(void)
 		}
 		else {
 			/* do nothing */
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			syslog(LOG_DEBUG, "udpxy not started!\n");
+#endif
 		}
 	}
 }
@@ -1838,7 +1850,9 @@ void start_ntpd(void)
 
 		/* Allocating memory dynamically both so we don't waste memory, and in case of unanticipatedly long server name in nvram */
 		if ((servers = malloc(servers_len + 1)) == NULL) {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			syslog(LOG_DEBUG, "ntpd: failed allocating memory, exiting\n");
+#endif
 			return;			/* Just get out if we couldn't allocate memory */
 		}
 		memset(servers, 0, sizeof(servers));
@@ -1892,15 +1906,19 @@ static void stop_rstats(void)
 		if (pidz < 1) pidz = pidof("cp");
 		ppidz = ppid(ppid(pidz));
 		if ((m > 0) && (pidz > 0) && (pid == ppidz)) {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			syslog(LOG_DEBUG, "rstats(PID %d) shutting down, waiting for helper process to complete(PID %d, PPID %d).\n", pid, pidz, ppidz);
+#endif
 			--m;
 		} else {
 			kill(pid, SIGTERM);
 		}
 		sleep(1);
 	}
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	if ((w == 1) && (n > 0))
 		syslog(LOG_DEBUG, "rstats stopped.\n");
+#endif
 }
 
 static void start_rstats(int new)
@@ -1908,10 +1926,14 @@ static void start_rstats(int new)
 	if (nvram_match("rstats_enable", "1")) {
 		stop_rstats();
 		if (new) {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			syslog(LOG_DEBUG, "starting rstats (new datafile).\n");
+#endif
 			xstart("rstats", "--new");
 		} else {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			syslog(LOG_DEBUG, "starting rstats.\n");
+#endif
 			xstart("rstats");
 		}
 	}
@@ -1933,15 +1955,19 @@ static void stop_cstats(void)
 		if (pidz < 1) pidz = pidof("cp");
 		ppidz = ppid(ppid(pidz));
 		if ((m > 0) && (pidz > 0) && (pid == ppidz)) {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			syslog(LOG_DEBUG, "cstats(PID %d) shutting down, waiting for helper process to complete(PID %d, PPID %d).\n", pid, pidz, ppidz);
+#endif
 			--m;
 		} else {
 			kill(pid, SIGTERM);
 		}
 		sleep(1);
 	}
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	if ((w == 1) && (n > 0))
 		syslog(LOG_DEBUG, "cstats stopped.\n");
+#endif
 }
 
 static void start_cstats(int new)
@@ -1949,10 +1975,14 @@ static void start_cstats(int new)
 	if (nvram_match("cstats_enable", "1")) {
 		stop_cstats();
 		if (new) {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			syslog(LOG_DEBUG, "starting cstats (new datafile).\n");
+#endif
 			xstart("cstats", "--new");
 		} else {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			syslog(LOG_DEBUG, "starting cstats.\n");
+#endif
 			xstart("cstats");
 		}
 	}
@@ -2637,7 +2667,9 @@ static void _check(pid_t pid, const char *name, void (*func)(void))
 
 	if (pidof(name) > 0) return;
 
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	syslog(LOG_DEBUG, "%s terminated unexpectedly, restarting.\n", name);
+#endif
 	func();
 
 	/* Force recheck in 500 msec */
@@ -2651,9 +2683,7 @@ void check_services(void)
 	/* Periodically reap any zombies */
 	setitimer(ITIMER_REAL, &zombie_tv, NULL);
 
-#ifdef LINUX26
 	_check(pid_hotplug2, "hotplug2", start_hotplug2);
-#endif
 	_check(pid_dnsmasq, "dnsmasq", start_dnsmasq);
 	_check(pid_crond, "crond", start_cron);
 	_check(pid_igmp, "igmpproxy", start_igmp_proxy);
@@ -2784,6 +2814,7 @@ void exec_service(void)
 	char *modifier;
 	int action, user;
 	int i;
+	int act_start, act_stop;
 
 	strlcpy(buffer, nvram_safe_get("action_service"), sizeof(buffer));
 	next = buffer;
@@ -2796,45 +2827,49 @@ TOP:
 		goto CLEAR;
 	}
 	modifier = act;
+	action = 0;
 	strsep(&modifier, "-");
 
 	TRACE_PT("service=%s action=%s modifier=%s\n", service, act, modifier ? : "");
 
-	if (strcmp(act, "start") == 0) action = A_START;
-		else if (strcmp(act, "stop") == 0) action = A_STOP;
-		else if (strcmp(act, "restart") == 0) action = A_RESTART;
-		else action = 0;
+	if (strcmp(act, "start") == 0)   action = A_START;
+	if (strcmp(act, "stop") == 0)    action = A_STOP;
+	if (strcmp(act, "restart") == 0) action = A_RESTART;
+
+	act_start = action & A_START;
+	act_stop  = action & A_STOP;
+
 	user = (modifier != NULL && *modifier == 'c');
 
 	if (strcmp(service, "dhcpc-wan") == 0) {
-		if (action & A_STOP) stop_dhcpc("wan");
-		if (action & A_START) start_dhcpc("wan");
+		if (act_stop) stop_dhcpc("wan");
+		if (act_start) start_dhcpc("wan");
 		goto CLEAR;
 	}
 
 	if (strcmp(service, "dhcpc-wan2") == 0) {
-		if (action & A_STOP) stop_dhcpc("wan2");
-		if (action & A_START) start_dhcpc("wan2");
+		if (act_stop) stop_dhcpc("wan2");
+		if (act_start) start_dhcpc("wan2");
 		goto CLEAR;
 	}
 
 #ifdef TCONFIG_MULTIWAN
 	if (strcmp(service, "dhcpc-wan3") == 0) {
-		if (action & A_STOP) stop_dhcpc("wan3");
-		if (action & A_START) start_dhcpc("wan3");
+		if (act_stop) stop_dhcpc("wan3");
+		if (act_start) start_dhcpc("wan3");
 		goto CLEAR;
 	}
 
 	if (strcmp(service, "dhcpc-wan4") == 0) {
-		if (action & A_STOP) stop_dhcpc("wan4");
-		if (action & A_START) start_dhcpc("wan4");
+		if (act_stop) stop_dhcpc("wan4");
+		if (act_start) start_dhcpc("wan4");
 		goto CLEAR;
 	}
 #endif
 
 	if ((strcmp(service, "dhcpd") == 0) || (strcmp(service, "dns") == 0) || (strcmp(service, "dnsmasq") == 0)) {
-		if (action & A_STOP) stop_dnsmasq();
-		if (action & A_START) {
+		if (act_stop) stop_dnsmasq();
+		if (act_start) {
 			dns_to_resolv();
 			start_dnsmasq();
 		}
@@ -2842,18 +2877,18 @@ TOP:
 	}
 
 	if (strcmp(service, "adblock") == 0) {
-		if (action & A_STOP) stop_adblock();
-		if (action & A_START) start_adblock(1);		/* update lists immediately */
+		if (act_stop) stop_adblock();
+		if (act_start) start_adblock(1);		/* update lists immediately */
 		goto CLEAR;
 	}
 
 	if (strcmp(service, "firewall") == 0) {
-		if (action & A_STOP) {
+		if (act_stop) {
 			stop_firewall();
 			stop_igmp_proxy();
 			stop_udpxy();
 		}
-		if (action & A_START) {
+		if (act_start) {
 			start_firewall();
 			start_igmp_proxy();
 			start_udpxy();
@@ -2862,10 +2897,10 @@ TOP:
 	}
 
 	if (strcmp(service, "restrict") == 0) {
-		if (action & A_STOP) {
+		if (act_stop) {
 			stop_firewall();
 		}
-		if (action & A_START) {
+		if (act_start) {
 			i = nvram_get_int("rrules_radio");	/* -1 = not used, 0 = enabled by rule, 1 = disabled by rule */
 
 			start_firewall();
@@ -2881,13 +2916,13 @@ TOP:
 	}
 
 	if (strcmp(service, "arpbind") == 0) {
-		if (action & A_STOP) stop_arpbind();
-		if (action & A_START) start_arpbind();
+		if (act_stop) stop_arpbind();
+		if (act_start) start_arpbind();
 		goto CLEAR;
 	}
 
 	if (strcmp(service, "qos") == 0) {
-		if (action & A_STOP) {
+		if (act_stop) {
 			stop_qos("wan");
 			stop_qos("wan2");
 #ifdef TCONFIG_MULTIWAN
@@ -2896,7 +2931,7 @@ TOP:
 #endif
 		}
 		stop_firewall(); start_firewall();		/* always restarted */
-		if (action & A_START) {
+		if (act_start) {
 			start_qos("wan");
 			if (check_wanup("wan2")) {
 				start_qos("wan2");
@@ -2915,14 +2950,14 @@ TOP:
 	}
 
 	if (strcmp(service, "qoslimit") == 0) {
-		if (action & A_STOP) {
+		if (act_stop) {
 			new_qoslimit_stop();
 		}
 #ifdef TCONFIG_NOCAT
 		stop_splashd();
 #endif
 		stop_firewall(); start_firewall();		/* always restarted */
-		if (action & A_START) {
+		if (act_start) {
 			new_qoslimit_start();
 		}
 #ifdef TCONFIG_NOCAT
@@ -2932,41 +2967,41 @@ TOP:
 	}
 
 	if (strcmp(service, "upnp") == 0) {
-		if (action & A_STOP) {
+		if (act_stop) {
 			stop_upnp();
 		}
 		stop_firewall(); start_firewall();		/* always restarted */
-		if (action & A_START) {
+		if (act_start) {
 			start_upnp();
 		}
 		goto CLEAR;
 	}
 
 	if (strcmp(service, "telnetd") == 0) {
-		if (action & A_STOP) stop_telnetd();
-		if (action & A_START) start_telnetd();
+		if (act_stop) stop_telnetd();
+		if (act_start) start_telnetd();
 		goto CLEAR;
 	}
 
 	if (strcmp(service, "sshd") == 0) {
-		if (action & A_STOP) stop_sshd();
-		if (action & A_START) start_sshd();
+		if (act_stop) stop_sshd();
+		if (act_start) start_sshd();
 		goto CLEAR;
 	}
 
 	if (strcmp(service, "httpd") == 0) {
-		if (action & A_STOP) stop_httpd();
-		if (action & A_START) start_httpd();
+		if (act_stop) stop_httpd();
+		if (act_start) start_httpd();
 		goto CLEAR;
 	}
 
 #ifdef TCONFIG_IPV6
 	if (strcmp(service, "ipv6") == 0) {
-		if (action & A_STOP) {
+		if (act_stop) {
 			stop_dnsmasq();
 			stop_ipv6();
 		}
-		if (action & A_START) {
+		if (act_start) {
 			start_ipv6();
 			start_dnsmasq();
 		}
@@ -2974,10 +3009,10 @@ TOP:
 	}
 
 	if (strncmp(service, "dhcp6", 5) == 0) {
-		if (action & A_STOP) {
+		if (act_stop) {
 			stop_dhcp6c();
 		}
-		if (action & A_START) {
+		if (act_start) {
 			start_dhcp6c();
 		}
 		goto CLEAR;
@@ -2985,13 +3020,13 @@ TOP:
 #endif
 
 	if (strcmp(service, "admin") == 0) {
-		if (action & A_STOP) {
+		if (act_stop) {
 			stop_sshd();
 			stop_telnetd();
 			stop_httpd();
 		}
 		stop_firewall(); start_firewall();		/* always restarted */
-		if (action & A_START) {
+		if (act_start) {
 			start_httpd();
 			create_passwd();
 			if (nvram_match("telnetd_eas", "1")) start_telnetd();
@@ -3001,22 +3036,22 @@ TOP:
 	}
 
 	if (strcmp(service, "ddns") == 0) {
-		if (action & A_STOP) stop_ddns();
-		if (action & A_START) start_ddns();
+		if (act_stop) stop_ddns();
+		if (act_start) start_ddns();
 		goto CLEAR;
 	}
 
 	if (strcmp(service, "ntpd") == 0) {
-		if (action & A_STOP) stop_ntpd();
-		if (action & A_START) start_ntpd();
+		if (act_stop) stop_ntpd();
+		if (act_start) start_ntpd();
 		goto CLEAR;
 	}
 
 	if (strcmp(service, "logging") == 0) {
-		if (action & A_STOP) {
+		if (act_stop) {
 			stop_syslog();
 		}
-		if (action & A_START) {
+		if (act_start) {
 			start_syslog();
 		}
 		if (!user) {
@@ -3028,29 +3063,27 @@ TOP:
 	}
 
 	if (strcmp(service, "crond") == 0) {
-		if (action & A_STOP) {
+		if (act_stop) {
 			stop_cron();
 		}
-		if (action & A_START) {
+		if (act_start) {
 			start_cron();
 		}
 		goto CLEAR;
 	}
 
-#ifdef LINUX26
 	if (strncmp(service, "hotplug", 7) == 0) {
-		if (action & A_STOP) {
+		if (act_stop) {
 			stop_hotplug2();
 		}
-		if (action & A_START) {
+		if (act_start) {
 			start_hotplug2(1);
 		}
 		goto CLEAR;
 	}
-#endif
 
 	if (strcmp(service, "upgrade") == 0) {
-		if (action & A_START) {
+		if (act_start) {
 #if TOMATO_SL
 			stop_usbevent();
 			stop_smbd();
@@ -3083,38 +3116,38 @@ TOP:
 
 #ifdef TCONFIG_CIFS
 	if (strcmp(service, "cifs") == 0) {
-		if (action & A_STOP) stop_cifs();
-		if (action & A_START) start_cifs();
+		if (act_stop) stop_cifs();
+		if (act_start) start_cifs();
 		goto CLEAR;
 	}
 #endif
 
 #ifdef TCONFIG_JFFS2
 	if (strncmp(service, "jffs", 4) == 0) {
-		if (action & A_STOP) stop_jffs2();
-		if (action & A_START) start_jffs2();
+		if (act_stop) stop_jffs2();
+		if (act_start) start_jffs2();
 		goto CLEAR;
 	}
 #endif
 
 #ifdef TCONFIG_ZEBRA
 	if (strcmp(service, "zebra") == 0) {
-		if (action & A_STOP) stop_zebra();
-		if (action & A_START) start_zebra();
+		if (act_stop) stop_zebra();
+		if (act_start) start_zebra();
 		goto CLEAR;
 	}
 #endif
 
 #ifdef TCONFIG_SDHC
 	if (strcmp(service, "mmc") == 0) {
-		if (action & A_STOP) stop_mmc();
-		if (action & A_START) start_mmc();
+		if (act_stop) stop_mmc();
+		if (act_start) start_mmc();
 		goto CLEAR;
 	}
 #endif
 
 	if (strcmp(service, "routing") == 0) {
-		if (action & A_STOP) {
+		if (act_stop) {
 #ifdef TCONFIG_ZEBRA
 			stop_zebra();
 #endif
@@ -3129,7 +3162,7 @@ TOP:
 		}
 		stop_firewall();
 		start_firewall();
-		if (action & A_START) {
+		if (act_start) {
 			do_static_routes(1);	/* add new */
 #ifdef TCONFIG_ZEBRA
 			start_zebra();
@@ -3146,7 +3179,7 @@ TOP:
 	}
 
 	if (strcmp(service, "ctnf") == 0) {
-		if (action & A_START) {
+		if (act_start) {
 			setup_conntrack();
 			stop_firewall();
 			start_firewall();
@@ -3155,11 +3188,11 @@ TOP:
 	}
 
 	if (strcmp(service, "wan") == 0) {
-		if (action & A_STOP) {
+		if (act_stop) {
 			stop_wan();
 		}
 
-		if (action & A_START) {
+		if (act_start) {
 			rename("/tmp/ppp/wan_log", "/tmp/ppp/wan_log.~");
 			start_wan(BOOT);
 			sleep(5);
@@ -3177,11 +3210,11 @@ TOP:
 	}
 
 	if (strcmp(service, "wan1") == 0) {
-		if (action & A_STOP) {
+		if (act_stop) {
 			stop_wan_if("wan");
 		}
 
-		if (action & A_START) {
+		if (act_start) {
 			start_wan_if(BOOT, "wan");
 			sleep(5);
 			force_to_dial("wan");
@@ -3190,11 +3223,11 @@ TOP:
 	}
 
 	if (strcmp(service, "wan2") == 0) {
-		if (action & A_STOP) {
+		if (act_stop) {
 			stop_wan_if("wan2");
 		}
 
-		if (action & A_START) {
+		if (act_start) {
 			start_wan_if(BOOT, "wan2");
 			sleep(5);
 			force_to_dial("wan2");
@@ -3204,11 +3237,11 @@ TOP:
 
 #ifdef TCONFIG_MULTIWAN
 	if (strcmp(service, "wan3") == 0) {
-		if (action & A_STOP) {
+		if (act_stop) {
 			stop_wan_if("wan3");
 		}
 
-		if (action & A_START) {
+		if (act_start) {
 			start_wan_if(BOOT, "wan3");
 			sleep(5);
 			force_to_dial("wan3");
@@ -3217,11 +3250,11 @@ TOP:
 	}
 
 	if (strcmp(service, "wan4") == 0) {
-		if (action & A_STOP) {
+		if (act_stop) {
 			stop_wan_if("wan4");
 		}
 
-		if (action & A_START) {
+		if (act_start) {
 			start_wan_if(BOOT, "wan4");
 			sleep(5);
 			force_to_dial("wan4");
@@ -3231,7 +3264,7 @@ TOP:
 #endif
 
 	if (strcmp(service, "net") == 0) {
-		if (action & A_STOP) {
+		if (act_stop) {
 #ifdef TCONFIG_USB
 			stop_nas_services();
 #endif
@@ -3246,7 +3279,7 @@ TOP:
 			stop_lan();
 			stop_vlan();
 		}
-		if (action & A_START) {
+		if (act_start) {
 			start_vlan();
 			start_lan();
 			start_arpbind();
@@ -3263,21 +3296,21 @@ TOP:
 	}
 
 	if (strcmp(service, "wireless") == 0) {
-		if (action & A_STOP) {
+		if (act_stop) {
 			stop_wireless();
 		}
-		if (action & A_START) {
+		if (act_start) {
 			start_wireless();
 		}
 		goto CLEAR;
 	}
 
 	if (strcmp(service, "wl") == 0) {
-		if (action & A_STOP) {
+		if (act_stop) {
 			stop_wireless();
 			unload_wl();
 		}
-		if (action & A_START) {
+		if (act_start) {
 			load_wl();
 			start_wireless();
 			stop_wireless();
@@ -3287,10 +3320,10 @@ TOP:
 	}
 
 	if (strcmp(service, "nas") == 0) {
-		if (action & A_STOP) {
+		if (act_stop) {
 			stop_nas();
 		}
-		if (action & A_START) {
+		if (act_start) {
 			start_nas();
 			start_wl();
 		}
@@ -3298,42 +3331,42 @@ TOP:
 	}
 
 	if (strcmp(service, "rstats") == 0) {
-		if (action & A_STOP) stop_rstats();
-		if (action & A_START) start_rstats(0);
+		if (act_stop) stop_rstats();
+		if (act_start) start_rstats(0);
 		goto CLEAR;
 	}
 
 	if (strcmp(service, "rstatsnew") == 0) {
-		if (action & A_STOP) stop_rstats();
-		if (action & A_START) start_rstats(1);
+		if (act_stop) stop_rstats();
+		if (act_start) start_rstats(1);
 		goto CLEAR;
 	}
 
 	if (strcmp(service, "cstats") == 0) {
-		if (action & A_STOP) stop_cstats();
-		if (action & A_START) start_cstats(0);
+		if (act_stop) stop_cstats();
+		if (act_start) start_cstats(0);
 		goto CLEAR;
 	}
 
 	if (strcmp(service, "cstatsnew") == 0) {
-		if (action & A_STOP) stop_cstats();
-		if (action & A_START) start_cstats(1);
+		if (act_stop) stop_cstats();
+		if (act_start) start_cstats(1);
 		goto CLEAR;
 	}
 
 	if (strcmp(service, "sched") == 0) {
-		if (action & A_STOP) stop_sched();
-		if (action & A_START) start_sched();
+		if (act_stop) stop_sched();
+		if (act_start) start_sched();
 		goto CLEAR;
 	}
 
 #ifdef TCONFIG_BT
 	if (strcmp(service, "bittorrent") == 0) {
-		if (action & A_STOP) {
+		if (act_stop) {
 			stop_bittorrent();
 		}
 		stop_firewall(); start_firewall();		/* always restarted */
-		if (action & A_START) {
+		if (act_start) {
 			start_bittorrent();
 		}
 		goto CLEAR;
@@ -3342,50 +3375,50 @@ TOP:
 
 #ifdef TCONFIG_NFS
 	if (strcmp(service, "nfs") == 0) {
-		if (action & A_STOP) stop_nfs();
-		if (action & A_START) start_nfs();
+		if (act_stop) stop_nfs();
+		if (act_start) start_nfs();
 		goto CLEAR;
 	}
 #endif
 
 #ifdef TCONFIG_SNMP
 	if (strcmp(service, "snmp") == 0) {
-		if (action & A_STOP) stop_snmp();
-		if (action & A_START) start_snmp();
+		if (act_stop) stop_snmp();
+		if (act_start) start_snmp();
 		goto CLEAR;
 	}
 #endif
 
 #ifdef TCONFIG_TOR
 	if (strcmp(service, "tor") == 0) {
-		if (action & A_STOP) stop_tor();
+		if (act_stop) stop_tor();
 
 		stop_firewall(); start_firewall();		/* always restarted */
 
-		if (action & A_START) start_tor();
+		if (act_start) start_tor();
 		goto CLEAR;
 	}
 #endif
 
 #ifdef TCONFIG_UPS
 	if (strcmp(service, "ups") == 0) {
-		if (action & A_STOP) stop_ups();
-		if (action & A_START) start_ups();
+		if (act_stop) stop_ups();
+		if (act_start) start_ups();
 		goto CLEAR;
 	}
 #endif
 
 	if (strcmp(service, "tomatoanon") == 0) {
-		if (action & A_STOP) stop_tomatoanon();
-		if (action & A_START) start_tomatoanon();
+		if (act_stop) stop_tomatoanon();
+		if (act_start) start_tomatoanon();
 		goto CLEAR;
 	}
 
 #ifdef TCONFIG_USB
 	// !!TB - USB Support
 	if (strcmp(service, "usb") == 0) {
-		if (action & A_STOP) stop_usb();
-		if (action & A_START) {
+		if (act_stop) stop_usb();
+		if (act_start) {
 			start_usb();
 			/* restart Samba and ftp since they may be killed by stop_usb() */
 			restart_nas_services(0, 1);
@@ -3396,8 +3429,8 @@ TOP:
 	}
 
 	if (strcmp(service, "usbapps") == 0) {
-		if (action & A_STOP) stop_nas_services();
-		if (action & A_START) start_nas_services();
+		if (act_stop) stop_nas_services();
+		if (act_start) start_nas_services();
 		goto CLEAR;
 	}
 #endif
@@ -3405,19 +3438,19 @@ TOP:
 #ifdef TCONFIG_FTP
 	/* !!TB - FTP Server */
 	if (strcmp(service, "ftpd") == 0) {
-		if (action & A_STOP) stop_ftpd();
+		if (act_stop) stop_ftpd();
 		setup_conntrack();
 		stop_firewall();
 		start_firewall();
-		if (action & A_START) start_ftpd();
+		if (act_start) start_ftpd();
 		goto CLEAR;
 	}
 #endif
 
 #ifdef TCONFIG_MEDIA_SERVER
 	if (strcmp(service, "media") == 0 || strcmp(service, "dlna") == 0) {
-		if (action & A_STOP) stop_media_server();
-		if (action & A_START) start_media_server();
+		if (act_stop) stop_media_server();
+		if (act_start) start_media_server();
 		goto CLEAR;
 	}
 #endif
@@ -3425,8 +3458,8 @@ TOP:
 #ifdef TCONFIG_SAMBASRV
 	/* !!TB - Samba */
 	if (strcmp(service, "samba") == 0 || strcmp(service, "smbd") == 0) {
-		if (action & A_STOP) stop_samba();
-		if (action & A_START) {
+		if (act_stop) stop_samba();
+		if (act_start) {
 			create_passwd();
 			stop_dnsmasq();
 			start_dnsmasq();
@@ -3438,69 +3471,69 @@ TOP:
 
 #ifdef TCONFIG_OPENVPN
 	if (strncmp(service, "vpnclient", 9) == 0) {
-		if (action & A_STOP) stop_ovpn_client(atoi(&service[9]));
-		if (action & A_START) start_ovpn_client(atoi(&service[9]));
+		if (act_stop) stop_ovpn_client(atoi(&service[9]));
+		if (act_start) start_ovpn_client(atoi(&service[9]));
 		goto CLEAR;
 	}
 
 	if (strncmp(service, "vpnserver", 9) == 0) {
-		if (action & A_STOP) stop_ovpn_server(atoi(&service[9]));
-		if (action & A_START) start_ovpn_server(atoi(&service[9]));
+		if (act_stop) stop_ovpn_server(atoi(&service[9]));
+		if (act_start) start_ovpn_server(atoi(&service[9]));
 		goto CLEAR;
 	}
 #endif
 
 #ifdef TCONFIG_TINC
 	if (strcmp(service, "tinc") == 0) {
-		if (action & A_STOP) stop_tinc();
-		if (action & A_START) start_tinc();
+		if (act_stop) stop_tinc();
+		if (act_start) start_tinc();
 		goto CLEAR;
 	}
 #endif
 
 #ifdef TCONFIG_NOCAT
 	if (strcmp(service, "splashd") == 0) {
-		if (action & A_STOP) stop_splashd();
-		if (action & A_START) start_splashd();
+		if (act_stop) stop_splashd();
+		if (act_start) start_splashd();
 		goto CLEAR;
 	}
 #endif
 
 #ifdef TCONFIG_NGINX
 	if (strcmp(service, "enginex") == 0) {
-		if (action & A_STOP) stop_enginex();
+		if (act_stop) stop_enginex();
 		stop_firewall(); start_firewall();		/* always restarted */
-		if (action & A_START) start_enginex();
+		if (act_start) start_enginex();
 		goto CLEAR;
 	}
 	if (strcmp(service, "nginxfp") == 0) {
-		if (action & A_STOP) stop_nginxfastpath();
+		if (act_stop) stop_nginxfastpath();
 		stop_firewall(); start_firewall();		/* always restarted */
-		if (action & A_START) start_nginxfastpath();
+		if (act_start) start_nginxfastpath();
 		goto CLEAR;
 	}
 	if (strcmp(service, "mysql") == 0) {
-		if (action & A_STOP) stop_mysql();
+		if (act_stop) stop_mysql();
 		stop_firewall(); start_firewall();		/* always restarted */
-		if (action & A_START) start_mysql();
+		if (act_start) start_mysql();
 		goto CLEAR;
 	}
 #endif
 
 #ifdef TCONFIG_PPTPD
 	if (strcmp(service, "pptpd") == 0) {
-		if (action & A_STOP) stop_pptpd();
-		if (action & A_START) start_pptpd();
+		if (act_stop) stop_pptpd();
+		if (act_start) start_pptpd();
 		goto CLEAR;
 	}
 #endif
 
 #ifdef TCONFIG_PPTPD
- 	if (strcmp(service, "pptpclient") == 0) {
- 		if (action & A_STOP) stop_pptp_client();
- 		if (action & A_START) start_pptp_client();
- 		goto CLEAR;
- 	}
+	if (strcmp(service, "pptpclient") == 0) {
+		if (act_stop) stop_pptp_client();
+		if (act_start) start_pptp_client();
+		goto CLEAR;
+	}
 #endif
 
 CLEAR:

@@ -307,17 +307,21 @@ static int listen_interface(char *interface, int wan_proto, char *prefix)
 			ret = L_FAIL;
 			goto EXIT;
 		} else { /* dest IP is PPTP/L2TP server IP or WAN IP */
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			syslog(LOG_DEBUG, "*** got packet: saddr=%s", inet_ntop(AF_INET, &packet.saddr, tmp, INET_ADDRSTRLEN));
 			syslog(LOG_DEBUG, "*** got packet: daddr=%s", inet_ntop(AF_INET, &packet.daddr, tmp, INET_ADDRSTRLEN));
 			syslog(LOG_DEBUG, "*** match saddr: %s", inet_ntop(AF_INET, &ipaddr.s_addr, tmp, INET_ADDRSTRLEN));
 			syslog(LOG_DEBUG, "*** match nmask: %s", inet_ntop(AF_INET, &netmask.s_addr, tmp, INET_ADDRSTRLEN));
 			syslog(LOG_DEBUG, "*** match SUCCESS");
+#endif
 			ret = L_SUCCESS;
 			goto EXIT;
 		}
 		/* all other packets to outside world, can potentially trigger WAN on any Internet activity in LAN, with real On Demand mode */
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		syslog(LOG_DEBUG, "*** listen: got saddr=%s", inet_ntop(AF_INET, &packet.saddr, tmp, INET_ADDRSTRLEN));
 		syslog(LOG_DEBUG, "*** listen: got daddr=%s", inet_ntop(AF_INET, &packet.daddr, tmp, INET_ADDRSTRLEN));
+#endif
 		//ret = L_SUCCESS;
 		//goto EXIT;
 	}
@@ -379,7 +383,9 @@ int listen_main(int argc, char *argv[])
 		switch (listen_interface(interface, get_wanx_proto(prefix), prefix)) {
 		case L_SUCCESS:
 			LOG("\nLAN to %s packet received\n\n", prefix);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			syslog(LOG_DEBUG, "*** lan to %s packet received, dialing %s ...", prefix, prefix);
+#endif
 			force_to_dial(prefix);
 			if (check_wanup(prefix)) return 0;
 			// Connect fail, we want to re-connect session
@@ -387,17 +393,23 @@ int listen_main(int argc, char *argv[])
 			break;
 		case L_UPGRADE:
 			LOG("Upgrade: nothing to do ...\n");
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			syslog(LOG_DEBUG, "*** nothing to do, quit");
+#endif
 			unlink(pid_file);
 			return 0;
 		case L_ESTABLISHED:
 			LOG("The link had been established\n");
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			syslog(LOG_DEBUG, "*** the link had been established, quit");
+#endif
 			unlink(pid_file);
 			return 0;
 		case L_ERROR:
 			LOG("ERROR\n");
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			syslog(LOG_DEBUG, "*** got ERROR, quit");
+#endif
 			unlink(pid_file);
 			return 0;
 //		case L_FAIL:

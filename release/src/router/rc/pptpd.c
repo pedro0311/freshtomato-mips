@@ -244,9 +244,12 @@ void start_pptpd(void)
 
 	// Create pptpd.conf options file for pptpd daemon
 	fp = fopen("/tmp/pptpd/pptpd.conf", "w");
-	fprintf(fp, "bcrelay %s\n", nvram_safe_get("pptpd_broadcast"));
-	fprintf(fp, "localip %s\n"
-		"remoteip %s\n", nvram_safe_get("lan_ipaddr"),
+	fprintf(fp,
+		"bcrelay %s\n"
+		"localip %s\n"
+		"remoteip %s\n",
+		nvram_safe_get("pptpd_broadcast"),
+		nvram_safe_get("lan_ipaddr"),
 		nvram_safe_get("pptpd_remoteip"));
 	fclose(fp);
 

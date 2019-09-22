@@ -11,12 +11,7 @@
 #define BUF_SIZE 128
 #define IF_SIZE 8
 
-// Line number as text string
-#define __LINE_T__ __LINE_T_(__LINE__)
-#define __LINE_T_(x) __LINE_T(x)
-#define __LINE_T(x) # x
-
-#define vpnlog(level,x...) if(nvram_get_int("pptp_debug")>=level) syslog(level, __LINE_T__ ": " x)
+#define vpnlog(level,x...) if(nvram_get_int("pptp_debug")>=level) syslog(level, x)
 
 void start_pptp_client(void)
 {
@@ -28,7 +23,9 @@ void start_pptp_client(void)
 	char *argv[5];
 	int argc = 0;
 
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(LOG_DEBUG,"IN start_pptp_client...");
+#endif
 
 	struct hostent *he;
 	struct in_addr **addr_list;
@@ -44,7 +41,9 @@ void start_pptp_client(void)
 	if ( pidof(buffer) >= 0 ) {
 		// PPTP already running
 		//return;
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		vpnlog(LOG_DEBUG,"PPTP already running... stop");
+#endif
 		stop_pptp_client();
 	}
 	unlink("/etc/vpn/pptpc_ip-up");
@@ -154,11 +153,15 @@ void start_pptp_client(void)
 			//eval("ip", "rule", "add", "to", srv_addr, "lookup", (char *)get_wan_unit(prefix), "pref", "120");
 			memset(buffer, 0, sizeof(buffer));
 			sprintf(buffer, "ip rule del lookup %d pref 120", get_wan_unit(prefix));
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			vpnlog(LOG_DEBUG,"cmd=%s (force route to PPTP server via selected wan)", buffer);
+#endif
 			system(buffer);
 			memset(buffer, 0, sizeof(buffer));
 			sprintf(buffer, "ip rule add to %s lookup %d pref 120", srv_addr, get_wan_unit(prefix));
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			vpnlog(LOG_DEBUG,"cmd=%s (force route to PPTP server via selected wan)", buffer);
+#endif
 			system(buffer);
 		}
 
@@ -172,7 +175,9 @@ void start_pptp_client(void)
 	} else {
 		stop_pptp_client();
 	}
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(LOG_DEBUG,"OUT start_pptp_client");
+#endif
 }
 
 void stop_pptp_client(void)
@@ -183,7 +188,9 @@ void stop_pptp_client(void)
 	char cmd[256];
 	char *prefix = nvram_safe_get("pptp_client_usewan");
 
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(LOG_DEBUG,"IN stop_pptp_client...");
+#endif
 	//eval("/etc/vpn/pptpc_ip-down"); // why do it twice?
 	killall_tk("pptpc_ip-up");
 	killall_tk("pptpc_ip-down");
@@ -194,7 +201,9 @@ void stop_pptp_client(void)
 		//eval("ip", "rule", "del", "lookup", (char *)get_wan_unit(prefix), "pref", "120");
 		memset(cmd, 0, 256);
 		sprintf(cmd, "ip rule del lookup %d pref 120", get_wan_unit(prefix));
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		vpnlog(LOG_DEBUG,"cmd=%s (PPTP server IP via selected WAN)", cmd);
+#endif
 		system(cmd);
 	}
 
@@ -203,7 +212,9 @@ void stop_pptp_client(void)
 	_eval(argv, NULL, 0, NULL);
 	rmdir("/etc/vpn");
 	rmdir("/tmp/ppp");
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(LOG_DEBUG,"OUT stop_pptp_client... /etc/vpn scripts removed!");
+#endif
 }
 
 void append_pptp_route(void)
@@ -214,7 +225,9 @@ void append_pptp_route(void)
 		char *pptp_client_iface = nvram_safe_get("pptp_client_iface");
 		memset(cmd, 0, 256);
 		sprintf(cmd, "ip route replace default scope global via %s dev %s", pptp_client_ipaddr, pptp_client_iface);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		vpnlog(LOG_DEBUG,"pptp_client, cmd=%s", cmd);
+#endif
 		system(cmd);
 	}
 }
@@ -231,7 +244,9 @@ void clear_pptp_route(void)
 
 	char *prefix = nvram_safe_get("pptp_client_usewan");
 
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(LOG_DEBUG,"IN clear_pptp_route");
+#endif
 
 	/*
 	char *srv_addr = nvram_safe_get("pptp_client_srvip");
@@ -259,12 +274,16 @@ void clear_pptp_route(void)
 		char *pptp_client_iface = nvram_safe_get("pptp_client_iface");
 		memset(cmd, 0, 256);
 		sprintf(cmd, "ip route del default via %s dev %s", pptp_client_ipaddr, pptp_client_iface);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		vpnlog(LOG_DEBUG,"cmd=%s", cmd);
+#endif
 		system(cmd);
 		// restore default route via binded WAN
 		char *wan_ipaddr, *wan_gw, *wan_iface;
 		wanface_list_t wanfaces;
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		vpnlog(LOG_DEBUG,"*** prefix: %s", prefix);
+#endif
 		if (check_wanup(prefix)) {
 			wan_ipaddr = (char *)get_wanip(prefix);
 			wan_gw = wan_gateway(prefix);
@@ -279,17 +298,23 @@ void clear_pptp_route(void)
 			wan_iface = wanfaces.iface[0].name;
 			prefix = pmw;
 		}
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		vpnlog(LOG_DEBUG,"*** [%s] ip:%s gw:%s iface:%s", prefix, wan_ipaddr, wan_iface, wan_gw);
+#endif
 		if (check_wanup(prefix)) {
 			int proto = get_wanx_proto(prefix);
 			memset(cmd, 0, 256);
 			sprintf(cmd, "ip route add default via %s dev %s", (proto == WP_DHCP || proto == WP_LTE || proto == WP_STATIC) ? wan_gw : wan_ipaddr,
 				wan_iface);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			vpnlog(LOG_DEBUG,"cmd=%s", cmd);
+#endif
 			system(cmd);
 		}
 	}
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(LOG_DEBUG,"OUT clear_pptp_route");
+#endif
 }
 
 int write_pptpvpn_resolv(FILE* f)
@@ -299,13 +324,17 @@ int write_pptpvpn_resolv(FILE* f)
 	int ch;
 
 	if ((usepeer = nvram_get_int("pptp_client_peerdns")) <= 0) {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		vpnlog(LOG_DEBUG, "pptpclient: pptp peerdns disabled");
+#endif
 		return 0;
 	}
 	if (nvram_get_int("pptp_client_enable")) { // write DNS only for enabled client
 		dnsf = fopen("/tmp/ppp/resolv.conf", "r");
 		if (dnsf == NULL) {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			vpnlog(LOG_DEBUG, "pptpclient: /tmp/ppp/resolv.conf can't be opened");
+#endif
 			return 0;
 		}
 		fputs("# pptp client dns:\n", f);
@@ -340,7 +369,9 @@ void pptp_rtbl_export(void)
 		if(!strcmp(b,"")) continue;
 		memset(cmd, 0, 256);
 		sprintf(cmd, "ip rule add to %s table %d pref %d", b, PPTP_CLIENT_TABLE_ID, 115);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		vpnlog(LOG_DEBUG,"pptp_client, cmd=%s", cmd);
+#endif
 		system(cmd);
 	}
 }
@@ -353,19 +384,25 @@ void pptp_client_table_del(void)
 	// ip route flush table PPTP (remove all PPTP routes)
 	memset(cmd, 0, 256);
 	sprintf(cmd, "ip route flush table %s", PPTP_CLIENT_TABLE_NAME);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(LOG_DEBUG,"pptp_client, cmd=%s", cmd);
+#endif
 	system(cmd);
 
 	// ip rule del table PPTP pref 105 (from PPTP_IP)
 	memset(cmd, 0, 256);
 	sprintf(cmd, "ip rule del table %s pref 10%d", PPTP_CLIENT_TABLE_NAME, PPTP_CLIENT_TABLE_ID);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(LOG_DEBUG,"pptp_client, cmd=%s", cmd);
+#endif
 	system(cmd);
 
 	// ip rule del table PPTP pref 110 (to PPTP_DNS)
 	memset(cmd, 0, 256);
 	sprintf(cmd, "ip rule del table %s pref 110", PPTP_CLIENT_TABLE_NAME);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(LOG_DEBUG,"pptp_client, cmd=%s", cmd);
+#endif
 	system(cmd); // del PPTP DNS1
 	system(cmd); // del PPTP DNS2
 /*
@@ -378,7 +415,9 @@ void pptp_client_table_del(void)
 	// ip rule del fwmark 0x500/0xf00 table PPTP pref 125 (FWMARK)
 	memset(cmd, 0, 256);
 	sprintf(cmd, "ip rule del table %s pref 12%d", PPTP_CLIENT_TABLE_NAME, PPTP_CLIENT_TABLE_ID);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(LOG_DEBUG,"pptp_client, cmd=%s", cmd);
+#endif
 	system(cmd);
 
 }
@@ -386,7 +425,9 @@ void pptp_client_table_del(void)
 // set pptp_client ip route table & ip rule table
 void pptp_client_table_add(void)
 {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(LOG_DEBUG,"IN fun pptp_client_table_add");
+#endif
 
 	int mwan_num,i;
 	char cmd[256];
@@ -412,14 +453,18 @@ void pptp_client_table_add(void)
 	// ip rule add from PPTP_IP table PPTP pref 105
 	memset(cmd, 0, 256);
 	sprintf(cmd, "ip rule add from %s table %s pref 10%d", pptp_client_ipaddr, PPTP_CLIENT_TABLE_NAME, PPTP_CLIENT_TABLE_ID);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(LOG_DEBUG,"pptp_client, cmd=%s (from PPTP_IP)", cmd);
+#endif
 	system(cmd);
 
 	for (i = 0 ; i < pptp_dns->count; ++i) {
 		// ip rule add to PPTP_DNS table PPTP pref 110
 		memset(cmd, 0, 256);
 		sprintf(cmd, "ip rule add to %s table %s pref 110", inet_ntoa(pptp_dns->dns[i].addr), PPTP_CLIENT_TABLE_NAME);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		vpnlog(LOG_DEBUG,"pptp_client, cmd=%s (to PPTP_DNS)", cmd);
+#endif
 		system(cmd);
 	}
 /*
@@ -440,7 +485,9 @@ void pptp_client_table_add(void)
 	// ip rule add fwmark 0x500/0xf00 table PPTP pref 125
 	memset(cmd, 0, 256);
 	sprintf(cmd, "ip rule add fwmark 0x%d00/0xf00 table %s pref 12%d", PPTP_CLIENT_TABLE_ID, PPTP_CLIENT_TABLE_NAME, PPTP_CLIENT_TABLE_ID);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(LOG_DEBUG,"pptp_client, cmd=%s (fwmark)", cmd);
+#endif
 	system(cmd);
 
 	/*
@@ -468,7 +515,9 @@ void pptp_client_table_add(void)
 					nvram_safe_get(strcat_r(sPrefix, "_ifname",tmp)),
 					nvram_safe_get(strcat_r(sPrefix, "_ipaddr",tmp)),
 					PPTP_CLIENT_TABLE_NAME);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 				vpnlog(LOG_DEBUG,"pptp_client, cmd=%s (active MANX)", cmd);
+#endif
 				system(cmd);
 				// WAN: wan_gateway_get, wan_iface, wan_ppp_get_ip
 				sprintf(cmd, "ip route append %s dev %s proto kernel scope link src %s table %s",
@@ -485,44 +534,58 @@ void pptp_client_table_add(void)
 					nvram_safe_get(strcat_r(sPrefix, "_ipaddr",tmp)),
 					PPTP_CLIENT_TABLE_NAME);
 			}
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			vpnlog(LOG_DEBUG,"pptp_client, cmd=%s (active WANX)", cmd);
+#endif
 			system(cmd);
 		}
 	}
 	// ip route add 172.16.36.1 dev ppp4 proto kernel scope link src 172.16.36.13
 	memset(cmd, 0, 256);
 	sprintf(cmd, "ip route append %s dev %s proto kernel scope link src %s", pptp_client_gateway, pptp_client_iface, pptp_client_ipaddr);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(LOG_DEBUG,"pptp_client, cmd=%s (pptp gw)", cmd);
+#endif
 	system(cmd);
 	for(wanid = 1 ; wanid <= mwan_num; ++wanid){
 		get_wan_prefix(wanid, sPrefix);
 		if(check_wanup(sPrefix)){
 			memset(cmd, 0, 256);
 			sprintf(cmd, "ip route append %s dev %s proto kernel scope link src %s table %d", pptp_client_gateway, pptp_client_iface, pptp_client_ipaddr, wanid);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 			vpnlog(LOG_DEBUG,"pptp_client, cmd=%s (pptp gw for %s)", cmd, sPrefix);
+#endif
 			system(cmd);
 		}
 	}
 	// ip route add 172.16.36.1 dev ppp4 proto kernel scope link src 172.16.36.13 table PPTP (pptp gw)
 	memset(cmd, 0, 256);
 	sprintf(cmd, "ip route append %s dev %s proto kernel scope link src %s table %s", pptp_client_gateway, pptp_client_iface, pptp_client_ipaddr, PPTP_CLIENT_TABLE_NAME);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(LOG_DEBUG,"pptp_client, cmd=%s (pptp gw)", cmd);
+#endif
 	system(cmd);
 	// ip route add 192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1 table PPTP (LAN)
 	get_cidr(nvram_safe_get("lan_ipaddr"), nvram_safe_get("lan_netmask"), ip_cidr);
 	memset(cmd, 0, 256);
 	sprintf(cmd, "ip route append %s dev %s proto kernel scope link src %s table %s", ip_cidr, nvram_safe_get("lan_ifname"), nvram_safe_get("lan_ipaddr"), PPTP_CLIENT_TABLE_NAME);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(LOG_DEBUG,"pptp_client, cmd=%s (LAN)", cmd);
+#endif
 	system(cmd);
 	// ip route add 127.0.0.0/8 dev lo scope link table PPTP (lo setup)
 	memset(cmd, 0, 256);
 	sprintf(cmd, "ip route append 127.0.0.0/8 dev lo scope link table %s", PPTP_CLIENT_TABLE_NAME);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(LOG_DEBUG,"pptp_client, cmd=%s (lo setup)", cmd);
+#endif
 	system(cmd);
 	// ip route add default via 10.0.10.1 dev ppp3 table PPTP (default route)
 	memset(cmd, 0, 256);
 	sprintf(cmd, "ip route append default via %s dev %s table %s", pptp_client_ipaddr, pptp_client_iface, PPTP_CLIENT_TABLE_NAME);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(LOG_DEBUG,"pptp_client, cmd=%s (default route)", cmd);
+#endif
 	system(cmd);
 	// PPTP network
 	if (!nvram_match("pptp_client_srvsub", "0.0.0.0") && !nvram_match("pptp_client_srvsubmsk", "0.0.0.0")) {
@@ -530,7 +593,9 @@ void pptp_client_table_add(void)
 		get_cidr(nvram_safe_get("pptp_client_srvsub"), nvram_safe_get("pptp_client_srvsubmsk"), remote_cidr);
 		memset(cmd, 0, 256);
 		sprintf(cmd, "ip route append %s via %s dev %s scope link table %s", remote_cidr, pptp_client_ipaddr, pptp_client_iface, "main");
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		vpnlog(LOG_DEBUG,"pptp_client, cmd=%s", cmd);
+#endif
 		system(cmd);
 		// add PPTP network to all WANX tables
 		for(wanid = 1 ; wanid <= mwan_num; ++wanid){
@@ -538,7 +603,9 @@ void pptp_client_table_add(void)
 			if(check_wanup(sPrefix)){
 				memset(cmd, 0, 256);
 				sprintf(cmd, "ip route append %s via %s dev %s scope link table %d", remote_cidr, pptp_client_ipaddr, pptp_client_iface, wanid);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 				vpnlog(LOG_DEBUG,"pptp_client, cmd=%s (%s)", cmd, sPrefix);
+#endif
 				system(cmd);
 			}
 		}
@@ -546,11 +613,15 @@ void pptp_client_table_add(void)
 		get_cidr(nvram_safe_get("pptp_client_srvsub"), nvram_safe_get("pptp_client_srvsubmsk"), remote_cidr);
 		memset(cmd, 0, 256);
 		sprintf(cmd, "ip route append %s via %s dev %s scope link table %s", remote_cidr, pptp_client_ipaddr, pptp_client_iface, PPTP_CLIENT_TABLE_NAME);
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		vpnlog(LOG_DEBUG,"pptp_client, cmd=%s", cmd);
+#endif
 		system(cmd);
 	}
 
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(LOG_DEBUG,"OUT fun pptp_client_table_add");
+#endif
 }
 
 int pptpc_ipup_main(int argc, char **argv)
@@ -562,7 +633,9 @@ int pptpc_ipup_main(int argc, char **argv)
 
 	TRACE_PT("begin\n");
 
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(LOG_DEBUG,"IN pptpc_ipup_main IFNAME=%s DEVICE=%s LINKNAME=%s IPREMOTE=%s IPLOCAL=%s DNS1=%s DNS2=%s", getenv("IFNAME"), getenv("DEVICE"), getenv("LINKNAME"), getenv("IPREMOTE"), getenv("IPLOCAL"), getenv("DNS1"), getenv("DNS2"));
+#endif
 
 	sysinfo(&si);
 	f_write("/etc/vpn/pptpclient_time", &si.uptime, sizeof(si.uptime), 0, 0);
@@ -625,7 +698,9 @@ int pptpc_ipdown_main(int argc, char **argv)
 {
 	TRACE_PT("begin\n");
 
+#ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(LOG_DEBUG,"IN pptpc_ipdown_main IFNAME=%s DEVICE=%s LINKNAME=%s IPREMOTE=%s IPLOCAL=%s DNS1=%s DNS2=%s", getenv("IFNAME"), getenv("DEVICE"), getenv("LINKNAME"), getenv("IPREMOTE"), getenv("IPLOCAL"), getenv("DNS1"), getenv("DNS2"));
+#endif
 
 	if (!wait_action_idle(10)) return -1;
 

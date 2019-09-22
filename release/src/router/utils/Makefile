@@ -15,10 +15,8 @@
 include ../common.mak
 
 UTILS := mii-tool robocfg ttcp
-CFLAGS += -s -Os -I$(SRCBASE)/include -I$(LINUXDIR)/include -Wall $(EXTRACFLAGS)
-ifneq ($(CONFIG_LINUX26),y)
-CFLAGS += -U CONFIG_NVRAM_SIZE
-endif
+CFLAGS += -s -Os -I$(SRCBASE)/include -I$(LINUXDIR)/include -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections
+LDFLAGS += -ffunction-sections -fdata-sections -Wl,--gc-sections
 
 all: $(UTILS)
 
@@ -27,7 +25,7 @@ mii-tool: mii-tool.c mii.h
 robocfg: robocfg.c etc53xx.h
 
 ttcp: epi_ttcp.c
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 clean:
 	rm -f *.o *~ $(UTILS)

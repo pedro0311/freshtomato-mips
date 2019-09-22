@@ -18,8 +18,8 @@
 <style type="text/css">
 #donate a:hover,
 #donate a:active {
-    background-color: #ededed;
-    text-decoration: none;
+	background-color: #ededed;
+	text-decoration: none;
 }
 </style>
 <script type="text/javascript">
@@ -104,9 +104,10 @@ Linux kernel <% version(2); %> and Broadcom Wireless Driver <% version(3); %><br
 <b>Forums about Tomato</b> - PL: <a href="https://openlinksys.info" class="new_window">https://openlinksys.info</a> EN: <a href="https://www.linksysinfo.org/index.php?forums/tomato-firmware.33/" class="new_window">https://linksysinfo.org</a><br/>
 <b>FreshTomato team: </b><a href="https://bitbucket.org/pedro311/freshtomato-mips" class="new_window">@pedro</a>, <a href="https://bitbucket.org/kille72/freshtomato-arm" class="new_window">@kille72</a><br/>
 <br/>
+
 <hr>
 <!-- / / / -->
-
+<!-- OPTSIZE-BEGIN -->
 <br/>
 
 <b>TomatoUSB Team features:</b><br/>
@@ -275,6 +276,9 @@ We want to express our gratitude to all people not mentioned here but contribute
 <br/>
 
 <hr>
+<!-- / / / -->
+<!-- OPTSIZE-END -->
+
 <br/><b>FreshTomato-MIPS - is an alternative, customized version, forked off from Tomato by Shibby</b>
 <br/>
 Copyright (C) 2016-2019 FreshTomato team

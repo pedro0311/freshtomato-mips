@@ -24,40 +24,22 @@
  * Do this here, because Tomato doesn't have the sysctl command.
  * With these values, a disk block should be written to disk within 2 seconds.
  */
-#ifdef LINUX26
 void tune_bdflush(void)
 {
 	f_write_string("/proc/sys/vm/dirty_expire_centisecs", "200", 0, 0);
 	f_write_string("/proc/sys/vm/dirty_writeback_centisecs", "200", 0, 0);
 }
-#else
-#include <sys/kdaemon.h>
-#define SET_PARM(n) (n * 2 | 1)
-void tune_bdflush(void)
-{
-	bdflush(SET_PARM(5), 100);
-	bdflush(SET_PARM(6), 100);
-	bdflush(SET_PARM(8), 0);
-}
-#endif // LINUX26
 
 #define USBCORE_MOD	"usbcore"
 #define USB20_MOD	"ehci-hcd"
 #define USBSTORAGE_MOD	"usb-storage"
 #define SCSI_MOD	"scsi_mod"
 #define SD_MOD		"sd_mod"
-#ifdef LINUX26
 #define USBOHCI_MOD	"ohci-hcd"
 #define USBUHCI_MOD	"uhci-hcd"
 #define USBPRINTER_MOD	"usblp"
 #define SCSI_WAIT_MOD	"scsi_wait_scan"
 #define USBFS		"usbfs"
-#else
-#define USBOHCI_MOD	"usb-ohci"
-#define USBUHCI_MOD	"usb-uhci"
-#define USBPRINTER_MOD	"printer"
-#define USBFS		"usbdevfs"
-#endif
 
 static int p9100d_sig(int sig)
 {
@@ -98,9 +80,8 @@ void start_usb(void)
 		modprobe(USBCORE_MOD);
 
 		/* mount usb device filesystem */
-        	mount(USBFS, "/proc/bus/usb", USBFS, MS_MGC_VAL, NULL);
+		mount(USBFS, "/proc/bus/usb", USBFS, MS_MGC_VAL, NULL);
 
-#ifdef LINUX26
 		// Remove legacy approach in the code here - rather, use do_led() function, which is designed to do this
 		// The reason for changing this ... some HW (like Netgear WNDR4000) don't work with direct GPIO write -> use do_led()!
 		i = do_led(LED_USB, LED_PROBE);
@@ -111,7 +92,6 @@ void start_usb(void)
 			f_write_string("/proc/leds-usb/gpio_pin", param, 0, 0);*/
 			do_led(LED_USB, LED_OFF);
 		}
-#endif
 #ifdef TCONFIG_USBAP
 			char instance[20];
 			/* From Asus QTD cache params */
@@ -140,16 +120,12 @@ void start_usb(void)
 		if (nvram_get_int("usb_storage")) {
 			/* insert scsi and storage modules before usb drivers */
 			modprobe(SCSI_MOD);
-#ifdef LINUX26
 			modprobe(SCSI_WAIT_MOD);
-#endif
 			modprobe(SD_MOD);
 			modprobe(USBSTORAGE_MOD);
 
 			if (nvram_get_int("usb_fs_ext3")) {
-#ifdef LINUX26
 				modprobe("mbcache");	// used by ext2/ext3
-#endif
 				/* insert ext3 first so that lazy mount tries ext3 before ext2 */
 				modprobe("jbd");
 				modprobe("ext3");
@@ -214,11 +190,9 @@ void start_usb(void)
 				);
 			}
 		}
-#ifdef LINUX26
 		if (nvram_get_int("idle_enable") == 1) {
 			xstart( "sd-idle" );
 		}
-#endif
 
 #ifdef TCONFIG_UPS
 		if (nvram_get_int("usb_apcupsd") == 1) {
@@ -267,9 +241,7 @@ void stop_usb(void)
 		modprobe_r("ext2");
 		modprobe_r("ext3");
 		modprobe_r("jbd");
-#ifdef LINUX26
 		modprobe_r("mbcache");
-#endif
 		modprobe_r("vfat");
 		modprobe_r("fat");
 		modprobe_r("fuse");
@@ -287,18 +259,14 @@ void stop_usb(void)
 		modprobe_r("nls_cp850");
 		modprobe_r("nls_cp852");
 		modprobe_r("nls_cp866");
-#ifdef LINUX26
 		modprobe_r("nls_cp932");
 		modprobe_r("nls_cp936");
 		modprobe_r("nls_cp949");
 		modprobe_r("nls_cp950");
 #endif
-#endif
 		modprobe_r(USBSTORAGE_MOD);
 		modprobe_r(SD_MOD);
-#ifdef LINUX26
 		modprobe_r(SCSI_WAIT_MOD);
-#endif
 		modprobe_r(SCSI_MOD);
 	}
 
@@ -314,11 +282,9 @@ void stop_usb(void)
 	if (disabled || nvram_get_int("usb_uhci") != 1) modprobe_r(USBUHCI_MOD);
 	if (disabled || nvram_get_int("usb_usb2") != 1) modprobe_r(USB20_MOD);
 
-#ifdef LINUX26
 	//modprobe_r("leds-usb");
 	//modprobe_r("ledtrig-usbdev");
 	led(LED_USB, LED_OFF);
-#endif
 
 	// only unload core modules if usb is disabled
 	if (disabled) {
@@ -329,7 +295,6 @@ void stop_usb(void)
 		modprobe_r(USBCORE_MOD);
 	}
 
-#ifdef LINUX26
 	if (nvram_get_int("idle_enable") == 0) {
 		killall("sd-idle", SIGTERM);
 	}
@@ -368,7 +333,6 @@ void stop_usb(void)
 	if (nvram_match("boardtype", "0x052b")) { // Netgear WNR3500L v2 - disable USB port
 		xstart("gpio", "disable", "20");
 	}
-#endif
 
 }
 
@@ -423,9 +387,8 @@ int mount_r(char *mnt_dev, char *mnt_dir, char *type)
 				nvram_set("smbd_nlsmod", flagfn);
 			}
 			sprintf(options + strlen(options), ",shortname=winnt" + (options[0] ? 0 : 1));
-#ifdef LINUX26
 			sprintf(options + strlen(options), ",flush" + (options[0] ? 0 : 1));
-#endif
+
 			if (nvram_invmatch("usb_fat_opt", ""))
 				sprintf(options + strlen(options), "%s%s", options[0] ? "," : "", nvram_safe_get("usb_fat_opt"));
 		}
@@ -538,9 +501,6 @@ struct mntent *mount_fstab(char *dev_name, char *type, char *label, char *uuid)
 static int usb_ufd_connected(int host_no)
 {
 	char proc_file[128];
-#ifndef LINUX26
-	char line[256];
-#endif
 	FILE *fp;
 
 	sprintf(proc_file, "%s/%s-%d/%d", PROC_SCSI_ROOT, USB_STORAGE, host_no, host_no);
@@ -553,18 +513,8 @@ static int usb_ufd_connected(int host_no)
 	}
 
 	if (fp) {
-#ifdef LINUX26
 		fclose(fp);
 		return 1;
-#else
-		while (fgets(line, sizeof(line), fp) != NULL) {
-			if (strstr(line, "Attached: Yes")) {
-				fclose(fp);
-				return 1;
-			}
-		}
-		fclose(fp);
-#endif
 	}
 
 	return 0;
@@ -875,8 +825,6 @@ void remove_storage_main(int shutdn)
  * needs to wait until the disk is unmounted.  We have 20 seconds to do
  * the unmounts.
  *******/
-
-#ifdef LINUX26
 static inline void usbled_proc(char *device, int add)
 {
 	char *p;
@@ -901,7 +849,6 @@ static inline void usbled_proc(char *device, int add)
 			do_led(LED_USB, LED_OFF);
 	}
 }
-#endif
 
 /* Plugging or removing usb device
  *
@@ -972,23 +919,15 @@ void hotplug_usb(void)
 	char *interface = getenv("INTERFACE");
 	char *action = getenv("ACTION");
 	char *product = getenv("PRODUCT");
-#ifdef LINUX26
 	char *device = getenv("DEVICENAME");
 	int is_block = strcmp(getenv("SUBSYSTEM") ? : "", "block") == 0;
-#else
-	char *device = getenv("DEVICE");
-#endif
 	char *scsi_host = getenv("SCSI_HOST");
 
 	_dprintf("%s hotplug INTERFACE=%s ACTION=%s PRODUCT=%s HOST=%s DEVICE=%s\n",
 		getenv("SUBSYSTEM") ? : "USB", interface, action, product, scsi_host, device);
 
 	if (!nvram_get_int("usb_enable")) return;
-#ifdef LINUX26
 	if (!action || ((!interface || !product) && !is_block))
-#else
-	if (!interface || !action || !product)	/* Hubs bail out here. */
-#endif
 		return;
 
 	if (scsi_host)
@@ -998,17 +937,10 @@ void hotplug_usb(void)
 
 	add = (strcmp(action, "add") == 0);
 	if (add && (strncmp(interface ? : "", "TOMATO/", 7) != 0)) {
-#ifdef LINUX26
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		if (!is_block && device)
-#endif
-		syslog(LOG_DEBUG, "Attached USB device %s [INTERFACE=%s PRODUCT=%s]",
-			device, interface, product);
-#ifndef LINUX26
-		/* To allow automount to be blocked on startup.
-		 * In kernel 2.6 we still need to serialize mount/umount calls -
-		 * so the lock is down below in the "block" hotplug processing.
-		 */
-		file_unlock(file_lock("usb"));
+			syslog(LOG_DEBUG, "Attached USB device %s [INTERFACE=%s PRODUCT=%s]",
+				device, interface, product);
 #endif
 	}
 
@@ -1028,7 +960,6 @@ void hotplug_usb(void)
 		hotplug_usb_storage_device(host < 0 ? -1 : host, add ? -1 : 0,
 			host == -2 ? 0 : EFH_USER);
 	}
-#ifdef LINUX26
 	else if (is_block && strcmp(getenv("MAJOR") ? : "", "8") == 0 && strcmp(getenv("PHYSDEVBUS") ? : "", "scsi") == 0) {
 		/* scsi partition */
 		char devname[64];
@@ -1060,26 +991,15 @@ void hotplug_usb(void)
 		}
 		file_unlock(lock);
 	}
-#endif
 	else if (strncmp(interface ? : "", "8/", 2) == 0) {	/* usb storage */
-#ifdef LINUX26
 		usbled_proc(device, add);
-#endif
 		run_nvscript("script_usbhotplug", NULL, 2);
-#ifndef LINUX26
-		hotplug_usb_storage_device(host, add, (add ? EFH_HP_ADD : EFH_HP_REMOVE) | (host < 0 ? EFH_HUNKNOWN : 0));
-#endif
 	}
 	else {	/* It's some other type of USB device, not storage. */
-#ifdef LINUX26
 		if (is_block) return;
-#endif
-#ifdef LINUX26
 		if (strncmp(interface ? : "", "7/", 2) == 0)	/* printer */
 			usbled_proc(device, add);
-#endif
 		/* Do nothing.  The user's hotplug script must do it all. */
 		run_nvscript("script_usbhotplug", NULL, 2);
 	}
 }
-
