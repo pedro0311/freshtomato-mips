@@ -5,9 +5,8 @@
 include ../common.mak
 
 CFLAGS	+= -I. -I$(TOP)/shared -I$(TOP)/busybox -I$(SRCBASE)/include -Wall
-#CFLAGS	+= -g -DDEBUG
-CFLAGS	+= -s -Os -DBCMWPA2
-LDFLAGS	+= -L$(TOP)/nvram -L$(INSTALLDIR)/nvram/usr/lib -lnvram -L$(TOP)/shared -L$(INSTALLDIR)/shared/usr/lib -lshared
+CFLAGS	+= -s -Os -DBCMWPA2 -ffunction-sections -fdata-sections
+LDFLAGS	+= -L$(TOP)/nvram -L$(INSTALLDIR)/nvram/usr/lib -lnvram -L$(TOP)/shared -L$(INSTALLDIR)/shared/usr/lib -lshared -ffunction-sections -fdata-sections -Wl,--gc-sections
 
 OBJS := et.o
 
@@ -22,5 +21,5 @@ install: all
 	$(STRIP) $(INSTALLDIR)/usr/sbin/et
 
 et: $(OBJS)
-	$(CC) -o $@ $^ $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 

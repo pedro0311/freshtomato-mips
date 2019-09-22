@@ -13,10 +13,9 @@
 #
 include ../common.mak
 
-CFLAGS	+= -I. -I$(TOP)/shared -I$(SRCBASE)/include -Wall
-#CFLAGS	+= -g -DDEBUG
+CFLAGS	+= -I. -I$(TOP)/shared -I$(SRCBASE)/include -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections
 CFLAGS	+= -s -Os -DBCMWPA2 $(EXTRACFLAGS)
-LDFLAGS	+= -L$(TOP)/nvram -lnvram -L$(TOP)/shared -lshared
+LDFLAGS	+= -L$(TOP)/nvram -lnvram -L$(TOP)/shared -lshared -ffunction-sections -fdata-sections -Wl,--gc-sections
 
 
 OBJS := wlconf.o
@@ -33,4 +32,4 @@ install: all
 	$(STRIP) $(INSTALLDIR)/usr/sbin/wlconf
 
 wlconf: $(OBJS)
-	$(CC) -o $@ $^ $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
