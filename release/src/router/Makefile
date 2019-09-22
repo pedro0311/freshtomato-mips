@@ -766,7 +766,7 @@ OPENSSL_CIPHERS:=no-dh no-idea no-rc2 no-rc5 no-engine no-aes192 no-cast
 endif
 
 ifeq ($(TCONFIG_KEYGEN),)
-OPENSSL_CIPHERS+=no-sha0 no-smime no-camellia no-krb5 no-rmd160 no-ripemd no-seed no-capieng no-gms no-gmp no-rfc3779 no-err no-hw no-jpake no-zlib no-engines no-sse2 no-libunbound no-ssl-trace no-dtls1 no-store no-psk no-md2 no-mdc2 no-ts
+OPENSSL_CIPHERS+=no-sha0 no-smime no-camellia no-krb5 no-rmd160 no-ripemd no-seed no-capieng no-gms no-gmp no-rfc3779 no-hw no-jpake no-zlib no-engines no-sse2 no-libunbound no-ssl-trace no-dtls1 no-store no-psk no-md2 no-mdc2 no-ts
 endif
 
 openssl/stamp-h1:
@@ -783,7 +783,7 @@ endif
 	RANLIB=$(RANLIB:$(CROSS_COMPILE)%=%) \
 	./Configure $(HOSTCONFIG) --openssldir=/etc \
 	-ffunction-sections -fdata-sections -Wl,--gc-sections \
-	shared $(OPENSSL_CIPHERS) no-ssl2 no-ssl3
+	shared $(OPENSSL_CIPHERS) no-ssl2 no-ssl3 no-err $(if $(TCONFIG_BBT),,no-rc4)
 ifeq ($(TCONFIG_KEYGEN),)
 	cd openssl && mkdir -p include/openssl && \
 	ln -sf ../../crypto/camellia/camellia.h include/openssl/camellia.h && \
