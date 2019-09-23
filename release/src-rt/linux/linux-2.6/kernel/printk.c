@@ -654,6 +654,12 @@ static void call_console_drivers(unsigned long start, unsigned long end)
 {
 }
 
+asmlinkage int printk(const char *fmt, ...)
+{
+	return 0;
+}
+EXPORT_SYMBOL(printk);
+
 #endif
 
 /*

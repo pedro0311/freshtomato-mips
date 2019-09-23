@@ -174,9 +174,8 @@ asmlinkage int printk(const char * fmt, ...)
 static inline int vprintk(const char *s, va_list args)
 	__attribute__ ((format (printf, 1, 0)));
 static inline int vprintk(const char *s, va_list args) { return 0; }
-static inline int printk(const char *s, ...)
+asmlinkage int printk(const char * fmt, ...)
 	__attribute__ ((format (printf, 1, 2)));
-static inline int printk(const char *s, ...) { return 0; }
 
 /* No effect, but we still get type checking even in the !PRINTK case: */
 #define printk_once(x...) printk(x)
