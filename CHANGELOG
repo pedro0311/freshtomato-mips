@@ -3,6 +3,121 @@ FreshTomato-MIPS Changelog
 
 
 
+2019.3-220-beta 2019.09.29
+--------------------------
+
+- kernel/kernel RT: prepare for conditional elimination of PRINTK code - reduce kernel size for selected targets
+- nfs-utils: clean sources 1.1.5, add patches instead
+- nfs-utils: update to 1.2.1
+- nettle: update to 3.5.1 + fix build break
+- ebtables: update to 2019.06.28 snapshot
+- portmap: clean-sources 6.0, add patch instead
+- e2fsprogs: update to 1.45.3
+- sqlite: update to 3.29.0
+- php: update to 7.2.22
+- uqmi: update to 2019.06.27 (1965c71) snapshot
+- nginx: update to 1.16.1
+- ffmpeg: update to 0.6.7
+- nano: update to 4.4
+- tor: update to 0.4.1.5
+- miniupnpd: update to 2.1.20190902
+- dnsmasq: update to 2.80-e24abf2 snapshot
+- adminer: update to 4.7.3 2019-08-27
+- libxml2: update to 2.9.9 + libs optimization + fix build break
+- libpng: update to 1.2.59 + libs optimization
+- libubox: update to 2019.06.16 (ecf5617) snapshot
+- libjson-c: update to 2019.06.09 (07ea04e) snaphot
+- libexif: update to 2019.06.15 (a0c04d9) snaphot
+- libiconv: update to 1.16 + libs optimization
+- libevent: update to 2.0.23-beta
+- libcurl: update to 7.66.0 + libs optimization
+- libusb: update to 1.0.23
+- openssl: update to 1.0.2t
+- libcurl: updated CA certificate bundle as of 2019-08-28
+- nfs-utils: move rc script from patch to a file + cosmetics
+- dnsmasq: fix wrong return code from explore_rrset() with some errors
+- ebtables: build ipv6 extension only if needed
+- pcre: reduce size
+- GUI: fix/add conditional OpenVPN client restart, if the entry was removed from Routing Policy table only by clicking the "x" sign
+- GUI: about.asp: remove some info if more space is needed in small targets (+fix)
+- BTGUI: move "btcheck" script to "others" subdir
+- Make solving domain .onion using Tor optional (add option in "DHCP / DNS Server" settings; default is off)
+- OpenVPN: add Strict Mode to client's Routing Policy (strict mode takes extra steps to ensure that only routes going through the VPN tunnel get used for tunnelled clients; kill switch is still missing)
+- Makefile: remove size optimization for kernel in Netgear WNDR3400/3400V2/3400V3/3700V3
+- Makefile/config: introduce new TCONFIG_OPTIMIZE_SIZE variable used for size optimization on small-size targets
+- Makefile: switch from dnscrypt-proxy to stubby on small targets to save space
+- Makefile: elimination of BUG code - reduce kernel size for j and r2j targets
+- Makefile: enable elimination of PRINTK code - reduce kernel size for j and r2j targets
+- Makefiles: optimize for size (emf, igs, et, robocfg, wlconf)
+- dnsmasq: reduce size on small targets
+- iproute2: reduce size on small targets
+- pppd: reduce size on small targets
+- xl2tpd: reduce size on small targets
+- iptables: reduce size on small targets
+- glib: reduce size on small targets
+- ffmpeg/minidlna: reduce size on small targets
+- snmp: reduce size on small targets
+- ntfs-3g: reduce size on small targets
+- samba3: reduce size on small targets
+- udevtrigger: reduce size
+- httpd: gencert.sh: add "TLS Web Server Authentication" to certificate's extended attributes (new requirement from iOS/MacOS; Ported from RMerlin, thanks: https://github.com/RMerl/asuswrt-merlin.ng/commit/e786dfa2a5faac92c77c499a9b7fb0923efce892)
+- httpd: limit SSL certificate to 2 years if clock is accurate (Based on RMerlin's commit: https://github.com/RMerl/asuswrt-merlin.ng/commit/9e1566a472b3babcbe463e21e5b00a1b1efff30a)
+- router: Makefile: fix OpenVPN recipe (remove deprecated "with-plugindir" option; add "PLUGINDIR" instead)
+- router: Makefile: pppd: also reduce the size of chat and pppol2tp plugin
+- router: Makefile: clean-up tor recipe
+- router: Makefile: fix libnfsidmap recipe
+- router: Makefile: flac: remove deprecated option, cosmetics
+- router: Makefile: clean-up pptpd recipe
+- router: Makefile: optimize lzo and OpenVPN for speed for AIO targets
+- router: Makefile: zebra: remove deprecated option, fix naming of second one
+- router: Makefile: udpxy: reduce size
+- router: Makefile: hotplug2: reduce size
+- router: Makefile: xl2tpd: reduce size
+- router: Makefile: bridge: reduce size
+- router: Makefile: rp-pppoe: reduce size
+- router: Makefile: ipset: reduce size
+- router: Makefile: accel-pptp: reduce size
+- router: Makefile: snmp: reduce size
+- router: Makefile: glib: reduce size
+- router: Makefile: libusb10: reduce size
+- router: Makefile: jpeg: reduce size
+- router: Makefile: libid3tag: reduce size
+- router: Makefile: zlib: reduce size
+- router: Makefile: miniupnpd: reduce size
+- router: Makefile: libcurl: tune-up recipe (reduce size; add zlib support; add (Open)SSL support to AIO targets; libs optimization; cosmetics in patch)
+- router: Makefile: libsub: fix typo (usb_modeswitch works again)
+- router: Makefile: tune OpenVPN recipe
+- router: Makefile: build openssl always with no-err; with no-rc4 if transmission is disabled
+- router: cstats: Makefile: reduce size
+- router: httpd: openvpn.c: fix compiler warnings
+- router: mssl: Makefile: reduce size of libmssl.so
+- router: nvram: defaults.c: remove some examples if more space is needed in nvram
+- router: others: Makefile: Remove comments from scripts to safe some space
+- router: others: mymotd: cosmetics
+- router: others: stealthMode: remove Sunset mode because Yahoo API is down + cosmetics
+- router: rc: optimize code for size for small targets
+- router: rstats: Makefile: reduce size
+- router: wanuptime: fix compiler warnings
+- router: www: Makefile: also remove wwan-sms.asp if target is without USB support
+- router: www: wwan_parser.js: declare variables with "var" instead of "let" for uglifyjs to work correctly
+- router: www: *.svg: cosmetics
+- miniupnpd: fix patches after commit #151e792
+- samba3: optimize code for speed for AIO targets, otherwise - reduce size
+- Clean-up tree and Makefile (unused package udev)
+- Clean-up tree and Makefile (unused package vlan)
+- Add Cloudflare DDNS support
+- Move disabling of rp_filter from mwan to firewall and make it multiwan aware
+- Test and fix wwansignal with all possible modes of Huawei E8372
+- Use nvram_safe_get to avoid crash in case of null pointer.
+- Fix undefined function reference in wwan_parser.js
+- Fix race condition starting wireless WAN causing route addition failure
+- switch4g: also try to reset modem in QMI mode
+- Revert "libcurl: disable proxy and libcurl output options" (TBH: the profit on the smaller size is illusory)
+- Revert "kernel: backport ida_simple_* kernel functions." (we don't have space for this...)
+- E4200v1: fix overlapping MAC addresses with more than one VIF per WiFi module
+- E4200v1: adjust WiFi setup/init parameter (align to dd wrt)
+
+
 2019.3.118-beta 2019.07.06
 --------------------------
 
@@ -12,6 +127,7 @@ Recommendations:
 - GUI problems: use Ctrl+F5 and/or clean your browser cache.
 
 - kernel: backport ida_simple_* kernel functions
+- kernel RT-AC: update netfilter_bridge headers, to fix compilation of ebtables
 - nano: update to 4.3
 - sqlite: update to 3.28.0
 - miniupnpd: update to 2.1.20190630

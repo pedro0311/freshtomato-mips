@@ -360,7 +360,7 @@ endif
 		-e "/OPENVPN-BEGIN/d"	-e "/OPENVPN-END/d" \
 		-e "/AES-BEGIN/d"	-e "/AES-END/d" \
 		-e "/PPTPD-BEGIN/d"	-e "/PPTPD-END/d"\
-		-e "/VPN-BEGIN/d"	-e "/VPN-END/d" \
+		-e "/VPN-BEGIN/,/VPN-END/d" \
 		-e "/IPV6-BEGIN/d"	-e "/IPV6-END/d" \
 		-e "/CTF-BEGIN/d"	-e "/CTF-END/d" \
 		-e "/BBT-BEGIN/d"	-e "/BBT-END/d" \
