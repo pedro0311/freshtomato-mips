@@ -293,7 +293,7 @@
  	}
        
        insert_error = 1;
-@@ -888,7 +893,11 @@ struct crec *cache_find_by_addr(struct c
+@@ -892,7 +897,11 @@ struct crec *cache_find_by_addr(struct c
  				time_t now, unsigned int prot)
  {
    struct crec *ans;
@@ -305,7 +305,7 @@
    
    if (crecp) /* iterating */
      ans = crecp->next;
-@@ -1115,12 +1124,14 @@ int read_hostsfile(char *filename, unsig
+@@ -1119,12 +1128,14 @@ int read_hostsfile(char *filename, unsig
  	  addrlen = INADDRSZ;
  	  domain_suffix = get_domain(addr.addr4);
  	}
@@ -320,7 +320,7 @@
        else
  	{
  	  my_syslog(LOG_ERR, _("bad address at %s line %d"), filename, lineno); 
-@@ -1287,7 +1298,7 @@ void cache_reload(void)
+@@ -1291,7 +1302,7 @@ void cache_reload(void)
  	    cache->flags = F_HOSTS | F_IMMORTAL | F_FORWARD | F_REVERSE | F_IPV4 | F_NAMEP | F_CONFIG;
  	    add_hosts_entry(cache, (union all_addr *)&hr->addr, INADDRSZ, SRC_CONFIG, (struct crec **)daemon->packet, revhashsz);
  	  }
@@ -329,7 +329,7 @@
  	if (!IN6_IS_ADDR_UNSPECIFIED(&hr->addr6) &&
  	    (cache = whine_malloc(SIZEOF_POINTER_CREC)))
  	  {
-@@ -1296,6 +1307,7 @@ void cache_reload(void)
+@@ -1300,6 +1311,7 @@ void cache_reload(void)
  	    cache->flags = F_HOSTS | F_IMMORTAL | F_FORWARD | F_REVERSE | F_IPV6 | F_NAMEP | F_CONFIG;
  	    add_hosts_entry(cache, (union all_addr *)&hr->addr6, IN6ADDRSZ, SRC_CONFIG, (struct crec **)daemon->packet, revhashsz);
  	  }
@@ -337,7 +337,7 @@
        }
  	
    if (option_bool(OPT_NO_HOSTS) && !daemon->addn_hosts)
-@@ -1394,11 +1406,13 @@ void cache_add_dhcp_entry(char *host_nam
+@@ -1398,11 +1410,13 @@ void cache_add_dhcp_entry(char *host_nam
    int in_hosts = 0;
    size_t addrlen = sizeof(struct in_addr);
  
@@ -351,7 +351,7 @@
    
    inet_ntop(prot, host_address, daemon->addrbuff, ADDRSTRLEN);
    
-@@ -1761,8 +1775,10 @@ void dump_cache(time_t now)
+@@ -1765,8 +1779,10 @@ void dump_cache(time_t now)
  		a = daemon->addrbuff;
  		if (cache->flags & F_IPV4)
  		  inet_ntop(AF_INET, &cache->addr, a, ADDRSTRLEN);
@@ -362,7 +362,7 @@
  	      }
  
  	    if (cache->flags & F_IPV4)
-@@ -1905,9 +1921,14 @@ void log_query(unsigned int flags, char
+@@ -1909,9 +1925,14 @@ void log_query(unsigned int flags, char
  	     sprintf(daemon->addrbuff, "%u", rcode);
  	}
        else
@@ -490,7 +490,7 @@
  	/* At the end */
 --- dnsmasq/src/dnsmasq.c
 +++ dnsmasq/src/dnsmasq.c
-@@ -1842,11 +1842,11 @@ static void check_dns_listeners(time_t n
+@@ -1866,11 +1866,11 @@ static void check_dns_listeners(time_t n
  		  indextoname(listener->tcpfd, if_index, intr_name))
  		{
  		  union all_addr addr;
