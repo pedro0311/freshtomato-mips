@@ -230,6 +230,10 @@ config TCONFIG_CTF
 	bool "CTF (Cut-Through Forwarding)"
 	default n
 
+config TCONFIG_BCMNAT
+	bool "Broadcom FastNAT (bcm_nat)"
+	default n
+
 config TCONFIG_NAND
 	bool "NAND flash support"
 	default n

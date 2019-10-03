@@ -20,7 +20,7 @@
  CFLAGS += -Wall
  CFLAGS += -Wextra -Wstrict-prototypes -Wdeclaration-after-statement
  #CFLAGS += -Wno-missing-field-initializers
-@@ -162,7 +162,7 @@ LDLIBS += $(shell $(PKG_CONFIG) --static
+@@ -163,7 +163,7 @@ LDLIBS += $(shell $(PKG_CONFIG) --static
  
  # OpenWrt packager disables https server for IGD v2 and hardcodes libuuid support
  ifeq ($(TARGET_OPENWRT),)

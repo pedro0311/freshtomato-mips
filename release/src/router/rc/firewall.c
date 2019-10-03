@@ -774,9 +774,6 @@ static void nat_table(void)
 	char src[64];
 	char t[512];
 	char *p, *c;
-#ifdef TCONFIG_TOR
-	char *torports;
-#endif
 	int i;
 
 	ipt_write("*nat\n"
@@ -1045,6 +1042,7 @@ static void nat_table(void)
 #ifdef TCONFIG_TOR
 		//TOR
 		if (nvram_match("tor_enable", "1")) {
+			char *torports;
 
 			if (nvram_match( "tor_ports", "custom" ) ) {
 				torports = nvram_safe_get( "tor_ports_custom" );

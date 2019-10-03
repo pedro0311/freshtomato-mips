@@ -978,6 +978,9 @@ static const nvset_t nvset_list[] = {
 #ifdef CONFIG_BCMWL5
 	{ "ctf_disable",		V_01				},
 #endif
+#ifdef TCONFIG_BCMNAT
+	{ "bcmnat_disable",		V_01				},
+#endif
 // advanced-vlan
 	{ "vlan0ports",			V_TEXT(0,16)			},
 	{ "vlan1ports",			V_TEXT(0,16)			},

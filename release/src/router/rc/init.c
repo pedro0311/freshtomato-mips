@@ -3864,6 +3864,11 @@ static void sysinit(void)
 		modprobe("ctf");
 #endif
 
+#ifdef TCONFIG_BCMNAT
+	if (nvram_invmatch("bcmnat_disable", "1"))
+		modprobe("bcm_nat");
+#endif
+
 #ifdef TCONFIG_EMF
 	modprobe("emf");
 	modprobe("igs");
