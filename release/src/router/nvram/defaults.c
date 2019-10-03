@@ -586,6 +586,9 @@ const defaults_t defaults[] = {
 #ifdef CONFIG_BCMWL5
 	{ "ctf_disable",		"1"				},
 #endif
+#ifdef TCONFIG_BCMNAT
+	{ "bcmnat_disable",		"1"				},
+#endif
 
 /* advanced-dhcpdns */
 	{ "dhcpd_dmdns",		"1"				},
