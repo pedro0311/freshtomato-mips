@@ -43,7 +43,7 @@ enum {
 	OVPN_RGW_POLICY
 };
 
-#ifndef TCONFIG_OPTIMIZE_SIZE
+
 static int waitfor(const char *name)
 {
 	int pid, n = 5;
@@ -56,7 +56,6 @@ static int waitfor(const char *name)
 	}
 	return (pid >= 0);
 }
-#endif
 
 void start_ovpn_client(int clientNum)
 {
@@ -610,8 +609,8 @@ void stop_ovpn_client(int clientNum)
 	vpnlog(VPN_LOG_EXTRA, "Stopping OpenVPN client.");
 #endif
 	sprintf(buffer, "vpnclient%d", clientNum);
-#ifndef TCONFIG_OPTIMIZE_SIZE
 	if (!waitfor(buffer))
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		vpnlog(VPN_LOG_EXTRA, "OpenVPN client stopped.");
 #endif
 
@@ -1386,8 +1385,8 @@ void stop_ovpn_server(int serverNum)
 	vpnlog(VPN_LOG_EXTRA, "Stopping OpenVPN server.");
 #endif
 	sprintf(buffer, "vpnserver%d", serverNum);
-#ifndef TCONFIG_OPTIMIZE_SIZE
 	if (!waitfor(buffer))
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		vpnlog(VPN_LOG_EXTRA, "OpenVPN server stopped.");
 #endif
 
