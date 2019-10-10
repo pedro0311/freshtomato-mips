@@ -94,7 +94,9 @@ void start_ovpn_client(int clientNum)
 	else if (nvram_contains_word(buffer, "tun"))
 		ifType = TUN;
 	else {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		vpnlog(VPN_LOG_ERROR, "Invalid interface type, %.3s", nvram_safe_get(buffer));
+#endif
 		return;
 	}
 
@@ -110,7 +112,9 @@ void start_ovpn_client(int clientNum)
 	else if (nvram_contains_word(buffer, "custom"))
 		cryptMode = CUSTOM;
 	else {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		vpnlog(VPN_LOG_ERROR, "Invalid encryption mode, %.6s", nvram_safe_get(buffer));
+#endif
 		return;
 	}
 
@@ -133,7 +137,9 @@ void start_ovpn_client(int clientNum)
 	sprintf(buffer, "/etc/openvpn/vpnclient%d", clientNum);
 	unlink(buffer);
 	if (symlink("/usr/sbin/openvpn", buffer)) {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		vpnlog(VPN_LOG_ERROR, "Creating symlink failed...");
+#endif
 		stop_ovpn_client(clientNum);
 		return;
 	}
@@ -456,19 +462,13 @@ void start_ovpn_client(int clientNum)
 			iface);
 
 		if (routeMode == NAT) {
-			/* Add the nat for the main lan addresses */
-			sscanf(nvram_safe_get("lan_ipaddr"), "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]);
-			sscanf(nvram_safe_get("lan_netmask"), "%d.%d.%d.%d", &nm[0], &nm[1], &nm[2], &nm[3]);
-			fprintf(fp, "iptables -t nat -I POSTROUTING -s %d.%d.%d.%d/%s -o %s -j MASQUERADE\n",
-				ip[0]&nm[0], ip[1]&nm[1], ip[2]&nm[2], ip[3]&nm[3], nvram_safe_get("lan_netmask"), iface);
-
-			/* Add the nat for other bridges, too */
-			for(i = 1; i < 4; i++) {
+			/* Add the nat for all active bridges */
+			for (i = 0; i < 4; i++) {
 				int ret1, ret2;
 
-				sprintf(buffer,"lan%d_ipaddr",i);
+				sprintf(buffer, (i == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), i);
 				ret1 = sscanf(nvram_safe_get(buffer), "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]);
-				sprintf(buffer,"lan%d_netmask",i);
+				sprintf(buffer, (i == 0 ? "lan_netmask" : "lan%d_netmask"), i);
 				ret2 = sscanf(nvram_safe_get(buffer), "%d.%d.%d.%d", &nm[0], &nm[1], &nm[2], &nm[3]);
 				if (ret1 == 4 && ret2 == 4) {
 					fprintf(fp, "iptables -t nat -I POSTROUTING -s %d.%d.%d.%d/%s -o %s -j MASQUERADE\n", ip[0]&nm[0], ip[1]&nm[1], ip[2]&nm[2], ip[3]&nm[3], nvram_safe_get(buffer), iface);
@@ -534,7 +534,7 @@ void start_ovpn_client(int clientNum)
 	/* Start the VPN client */
 	sprintf(buffer, "/etc/openvpn/vpnclient%d --cd /etc/openvpn/client%d --config config.ovpn", clientNum, clientNum);
 
-	vpnlog(VPN_LOG_INFO, "Starting OpenVPN: %s", buffer);
+	vpnlog(VPN_LOG_INFO, "Starting OpenVPN: %d", clientNum);
 
 	for (argv[argc=0] = strtok(buffer, " "); argv[argc] != NULL; argv[++argc] = strtok(NULL, " "));
 	if (_eval(argv, NULL, 0, &pid)) {
@@ -684,16 +684,15 @@ void start_ovpn_server(int serverNum)
 	char buffer2[BUF_SIZE];
 	char *argv[6], *chp, *route;
 	char *br_ipaddr, *br_netmask;
-	int push_lanX = 0;
-	int ret3 = 0, ret4 = 0;
+	int push_lan[3] = {0};
+	int dont_push_active = 0;
 	int argc = 0;
 	int c2c = 0;
 	enum { TAP, TUN } ifType = TUN;
 	enum { TLS, SECRET, CUSTOM } cryptMode = CUSTOM;
 	int nvi, ip[4], nm[4];
 	long int nvl;
-	int pid;
-	int current_security_level = 1;
+	int pid, i;
 
 	sprintf(buffer, "vpnserver%d", serverNum);
 	if (getpid() != 1) {
@@ -715,7 +714,9 @@ void start_ovpn_server(int serverNum)
 	else if (nvram_contains_word(buffer, "tun"))
 		ifType = TUN;
 	else {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		vpnlog(VPN_LOG_ERROR, "Invalid interface type, %.3s", nvram_safe_get(buffer));
+#endif
 		return;
 	}
 
@@ -731,7 +732,9 @@ void start_ovpn_server(int serverNum)
 	else if (nvram_contains_word(buffer, "custom"))
 		cryptMode = CUSTOM;
 	else {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		vpnlog(VPN_LOG_ERROR, "Invalid encryption mode, %.6s", nvram_safe_get(buffer));
+#endif
 		return;
 	}
 
@@ -744,7 +747,9 @@ void start_ovpn_server(int serverNum)
 	sprintf(buffer, "/etc/openvpn/vpnserver%d", serverNum);
 	unlink(buffer);
 	if (symlink("/usr/sbin/openvpn", buffer)) {
+#ifndef TCONFIG_OPTIMIZE_SIZE
 		vpnlog(VPN_LOG_ERROR, "Creating symlink failed...");
+#endif
 		stop_ovpn_server(serverNum);
 		return;
 	}
@@ -908,54 +913,19 @@ void start_ovpn_server(int serverNum)
 
 	if (cryptMode == TLS) {
 		if (ifType == TUN) {
-			push_lanX = 0; /* reset */
-
-			/*push LAN*/
-			sprintf(buffer, "vpn_server%d_plan", serverNum);
-			if (nvram_get_int(buffer)) {
-				ret3 = 0; /* reset */
-				ret4 = 0;
-				ret3 = sscanf(nvram_safe_get("lan_ipaddr"), "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]);
-				ret4 = sscanf(nvram_safe_get("lan_netmask"), "%d.%d.%d.%d", &nm[0], &nm[1], &nm[2], &nm[3]);
-				if (ret3 == 4 && ret4 == 4) {
-					fprintf(fp, "push \"route %d.%d.%d.%d %s\"\n", ip[0]&nm[0], ip[1]&nm[1], ip[2]&nm[2], ip[3]&nm[3], nvram_safe_get("lan_netmask"));
-					push_lanX = push_lanX | 0x01; /* IPv4 LAN will be pushed, set bit 0 */
-				}
-			}
-			/* push LAN1 */
-			sprintf(buffer, "vpn_server%d_plan1", serverNum);
-			if (nvram_get_int(buffer)) {
-				ret3 = 0; /* reset */
-				ret4 = 0;
-				ret3 = sscanf(nvram_safe_get("lan1_ipaddr"), "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]);
-				ret4 = sscanf(nvram_safe_get("lan1_netmask"), "%d.%d.%d.%d", &nm[0], &nm[1], &nm[2], &nm[3]);
-				if (ret3 == 4 && ret4 == 4) {
-					fprintf(fp, "push \"route %d.%d.%d.%d %s\"\n", ip[0]&nm[0], ip[1]&nm[1], ip[2]&nm[2], ip[3]&nm[3], nvram_safe_get("lan1_netmask"));
-					push_lanX = push_lanX | 0x02; /* IPv4 LAN1 will be pushed, set bit 1 */
-				}
-			}
-			/* push LAN2 */
-			sprintf(buffer, "vpn_server%d_plan2", serverNum);
-			if (nvram_get_int(buffer)) {
-				ret3 = 0; /* reset */
-				ret4 = 0;
-				ret3 = sscanf(nvram_safe_get("lan2_ipaddr"), "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]);
-				ret4 = sscanf(nvram_safe_get("lan2_netmask"), "%d.%d.%d.%d", &nm[0], &nm[1], &nm[2], &nm[3]);
-				if (ret3 == 4 && ret4 == 4) {
-					fprintf(fp, "push \"route %d.%d.%d.%d %s\"\n", ip[0]&nm[0], ip[1]&nm[1], ip[2]&nm[2], ip[3]&nm[3], nvram_safe_get("lan2_netmask"));
-					push_lanX = push_lanX | 0x04; /* IPv4 LAN2 will be pushed, set bit 2 */
-				}
-			}
-			/* push LAN3 */
-			sprintf(buffer, "vpn_server%d_plan3", serverNum);
-			if (nvram_get_int(buffer)) {
-				ret3 = 0; /* reset */
-				ret4 = 0;
-				ret3 = sscanf(nvram_safe_get("lan3_ipaddr"), "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]);
-				ret4 = sscanf(nvram_safe_get("lan3_netmask"), "%d.%d.%d.%d", &nm[0], &nm[1], &nm[2], &nm[3]);
-				if (ret3 == 4 && ret4 == 4) {
-					fprintf(fp, "push \"route %d.%d.%d.%d %s\"\n", ip[0]&nm[0], ip[1]&nm[1], ip[2]&nm[2], ip[3]&nm[3], nvram_safe_get("lan3_netmask"));
-					push_lanX = push_lanX | 0x08; /* IPv4 LAN3 will be pushed, set bit 3 */
+			/* push LANs */
+			for (i = 0; i < 4; i++) {
+				sprintf(buffer, (i == 0 ? "vpn_server%d_plan" : "vpn_server%d_plan%d"), serverNum, i);
+				if (nvram_get_int(buffer)) {
+					int ret3 = 0, ret4 = 0;
+					sprintf(buffer, (i == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), i);
+					ret3 = sscanf(nvram_safe_get(buffer), "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]);
+					sprintf(buffer, (i == 0 ? "lan_netmask" : "lan%d_netmask"), i);
+					ret4 = sscanf(nvram_safe_get(buffer), "%d.%d.%d.%d", &nm[0], &nm[1], &nm[2], &nm[3]);
+					if (ret3 == 4 && ret4 == 4) {
+						fprintf(fp, "push \"route %d.%d.%d.%d %s\"\n", ip[0]&nm[0], ip[1]&nm[1], ip[2]&nm[2], ip[3]&nm[3], nvram_safe_get(buffer));
+						push_lan[i] = 1; /* IPv4 LANX will be pushed */
+					}
 				}
 			}
 		}
@@ -1046,12 +1016,11 @@ void start_ovpn_server(int serverNum)
 
 		sprintf(buffer, "vpn_server%d_userpass", serverNum);
 		if (nvram_get_int(buffer)) {
-			fprintf(fp, "plugin /lib/openvpn_plugin_auth_nvram.so vpn_server%d_users_val\n",serverNum);
-			if (current_security_level < 2) {
-				fprintf(fp, "script-security 2\n");
-				current_security_level = 2;
-			}
-			fprintf(fp, "username-as-common-name\n");
+			fprintf(fp,
+				"plugin /lib/openvpn_plugin_auth_nvram.so vpn_server%d_users_val\n"
+				"script-security 2\n"
+				"username-as-common-name\n",
+				serverNum);
 
 			sprintf(buffer, "vpn_server%d_nocert", serverNum);
 			if (nvram_get_int(buffer))
@@ -1066,42 +1035,22 @@ void start_ovpn_server(int serverNum)
 				fprintf(fp, "push \"dhcp-option WINS %s\"\n", nvram_safe_get("wan_wins"));
 
 			/* check if lanX will be pushed --> if YES, push the suitable DNS Server address */
-			if (push_lanX) {
-				if ((push_lanX & 0x01)) { /* push IPv4 LAN DNS */
-					fprintf(fp, "push \"dhcp-option DNS %s\"\n", nvram_safe_get("lan_ipaddr"));
-				}
-				if ((push_lanX & 0x02)) { /* push IPv4 LAN1 DNS */
-					fprintf(fp, "push \"dhcp-option DNS %s\"\n", nvram_safe_get("lan1_ipaddr"));
-				}
-				if ((push_lanX & 0x04)) { /* push IPv4 LAN2 DNS */
-					fprintf(fp, "push \"dhcp-option DNS %s\"\n", nvram_safe_get("lan2_ipaddr"));
-				}
-				if ((push_lanX & 0x08)) { /* push IPv4 LAN3 DNS */
-					fprintf(fp, "push \"dhcp-option DNS %s\"\n", nvram_safe_get("lan3_ipaddr"));
+			for (i = 0; i < 4; i++) {
+				if (push_lan[i] == 1) { /* push IPv4 LANX DNS */
+					sprintf(buffer, (i == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), i);
+					fprintf(fp, "push \"dhcp-option DNS %s\"\n", nvram_safe_get(buffer));
+					dont_push_active = 1;
 				}
 			}
 			/* no lanX will be pushed, push only one active DNS */
 			/* check what LAN is active before push DNS */
-			else {
-				/* check LAN */
-				if(strcmp(nvram_safe_get("lan_ipaddr"), "") != 0) {
-					fprintf(fp, "push \"dhcp-option DNS %s\"\n", nvram_safe_get("lan_ipaddr"));
-				}
-				/* check LAN1 */
-				else if (strcmp(nvram_safe_get("lan1_ipaddr"), "") != 0) {
-					fprintf(fp, "push \"dhcp-option DNS %s\"\n", nvram_safe_get("lan1_ipaddr"));
-				}
-				/* check LAN2 */
-				else if (strcmp(nvram_safe_get("lan2_ipaddr"), "") != 0) {
-					fprintf(fp, "push \"dhcp-option DNS %s\"\n", nvram_safe_get("lan2_ipaddr"));
-				}
-				/* check LAN3 */
-				else if (strcmp(nvram_safe_get("lan3_ipaddr"), "") != 0) {
-					fprintf(fp, "push \"dhcp-option DNS %s\"\n", nvram_safe_get("lan3_ipaddr"));
-				}
-				/* something is not OK! */
-				else {
-					/* do not push DNS! */
+			if (dont_push_active == 0) {
+				for (i = 0; i < 4; i++) {
+					sprintf(buffer, (i == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), i);
+					if (strcmp(nvram_safe_get(buffer), "") != 0) {
+						fprintf(fp, "push \"dhcp-option DNS %s\"\n", nvram_safe_get(buffer));
+						break;
+					}
 				}
 			}
 		}
