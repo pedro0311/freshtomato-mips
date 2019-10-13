@@ -26,7 +26,6 @@
 *.tar.xz.asc
 .FBCIndex
 .FBCLockFolder
-.deps
 .libs
 phpt.*
 core
@@ -191,6 +190,7 @@ sapi/fpm/fpm/php-cgi
 sapi/phpdbg/phpdbg_parser.c
 sapi/phpdbg/phpdbg_parser.h
 sapi/phpdbg/phpdbg
+sapi/phpdbg/phpdbg.1
 scripts/php-config
 scripts/phpize
 scripts/man1/*.1
@@ -231,4 +231,3 @@ win32/wsyslog.h
 # special cases to invert previous ignore rules
 !ext/fileinfo/libmagic.patch
 !ext/mbstring/oniguruma.patch
-
