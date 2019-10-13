@@ -348,7 +348,6 @@ function anon_update() {
 
 function show() {
 	c('cpu', stats.cpuload);
-	c('temps', stats.cputemp + 'C / ' + Math.round(stats.cputemp.slice(0, -1)*1.8+32) + '°F');
 	c('uptime', stats.uptime);
 	c('time', stats.time);
 	c('memory', stats.memory);
