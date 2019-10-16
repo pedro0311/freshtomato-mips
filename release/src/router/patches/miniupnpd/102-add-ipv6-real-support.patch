@@ -1,6 +1,6 @@
 --- miniupnpd/Makefile.linux
 +++ miniupnpd/Makefile.linux
-@@ -117,7 +117,13 @@ TEST := $(shell [ $(IPTVER1) -gt 1 ] ||
+@@ -120,7 +120,13 @@ TEST := $(shell [ $(IPTVER1) -gt 1 ] ||
  LDLIBS = $(IPTABLESPATH)/libiptc/.libs/libip4tc.o
  #LDLIBS = $(IPTABLESPATH)/libiptc/.libs/libiptc.a
  else # ifeq ($(TEST), 1)

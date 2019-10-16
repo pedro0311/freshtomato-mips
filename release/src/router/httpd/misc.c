@@ -517,8 +517,10 @@ void asp_sysinfo(int argc, char **argv)
 	char cpu_model[64];
 	char bogomips[8];
 	char cpuclk[8];
+	char cfe_version[16];
 
 	get_cpuinfo(system_type, cpu_model, bogomips, cpuclk);
+	get_cfeversion(cfe_version);
 
 	web_puts("\nsysinfo = {\n");
 
@@ -544,7 +546,8 @@ void asp_sysinfo(int argc, char **argv)
 		"\tsystemtype: '%s',\n"
 		"\tcpumodel: '%s',\n"
 		"\tbogomips: '%s',\n"
-		"\tcpuclk: '%s'",
+		"\tcpuclk: '%s',\n"
+		"\tcfeversion: '%s'",
 			si.uptime,
 			reltime(s, si.uptime),
 			si.loads[0], si.loads[1], si.loads[2],
@@ -557,7 +560,8 @@ void asp_sysinfo(int argc, char **argv)
 			system_type,
 			cpu_model,
 			bogomips,
-			cpuclk);
+			cpuclk,
+			cfe_version);
 
 	web_puts("};\n");
 }
@@ -947,4 +951,30 @@ void wo_resolve(char *url)
 		}
 	}
 	web_puts("];\n");
+}
+
+char* get_cfeversion(char *buf)
+{
+	FILE *f;
+	char s[16] = "";
+	int len = 0;
+
+	strcpy(buf, "");
+
+	if ((f = popen("strings /dev/mtd0ro | grep bl_version | cut -d '=' -f2", "r")) != NULL) {
+		if (fgets(s, 15, f) != NULL) {
+			len = strlen(s);
+		}
+		pclose(f);
+	}
+
+	if (len == 0) {
+		strcpy(buf, "--");
+	}
+	else {
+		strcpy(buf, s);
+		buf[strcspn(buf, "\n")] = 0;
+	}
+
+	return buf;
 }

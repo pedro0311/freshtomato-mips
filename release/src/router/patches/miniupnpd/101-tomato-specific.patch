@@ -1,6 +1,6 @@
 --- miniupnpd/genconfig.sh
 +++ miniupnpd/genconfig.sh
-@@ -94,7 +94,7 @@ fi
+@@ -99,7 +99,7 @@ fi
  # Tomato USB special case
  if [ -f ../shared/tomato_version ]; then
  	OS_NAME=Tomato
@@ -11,7 +11,7 @@
  
 --- miniupnpd/Makefile.linux
 +++ miniupnpd/Makefile.linux
-@@ -27,7 +27,7 @@ CFLAGS ?= -Os
+@@ -28,7 +28,7 @@ CFLAGS ?= -Os
  CFLAGS += -fno-common
  CFLAGS += -fstack-protector -fPIE
  CFLAGS += -D_FORTIFY_SOURCE=2
@@ -20,7 +20,7 @@
  CFLAGS += -Wall
  CFLAGS += -Wextra -Wstrict-prototypes -Wdeclaration-after-statement
  #CFLAGS += -Wno-missing-field-initializers
-@@ -163,7 +163,7 @@ LDLIBS += $(shell $(PKG_CONFIG) --static
+@@ -166,7 +166,7 @@ LDLIBS += $(shell $(PKG_CONFIG) --static
  
  # OpenWrt packager disables https server for IGD v2 and hardcodes libuuid support
  ifeq ($(TARGET_OPENWRT),)
