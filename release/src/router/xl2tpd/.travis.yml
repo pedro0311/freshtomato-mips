@@ -1,9 +1,15 @@
-os:
-  - linux
+matrix:
+  include:
+    - os: linux
+      dist: precise
+    - os: linux
+      dist: xenial
+
 
 language: c
 compiler:
   - gcc
+  - clang
 
 sudo: false
 
@@ -17,10 +23,10 @@ addons:
 
 cache:
   directories:
-  - $HOME/.ccache
+    - $HOME/.ccache
 
 before_script:
-    make clean
+  make clean
 
 script:
-    make
+  make

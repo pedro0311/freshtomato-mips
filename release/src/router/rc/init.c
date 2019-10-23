@@ -855,6 +855,15 @@ static void check_bootnv(void)
 	dirty |= check_nv("cctl", "0");
 	dirty |= check_nv("ccode", "0");
 
+	/* fix WL mac for 2.4 GHz, was always 00:90:4C:5F:00:2A after upgrade/nvram full erase (for every router) */
+	if (strncasecmp(nvram_safe_get("il0macaddr"), "00:90:4c", 8) == 0 ||
+	    strncasecmp(nvram_safe_get("wl0_hwaddr"), "00:90:4c", 8) == 0) {
+		strcpy(mac, nvram_safe_get("et0macaddr"));
+		inc_mac(mac, +2);
+		dirty |= check_nv("il0macaddr", mac);
+		dirty |= check_nv("wl0_hwaddr", mac);
+	}
+
 	switch (hardware) {
 	case HW_BCM5325E:
 		/* Lower the DDR ram drive strength , the value will be stable for all boards
@@ -942,6 +951,12 @@ static int init_nvram(void)
 	case MODEL_WRT54G:
 		mfr = "Linksys";
 		name = "WRT54G/GS/GL";
+		if (!nvram_match("t_fix1", (char *)name)) {
+			/* fix MAC addresses */
+			strcpy(s, nvram_safe_get("et0macaddr"));	/* get et0 MAC address for LAN */
+			inc_mac(s, +2);					/* MAC + 1 will be for WAN */
+			nvram_set("il0macaddr", s);			/* fix WL mac for 2.4 GHz, was always 00:90:4C:5F:00:2A after upgrade/nvram full erase (for every router) */
+		}
 		switch (check_hw_type()) {
 		case HW_BCM4712:
 			nvram_set("gpio2", "adm_eecs");
@@ -960,7 +975,7 @@ static int init_nvram(void)
 		case HW_BCM5352E:
 			nvram_set("opo", "0x0008");
 			nvram_set("ag0", "0x02");
-			// drop
+			/* fall through */
 		default:
 			nvram_set("gpio2", "ses_led");
 			nvram_set("gpio3", "ses_led2");
