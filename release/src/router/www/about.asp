@@ -288,7 +288,7 @@ Built on <% build_time(); %> by Pedro
 <br/>
 <br/>
 <br/>
-Click below to send a "Thank you" gift through PayPal
+<b>Click below to send a "Thank you" gift through PayPal</b>
 <br/>
 <br/>
 <div id="donate">
@@ -301,9 +301,20 @@ Click below to send a "Thank you" gift through PayPal
 	</form>
 </div>
 <br/>
+<div id="donate"><b>...Or by Bitcoin: </b> 1JDxBBQvcJ9XxgagJRNVrqC1nysq8F8B1Y</div>
+<br/>
+<hr>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
 <br/>
 <b>Based on Tomato Firmware v1.28</b><br/>
 <i>Copyright (C) 2006-2010 Jonathan Zarate</i><br/>
+
+<!-- OPTSIZE-BEGIN -->
+
 <a href="http://www.polarcloud.com/tomato/" class="new_window">http://www.polarcloud.com/tomato/</a><br/>
 <br/>
 
@@ -324,6 +335,9 @@ Click below to send a "Thank you" gift through PayPal
 </div>
 </form>
 <br/>
+
+<!-- OPTSIZE-END -->
+
 <br/>
 <b>Thanks to everyone who risked their routers, tested, reported bugs, made
 suggestions and contributed to this project. ^ _ ^</b>
