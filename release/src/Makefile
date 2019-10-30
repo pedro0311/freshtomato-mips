@@ -794,7 +794,7 @@ i:
 
 ## MiniVPN - for 4MB routers
 j:
-	@$(MAKE) bin USB="" B=V MULTIWAN=y NO_CIFS=y NO_ZEBRA=y NO_JFFS=y OPENVPN=y PPTPD=y KERN_SIZE_OPT_MORE=y BUILD_DESC="MiniVPN"
+	@$(MAKE) bin USB="" B=V MULTIWAN=y NO_CIFS=y NO_ZEBRA=y NO_JFFS=y OPENVPN=y KERN_SIZE_OPT_MORE=y BUILD_DESC="MiniVPN"
 
 
 ## IPv6-VPN with no USB support
