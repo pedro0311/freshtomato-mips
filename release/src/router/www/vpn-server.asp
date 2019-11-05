@@ -740,7 +740,11 @@ for (i = 0; i < tabs.length; ++i)
 			suffix: '<span style="color: red" id=\''+t+'_ncp_24_warn\'>&nbsp;<small>Warning: The exported client file will require OpenVPN 2.4.0 or newer.<\/small><\/span>' },
 		{ title: 'Negotiable ciphers', name: 'vpn_'+t+'_ncp_ciphers', type: 'text', size: 50, maxlen: 50, value: eval ( 'nvram.vpn_'+t+'_ncp_ciphers' ) },
 		{ title: 'Legacy/fallback cipher', name: 'vpn_'+t+'_cipher', type: 'select', options: ciphers, value: eval( 'nvram.vpn_'+t+'_cipher' ) },
-		{ title: 'Compression', name: 'vpn_'+t+'_comp', type: 'select', options: [ ['-1', 'Disabled'], ['no', 'None'], ['yes', 'LZO'], ['adaptive', 'LZO Adaptive'], ['lz4', 'LZ4'], ['lz4-v2', 'LZ4-V2']], value: eval( 'nvram.vpn_'+t+'_comp' ),
+		{ title: 'Compression', name: 'vpn_'+t+'_comp', type: 'select', options: [ ['-1', 'Disabled'], ['no', 'None'], ['yes', 'LZO'], ['adaptive', 'LZO Adaptive']
+/* OVPNSMALL-BEGIN */
+			, ['lz4', 'LZ4'], ['lz4-v2', 'LZ4-V2']
+/* OVPNSMALL-END */
+			], value: eval( 'nvram.vpn_'+t+'_comp' ),
 			suffix: '<span style="color: red" id=\''+t+'_comp_24_warn\'>&nbsp;<small>Warning: The exported client file will require OpenVPN 2.4.0 or newer.<\/small><\/span>' },
 		{ title: 'TLS Renegotiation Time', name: 'vpn_'+t+'_reneg', type: 'text', maxlen: 10, size: 7, value: eval( 'nvram.vpn_'+t+'_reneg' ),
 			suffix: '&nbsp;<small>(in seconds, -1 for default)<\/small>' },
