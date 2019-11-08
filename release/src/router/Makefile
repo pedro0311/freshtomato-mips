@@ -1825,7 +1825,6 @@ pcre-clean:
 	$(call unpatch_files,pcre)
 
 libxml2/stamp-h1:
-	$(call patch_files,libxml2)
 	cd libxml2 && \
 	autoreconf -fsi && \
 	CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) CFLAGS="-Os -Wall -I$(TOP)/zlib $(EXTRACFLAGS)" LDFLAGS="-L$(TOP)/zlib" \
@@ -1839,17 +1838,16 @@ libxml2: libxml2/stamp-h1
 	@$(MAKE) -C libxml2 DESTDIR=$(TOP)/libxml2/staged install
 
 libxml2-install:
-	install -D libxml2/.libs/libxml2.so.2.9.9 $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.9.9
-	$(STRIP) $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.9.9
+	install -D libxml2/.libs/libxml2.so.2.9.10 $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.9.10
+	$(STRIP) $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.9.10
 	cd $(INSTALLDIR)/libxml2/usr/lib && \
-		ln -sf libxml2.so.2.9.9 libxml2.so.2 && \
-		ln -sf libxml2.so.2.9.9 libxml2.so
+		ln -sf libxml2.so.2.9.10 libxml2.so.2 && \
+		ln -sf libxml2.so.2.9.10 libxml2.so
 
 libxml2-clean:
 	-@$(MAKE) -C libxml2 clean
 	@rm -f libxml2/stamp-h1
 	@rm -rf libxml2/staged
-	$(call unpatch_files,libxml2)
 
 libpng/stamp-h1:
 	cd libpng && \
@@ -2190,7 +2188,7 @@ openvpn/.conf: openssl lzo
 	PLUGINDIR="/lib" \
 	$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib \
 		--enable-management --disable-debug --disable-plugin-auth-pam --disable-plugin-down-root --disable-dependency-tracking \
-		ac_cv_lib_resolv_gethostbyname=no
+		$(if $(TCONFIG_OPENVPN_SMALL),--disable-lz4 --enable-small) ac_cv_lib_resolv_gethostbyname=no
 	touch openvpn/.conf
 
 openvpn: openvpn/.conf

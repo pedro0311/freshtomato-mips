@@ -256,6 +256,7 @@ config TCONFIG_IPERF
 
 config TCONFIG_KEYGEN
 	bool "TLS keys generator in GUI for VPN Server"
+	depends on TCONFIG_OPENVPN
 	default n
 
 config TCONFIG_TERMLIB
@@ -269,3 +270,8 @@ config TCONFIG_NVRAM_32K
 config TCONFIG_OPTIMIZE_SIZE
 	bool "Flag to detect small targets used for size optimization"
 	default y
+
+config TCONFIG_OPENVPN_SMALL
+	bool "Build a small size OpenVPN"
+	depends on TCONFIG_OPENVPN
+	default n

@@ -121,7 +121,6 @@ switch (nvram['t_model_name']) {
 	case 'Linksys E1000 v1':
 	case 'Linksys E1000 v2.0':
 	case 'Linksys E1000 v2.1':
-	case 'Linksys E2000':
 	case 'Linksys E3000':
 /*	case 'Linksys WRT310N': */
 	case 'Linksys WRT320N':
@@ -165,6 +164,7 @@ switch (nvram['t_model_name']) {
 	case 'Netgear WNR3500L/U/v2':
 	case 'Netgear WNR3500L v2':
 	case 'Tenda N60':
+	case 'Linksys E2000':
 		COL_P0N = '4';
 		COL_P1N = '3';
 		COL_P2N = '2';

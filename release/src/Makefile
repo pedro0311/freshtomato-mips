@@ -447,7 +447,7 @@ what:
 # USB ("USB"|"")
 # JFFSv1 | NO_JFFS
 # NO_CIFS, NO_SSH, NO_ZEBRA, NO_SAMBA, NO_HTTPS, NO_XXTP, NO_LIBOPT
-# SAMBA3, OPENVPN, IPV6SUPP, EBTABLES, NTFS, UFSD, MEDIASRV, BBEXTRAS, USBEXTRAS, BCM57, SLIM, NOCAT CTF NGINX NANO BCMNAT
+# SAMBA3, OPENVPN, OPENVPN_SMALL, IPV6SUPP, EBTABLES, NTFS, UFSD, MEDIASRV, BBEXTRAS, USBEXTRAS, BCM57, SLIM, NOCAT CTF NGINX NANO BCMNAT
 # NFS BTCLIENT BTGUI TR_EXTRAS SNMP SDHC HFS UPS DNSCRYPT STUBBY PPTPD TOR IPSEC RAID MICROSD USBAP NO_USBAPP IPERF KEYGEN TERMLIB
 
 define RouterOptions
@@ -560,7 +560,7 @@ define RouterOptions
 	if [ "$(OPENVPN)" = "y" ]; then \
 		sed -i "/TCONFIG_LZO/d" $(1); \
 		echo "TCONFIG_LZO=y" >>$(1); \
-		sed -i "/TCONFIG_OPENVPN/d" $(1); \
+		sed -i "/# TCONFIG_OPENVPN is not set/d" $(1); \
 		echo "TCONFIG_OPENVPN=y" >>$(1); \
 		sed -i "/TCONFIG_FTP_SSL/d" $(1); \
 		echo "TCONFIG_FTP_SSL=y" >>$(1); \
@@ -703,6 +703,10 @@ define RouterOptions
 	if [ "$(NVRAM_SIZE)" = "32" ]; then \
 		sed -i "/TCONFIG_NVRAM_32K/d" $(1); \
 		echo "TCONFIG_NVRAM_32K=y" >>$(1); \
+	fi; \
+	if [ "$(OPENVPN_SMALL)" = "y" ]; then \
+		sed -i "/TCONFIG_OPENVPN_SMALL/d" $(1); \
+		echo "TCONFIG_OPENVPN_SMALL=y" >>$(1); \
 	fi; \
 	)
 endef
@@ -1103,7 +1107,7 @@ i:
 
 ## MiniVPN - for 4MB routers
 j:
-	@$(MAKE) bin USB="" B=V MULTIWAN=y NO_CIFS=y NO_ZEBRA=y NO_JFFS=y OPENVPN=y PPTPD=y KERN_SIZE_OPT=y KERN_SIZE_OPT_MORE=y BUILD_DESC="MiniVPN"
+	@$(MAKE) bin USB="" B=V MULTIWAN=y NO_CIFS=y NO_ZEBRA=y NO_JFFS=y OPENVPN=y OPENVPN_SMALL=y KERN_SIZE_OPT_MORE=y BUILD_DESC="MiniVPN"
 
 
 ## IPv6-VPN with no USB support

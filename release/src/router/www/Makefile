@@ -344,6 +344,14 @@ ifeq ($(TCONFIG_OPTIMIZE_SIZE),y)
 	sed -i $(INSTALLDIR)/www/about.asp -e "/OPTSIZE-BEGIN/,/OPTSIZE-END/d"
 endif
 
+# Only include LZ4 compression option if normal OpenVPN is build
+ifeq ($(TCONFIG_OPENVPN),y)
+ifeq ($(TCONFIG_OPENVPN_SMALL),y)
+	sed -i $(INSTALLDIR)/www/vpn-client.asp -e "/OVPNSMALL-BEGIN/,/OVPNSMALL-END/d"
+	sed -i $(INSTALLDIR)/www/vpn-server.asp -e "/OVPNSMALL-BEGIN/,/OVPNSMALL-END/d"
+endif
+endif
+
 # Clean-up compiler directives
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp *.js *.jsx *.html); do \
@@ -387,6 +395,7 @@ endif
 		-e "/TERMLIB-BEGIN/d"	-e "/TERMLIB-END/d"\
 		-e "/TERMLIB0-BEGIN/d"	-e "/TERMLIB0-END/d"\
 		-e "/OPTSIZE-BEGIN/d"	-e "/OPTSIZE-END/d" \
+		-e "/OVPNSMALL-BEGIN/d" -e "/OVPNSMALL-END/d" \
 		|| true; \
 	done
 
