@@ -1079,6 +1079,9 @@ static int init_nvram(void)
 		name = nvram_match("boardrev", "0x1307") ? "E2000" : "WRT320N";
 		features = SUP_SES | SUP_80211N | SUP_WHAM_LED | SUP_1000ET;
 		if (!nvram_match("t_fix1", (char *)name)) {
+			if (nvram_match("boardrev", "0x1307")) {	/* to be check if WRT320N also need this */
+				nvram_set("lan_invert", "1");
+			}
 			nvram_set("lan_ifnames", "vlan1 eth1");
 			nvram_set("wan_ifnameX", "vlan2");
 			nvram_set("wl_ifname", "eth1");
