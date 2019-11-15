@@ -590,13 +590,9 @@ define KernelConfig
 	if [ "$(KERN_SIZE_OPT_MORE)" = "y" ]; then \
 		sed -i "/CONFIG_BUG=y/d" $(1); \
 		echo "# CONFIG_BUG is not set" >>$(1); \
-		sed -i "/CONFIG_PRINTK=y/d" $(1); \
-		echo "# CONFIG_PRINTK is not set" >>$(1); \
 	else \
 		sed -i "/# CONFIG_BUG is not set/d" $(1); \
 		echo "CONFIG_BUG=y" >>$(1); \
-		sed -i "/# CONFIG_PRINTK is not set/d" $(1); \
-		echo "CONFIG_PRINTK=y" >>$(1); \
 	fi; \
 	if [ "$(MIPS32)" = "r2" ]; then \
 		sed -i "/CONFIG_CPU_MIPS32_R1/d" $(1); \
