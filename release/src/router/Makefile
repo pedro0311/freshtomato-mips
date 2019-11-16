@@ -1276,7 +1276,7 @@ dropbear: dropbear/config.h
 ifeq ($(TCONFIG_ZEBRA),y)
 	@$(MAKE) -C dropbear PROGRAMS="dropbear dbclient dropbearkey scp" MULTI=1 $(PARALLEL_BUILD)
 else
-	@$(MAKE) -C dropbear PROGRAMS="dropbear dropbearkey scp" MULTI=1 $(PARALLEL_BUILD)
+	@$(MAKE) -C dropbear PROGRAMS="dropbear dropbearkey $(if $(TCONFIG_OPTIMIZE_SIZE_MORE),,scp)" MULTI=1 $(PARALLEL_BUILD)
 endif
 
 dropbear-install:
