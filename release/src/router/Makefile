@@ -2162,7 +2162,7 @@ openvpn/.conf: openssl lzo
 	PLUGINDIR="/lib" \
 	$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib \
 		--enable-management --disable-debug --disable-plugin-auth-pam --disable-plugin-down-root --disable-dependency-tracking \
-		$(if $(TCONFIG_OPENVPN_SMALL),--disable-lz4 --enable-small) ac_cv_lib_resolv_gethostbyname=no
+		$(if $(TCONFIG_OPTIMIZE_SIZE_MORE),--disable-lz4 --enable-small --disable-server) ac_cv_lib_resolv_gethostbyname=no
 	touch openvpn/.conf
 
 openvpn: openvpn/.conf
