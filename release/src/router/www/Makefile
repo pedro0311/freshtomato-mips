@@ -356,9 +356,9 @@ endif
 
 # Only include LZ4 compression option if normal OpenVPN is build
 ifeq ($(TCONFIG_OPENVPN),y)
-ifeq ($(TCONFIG_OPENVPN_SMALL),y)
-	sed -i $(INSTALLDIR)/www/vpn-client.asp -e "/OVPNSMALL-BEGIN/,/OVPNSMALL-END/d"
-	sed -i $(INSTALLDIR)/www/vpn-server.asp -e "/OVPNSMALL-BEGIN/,/OVPNSMALL-END/d"
+ifeq ($(TCONFIG_OPTIMIZE_SIZE_MORE),y)
+	sed -i $(INSTALLDIR)/www/vpn-client.asp -e "/SIZEOPTMORE-BEGIN/,/SIZEOPTMORE-END/d"
+	sed -i $(INSTALLDIR)/www/vpn-server.asp -e "/SIZEOPTMORE-BEGIN/,/SIZEOPTMORE-END/d"
 endif
 endif
 
@@ -407,7 +407,7 @@ endif
 		-e "/TERMLIB-BEGIN/d"	-e "/TERMLIB-END/d"\
 		-e "/TERMLIB0-BEGIN/d"	-e "/TERMLIB0-END/d"\
 		-e "/OPTSIZE-BEGIN/d"	-e "/OPTSIZE-END/d" \
-		-e "/OVPNSMALL-BEGIN/d" -e "/OVPNSMALL-END/d" \
+		-e "/SIZEOPTMORE-BEGIN/d" -e "/SIZEOPTMORE-END/d" \
 		|| true; \
 	done
 

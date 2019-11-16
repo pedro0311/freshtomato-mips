@@ -170,8 +170,9 @@ function verifyFields(focused, quiet) {
 		userpass = E('_f_vpn_'+t+'_userpass');
 		dns = E('_f_vpn_'+t+'_dns');
 		ncp = E('_vpn_'+t+'_ncp_enable').value;
+/* SIZEOPTMORE-BEGIN */
 		comp = E('_vpn_'+t+'_comp').value;
-
+/* SIZEOPTMORE-END */
 		elem.display(PR('_vpn_'+t+'_ca'), PR('_vpn_'+t+'_ca_key'), PR('_vpn_'+t+'_ca_key_div_help'),
 /* KEYGEN-BEGIN */
 			     PR('_vpn_dhgen_'+t+'_button'),
@@ -202,7 +203,9 @@ function verifyFields(focused, quiet) {
 
 		/* Warn if exported client file requires OpenVPN 2.4.0 */
 		elem.display(E(t+'_ncp_24_warn'), (ncp > 0));
+/* SIZEOPTMORE-BEGIN */
 		elem.display(E(t+'_comp_24_warn'), (comp == "lz4") || (comp == "lz4-v2"));
+/* SIZEOPTMORE-END */
 		elem.display(E(t+'_tlscrypt_24_warn'), (hmac == 3));
 
 		keyHelp = E(t+'-keyhelp');
@@ -741,11 +744,14 @@ for (i = 0; i < tabs.length; ++i)
 		{ title: 'Negotiable ciphers', name: 'vpn_'+t+'_ncp_ciphers', type: 'text', size: 50, maxlen: 50, value: eval ( 'nvram.vpn_'+t+'_ncp_ciphers' ) },
 		{ title: 'Legacy/fallback cipher', name: 'vpn_'+t+'_cipher', type: 'select', options: ciphers, value: eval( 'nvram.vpn_'+t+'_cipher' ) },
 		{ title: 'Compression', name: 'vpn_'+t+'_comp', type: 'select', options: [ ['-1', 'Disabled'], ['no', 'None'], ['yes', 'LZO'], ['adaptive', 'LZO Adaptive']
-/* OVPNSMALL-BEGIN */
+/* SIZEOPTMORE-BEGIN */
 			, ['lz4', 'LZ4'], ['lz4-v2', 'LZ4-V2']
-/* OVPNSMALL-END */
-			], value: eval( 'nvram.vpn_'+t+'_comp' ),
-			suffix: '<span style="color: red" id=\''+t+'_comp_24_warn\'>&nbsp;<small>Warning: The exported client file will require OpenVPN 2.4.0 or newer.<\/small><\/span>' },
+/* SIZEOPTMORE-END */
+			], value: eval( 'nvram.vpn_'+t+'_comp' )
+/* SIZEOPTMORE-BEGIN */
+			, suffix: '<span style="color: red" id=\''+t+'_comp_24_warn\'>&nbsp;<small>Warning: The exported client file will require OpenVPN 2.4.0 or newer.<\/small><\/span>'
+/* SIZEOPTMORE-END */
+		},
 		{ title: 'TLS Renegotiation Time', name: 'vpn_'+t+'_reneg', type: 'text', maxlen: 10, size: 7, value: eval( 'nvram.vpn_'+t+'_reneg' ),
 			suffix: '&nbsp;<small>(in seconds, -1 for default)<\/small>' },
 		{ title: 'Manage Client-Specific Options', name: 'f_vpn_'+t+'_ccd', type: 'checkbox', value: eval( 'nvram.vpn_'+t+'_ccd' ) != 0 },
