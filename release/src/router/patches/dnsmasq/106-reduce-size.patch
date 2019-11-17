@@ -1,6 +1,6 @@
 --- dnsmasq/src/dnsmasq.h
 +++ dnsmasq/src/dnsmasq.h
-@@ -1302,15 +1302,25 @@ int wildcard_match(const char* wildcard,
+@@ -1306,15 +1306,25 @@ int wildcard_match(const char* wildcard,
  int wildcard_matchn(const char* wildcard, const char* match, int num);
  
  /* log.c */
@@ -62,7 +62,7 @@
  static unsigned char *option_find(struct dhcp_packet *mess, size_t size, int opt_type, int minsize);
  static unsigned char *option_find1(unsigned char *p, unsigned char *end, int opt, int minsize);
  static size_t dhcp_packet_size(struct dhcp_packet *mess, unsigned char *agent_id, unsigned char *real_end);
-@@ -1671,6 +1678,7 @@ static void add_extradata_opt(struct dhc
+@@ -1668,6 +1675,7 @@ static void add_extradata_opt(struct dhc
  }
  #endif
  
@@ -70,7 +70,7 @@
  static void log_packet(char *type, void *addr, unsigned char *ext_mac, 
  		       int mac_len, char *interface, char *string, char *err, u32 xid)
  {
-@@ -1724,6 +1732,7 @@ static void log_options(unsigned char *s
+@@ -1721,6 +1729,7 @@ static void log_options(unsigned char *s
        start += start[1] + 2;
      }
  }
