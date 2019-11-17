@@ -271,7 +271,6 @@ config TCONFIG_OPTIMIZE_SIZE
 	bool "Flag to detect small targets used for size optimization"
 	default y
 
-config TCONFIG_OPENVPN_SMALL
-	bool "Build a small size OpenVPN"
-	depends on TCONFIG_OPENVPN
+config TCONFIG_OPTIMIZE_SIZE_MORE
+	bool "Flag to optimize code even more"
 	default n

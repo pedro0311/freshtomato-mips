@@ -496,9 +496,9 @@ for (i = 0; i < tabs.length; ++i)
 		{ title: 'Negotiable ciphers', name: 'vpn_'+t+'_ncp_ciphers', type: 'text', size: 50, maxlen: 50, value: eval ( 'nvram.vpn_'+t+'_ncp_ciphers' ) },
 		{ title: 'Legacy/fallback cipher', name: 'vpn_'+t+'_cipher', type: 'select', options: ciphers, value: eval( 'nvram.vpn_'+t+'_cipher' ) },
 		{ title: 'Compression', name: 'vpn_'+t+'_comp', type: 'select', options: [ ['-1', 'Disabled'], ['no', 'None'], ['yes', 'LZO'], ['adaptive', 'LZO Adaptive']
-/* OVPNSMALL-BEGIN */
+/* SIZEOPTMORE-BEGIN */
 			, ['lz4', 'LZ4'], ['lz4-v2', 'LZ4-V2']
-/* OVPNSMALL-END */
+/* SIZEOPTMORE-END */
 			], value: eval( 'nvram.vpn_'+t+'_comp' ) },
 		{ title: 'TLS Renegotiation Time', name: 'vpn_'+t+'_reneg', type: 'text', maxlen: 10, size: 7, value: eval( 'nvram.vpn_'+t+'_reneg' ),
 			suffix: '&nbsp;<small>(in seconds, -1 for default)<\/small>' },

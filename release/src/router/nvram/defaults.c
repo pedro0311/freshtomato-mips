@@ -833,6 +833,9 @@ const defaults_t defaults[] = {
 	{ "sesx_script",
 		"[ $1 -ge 20 ] && telnetd -p 233 -l /bin/sh\n"
 	},
+#if defined(TCONFIG_NVRAM_32K) || defined(TCONFIG_OPTIMIZE_SIZE)
+	{ "script_brau",		""				},
+#else
 	{ "script_brau",
 		"if [ ! -e /tmp/switch-start ]; then\n"
 		"  # do something at startup\n"
@@ -847,6 +850,7 @@ const defaults_t defaults[] = {
 		"  led bridge off\n"
 		"fi\n"
 	},
+#endif
 
 /* admin-log */
 	{ "log_remote",			"0"				},
