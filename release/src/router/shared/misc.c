@@ -295,7 +295,6 @@ int wan_led(int mode) /* mode: 0 - OFF, 1 - ON */
 	    (model == MODEL_RTN15U) ||
 	    (model == MODEL_D1800H) ||
 	    (model == MODEL_TDN6) ||
-	    (model == MODEL_TDN60) ||
 	    (model == MODEL_WNDR4500) ||
 	    (model == MODEL_WNDR4500V2))
 	{
