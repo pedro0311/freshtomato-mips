@@ -223,7 +223,9 @@ function save() {
 	fom.sshd_pass.value = E('_f_sshd_pass').checked ? 1 : 0;
 	fom.sshd_remote.value = E('_f_sshd_remote').checked ? 1 : 0;
 	fom.sshd_motd.value = E('_f_sshd_motd').checked ? 1 : 0;
+/* SIZEOPTMORE-BEGIN */
 	fom.sshd_forwarding.value = E('_f_sshd_forwarding').checked ? 1 : 0;
+/* SIZEOPTMORE-END */
 
 	fom.rmgt_sip.value = fom.f_rmgt_sip.value.split(/\s*,\s*/).join(',');
 
@@ -282,7 +284,9 @@ function init() {
 <input type="hidden" name="sshd_motd">
 <input type="hidden" name="ne_shlimit">
 <input type="hidden" name="rmgt_sip">
+/* SIZEOPTMORE-BEGIN */
 <input type="hidden" name="sshd_forwarding">
+/* SIZEOPTMORE-END */
 <input type="hidden" name="web_mx">
 
 <div class="section-title">Web Admin</div>
@@ -349,7 +353,9 @@ createFieldTable('', [
 	{ title: 'Extended MOTD', name: 'f_sshd_motd', type: 'checkbox', value: nvram.sshd_motd == 1 },
 	{ title: 'Remote Access', name: 'f_sshd_remote', type: 'checkbox', value: nvram.sshd_remote == 1 },
 		{ title: 'Remote Port', indent: 2, name: 'sshd_rport', type: 'text', maxlen: 5, size: 7, value: nvram.sshd_rport },
+/* SIZEOPTMORE-BEGIN */
 	{ title: 'Remote Forwarding', name: 'f_sshd_forwarding', type: 'checkbox', value: nvram.sshd_forwarding == 1 },
+/* SIZEOPTMORE-END */
 	{ title: 'Port', name: 'sshd_port', type: 'text', maxlen: 5, size: 7, value: nvram.sshd_port },
 	{ title: 'Allow Password Login', name: 'f_sshd_pass', type: 'checkbox', value: nvram.sshd_pass == 1 },
 	{ title: 'Authorized Keys', name: 'sshd_authkeys', type: 'textarea', value: nvram.sshd_authkeys }

@@ -363,6 +363,11 @@ ifeq ($(TCONFIG_OPTIMIZE_SIZE_MORE),y)
 endif
 endif
 
+# Only include "Remote Forwarding" if special size optimization is not required
+ifeq ($(TCONFIG_OPTIMIZE_SIZE_MORE),y)
+	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/SIZEOPTMORE-BEGIN/,/SIZEOPTMORE-END/d"
+endif
+
 # Clean-up compiler directives
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp *.js *.jsx *.html); do \
