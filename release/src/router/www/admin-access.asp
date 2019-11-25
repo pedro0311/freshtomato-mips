@@ -337,7 +337,7 @@ var m = [
 	{ title: 'Allow Wireless Access', name: 'f_http_wireless', type: 'checkbox', value:  nvram.web_wl_filter == 0 },
 	null,
 	{ title: 'Directory with GUI files', name: 'web_dir', type: 'select',
-		options: [['default','Default: /www'], ['jffs', 'Custom: /jffs/www (Experts Only!)'], ['opt', 'Custom: /opt/www (Experts Only!)'], ['tmp', 'Custom: /tmp/www (Experts Only!)']], value: nvram.web_dir, suffix: ' <small>Please be sure of your decision before change this settings!<\/small>' },
+		options: [['default','Default: /www'], ['jffs', 'Custom: /jffs/www (Experts Only!)'], ['opt', 'Custom: /opt/www (Experts Only!)'], ['tmp', 'Custom: /tmp/www (Experts Only!)']], value: nvram.web_dir, suffix: '<br \/><small>Please be sure of your decision before change this settings!<\/small>' },
 	{ title: 'Color Scheme', name: 'web_css', type: 'select',
 		options: [['default','Default'],['red','Tomato'],['ext/custom','Custom (ext/custom.css)'], ['online', 'Online from TTB (TomatoThemeBase)']], value: nvram.web_css },
 		{ title: 'TTB theme name', indent: 2, name: 'ttb_css', type: 'text', maxlen: 25, size: 35, value: nvram.ttb_css, suffix: ' <small>TTB theme <a href="http://tomatothemebase.eu/wp-content/uploads/themes.txt" class="new_window"><u><i>list<\/i><\/u><\/a> and full <a href="http://www.tomatothemebase.eu" class="new_window"><u><i>gallery<\/i><\/u><\/a><\/small>' },
