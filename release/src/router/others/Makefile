@@ -47,8 +47,12 @@ endif
 #Adblock
 	install -m 0700 adblock $(INSTALLDIR)/usr/sbin
 
-#TTB project
+# TTB project
+ifeq ($(TCONFIG_USB),y)
+	install -m 0700 ttb-2.0.5 $(INSTALLDIR)/usr/sbin/ttb
+else
 	install -m 0700 ttb $(INSTALLDIR)/usr/sbin
+endif
 
 #Ethernet state report
 	install -m 0700 ethstate $(INSTALLDIR)/usr/sbin
