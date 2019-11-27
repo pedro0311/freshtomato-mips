@@ -32,11 +32,6 @@ void start_pptp_client(void)
 
 	char *srv_addr = nvram_safe_get("pptp_client_srvip");
 
-	if (nvram_get_int("pptp_client_enable") == 0) {
-		stop_pptp_client();
-		return;
-	}
-
 	sprintf(buffer, "pptpclient");
 	if (pidof(buffer) >= 0) {
 		/* PPTP already running */
@@ -45,6 +40,7 @@ void start_pptp_client(void)
 #endif
 		stop_pptp_client();
 	}
+
 	unlink("/etc/vpn/pptpc_ip-up");
 	unlink("/etc/vpn/pptpc_ip-down");
 	unlink("/etc/vpn/pptpc_options");
