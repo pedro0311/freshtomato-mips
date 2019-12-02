@@ -49,6 +49,7 @@
 #include <net/if.h>
 #include <net/ethernet.h>
 #include <linux/if_pppox.h>
+#include "inststr.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -80,11 +81,11 @@ int call_ID;
 
 //static struct in_addr get_ip_address(char *name);
 static int open_callmgr(int call_id,struct in_addr inetaddr, char *phonenr,int window);
-static void launch_callmgr(int call_is,struct in_addr inetaddr, char *phonenr,int window);
+static void launch_callmgr(int call_id, struct in_addr inetaddr, char *phonenr, int window);
 static int get_call_id(int sock, pid_t gre, pid_t pppd, u_int16_t *peer_call_id);
 
 static int route_add(const struct in_addr inetaddr, struct rtentry *rt);
-static int route_del(struct rtentry *rt);
+//static int route_del(struct rtentry *rt);
 
 //static int pptp_devname_hook(char *cmd, char **argv, int doit);
 static option_t Options[] =
@@ -198,18 +199,21 @@ static int pptp_start_client(void)
 	getsockname(pptp_fd,(struct sockaddr*)&src_addr,&len);
 	call_ID=src_addr.sa_addr.pptp.call_id;
 
-  do {
         /*
          * Open connection to call manager (Launch call manager if necessary.)
          */
-        callmgr_sock = open_callmgr(src_addr.sa_addr.pptp.call_id,dst_addr.sa_addr.pptp.sin_addr, pptp_phone,50);
-	if (callmgr_sock<0)
-	{
-		close(pptp_fd);
-		return -1;
-        }
-        /* Exchange PIDs, get call ID */
-    } while (get_call_id(callmgr_sock, getpid(), getpid(), &dst_addr.sa_addr.pptp.call_id) < 0);
+	callmgr_sock = -1;
+	do {
+		if (callmgr_sock >= 0)
+    			close(callmgr_sock);
+		callmgr_sock = open_callmgr(src_addr.sa_addr.pptp.call_id, dst_addr.sa_addr.pptp.sin_addr, pptp_phone, 50);
+		if (callmgr_sock < 0)
+		{
+			close(pptp_fd);
+			return -1;
+		}
+	/* Exchange PIDs, get call ID */
+	} while (get_call_id(callmgr_sock, getpid(), getpid(), &dst_addr.sa_addr.pptp.call_id) < 0);
 
 	if (connect(pptp_fd,(struct sockaddr*)&dst_addr,sizeof(dst_addr)))
 	{
@@ -281,6 +285,8 @@ static int open_callmgr(int call_id,struct in_addr inetaddr, char *phonenr,int w
                 }
                 default: /* parent */
                     waitpid(pid, &status, 0);
+                    if (WIFEXITED(status))
+                        status = WEXITSTATUS(status);
                     if (status!= 0)
 		    {
 			close(fd);
@@ -299,17 +305,30 @@ static int open_callmgr(int call_id,struct in_addr inetaddr, char *phonenr,int w
 }
 
 /*** call the call manager main ***********************************************/
-static void launch_callmgr(int call_id,struct in_addr inetaddr, char *phonenr,int window)
+static void launch_callmgr(int call_id, struct in_addr inetaddr, char *phonenr, int window)
 {
-			char win[10];
-			char call[10];
-      char *my_argv[9] = { "pptp", inet_ntoa(inetaddr), "--call_id",call,"--phone",phonenr,"--window",win,NULL };
-      char buf[128];
-      sprintf(win,"%u",window);
-      sprintf(call,"%u",call_id);
-      snprintf(buf, sizeof(buf), "pptp: call manager for %s", my_argv[1]);
-      //inststr(argc, argv, envp, buf);
-      exit(callmgr_main(8, my_argv, environ));
+	char win[10];
+	char call[10];
+	char *my_argv[9] = { "pptp", inet_ntoa(inetaddr), "--call_id", call, "--phone", phonenr, "--window", win, NULL };
+	char buf[128];
+	int argc = 0;
+	char **argv = environ;
+
+	sprintf(win, "%u", window);
+	sprintf(call, "%u", call_id);
+	snprintf(buf, sizeof(buf), "pptp: call manager for %s", my_argv[1]);
+
+	if (argv && *argv)
+		argv--;
+	if (argv && *argv == NULL && progname)
+	do {
+		argv--;
+		argc++;
+	} while (argv && *argv && *argv > progname);
+	if (argv && *argv == progname)
+		inststr(argc, argv, environ, buf);
+
+	exit(callmgr_main(8, my_argv, environ));
 }
 
 /*** exchange data with the call manager  *************************************/
@@ -322,7 +341,7 @@ static int get_call_id(int sock, pid_t gre, pid_t pppd,
     /* don't bother with network byte order, because pid's are meaningless
      * outside the local host.
      */
-    int rc;
+    ssize_t rc;
     rc = write(sock, &gre, sizeof(gre));
     if (rc != sizeof(gre))
         return -1;
@@ -350,8 +369,10 @@ static int get_call_id(int sock, pid_t gre, pid_t pppd,
 
 void plugin_init(void)
 {
+#if 0
     if (!ppp_available() && !new_style_driver)
 	fatal("Kernel doesn't support ppp_generic - needed for PPTP");
+#endif
 
     add_options(Options);
 
@@ -375,7 +396,7 @@ route_ctrl(int ctrl, struct rtentry *rt)
 	close(s);
 	return errno;
 }
-
+/*
 static int
 route_del(struct rtentry *rt)
 {
@@ -386,7 +407,7 @@ route_del(struct rtentry *rt)
 
 	return 0;
 }
-
+*/
 static int
 route_add(const struct in_addr inetaddr, struct rtentry *rt)
 {
