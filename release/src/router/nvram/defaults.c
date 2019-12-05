@@ -780,7 +780,11 @@ const defaults_t defaults[] = {
 	{ "web_wl_filter",		"0"				},	// Allow/Deny Wireless Access Web
 	{ "web_css",			"default"			},
 	{ "web_dir",			"default"			},	// jffs, opt, tmp or default (/www)
-	{ "ttb_css",			"example"			},	//Tomato Themes Base
+	{ "ttb_css",			"example"			},	// Tomato Themes Base - default theme name
+#ifdef TCONFIG_USB
+	{ "ttb_loc",			""				},	// Tomato Themes Base - default files location
+	{ "ttb_url",			"http://www.tomatothemebase.eu/wp-content/uploads"},	// Tomato Themes Base - default URL
+#endif
 	{ "web_svg",			"1"				},
 	{ "telnetd_eas",		"1"				},
 	{ "telnetd_port",		"23"				},

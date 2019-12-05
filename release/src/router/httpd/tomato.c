@@ -1173,6 +1173,10 @@ static const nvset_t nvset_list[] = {
 	{ "web_css",			V_LENGTH(1, 32)			},
 	{ "web_dir",			V_LENGTH(1, 32)			},
 	{ "ttb_css",			V_LENGTH(0, 128)		},
+#ifdef TCONFIG_USB
+	{ "ttb_loc",			V_LENGTH(0, 128)		},
+	{ "ttb_url",			V_LENGTH(0, 128)		},
+#endif
 	{ "web_mx",			V_LENGTH(0, 128)		},
 	{ "http_wanport",		V_PORT				},
 	{ "telnetd_eas",		V_01				},

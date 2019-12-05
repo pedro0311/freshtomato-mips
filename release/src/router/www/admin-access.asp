@@ -29,7 +29,7 @@ textarea {
 
 <script type="text/javascript">
 
-//	<% nvram("http_enable,https_enable,http_lanport,https_lanport,remote_management,remote_mgt_https,web_wl_filter,web_css,web_dir,ttb_css,sshd_eas,sshd_pass,sshd_remote,telnetd_eas,http_wanport,sshd_authkeys,sshd_port,sshd_rport,sshd_forwarding,telnetd_port,rmgt_sip,https_crt_cn,https_crt_save,lan_ipaddr,ne_shlimit,sshd_motd,http_username,http_root"); %>
+//	<% nvram("http_enable,https_enable,http_lanport,https_lanport,remote_management,remote_mgt_https,web_wl_filter,web_css,web_dir,ttb_css,ttb_loc,ttb_url,sshd_eas,sshd_pass,sshd_remote,telnetd_eas,http_wanport,sshd_authkeys,sshd_port,sshd_rport,sshd_forwarding,telnetd_port,rmgt_sip,https_crt_cn,https_crt_save,lan_ipaddr,ne_shlimit,sshd_motd,http_username,http_root"); %>
 
 changed = 0;
 tdup = parseInt('<% psup("telnetd"); %>');
@@ -68,12 +68,22 @@ function verifyFields(focused, quiet) {
 	var o = (E('_web_css').value == 'online');
 	var p = nvram.ttb_css;
 	elem.display(PR('_ttb_css'), o);
+/* USB-BEGIN */
+	var q = nvram.ttb_loc;
+	elem.display(PR('_ttb_loc'), o);
+	var r = nvram.ttb_url;
+	elem.display(PR('_ttb_url'), o);
+/* USB-END */
 
 	try {
 		a = E('_web_css').value;
 		if (a == 'online') {
 			E('guicss').href = 'ext/' + p + '.css';
 			nvram.web_css = a;
+/* USB-BEGIN */
+			nvram.ttb_loc = q;
+			nvram.ttb_url = r;
+/* USB-END */
 		} else {
 			if (a != nvram.web_css) {
 				E('guicss').href = a + '.css';
@@ -223,7 +233,9 @@ function save() {
 	fom.sshd_pass.value = E('_f_sshd_pass').checked ? 1 : 0;
 	fom.sshd_remote.value = E('_f_sshd_remote').checked ? 1 : 0;
 	fom.sshd_motd.value = E('_f_sshd_motd').checked ? 1 : 0;
+/* SIZEOPTMORE-BEGIN */
 	fom.sshd_forwarding.value = E('_f_sshd_forwarding').checked ? 1 : 0;
+/* SIZEOPTMORE-END */
 
 	fom.rmgt_sip.value = fom.f_rmgt_sip.value.split(/\s*,\s*/).join(',');
 
@@ -282,7 +294,9 @@ function init() {
 <input type="hidden" name="sshd_motd">
 <input type="hidden" name="ne_shlimit">
 <input type="hidden" name="rmgt_sip">
+/* SIZEOPTMORE-BEGIN */
 <input type="hidden" name="sshd_forwarding">
+/* SIZEOPTMORE-END */
 <input type="hidden" name="web_mx">
 
 <div class="section-title">Web Admin</div>
@@ -323,10 +337,14 @@ var m = [
 	{ title: 'Allow Wireless Access', name: 'f_http_wireless', type: 'checkbox', value:  nvram.web_wl_filter == 0 },
 	null,
 	{ title: 'Directory with GUI files', name: 'web_dir', type: 'select',
-		options: [['default','Default: /www'], ['jffs', 'Custom: /jffs/www (Experts Only!)'], ['opt', 'Custom: /opt/www (Experts Only!)'], ['tmp', 'Custom: /tmp/www (Experts Only!)']], value: nvram.web_dir, suffix: ' <small>Please be sure of your decision before change this settings!<\/small>' },
+		options: [['default','Default: /www'], ['jffs', 'Custom: /jffs/www (Experts Only!)'], ['opt', 'Custom: /opt/www (Experts Only!)'], ['tmp', 'Custom: /tmp/www (Experts Only!)']], value: nvram.web_dir, suffix: '<br \/><small>Please be sure of your decision before change this settings!<\/small>' },
 	{ title: 'Color Scheme', name: 'web_css', type: 'select',
-		options: [['default','Default'],['red','Tomato'],['ext/custom','Custom (ext/custom.css)'], ['online', 'On-line from TTB']], value: nvram.web_css },
-		{ title: 'TTB ID#', indent: 2, name: 'ttb_css', type: 'text', maxlen: 25, size: 30, value: nvram.ttb_css, suffix: ' Theme name from <a href="http://www.tomatothemebase.eu"  class="new_window"><u><i>TTB themes gallery<\/i><\/u><\/a>' },
+		options: [['default','Default'],['red','Tomato'],['ext/custom','Custom (ext/custom.css)'], ['online', 'Online from TTB (TomatoThemeBase)']], value: nvram.web_css },
+		{ title: 'TTB theme name', indent: 2, name: 'ttb_css', type: 'text', maxlen: 25, size: 35, value: nvram.ttb_css, suffix: ' <small>TTB theme <a href="http://tomatothemebase.eu/wp-content/uploads/themes.txt" class="new_window"><u><i>list<\/i><\/u><\/a> and full <a href="http://www.tomatothemebase.eu" class="new_window"><u><i>gallery<\/i><\/u><\/a><\/small>' },
+/* USB-BEGIN */
+		{ title: 'TTB save folder', indent: 2, name: 'ttb_loc', type: 'text', maxlen: 35, size: 35, value: nvram.ttb_loc, suffix: '/TomatoThemeBase <small>(optional)<\/small>' },
+		{ title: 'TTB URL', indent: 2, name: 'ttb_url', type: 'text', maxlen: 128, size: 70, value: nvram.ttb_url },
+/* USB-END */
 	null,
 	{ title: 'Open Menus' }
 ];
@@ -349,7 +367,9 @@ createFieldTable('', [
 	{ title: 'Extended MOTD', name: 'f_sshd_motd', type: 'checkbox', value: nvram.sshd_motd == 1 },
 	{ title: 'Remote Access', name: 'f_sshd_remote', type: 'checkbox', value: nvram.sshd_remote == 1 },
 		{ title: 'Remote Port', indent: 2, name: 'sshd_rport', type: 'text', maxlen: 5, size: 7, value: nvram.sshd_rport },
+/* SIZEOPTMORE-BEGIN */
 	{ title: 'Remote Forwarding', name: 'f_sshd_forwarding', type: 'checkbox', value: nvram.sshd_forwarding == 1 },
+/* SIZEOPTMORE-END */
 	{ title: 'Port', name: 'sshd_port', type: 'text', maxlen: 5, size: 7, value: nvram.sshd_port },
 	{ title: 'Allow Password Login', name: 'f_sshd_pass', type: 'checkbox', value: nvram.sshd_pass == 1 },
 	{ title: 'Authorized Keys', name: 'sshd_authkeys', type: 'textarea', value: nvram.sshd_authkeys }

@@ -27,7 +27,7 @@ static void help(void)
 {
 	printf(
 		"NVRAM Utility\n"
-		"Copyright (C) 2006-2009 Jonathan Zarate\n\n"	
+		"Copyright (C) 2006-2009 Jonathan Zarate\n\n"
 		"Usage: nvram set <key=value> | get <key> | unset <key> | default_get  <key> [only work on K26AC routers]\n"
 		"ren <key> <key> | commit | erase | show [--nosort|--nostat] |\n"
 		"find <text> | defaults <--yes|--initcheck> | backup <filename> |\n"
@@ -69,7 +69,7 @@ static int get_main(int argc, char **argv)
 {
 	char *p;
 
-	if ((p = nvram_get(argv[1])) != NULL) {
+	if (((p = nvram_get(argv[1])) != NULL) && (*p)) {
 		puts(p);
 		return 0;
 	}
