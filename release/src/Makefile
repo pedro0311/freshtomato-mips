@@ -316,19 +316,7 @@ ifeq ($(WNDR),y)
 	# and tee only reads from stdout (not stderr)
 	@echo "*********************** Convert TRX to CHK (add Netgear Checksum) ************************" >>fpkg.log
 	# Make multiple versions / files, as file is HW specific (HW information is captured in the .chk file itself!)
- ifeq ($(USBAP),)
-	# Make WNDR3700v3, Checksum starts at 0x6FFFF8 => Max size (to not touch the last 64kB block) = 7274496
-	@$(SRCBASE)/wnrtool/mkchkimg -o image/freshtomato-WNDR3700v3-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).chk \
-	-k image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).trx \
-	-b U12H194T00_NETGEAR -r 2 2>&1 | tee -a fpkg.log
-	@$(MAKE) netgear-check MAXFSIZE=7274496 NG_FNAME=image/freshtomato-WNDR3700v3-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).chk
-
-	# Make WNDR3400, Checksum starts at 0x6CFFF8 => Max size (to not touch the last 64kB block) = 7077888
-	@$(SRCBASE)/wnrtool/mkchkimg -o image/freshtomato-WNDR3400-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).chk \
-	-k image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).trx \
-	-b U12H155T00_NETGEAR -r 2 2>&1 | tee -a fpkg.log
-	@$(MAKE) netgear-check MAXFSIZE=7077888 NG_FNAME=image/freshtomato-WNDR3400-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).chk
- else
+ ifeq ($(USBAP),y)
 	# Make WNDR3400v2, Checksum starts at 0x6FFFF8 => Max size (to not touch the last 64kB block) = 7274496
 	@$(SRCBASE)/wnrtool/mkchkimg -o image/freshtomato-WNDR3400v2-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).chk \
 	-k image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).trx \
@@ -340,6 +328,18 @@ ifeq ($(WNDR),y)
 	-k image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).trx \
 	-b U12H208T00_NETGEAR -r 2 2>&1 | tee -a fpkg.log
 	@$(MAKE) netgear-check MAXFSIZE=7274496 NG_FNAME=image/freshtomato-WNDR3400v3-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).chk
+ else
+	# Make WNDR3700v3, Checksum starts at 0x6FFFF8 => Max size (to not touch the last 64kB block) = 7274496
+	@$(SRCBASE)/wnrtool/mkchkimg -o image/freshtomato-WNDR3700v3-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).chk \
+	-k image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).trx \
+	-b U12H194T00_NETGEAR -r 2 2>&1 | tee -a fpkg.log
+	@$(MAKE) netgear-check MAXFSIZE=7274496 NG_FNAME=image/freshtomato-WNDR3700v3-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).chk
+
+	# Make WNDR3400, Checksum starts at 0x6CFFF8 => Max size (to not touch the last 64kB block) = 7077888
+	@$(SRCBASE)/wnrtool/mkchkimg -o image/freshtomato-WNDR3400-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).chk \
+	-k image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).trx \
+	-b U12H155T00_NETGEAR -r 2 2>&1 | tee -a fpkg.log
+	@$(MAKE) netgear-check MAXFSIZE=7077888 NG_FNAME=image/freshtomato-WNDR3400-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).chk
  endif
 	@echo "Cleanup ...."
 	@cp fpkg.log image/fpkg-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2).log
