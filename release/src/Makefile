@@ -1516,9 +1516,9 @@ help:
 	@echo "wndr3400v2-vpn Netgear WNDR3400v2/v3 VPN with wl_high module (dualband support) w/o Samba"
 #	@echo "l600n        Rosewill L600N Build with wl_high module (dualband support)"
 	@echo ""
-	@echo "       Netgear WNDR3400/3700v3 builds
-	@echo "wndr64       Netgear WNDR3400/3700v3 miniIPv6 w/o miniDLNA
-	@echo "wndr64-vpn   Netgear WNDR3400/3700v3 VPN w/o Samba
+	@echo "       Netgear WNDR3400/3700v3 builds"
+	@echo "wndr64       Netgear WNDR3400/3700v3 miniIPv6 w/o miniDLNA"
+	@echo "wndr64-vpn   Netgear WNDR3400/3700v3 VPN w/o Samba"
 	@echo ""
 	@echo "       Netgear WNR3500L v2 builds (128MB Flash)"
 	@echo "v2e          Netgear WNR3500Lv2 build VPN"
