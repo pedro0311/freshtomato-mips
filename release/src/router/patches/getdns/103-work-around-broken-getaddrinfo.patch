@@ -1,6 +1,6 @@
 --- getdns/src/context.c	2018-09-08 17:50:58.784301357 +0200
 +++ getdns/src/context.c	2018-09-08 22:58:16.000000000 +0200
-@@ -2899,7 +2899,7 @@ getdns_context_set_upstream_recursive_se
+@@ -2736,7 +2736,7 @@ getdns_context_set_upstream_recursive_se
  	}
  	memset(&hints, 0, sizeof(struct addrinfo));
  	hints.ai_family    = AF_UNSPEC;      /* Allow IPv4 or IPv6 */
@@ -11,7 +11,7 @@
  	hints.ai_canonname = NULL;
 --- getdns/src/server.c	2018-09-08 17:50:58.796301396 +0200
 +++ getdns/src/server.c	2018-09-08 22:59:43.000000000 +0200
-@@ -970,9 +970,14 @@ getdns_return_t getdns_context_set_liste
+@@ -976,9 +976,14 @@ getdns_return_t getdns_context_set_liste
  	for (i = 0; i < new_set->count; i++)
  		new_set->items[i].fd = -1;
  
