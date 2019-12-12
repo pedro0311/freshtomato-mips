@@ -56,7 +56,7 @@
  }
 --- rp-pppoe/src/pppoe-server.c	2008-06-30 16:00:43.000000000 +0200
 +++ rp-pppoe/src/pppoe-server.c	2018-04-02 00:24:53.000000000 +0200
-@@ -2037,7 +2037,7 @@ startPPPDLinuxKernelMode(ClientSession *
+@@ -2037,12 +2037,12 @@ startPPPDLinuxKernelMode(ClientSession *
      argv[c++] = "default-asyncmap";
      if (PassUnitOptionToPPPD) {
  	argv[c++] = "unit";

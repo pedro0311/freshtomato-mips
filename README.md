@@ -93,5 +93,5 @@ Disclaimer: I am not responsible for any bricked routers, nor do I encourage oth
 
 **WARNING**
 
-To compile n60, rtn53, e2500, e3200, wndr64, wndr64-vpn and f9k targets (RT-N), before compilation you have to revert patch to the kernel: ```$ cd release/src-rt/linux``` ```patch -R -p4 < fix4usbap.patch```
+To compile n60, rtn53, e2500, e3200, wndr3400v2, wndr3400v2-vpn and f9k targets (RT-N), before compilation you have to revert patch to the kernel: ```$ cd release/src-rt/linux``` ```patch -R -p4 < fix4usbap.patch```
 
