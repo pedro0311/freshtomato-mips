@@ -390,9 +390,8 @@ int do_led(int which, int mode)
 	case MODEL_WNR3500L:
 	case MODEL_WNR3500LV2:
 		if (which == LED_DIAG) {
-			/* power led gpio: 0x03 - green, 0x07 - amber */
-			b = (mode) ? 7 : 3;
-			c = (mode) ? 3 : 7;
+			b = 3; /* gpio 3 actice HIGH AND gpio 7 active LOW  ==> result: Power LED on green; for amber --> inverted */
+			c = 7;
 		} else
 			b = wnr3500[which];
 		break;
