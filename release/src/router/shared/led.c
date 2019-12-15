@@ -223,7 +223,7 @@ int do_led(int which, int mode)
 	static int wrt310nv1[]	= { 255,    1,     9,    3,  255,  255,  255,  255,    255};
 	static int wrt160nv1[]	= { 255,    1,     5,    3,  255,  255,  255,  255,    255};
 #ifdef CONFIG_BCMWL5
-	static int wnr3500[]	= { 255,  255,     2,  255,  255,   -1,  255,  255,    255};
+	static int wnr3500[]	= { 255,  255,    -2,  255,  255,   -1,  255,  255,    255};
 	static int wnr2000v2[]	= { 255,  255,   255,  255,  255,   -7,  255,  255,    255};
 	static int wndr4000[]	= {   3,    1,     0,    1,  255,    6,  255,    5,      4};
 	static int wndr3400[]	= {  -9,   -7,    -3,   -7,  255,  255,  255,    2,    -99}; /* Note: 5 = Switch, 4 = Reset button, 8 = SES button */
