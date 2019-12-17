@@ -277,6 +277,7 @@ sub fixDyn
 	fixDynDep("php-cli", "libcurl.so.4.6.0");
 
 	fixDynDep("curl", "libcurl.so.4.6.0");
+	fixDynDep("mdu", "libcurl.so.4.6.0");
 
 #!!TB - Updated Broadcom WL driver
 	fixDynDep("libbcmcrypto.so", "libc.so.0");
