@@ -836,7 +836,11 @@ openssl-install:
 
 mssl:	$(if $(FULL_OPENSSL),openssl,cyassl)
 
+ifneq ($(TCONFIG_BBT)$(TCONFIG_NGINX),)
+mdu:	shared libcurl
+else
 mdu:	shared mssl
+endif
 
 rc: nvram shared
 
