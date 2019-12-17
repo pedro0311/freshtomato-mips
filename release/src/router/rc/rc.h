@@ -278,6 +278,7 @@ extern void stop_nas(void);
 extern void notify_nas(const char *ifname);
 
 /* firewall.c */
+typedef void (*_tf_ipt_write)(const char *format, ... );
 extern wanface_list_t wanfaces;
 extern wanface_list_t wan2faces;
 
@@ -444,13 +445,18 @@ extern void stop_sched(void);
 #define PPTP_CLIENT_TABLE_NAME "PPTP"
 extern void start_pptp_client(void);
 extern void stop_pptp_client(void);
-extern int write_pptpvpn_resolv(FILE*);
+extern void start_pptp_client_eas(void);
+extern void stop_pptp_client_eas(void);
+extern int write_pptp_client_resolv(FILE*);
 extern void clear_pptp_route(void);
 extern int pptpc_ipup_main(int argc, char **argv);
 extern int pptpc_ipdown_main(int argc, char **argv);
+extern void pptp_client_firewall(const char *table, const char *opt, _tf_ipt_write table_writer);
 extern void get_cidr(char *ipaddr, char *netmask, char *cidr);
 #else
-#define write_pptpvpn_resolv(f) (0)
+static inline void start_pptp_client_eas(void) {};
+static inline void stop_pptp_client_eas(void) {};
+#define write_pptp_client_resolv(f) (0)
 #endif
 
 /* nvram */

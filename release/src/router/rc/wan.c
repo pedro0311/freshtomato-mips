@@ -1394,18 +1394,12 @@ void start_wan_done(char *wan_ifname, char *prefix)
 #ifdef TCONFIG_OPENVPN
 			start_ovpn_eas();
 #endif
-			start_adblock(0);
-		}
-
 #ifdef TCONFIG_TINC
-		if (wanup)
 			start_tinc_wanup();
 #endif
-
-#ifdef TCONFIG_PPTPD
-		if (wanup && nvram_get_int("pptp_client_enable"))
-			start_pptp_client();
-#endif
+			start_pptp_client_eas();
+			start_adblock(0);
+		}
 
 		stop_upnp();
 		start_upnp();
@@ -1497,13 +1491,6 @@ void stop_wan(void)
 	stop_tinc();
 #endif
 
-#ifdef TCONFIG_PPTPD
-	stop_pptp_client();
-	stop_dnsmasq();
-	dns_to_resolv();
-	start_dnsmasq();
-#endif
-
 	new_qoslimit_stop();	/* !! RAF */
 	stop_upnp();		/* !!TB - moved from stop_services() */
 	stop_firewall();
@@ -1521,6 +1508,7 @@ void stop_wan(void)
 	stop_ovpn_eas();
 #endif
 
+	stop_pptp_client_eas();
 	stop_adblock();
 	clear_resolv();
 	stop_wan_if("wan");
