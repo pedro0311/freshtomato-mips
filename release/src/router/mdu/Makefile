@@ -10,8 +10,8 @@ LIBS += -L$(TOP)/openssl -lssl -lcrypto
 endif
 
 ifneq ($(TCONFIG_BBT)$(TCONFIG_NGINX),)
-CFLAGS += -DUSE_LIBCURL -I$(TOP)/libcurl/staged/usr/include
-LIBS += -lpthread -L$(TOP)/libcurl/lib/.libs -lcurl
+CFLAGS += -DUSE_LIBCURL -I$(TOP)/libcurl/staged/usr/include -I$(TOP)/zlib
+LIBS += -lpthread -L$(TOP)/libcurl/lib/.libs -lcurl -L$(TOP)/zlib -lz
 else
 CFLAGS+= -I$(TOP)/mssl
 LIBS += -L$(TOP)/mssl -lmssl
