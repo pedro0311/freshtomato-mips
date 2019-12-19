@@ -1,6 +1,6 @@
 --- pppd/chat/chat.c
 +++ pppd/chat/chat.c
-@@ -485,9 +485,15 @@ char *chat_file;
+@@ -485,9 +485,11 @@ char *chat_file;
   */
  void usage()
  {
@@ -8,15 +8,11 @@
      fprintf(stderr, "\
  Usage: %s [-e] [-E] [-v] [-V] [-t timeout] [-r report-file]\n\
       [-T phone-number] [-U phone-number2] {-f chat-file | chat-script}\n", program_name);
-+#else
-+    printf("\
-+Usage: %s [-e] [-E] [-v] [-V] [-t timeout] [-r report-file]\n\
-+     [-T phone-number] [-U phone-number2] {-f chat-file | chat-script}\n", program_name);
 +#endif
      exit(1);
  }
  
-@@ -512,7 +518,11 @@ void msgf __V((const char *fmt, ...))
+@@ -512,7 +514,11 @@ void msgf __V((const char *fmt, ...))
      if (to_log)
  	syslog(LOG_INFO, "%s", line);
      if (to_stderr)
@@ -28,7 +24,7 @@
      va_end(args);
  }
  
-@@ -538,7 +548,11 @@ void fatal __V((int code, const char *fm
+@@ -538,7 +544,11 @@ void fatal __V((int code, const char *fm
      if (to_log)
  	syslog(LOG_ERR, "%s", line);
      if (to_stderr)
@@ -247,16 +243,13 @@
      exit(1);
  }
  
-@@ -720,6 +807,11 @@ char *xstrdup(const char *s)
+@@ -720,6 +807,8 @@ char *xstrdup(const char *s)
  
  void usage(void)
  {
 +#ifdef NO_OPTSIZE
      fprintf(stderr, "Usage: pppoe-discovery [options]\n");
      fprintf(stderr, "\nVersion " RP_VERSION "\n");
-+#else
-+    printf("Usage: pppoe-discovery [options]\n");
-+    printf("\nVersion " RP_VERSION "\n");
 +#endif
  }
 --- pppd/pppd/pppd.h
@@ -272,8 +265,8 @@
  void fatal __P((char *, ...));	/* log an error message and die(1) */
 +#else
 +#define warn(a,...)
-+#define error(a,...) exit (-1)
-+#define fatal(a,...) exit (-2)
++#define error(a,...)
++#define fatal(a,...) die(1)
 +#endif
 +
  void init_pr_log __P((const char *, int)); /* initialize for using pr_log */
@@ -281,19 +274,17 @@
  void end_pr_log __P((void));	/* finish up after using pr_log */
 --- pppd/pppd/srp-entry.c
 +++ pppd/pppd/srp-entry.c
-@@ -85,7 +85,11 @@ static const char *myname;
+@@ -85,7 +85,9 @@ static const char *myname;
  static void
  usage(void)
  {
 +#ifdef NO_OPTSIZE
  	(void) fprintf(stderr, "Usage:\n\t%s [-i index] [clientname]\n",
-+#else
-+	(void) printf("Usage:\n\t%s [-i index] [clientname]\n",
-+#endif
  	    myname);
++#endif
  	exit(1);
  }
-@@ -133,7 +137,11 @@ main(int argc, char **argv)
+@@ -133,7 +135,11 @@ main(int argc, char **argv)
  		tcent = &mytce;
  	}
  	if (tcent == NULL) {

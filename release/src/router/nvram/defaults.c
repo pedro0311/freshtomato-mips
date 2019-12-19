@@ -1197,13 +1197,13 @@ const defaults_t defaults[] = {
 #endif
 
 #ifdef TCONFIG_PPTPD
-	{ "pptp_client_enable",		"0"				},
+	{ "pptp_client_eas",		"0"				},
 	{ "pptp_client_usewan",		"wan"				},
 	{ "pptp_client_peerdns",	"0"				},
 	{ "pptp_client_mtuenable",	"0"				},
-	{ "pptp_client_mtu",		"1450"				},
+	{ "pptp_client_mtu",		"1400"				},
 	{ "pptp_client_mruenable",	"0"				},
-	{ "pptp_client_mru",		"1450"				},
+	{ "pptp_client_mru",		"1400"				},
 	{ "pptp_client_nat",		"0"				},
 	{ "pptp_client_srvip",		""				},
 	{ "pptp_client_srvsub",		"10.0.0.0"			},
@@ -1213,6 +1213,8 @@ const defaults_t defaults[] = {
 	{ "pptp_client_crypt",		"0"				},
 	{ "pptp_client_custom",		""				},
 	{ "pptp_client_dfltroute",	"0"				},
+	{ "pptp_client_stateless",	"1"				},
+	{ "pptpd_chap",			"0"				},	/* 0/1/2 (Auto/MS-CHAPv1/MS-CHAPv2) */
 #endif
 
 #ifdef TCONFIG_TINC
