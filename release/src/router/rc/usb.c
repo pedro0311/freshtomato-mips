@@ -830,23 +830,56 @@ static inline void usbled_proc(char *device, int add)
 	char *p;
 	char param[32];
 
+	DIR *usb1=NULL;
+	DIR *usb2=NULL;
+	DIR *usb3=NULL;
+	DIR *usb4=NULL;
+
 	if (do_led(LED_USB, LED_PROBE) != 255) {
-		strncpy(param, device, sizeof(param));
-		if ((p = strchr(param, ':')) != NULL)
-			*p = 0;
+		if (device != NULL) {
+			strncpy(param, device, sizeof(param));
+			if ((p = strchr(param, ':')) != NULL)
+				*p = 0;
 
-		/* verify if we need to ignore this device (i.e. an internal SD/MMC slot ) */
-		p = nvram_safe_get("usb_noled");
-		if (strcmp(p, param) == 0)
-			return;
+			/* verify if we need to ignore this device (i.e. an internal SD/MMC slot ) */
+			p = nvram_safe_get("usb_noled");
+			if (strcmp(p, param) == 0)
+				return;
+		}
 
-		// Remove legacy approach in the code here - rather, use do_led() function, which is designed to do this
-		// The reason for changing this ... some HW (like Netgear WNDR4000) don't work with direct GPIO write -> use do_led()!
-		//f_write_string(add ? "/proc/leds-usb/add" : "/proc/leds-usb/remove", param, 0, 0);
-		if (add)
-			do_led(LED_USB, LED_ON);
-		else
-			do_led(LED_USB, LED_OFF);
+		usb1 = opendir ("/sys/bus/usb/devices/2-1:1.0");
+		usb2 = opendir ("/sys/bus/usb/devices/2-2:1.0");
+		usb3 = opendir ("/sys/bus/usb/devices/1-1:1.0");
+		usb4 = opendir ("/sys/bus/usb/devices/1-2:1.0");
+
+		if (add) {
+			if (usb1 != NULL) {
+				do_led(LED_USB, LED_ON);	/* USB LED On! */
+				(void) closedir (usb1);
+				usb1 = NULL;
+			}
+			if (usb3 != NULL) {
+				do_led(LED_USB, LED_ON);	/* USB LED On! */
+				(void) closedir (usb3);
+				usb3 = NULL;
+			}
+			if (usb2 != NULL) {
+				do_led(LED_USB, LED_ON);	/* USB LED On! */
+				(void) closedir (usb2);
+				usb2 = NULL;
+			}
+			if (usb4 != NULL) {
+				do_led(LED_USB, LED_ON);	/* USB LED On! */
+				(void) closedir (usb4);
+				usb4 = NULL;
+			}
+		}
+		else {
+			if (usb1 == NULL && usb3 == NULL &&
+			    usb2 == NULL && usb4 == NULL) {
+				do_led(LED_USB, LED_OFF);	/* USB LED Off! */
+			}
+		}
 	}
 }
 
@@ -959,6 +992,10 @@ void hotplug_usb(void)
 		/* Unmount or remount all partitions of the host. */
 		hotplug_usb_storage_device(host < 0 ? -1 : host, add ? -1 : 0,
 			host == -2 ? 0 : EFH_USER);
+
+		if (device == NULL) {
+			usbled_proc(device, add);
+		}
 	}
 	else if (is_block && strcmp(getenv("MAJOR") ? : "", "8") == 0 && strcmp(getenv("PHYSDEVBUS") ? : "", "scsi") == 0) {
 		/* scsi partition */
