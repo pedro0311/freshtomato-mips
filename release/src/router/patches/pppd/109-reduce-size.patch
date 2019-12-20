@@ -38,7 +38,7 @@
  }
 --- pppd/pppd/main.c
 +++ pppd/pppd/main.c
-@@ -1794,7 +1794,11 @@ device_script(program, in, out, dont_wai
+@@ -1802,7 +1802,11 @@ device_script(program, in, out, dont_wai
      setgid(getgid());
      setuid(uid);
      if (getuid() != uid) {
@@ -52,7 +52,7 @@
      update_system_environment();
 --- pppd/pppd/options.c
 +++ pppd/pppd/options.c
-@@ -1069,7 +1069,11 @@ static void
+@@ -1068,7 +1068,11 @@ static void
  usage()
  {
      if (phase == PHASE_INITIALIZE)
@@ -64,7 +64,7 @@
  }
  
  /*
-@@ -1094,7 +1098,11 @@ showversion(argv)
+@@ -1093,7 +1097,11 @@ showversion(argv)
      char **argv;
  {
      if (phase == PHASE_INITIALIZE) {
@@ -76,7 +76,7 @@
  	exit(0);
      }
      return 0;
-@@ -1121,7 +1129,11 @@ option_error __V((char *fmt, ...))
+@@ -1120,7 +1128,11 @@ option_error __V((char *fmt, ...))
      vslprintf(buf, sizeof(buf), fmt, args);
      va_end(args);
      if (phase == PHASE_INITIALIZE)
@@ -90,7 +90,7 @@
  
 --- pppd/pppd/plugins/rp-pppoe/pppoe-discovery.c
 +++ pppd/pppd/plugins/rp-pppoe/pppoe-discovery.c
-@@ -81,7 +81,11 @@ etherType(PPPoEPacket *packet)
+@@ -82,7 +82,11 @@ etherType(PPPoEPacket *packet)
  {
      UINT16_t type = (UINT16_t) ntohs(packet->ethHdr.h_proto);
      if (type != Eth_PPPOE_Discovery && type != Eth_PPPOE_Session) {
@@ -102,7 +102,7 @@
      }
      return type;
  }
-@@ -162,9 +166,17 @@ openInterface(char const *ifname, UINT16
+@@ -163,9 +167,17 @@ openInterface(char const *ifname, UINT16
  	fatalSys("ioctl(SIOCGIFMTU)");
      }
      if (ifr.ifr_mtu < ETH_DATA_LEN) {
@@ -120,7 +120,7 @@
      }
  
  #ifdef HAVE_STRUCT_SOCKADDR_LL
-@@ -267,19 +279,31 @@ parsePacket(PPPoEPacket *packet, ParseFu
+@@ -268,19 +280,31 @@ parsePacket(PPPoEPacket *packet, ParseFu
      UINT16_t tagType, tagLen;
  
      if (PPPOE_VER(packet->vertype) != 1) {
@@ -152,7 +152,7 @@
  	return -1;
      }
  
-@@ -293,7 +317,11 @@ parsePacket(PPPoEPacket *packet, ParseFu
+@@ -294,7 +318,11 @@ parsePacket(PPPoEPacket *packet, ParseFu
  	    return 0;
  	}
  	if ((curTag - packet->payload) + tagLen + TAG_HDR_SIZE > len) {
@@ -164,7 +164,7 @@
  	    return -1;
  	}
  	func(tagType, tagLen, curTag+TAG_HDR_SIZE, extra);
-@@ -547,7 +575,11 @@ waitForPADO(PPPoEConnection *conn, int t
+@@ -548,7 +576,11 @@ waitForPADO(PPPoEConnection *conn, int t
  
  	/* Check length */
  	if (ntohs(packet.length) + HDR_SIZE > len) {
@@ -176,7 +176,7 @@
  		   (unsigned int) ntohs(packet.length));
  	    continue;
  	}
-@@ -567,18 +603,30 @@ waitForPADO(PPPoEConnection *conn, int t
+@@ -568,18 +604,30 @@ waitForPADO(PPPoEConnection *conn, int t
  
  	if (packet.code == CODE_PADO) {
  	    if (BROADCAST(packet.ethHdr.h_source)) {
@@ -207,7 +207,7 @@
  		continue;
  	    }
  	    conn->numPADOs++;
-@@ -623,7 +707,11 @@ discovery(PPPoEConnection *conn)
+@@ -624,7 +708,11 @@ discovery(PPPoEConnection *conn)
      do {
  	padiAttempts++;
  	if (padiAttempts > MAX_PADI_ATTEMPTS) {
@@ -219,7 +219,7 @@
  	    close(conn->discoverySocket);
  	    conn->discoverySocket = -1;
  	    return;
-@@ -659,7 +738,11 @@ int main(int argc, char *argv[])
+@@ -660,7 +739,11 @@ int main(int argc, char *argv[])
  	case 'D':
  	    conn->debugFile = fopen(optarg, "w");
  	    if (!conn->debugFile) {
@@ -231,7 +231,7 @@
  			optarg, strerror(errno));
  		exit(1);
  	    }
-@@ -695,7 +778,11 @@ int main(int argc, char *argv[])
+@@ -696,7 +779,11 @@ int main(int argc, char *argv[])
  
  void rp_fatal(char const *str)
  {
@@ -243,7 +243,7 @@
      exit(1);
  }
  
-@@ -720,6 +807,8 @@ char *xstrdup(const char *s)
+@@ -721,6 +808,8 @@ char *xstrdup(const char *s)
  
  void usage(void)
  {

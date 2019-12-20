@@ -8,13 +8,13 @@
 +COPTS = -Os -pipe -Wall -g -ffunction-sections -fdata-sections
  LIBS =
  
- # Uncomment the next 2 lines to include support for Microsoft's
-@@ -172,7 +172,7 @@ endif
+ # Uncomment the next line to include support for Microsoft's
+@@ -183,7 +183,7 @@ endif
  
  ifdef PLUGIN
  CFLAGS	+= -DPLUGIN
--LDFLAGS	+= -Wl,-E
-+LDFLAGS	+= -Wl,-E -ffunction-sections -fdata-sections -Wl,--gc-sections
+-LDFLAGS_PLUGIN	+= -Wl,-E
++LDFLAGS_PLUGIN	+= -Wl,-E -ffunction-sections -fdata-sections -Wl,--gc-sections
  LIBS	+= -ldl
  endif
  
