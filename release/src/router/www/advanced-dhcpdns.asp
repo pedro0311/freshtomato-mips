@@ -39,7 +39,9 @@ function verifyFields(focused, quiet) {
 	if ((b) && (!v_range('_f_dhcpd_slt', quiet, 1, 43200))) return 0;
 	if (!v_length('_dnsmasq_custom', quiet, 0, 2048)) return 0;
 	if (!v_range('_dhcpd_lmax', quiet, 1, 0xFFFF)) return 0;
+/* IPV6-BEGIN */
 	if (!v_range('_f_ipv6_lease_time', quiet, 1, 720)) return 0;
+/* IPV6-END */
 	if (!v_length('_dhcpc_custom', quiet, 0, 80)) return 0;
 	return 1;
 }
@@ -67,14 +69,18 @@ function save() {
 /* TOR-BEGIN */
 	fom.dnsmasq_onion_support.value = E('_f_dnsmasq_onion_support').checked ? '1' : '0';
 /* TOR-END */
+/* IPV6-BEGIN */
 	fom.ipv6_radvd.value = E('_f_ipv6_radvd').checked ? '1' : '0';
 	fom.ipv6_dhcpd.value = E('_f_ipv6_dhcpd').checked ? '1' : '0';
 	fom.ipv6_lease_time.value = E('_f_ipv6_lease_time').value;
+/* IPV6-END */
 
 	fom.dnsmasq_q.value = 0;
 	if (fom.f_dnsmasq_q4.checked) fom.dnsmasq_q.value |= 1;
+/* IPV6-BEGIN */
 	if (fom.f_dnsmasq_q6.checked) fom.dnsmasq_q.value |= 2;
 	if (fom.f_dnsmasq_qr.checked) fom.dnsmasq_q.value |= 4;
+/* IPV6-END */
 
 	if (fom.dhcpc_minpkt.value != nvram.dhcpc_minpkt ||
 	    fom.dhcpc_custom.value != nvram.dhcpc_custom) {
@@ -151,9 +157,11 @@ function init() {
 <input type="hidden" name="dhcpc_minpkt">
 <input type="hidden" name="dhcpd_static_only">
 <input type="hidden" name="dnsmasq_debug">
+/* IPV6-BEGIN */
 <input type="hidden" name="ipv6_radvd">
 <input type="hidden" name="ipv6_dhcpd">
 <input type="hidden" name="ipv6_lease_time">
+/* IPV6-END */
 <input type="hidden" name="dnsmasq_q">
 /* TOR-BEGIN */
 <input type="hidden" name="dnsmasq_onion_support">
@@ -179,12 +187,16 @@ createFieldTable('', [
 			value: (nvram.dhcpd_slt < 1) ? nvram.dhcpd_slt : 1 },
 		{ name: 'f_dhcpd_slt', type: 'text', maxlen: 5, size: 8, prefix: '<span id="_dhcpd_sltman"> ', suffix: ' <i>(minutes)<\/i><\/span>',
 			value: (nvram.dhcpd_slt >= 1) ? nvram.dhcpd_slt : 3600 } ] },
+/* IPV6-BEGIN */
 	{ title: 'Announce IPv6 on LAN (SLAAC)', name: 'f_ipv6_radvd', type: 'checkbox', value: nvram.ipv6_radvd == '1' },
 	{ title: 'Announce IPv6 on LAN (DHCP)', name: 'f_ipv6_dhcpd', type: 'checkbox', value: nvram.ipv6_dhcpd == '1' },
 	{ title: 'DHCP IPv6 lease time', name: 'f_ipv6_lease_time', type: 'text', maxlen: 3, size: 8, suffix: ' <small> (in hours)<\/small>', value: nvram.ipv6_lease_time || 12 },
+/* IPV6-END */
 	{ title: 'Mute dhcpv4 logging', name: 'f_dnsmasq_q4', type: 'checkbox', value: (nvram.dnsmasq_q & 1) },
+/* IPV6-BEGIN */
 	{ title: 'Mute dhcpv6 logging', name: 'f_dnsmasq_q6', type: 'checkbox', value: (nvram.dnsmasq_q & 2) },
 	{ title: 'Mute RA logging', name: 'f_dnsmasq_qr', type: 'checkbox', value: (nvram.dnsmasq_q & 4) },
+/* IPV6-END */
 	{ title: '<a href="http://www.thekelleys.org.uk/" class="new_window">Dnsmasq<\/a><br />Custom configuration', name: 'dnsmasq_custom', type: 'textarea', value: nvram.dnsmasq_custom }
 ]);
 </script>
