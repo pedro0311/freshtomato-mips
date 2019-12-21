@@ -58,7 +58,9 @@ endif
 	install -m 0700 ethstate $(INSTALLDIR)/usr/sbin
 
 #stealthMode
+ifneq ($(TCONFIG_OPTIMIZE_SIZE_MORE),y)
 	install -m 0700 stealthMode $(INSTALLDIR)/usr/sbin
+endif
 
 #MOTD
 	install -m 0700 mymotd $(INSTALLDIR)/usr/sbin
