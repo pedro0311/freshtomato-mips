@@ -1195,7 +1195,7 @@ const defaults_t defaults[] = {
 
 #ifdef TCONFIG_PPTPD
 	{ "pptp_client_eas",		"0"				},
-	{ "pptp_client_usewan",		"wan"				},
+	{ "pptp_client_usewan",		"none"				},
 	{ "pptp_client_peerdns",	"0"				},
 	{ "pptp_client_mtuenable",	"0"				},
 	{ "pptp_client_mtu",		"1400"				},
