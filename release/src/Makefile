@@ -797,6 +797,11 @@ j:
 	@$(MAKE) bin USB="" B=V MULTIWAN=y NO_CIFS=y NO_ZEBRA=y NO_JFFS=y OPENVPN=y OPTIMIZE_SIZE_MORE=y KERN_SIZE_OPT_MORE=y BUILD_DESC="MiniVPN"
 
 
+## MiniVPN2 - for 4MB routers
+j2:
+	@$(MAKE) bin USB="" B=V MULTIWAN=y NO_CIFS=y NO_ZEBRA=y NO_JFFS=y PPTPD=y OPTIMIZE_SIZE_MORE=y KERN_SIZE_OPT_MORE=y BUILD_DESC="MiniVPN2"
+
+
 ## IPv6-VPN with no USB support
 v:
 	@$(MAKE) bin USB="" B=V MULTIWAN=y NO_JFFS=y IPV6SUPP=y OPENVPN=y PPTPD=y BUILD_DESC="IPv6-$(VPN)"
@@ -853,6 +858,9 @@ r2i:
 
 r2j:
 	@$(MAKE) j MIPS32=r2 NVRAM_SIZE=32
+
+r2j2:
+	@$(MAKE) j2 MIPS32=r2 NVRAM_SIZE=32
 
 r2v:
 	@$(MAKE) v MIPS32=r2 NVRAM_SIZE=32
@@ -960,7 +968,8 @@ help:
 	@echo "o            Mega-VPN - (Mega plus VPN plus NOCAT minus NFS)"
 	@echo "z            MIPS Release 15F AIO (for routers +8MB flash)"
 	@echo "i            MiniIPv6 - (IPv6 with no USB support minus CIFS and RIPv1/2)"
-	@echo "j            MiniVPN - (VPN with no USB support minus CIFS and RIPv1/2)"
+	@echo "j            MiniVPN - (OpenVPN with no USB support minus CIFS and RIPv1/2)"
+	@echo "j2           MiniVPN - (PPTPD with no USB support minus CIFS and RIPv1/2)"
 	@echo "a            MiniVPN - (with USB support)"
 	@echo "f            Mini - (no USB support minus CIFS and RIPv1/2)"
 	@echo "v            IPv6-VPN (no usb) - (VPN with no USB support)"
@@ -979,7 +988,8 @@ help:
 	@echo "r2v          MIPS Release 2 IPv6-VPN (no usb)"
 	@echo "r2m          MIPS Release 2 Max (no usb)"
 	@echo "r2i          MIPS Release 2 MiniIPv6 (for 4MB flash)"
-	@echo "r2j          MIPS Release 2 MiniVPN (for 4MB flash)"
+	@echo "r2j          MIPS Release 2 MiniVPN (OpenVPN; for 4MB flash)"
+	@echo "r2j2         MIPS Release 2 MiniVPN (PPTPD; for 4MB flash)"
 	@echo "r2f          MIPS Release 2 Mini (for netgear)"
 	@echo ""
 	@echo "n60e         Linksys E-series build VPN"
