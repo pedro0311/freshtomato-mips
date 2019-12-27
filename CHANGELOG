@@ -3,6 +3,71 @@ FreshTomato-MIPS Changelog
 
 
 
+2019.4          2019.12.29
+--------------------------
+
+- kernel RT-AC: fix MultiWAN support that seems broken since few release (thanks @tvlz for pointing this out)
+- dnsmasq: update to 7d04e17 (2019.12.12) snapshot
+- accel-pptp: various fixes and updates; (forgotten commit from RT-AC branch)
+- pptpd: update poptop to 3b7a80c (2019.10.14) snapshot
+- ebtables: up version to 2.0.11
+- libusb: fixes from upstream 
+- tor: update to 0.4.2.5
+- nano: update to 4.6
+- php: update to 7.2.26
+- libjson-c: update to d6b968d (2019.12.13) snapshot
+- libexif: update to da025b3 (2019.12.13) snapshot
+- libubox: update to 07413cc (2019.11.24) snapshot
+- usb-modeswitch: update to 2.6.0
+- usb_modeswitch: update data package to 20191128
+- pppd: fixes/updates from upstream
+- adminer: update to 4.7.5
+- DDNS: add dns.he.net DDNS support 
+- DDNS: use libcurl if available for DDNS 
+- mdu: libs optimization (added lately libcurl)
+- mdu: fixes and improvements
+- pppd: merge patches 109-fixes-from-upstream and 110-various-fixes-for-errors-found-by-coverity-static-analysis with the sources
+- pppd: fix build break with opensssl
+- busybox: add CONFIG_FEATURE_NETSTAT_PRG to configuration, for netstat -p functionality
+- NFS: fix connection problems: "nfsd: unable to resolve ANYADDR:nfs: Servname not supported for ai_socktype"
+- nvram utility: fix unwanted new line in output when variable in nvram is set but empty (fixes problems with e.g: “nvram get VAR | wc -l”)
+- TTBv2: add local storage and custom URL support for routers with USB support (based on @rs232 commit)
+- VPN PPTP: changes and improvements - tested on Android and MIPS/ARM routers in different configurations, working (both: lan access and internet)
+- dropbear: build back with “Remote Forwarding” support (only for server) 
+- GUI: Hide references to TOR on advanced-dhcpdns.asp if image was built without it
+- GUI: PPTP Client Configuration: fix problems with “Start/Stop Now” button
+- GUI: OpenVPN Client: cosmetic; (as suggested by @rs232: https://www.linksysinfo.org/index.php?threads/fork-freshtomato-arm-development-thread.74117/post-309967)
+- GUI: Hide options for IPv6 on advanced-dhcpdns.asp if image was built without it
+- GUI: add Model Name to the header
+- patches: fix pppd patch (111-reduce-size); (call to log errors or warnings resulted in unwanted termination of pppd)
+- patches: portmap: fix patch
+- Makefile: fix “make help” - add missing quotation marks
+- Makefile: change to using Stubby instead of Dnscrypt for all builds
+- Makefile: add 'j2/r2j2' (MiniVPN2) targets - with PPTPD instead of OpenVPN
+- router: Makefile: pppd: build pppd with openssl support only if ‘full’ version is compiled
+- router: Makefile: do not add /rom/etc/vpn to image
+- router: Makefile: dnsmasq: build with NO_TFTP and NO_SCRIPT also for bigger targets, to reduce size
+- router: accel-pptp: fix some warnings from code analyzer
+- router: mdu: Makefile: fix build break, caused by commit #14def07; (also fix two compiler warnings)
+- router: mdu: fix missing User-Agent curl header
+- router: others: sysinfo: add -p switch to netstat (thanks @tvlz)
+- router: others: Makefile: remove stealthMode script for very small targets / images (save ~5,5 KB space)
+- router: www: vpn-pptp.asp: fix annoying bug that clicking “Start Now” causing pop-up window with warning “Unsaved changes will be lost. Continue anyway?”
+- router: rc: Makefile: - add missing NVRAM option to save space in NVRAM and reduce image size a little bit
+- router: rc: pptp_client.c: fix the inability to enable pptp when “Start with WAN” is unchecked
+- router: rc: pptpd.c: add interface ppp1* to dnsmasq config (only for DNS); (fix for: PPTP Client Android 9 cellphone/smartphone can now successfully connect and use the tunnel)
+- router: rc: pptpd.c: add interfaces vlan* and eth* to dnsmasq config (only for DNS); (fix for: PPTP Client Android 9 cellphone/smartphone can now successfully connect and can access local lan / samba / et cetera)
+- router: rc: services.c: c: Add WPAD DHCP option for Win7/8 by default if dhcpd_auth >=0 is fixed in nvram
+- router: rc: usb.c: set USB LED after saving settings (case web admin)
+- router: www: tomato.js: cosmetics (thanks @tvlz)
+- router: www: tools-survey.asp: cosmetic (thanks @tvlz)
+- Revert “hiding nvram size summary when displaying mymotd” (Not needed in the mips branch)
+- Revert “accel-pptp: change code optimization from -O2 to -Os to save some space”
+- Tenda N60: fix reboot when saving settings (Issue #7)
+- WNR3500L/v2: change LED table and adjust WAN / Internet LED
+- WNR3500L/v2: change LED table and adjust LED DIAG (Power LED)
+
+
 2019.3          2019.11.23
 --------------------------
 
@@ -53,6 +118,7 @@ FreshTomato-MIPS Changelog
 - router: www: about.asp: add BT donation address to the page + cosmetics
 - Linksys WRT54G/GS/GL: assign unique MAC address for 2.4 GHz WiFi, was always 00:90:4C:5F:00:2A after upgrade/nvram full erase (for every router)
 - Linksys E2000: correct order of the ports on status and advanced-vlan pages
+
 
 2019.3-220-beta 2019.09.29
 --------------------------
