@@ -12,6 +12,7 @@
 #include <time.h>
 #include <arpa/inet.h>
 
+
 //#define DLOG(args...) syslog(LOG_DEBUG, args)
 #define DLOG(fmt, args...) _dprintf(fmt"\n", args)
 
@@ -104,7 +105,7 @@ static void update(int num, int *dirty, int force)
 	}
 
 	if (ip[0] == '@') {
-		if ((strcmp(serv, "zoneedit") == 0) || (strcmp(serv, "tzo") == 0) || (strcmp(serv, "noip") == 0) || (strcmp(serv, "dnsomatic") == 0)) {
+		if ((strcmp(serv, "zoneedit") == 0) || (strcmp(serv, "noip") == 0) || (strcmp(serv, "dnsomatic") == 0) || (strcmp(serv, "pairdomains") == 0) || (strcmp(serv, "changeip") == 0)) {
 			strcpy(ip + 1, serv);
 		}
 		else {
