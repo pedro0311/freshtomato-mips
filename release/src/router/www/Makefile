@@ -328,6 +328,7 @@ endif
 ifneq ($(TCONFIG_IPERF),y)
 	rm -f $(INSTALLDIR)/www/tools-iperf.asp
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/IPERF-BEGIN/,/IPERF-END/d"
+	sed -i $(INSTALLDIR)/www/about.asp -e "/IPERF-BEGIN/,/IPERF-END/d"
 endif
 
 # Only include the https option if it is compiled in
@@ -349,6 +350,7 @@ endif
 ifneq ($(TCONFIG_TERMLIB),y)
 	rm -f $(INSTALLDIR)/www/termlib_min.js
 	sed -i $(INSTALLDIR)/www/tools-shell.asp -e "/TERMLIB-BEGIN/,/TERMLIB-END/d"
+	sed -i $(INSTALLDIR)/www/about.asp -e "/TERMLIB-BEGIN/,/TERMLIB-END/d"
 else
 	sed -i $(INSTALLDIR)/www/tools-shell.asp -e "/TERMLIB0-BEGIN/,/TERMLIB0-END/d"
 endif
@@ -418,6 +420,7 @@ endif
 		-e "/TERMLIB0-BEGIN/d"	-e "/TERMLIB0-END/d"\
 		-e "/OPTSIZE-BEGIN/d"	-e "/OPTSIZE-END/d" \
 		-e "/SIZEOPTMORE-BEGIN/d" -e "/SIZEOPTMORE-END/d" \
+		-e "/IPERF-BEGIN/d"	-e "/IPERF-END/d" \
 		|| true; \
 	done
 

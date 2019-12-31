@@ -271,6 +271,25 @@ Linux kernel <% version(2); %> and Broadcom Wireless Driver <% version(3); %><br
 - Revised IP/MAC Bandwidth Limiter<br/>
 <br/>
 
+<b>"mobrembski" feature:</b><br/>
+<!-- USB-BEGIN -->
+- WWAN modem status<br/>
+- WWAN SMS Inbox support<br/>
+<!-- USB-END -->
+<!-- IPERF-BEGIN -->
+- IPerf integration<br/>
+<!-- IPERF-END -->
+<!-- TERMLIB-BEGIN -->
+- termlib based system command line<br/>
+<!-- TERMLIB-END -->
+<!-- OPENVPN-BEGIN -->
+- OpenVPN client config generator<br/>
+<!-- OPENVPN-END -->
+- Build progress indicator
+<br/>
+<i>Copyright (C) 2017-2019 Michał Obrembski</i><br/>
+<a href="mailto:michal.o@szerszen.com">michal.o@szerszen.com</a><br/>
+
 <b>Special thanks:</b><br/>
 We want to express our gratitude to all people not mentioned here but contributed with patches, new models additions, bug solving and updates to Tomato firmware.<br/>
 <br/>
