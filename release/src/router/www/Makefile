@@ -424,6 +424,19 @@ endif
 		|| true; \
 	done
 
+# Make sure old and debugging crap is gone
+	@rm -f $(INSTALLDIR)/www/debug.js
+	@rm -f $(INSTALLDIR)/www/*-x.*
+	@rm -f $(INSTALLDIR)/www/*-old.*
+	@rm -f $(INSTALLDIR)/www/color.css
+
+	chmod 0644 $(INSTALLDIR)/www/*
+
+# Remove C-style comments from java, asp and css files. All "control" comments have been processed by now.
+	for F in $(wildcard *.js *.jsx *.asp *.css); do \
+		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/remcoms2.sh $(INSTALLDIR)/www/$$F c; \
+	done
+
 # Use HTML compressor to compress HTML as much as possible
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp ); do \
@@ -440,17 +453,4 @@ endif
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.css ); do \
 		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/tools/bin/uglifycss $$F --output $$F || true; \
-	done
-
-# Make sure old and debugging crap is gone
-	@rm -f $(INSTALLDIR)/www/debug.js
-	@rm -f $(INSTALLDIR)/www/*-x.*
-	@rm -f $(INSTALLDIR)/www/*-old.*
-	@rm -f $(INSTALLDIR)/www/color.css
-
-	chmod 0644 $(INSTALLDIR)/www/*
-
-# Remove C-style comments from java, asp and css files. All "control" comments have been processed by now.
-	for F in $(wildcard *.js *.jsx *.asp *.css); do \
-		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/remcoms2.sh $(INSTALLDIR)/www/$$F c; \
 	done
