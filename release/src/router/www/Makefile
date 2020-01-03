@@ -318,6 +318,7 @@ endif
 ifneq ($(TCONFIG_IPERF),y)
 	rm -f $(INSTALLDIR)/www/tools-iperf.asp
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/IPERF-BEGIN/,/IPERF-END/d"
+	sed -i $(INSTALLDIR)/www/about.asp -e "/IPERF-BEGIN/,/IPERF-END/d"
 endif
 
 # Only include the https option if it is compiled in
@@ -339,6 +340,7 @@ endif
 ifneq ($(TCONFIG_TERMLIB),y)
 	rm -f $(INSTALLDIR)/www/termlib_min.js
 	sed -i $(INSTALLDIR)/www/tools-shell.asp -e "/TERMLIB-BEGIN/,/TERMLIB-END/d"
+	sed -i $(INSTALLDIR)/www/about.asp -e "/TERMLIB-BEGIN/,/TERMLIB-END/d"
 else
 	sed -i $(INSTALLDIR)/www/tools-shell.asp -e "/TERMLIB0-BEGIN/,/TERMLIB0-END/d"
 endif
@@ -406,7 +408,21 @@ endif
 		-e "/TERMLIB0-BEGIN/d"	-e "/TERMLIB0-END/d"\
 		-e "/OPTSIZE-BEGIN/d"	-e "/OPTSIZE-END/d" \
 		-e "/SIZEOPTMORE-BEGIN/d" -e "/SIZEOPTMORE-END/d" \
+		-e "/IPERF-BEGIN/d"	-e "/IPERF-END/d" \
 		|| true; \
+	done
+
+# Make sure old and debugging crap is gone
+	@rm -f $(INSTALLDIR)/www/debug.js
+	@rm -f $(INSTALLDIR)/www/*-x.*
+	@rm -f $(INSTALLDIR)/www/*-old.*
+	@rm -f $(INSTALLDIR)/www/color.css
+
+	chmod 0644 $(INSTALLDIR)/www/*
+
+# Remove C-style comments from java, asp and css files. All "control" comments have been processed by now.
+	for F in $(wildcard *.js *.jsx *.asp *.css); do \
+		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/remcoms2.sh $(INSTALLDIR)/www/$$F c; \
 	done
 
 # Use HTML compressor to compress HTML as much as possible
@@ -425,17 +441,4 @@ endif
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.css ); do \
 		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/tools/bin/uglifycss $$F --output $$F || true; \
-	done
-
-# Make sure old and debugging crap is gone
-	@rm -f $(INSTALLDIR)/www/debug.js
-	@rm -f $(INSTALLDIR)/www/*-x.*
-	@rm -f $(INSTALLDIR)/www/*-old.*
-	@rm -f $(INSTALLDIR)/www/color.css
-
-	chmod 0644 $(INSTALLDIR)/www/*
-
-# Remove C-style comments from java, asp and css files. All "control" comments have been processed by now.
-	for F in $(wildcard *.js *.jsx *.asp *.css); do \
-		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/remcoms2.sh $(INSTALLDIR)/www/$$F c; \
 	done
