@@ -254,7 +254,7 @@
  }
 --- pppd/pppd/pppd.h
 +++ pppd/pppd/pppd.h
-@@ -541,9 +541,17 @@ size_t strlcat __P((char *, const char *
+@@ -543,9 +543,17 @@ size_t strlcat __P((char *, const char *
  void dbglog __P((char *, ...));	/* log a debug message */
  void info __P((char *, ...));	/* log an informational message */
  void notice __P((char *, ...));	/* log a notice-level message */
