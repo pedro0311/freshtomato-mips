@@ -1,34 +1,31 @@
 --- miniupnpd/genconfig.sh
 +++ miniupnpd/genconfig.sh
-@@ -99,7 +99,7 @@ fi
- # Tomato USB special case
+@@ -96,11 +96,11 @@ if [ -f ./os.astlinux ]; then
+ 	OS_VERSION=$(cat ./os.astlinux)
+ fi
+ 
+-# Tomato USB special case
++# Tomato special case
  if [ -f ../shared/tomato_version ]; then
  	OS_NAME=Tomato
 -	TOMATO_VER=`cat ../shared/tomato_version | cut -d' ' -f2,3`
+-	OS_VERSION="Tomato $TOMATO_VER"
 +	TOMATO_VER=`cat ../shared/tomato_version | cut -d' ' -f1,2`
- 	OS_VERSION="Tomato $TOMATO_VER"
++	OS_VERSION="FreshTomato $TOMATO_VER"
  fi
  
---- miniupnpd/Makefile.linux
-+++ miniupnpd/Makefile.linux
-@@ -28,7 +28,7 @@ CFLAGS ?= -Os
- CFLAGS += -fno-common
- CFLAGS += -fstack-protector -fPIE
- CFLAGS += -D_FORTIFY_SOURCE=2
--CPPFLAGS += -D_GNU_SOURCE
-+CFLAGS += -D_GNU_SOURCE
- CFLAGS += -Wall
- CFLAGS += -Wextra -Wstrict-prototypes -Wdeclaration-after-statement
- #CFLAGS += -Wno-missing-field-initializers
-@@ -166,7 +166,7 @@ LDLIBS += $(shell $(PKG_CONFIG) --static
- 
- # OpenWrt packager disables https server for IGD v2 and hardcodes libuuid support
- ifeq ($(TARGET_OPENWRT),)
--LDLIBS += $(shell $(PKG_CONFIG) --static --libs-only-l libssl)
-+#LDLIBS += $(shell $(PKG_CONFIG) --static --libs-only-l libssl)
- 
- TEST := $(shell $(PKG_CONFIG) --exists uuid && echo 1)
- ifeq ($(TEST),1)
+ ${RM} ${CONFIGFILE}
+@@ -352,8 +352,8 @@ case $OS_NAME in
+ 		FW=iptables
+ 		;;
+ 	Tomato)
+-		OS_NAME=UPnP
+-		OS_URL=http://tomatousb.org/
++		OS_NAME=FreshTomato
++		OS_URL=https://freshtomato.org/
+ 		echo "" >> ${CONFIGFILE}
+ 		echo "#ifndef TOMATO" >> ${CONFIGFILE}
+ 		echo "#define TOMATO" >> ${CONFIGFILE}
 --- miniupnpd/netfilter/iptcrdr.c
 +++ miniupnpd/netfilter/iptcrdr.c
 @@ -14,8 +14,8 @@
@@ -41,17 +38,15 @@
  #include <libiptc/libiptc.h>
  
  #include <linux/version.h>
-@@ -31,8 +31,8 @@
+@@ -31,7 +31,7 @@
  #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]) + __must_be_array(arr))
  #define LIST_POISON2  ((void *) 0x00200200 )
  
 -#if 0
--#include <linux/netfilter/nf_nat.h>
 +#if 1
-+#include "../../iptables-1.4.x/include/net/netfilter/nf_nat.h"
+ #include <linux/netfilter/nf_nat.h>
  #else
  #include "tiny_nf_nat.h"
- #endif
 @@ -44,7 +44,7 @@
  #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)
  #include <linux/netfilter_ipv4/ip_nat.h>
@@ -61,3 +56,14 @@
  #include <linux/netfilter/nf_nat.h>
  #else
  #include "tiny_nf_nat.h"
+--- miniupnpd/netfilter/iptpinhole.c
++++ miniupnpd/netfilter/iptpinhole.c
+@@ -20,7 +20,7 @@
+ 
+ #ifdef ENABLE_UPNPPINHOLE
+ 
+-#include <xtables.h>
++#include <iptables.h>
+ #include <libiptc/libip6tc.h>
+ #include "tiny_nf_nat.h"
+ 
