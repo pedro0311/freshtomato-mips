@@ -157,10 +157,18 @@ int buttons_main(int argc, char *argv[])
 		ses_mask = 1 << 21;
 		ses_led = LED_AOSS;
 		break;
-	case MODEL_RTN12:
+	case MODEL_RTN12A1:
 		reset_mask = 1 << 1;
 		ses_mask = 1 << 0;
 		brau_mask = (1 << 4) | (1 << 5) | (1 << 6);
+		break;
+	case MODEL_RTN12B1:
+	case MODEL_RTN12C1:
+	case MODEL_RTN12D1:
+	case MODEL_RTN12VP:
+		reset_mask = 1 << 22; /* reset button (active LOW) */
+		ses_mask = 1 << 23; /* wps button (active LOW) */
+		ses_led = LED_AOSS; /* Use LED AOSS (Power LED for Asus Router) for feedback if a button is pushed */
 		break;
 	case MODEL_RTN15U:
 		reset_mask = 1 << 5;
@@ -456,7 +464,7 @@ int buttons_main(int argc, char *argv[])
 				brau_flag = 0;
 				switch (nvram_get_int("btn_override") ? MODEL_UNKNOWN : model) {
 #ifdef CONFIG_BCMWL5
-				case MODEL_RTN12:
+				case MODEL_RTN12A1:
 					p = (brau_state & (1 << 4)) ? "ap" : (brau_state & (1 << 5)) ? "repeater" : "router";
 					break;
 #endif

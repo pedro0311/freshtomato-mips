@@ -85,8 +85,8 @@ Ovislink WL1600GL		HW_BCM5354G           0x048E        8        0x11
 
 RT-N16				BCM4718               0x04cf       45        0x1218    0x0310      hardware_version=RT-N16-00-07-01-00 regulation_domain=0X10US sdram_init=0x419
 RT-N15U				BCM5357               0x052b       45        0x1204    0x80001710|0x1000
-RT-N12				BCM4716               0x04cd       45        0x1201    0x????
-RT-N12B1			BCM5357               0x054d       45        0x1101    0x710
+RT-N12A1			BCM4716               0x04cd       45        0x1201    0x????
+RT-N12B1			BCM5357               0x054d       45        0x1101    0x710 // Version B1 / C1 / D1 --> all the same hw basicly; use nvram "hardware_version" to distinguish!
 RT-N10				BCM5356               0x04ec       45        0x1402    0x????
 RT-N10U				BCM5357               0x0550       45        0x1102    0x710
 RT-N10P				BCM53572              0x058e       45        0x1153    0x710
@@ -492,7 +492,10 @@ int get_model(void)
 		case HW_BCM5357:
 			if (nvram_match("boardrev", "0x1102")) return MODEL_RTN10U;
 			if (nvram_match("boardrev", "0x1153")) return MODEL_RTN10P;
-			if (nvram_match("boardrev", "0x1101")) return MODEL_RTN12B1;
+			if (strncmp(nvram_safe_get("hardware_version"), "RTN12B1", 7) == 0) return MODEL_RTN12B1;
+			if (strncmp(nvram_safe_get("hardware_version"), "RTN12C1", 7) == 0) return MODEL_RTN12C1;
+			if (strncmp(nvram_safe_get("hardware_version"), "RTN12D1", 7) == 0) return MODEL_RTN12D1;
+			if (strncmp(nvram_safe_get("hardware_version"), "RTN12VP", 7) == 0) return MODEL_RTN12VP;
 			if (nvram_match("boardrev", "0x1204")) return MODEL_RTN15U;
 			if (nvram_match("boardrev", "0x1442")) return MODEL_RTN53;
 			break;
@@ -500,7 +503,7 @@ int get_model(void)
 			if (nvram_match("boardrev", "0x1446")) return MODEL_RTN53A1;
 			break;
 		case HW_BCM4716:
-			if (nvram_match("boardrev", "0x1201")) return MODEL_RTN12;
+			if (nvram_match("boardrev", "0x1201")) return MODEL_RTN12A1;
 			break;
 		case HW_BCM4718:
 			if (nvram_match("boardrev", "0x1218")) return MODEL_RTN16;

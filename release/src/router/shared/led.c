@@ -238,7 +238,10 @@ int do_led(int which, int mode)
 	static int e4200[]	= { 255,    3,     5,  255,  255,  255,  255,  255,    255};
 	static int rtn10u[]	= { 255,  255,   255,  255,  255,   -7,  255,   -8,    255};
 	static int rtn10p[]	= { 255,   -6,   255,  255,  255,   -7,  255,  255,    255};
-	static int rtn12b1[]	= {  -5,  255,   255,  255,  255,  255,  255,  225,    255};
+	static int rtn12a1[]	= { 255,  255,   255,  255,  255,   -2,  255,  225,    255};
+	static int rtn12b1[]	= {  -5,  255,     4,  255,  255,  -18,  255,  225,    255};
+	static int rtn12c1[]	= {  -4,  255,     5,  255,  255,  -18,  255,  225,    255};
+	static int rtn12d1[]	= {  -5,  255,   255,  255,  255,  -18,  255,  225,    255};
 	static int rtn15u[]	= {  -1,  255,     3,  255,  255,   -6,    4,   -9,    255};
 	static int rtn53[]	= {   0,  -17,   255,  255,  255,  255,  255,  255,    255};
 	static int l600n[]	= { 255,  255,   255,  255,  255,   -7,  255,   -8,    255};
@@ -356,14 +359,29 @@ int do_led(int which, int mode)
 		b = -99;	/* Invert power light as diag indicator */
 		break;
 #ifdef CONFIG_BCMWL5
-	case MODEL_RTN12:
-		if (which != LED_DIAG) return ret;
-		b = -2;	/* power light */
-		break;
 	case MODEL_RTN10:
 	case MODEL_RTN16:
 		if (which != LED_DIAG) return ret;
 		b = -1;	/* power light */
+		break;
+	case MODEL_RTN10U:
+		b = rtn10u[which];
+		break;
+	case MODEL_RTN10P:
+		b = rtn10p[which];
+		break;
+	case MODEL_RTN12A1:
+		b = rtn12a1[which];
+		break;
+	case MODEL_RTN12B1:
+		b = rtn12b1[which];
+		break;
+	case MODEL_RTN12C1:
+		b = rtn12c1[which];
+		break;
+	case MODEL_RTN12D1:
+	case MODEL_RTN12VP:
+		b = rtn12d1[which];
 		break;
 	case MODEL_RTN15U:
 		b = rtn15u[which];
@@ -465,15 +483,6 @@ int do_led(int which, int mode)
 		break;
 	case MODEL_E4200:
 		b = e4200[which];
-		break;
-	case MODEL_RTN10U:
-		b = rtn10u[which];
-		break;
-	case MODEL_RTN10P:
-		b = rtn10p[which];
-		break;
-	case MODEL_RTN12B1:
-		b = rtn12b1[which];
 		break;
 	case MODEL_L600N:
 		b = l600n[which];

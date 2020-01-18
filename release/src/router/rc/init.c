@@ -522,10 +522,13 @@ static int init_vlan_ports(void)
 		dirty |= check_nv("vlan1ports", "0 5");
 		break;
 	case MODEL_RTN10P:
-	case MODEL_RTN12:
+	case MODEL_RTN12A1:
 	case MODEL_RTN12B1:
-		dirty |= check_nv("vlan0ports", "3 2 1 0 5*");
-		dirty |= check_nv("vlan1ports", "4 5");
+	case MODEL_RTN12C1:
+	case MODEL_RTN12D1:
+	case MODEL_RTN12VP:
+		dirty |= check_nv("vlan0ports", "3 2 1 0 5*"); /* L1 L2 L3 L4 CPU */
+		dirty |= check_nv("vlan1ports", "4 5"); /* WAN CPU */
 		break;
 	case MODEL_WRT610Nv2:
 	case MODEL_F5D8235v3:
@@ -1417,9 +1420,9 @@ static int init_nvram(void)
 			nvram_set("wl_ifname", "eth1");
 		}
 		break;
-	case MODEL_RTN12:
+	case MODEL_RTN12A1:
 		mfr = "Asus";
-		name = "RT-N12";
+		name = "RT-N12 A1";
 		features = SUP_SES | SUP_BRAU | SUP_80211N;
 		if (!nvram_match("t_fix1", (char *)name)) {
 			nvram_set("lan_ifnames", "vlan0 eth1");
@@ -1430,11 +1433,56 @@ static int init_nvram(void)
 	case MODEL_RTN12B1:
 		mfr = "Asus";
 		name = "RT-N12 B1";
-		features = SUP_80211N;
+		features = SUP_SES | SUP_80211N;
 		if (!nvram_match("t_fix1", (char *)name)) {
 			nvram_set("lan_ifnames", "vlan0 eth1");
 			nvram_set("wan_ifnameX", "vlan1");
 			nvram_set("wl_ifname", "eth1");
+
+			nvram_set("sb/1/ledbh5", "2"); /* WL_LED_ACTIVITY; WiFi LED - active HIGH */
+		}
+		break;
+	case MODEL_RTN12C1:
+		mfr = "Asus";
+		name = "RT-N12 C1";
+		features = SUP_SES | SUP_80211N;
+		if (!nvram_match("t_fix1", (char *)name)) {
+			nvram_set("lan_ifnames", "vlan0 eth1");
+			nvram_set("wan_ifnameX", "vlan1");
+			nvram_set("wl_ifname", "eth1");
+
+			nvram_set("sb/1/ledbh4", "2");  /* WL_LED_ACTIVITY; WiFi LED - active HIGH */
+			nvram_set("sb/1/ledbh5", "11"); /* WL_LED_INACTIVE, not used ... */
+			nvram_set("sb/1/ledbh6", "11"); /* WL_LED_INACTIVE, not used ... */
+		}
+		break;
+	case MODEL_RTN12D1:
+	case MODEL_RTN12VP:
+		mfr = "Asus";
+		name = "RT-N12 D1";
+		features = SUP_SES | SUP_80211N;
+		if (!nvram_match("t_fix1", (char *)name)) {
+			nvram_set("lan_ifnames", "vlan0 eth1");
+			nvram_set("wan_ifnameX", "vlan1");
+			nvram_set("wl_ifname", "eth1");
+
+			nvram_set("sb/1/ledbh5", "2"); /* WL_LED_ACTIVITY; WiFi LED - active HIGH */
+
+			/* adjust power settings for 2,4 GHz WiFi (according to / from Asus SRC) */
+			nvram_set("sb/1/maxp2ga0", "0x52");
+			nvram_set("sb/1/maxp2ga1", "0x52");
+			nvram_set("sb/1/cck2gpo", "0x0");
+			nvram_set("sb/1/ofdm2gpo0", "0x2000");
+			nvram_set("sb/1/ofdm2gpo1", "0x6442");
+			nvram_set("sb/1/ofdm2gpo", "0x64422000");
+			nvram_set("sb/1/mcs2gpo0", "0x2200");
+			nvram_set("sb/1/mcs2gpo1", "0x6644");
+			nvram_set("sb/1/mcs2gpo2", "0x2200");
+			nvram_set("sb/1/mcs2gpo3", "0x6644");
+			nvram_set("sb/1/mcs2gpo4", "0x4422");
+			nvram_set("sb/1/mcs2gpo5", "0x8866");
+			nvram_set("sb/1/mcs2gpo6", "0x4422");
+			nvram_set("sb/1/mcs2gpo7", "0x8866");
 		}
 		break;
 	case MODEL_RTN15U:

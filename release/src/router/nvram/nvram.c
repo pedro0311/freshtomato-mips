@@ -188,7 +188,7 @@ static const char *nv_default_value(const defaults_t *t)
 			return "28";
 #ifdef CONFIG_BCMWL5
 		case MODEL_RTN10:
-		case MODEL_RTN12:
+		case MODEL_RTN12A1:
 		case MODEL_RTN16:
 			return "17";
 #endif
