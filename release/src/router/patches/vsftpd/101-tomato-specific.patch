@@ -1,5 +1,5 @@
---- vsftpd/builddefs.h	2015-07-23 07:59:51.000000000 +0200
-+++ vsftpd/builddefs.h	2018-04-02 00:24:54.000000000 +0200
+--- vsftpd/builddefs.h
++++ vsftpd/builddefs.h
 @@ -1,9 +1,17 @@
  #ifndef VSF_BUILDDEFS_H
  #define VSF_BUILDDEFS_H
@@ -20,8 +20,8 @@
  
  #endif /* VSF_BUILDDEFS_H */
  
---- vsftpd/Makefile	2012-09-16 09:27:35.000000000 +0200
-+++ vsftpd/Makefile	2018-07-02 16:41:08.853975664 +0200
+--- vsftpd/Makefile
++++ vsftpd/Makefile
 @@ -1,16 +1,28 @@
 +include ../common.mak
 +
@@ -43,7 +43,7 @@
 +#LIBS	=	`./vsf_findlibs.sh`
 +#LINK	=	-Wl,-s
 +LIBS	=	-lcrypt -lnsl
-+LINK	=	
++LINK	=
 +
 +CFLAGS	+=	-I$(TOP)/shared
 +
@@ -60,8 +60,8 @@
  
  OBJS	=	main.o utility.o prelogin.o ftpcmdio.o postlogin.o privsock.o \
  		tunables.o ftpdataio.o secbuf.o ls.o \
---- vsftpd/parseconf.c	2012-09-16 09:15:07.000000000 +0200
-+++ vsftpd/parseconf.c	2018-04-02 00:24:54.000000000 +0200
+--- vsftpd/parseconf.c
++++ vsftpd/parseconf.c
 @@ -36,6 +36,7 @@ parseconf_bool_array[] =
    { "anon_upload_enable", &tunable_anon_upload_enable },
    { "anon_mkdir_write_enable", &tunable_anon_mkdir_write_enable },
@@ -78,8 +78,8 @@
    { 0, 0 }
  };
  
---- vsftpd/secutil.c	2012-03-28 05:08:28.000000000 +0200
-+++ vsftpd/secutil.c	2018-04-02 00:24:54.000000000 +0200
+--- vsftpd/secutil.c
++++ vsftpd/secutil.c
 @@ -129,16 +129,17 @@ vsf_secutil_change_credentials(const str
    {
      vsf_sysutil_set_no_procs();
@@ -109,8 +109,8 @@
 +//  }
  }
  
---- vsftpd/ssl.c	2015-07-23 06:14:04.000000000 +0200
-+++ vsftpd/ssl.c	2018-04-02 00:24:54.000000000 +0200
+--- vsftpd/ssl.c
++++ vsftpd/ssl.c
 @@ -28,6 +28,7 @@
  #include <openssl/err.h>
  #include <openssl/rand.h>
@@ -119,8 +119,8 @@
  #include <errno.h>
  #include <limits.h>
  
---- vsftpd/sysutil.c	2012-09-16 09:07:38.000000000 +0200
-+++ vsftpd/sysutil.c	2018-04-02 00:24:54.000000000 +0200
+--- vsftpd/sysutil.c
++++ vsftpd/sysutil.c
 @@ -2301,6 +2301,38 @@ vsf_sysutil_getpwuid(const int uid)
    return (struct vsf_sysutil_user*) getpwuid((unsigned int) uid);
  }
@@ -160,8 +160,8 @@
  struct vsf_sysutil_user*
  vsf_sysutil_getpwnam(const char* p_user)
  {
---- vsftpd/tunables.c	2015-07-23 06:13:07.000000000 +0200
-+++ vsftpd/tunables.c	2018-04-02 00:24:54.000000000 +0200
+--- vsftpd/tunables.c
++++ vsftpd/tunables.c
 @@ -17,6 +17,7 @@ int tunable_write_enable;
  int tunable_anon_upload_enable;
  int tunable_anon_mkdir_write_enable;
@@ -211,8 +211,8 @@
  }
  
  void
---- vsftpd/tunables.h	2012-03-28 05:10:39.000000000 +0200
-+++ vsftpd/tunables.h	2018-04-02 00:24:54.000000000 +0200
+--- vsftpd/tunables.h
++++ vsftpd/tunables.h
 @@ -18,6 +18,7 @@ extern int tunable_write_enable;
  extern int tunable_anon_upload_enable;        /* Enable STOR for anon users */
  extern int tunable_anon_mkdir_write_enable;   /* MKD for anon */

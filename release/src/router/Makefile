@@ -1036,20 +1036,16 @@ libnfnetlink-clean:
 
 miniupnpd-config:
 	$(call patch_files,miniupnpd)
-ifeq ($(TCONFIG_IPV6),y)
-	@cd miniupnpd && ./genconfig.sh --leasefile --ipv6 --vendorcfg --portinuse
-else
-	@cd miniupnpd && ./genconfig.sh --leasefile --vendorcfg --portinuse
-endif
+	@cd miniupnpd && ./genconfig.sh --leasefile --vendorcfg --portinuse $(if $(TCONFIG_IPV6),--ipv6,)
 
 miniupnpd: iptables miniupnpd-config
 	@$(SEP)
-	$(MAKE) -C miniupnpd miniupnpd -f Makefile.linux CC=$(CC) \
-		CFLAGS="-Os $(EXTRACFLAGS) -I$(TOP)/iptables/include -ffunction-sections -fdata-sections" \
-		LDFLAGS="-L$(TOP)/iptables -liptc -ffunction-sections -fdata-sections -Wl,--gc-sections" LIBS="" $(PARALLEL_BUILD)
+	$(MAKE) -C miniupnpd -f Makefile.freshtomato $(PARALLEL_BUILD) \
+		EXTRACFLAGS="-Os $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+		LDFLAGS="-L$(TOP)/iptables -liptc -ffunction-sections -fdata-sections -Wl,--gc-sections"
 
 miniupnpd-clean:
-	-@$(MAKE) -C miniupnpd -f Makefile.linux clean
+	-@$(MAKE) -C miniupnpd -f Makefile.freshtomato clean
 	@rm -f miniupnpd/config.h
 	$(call unpatch_files,miniupnpd)
 
@@ -1057,7 +1053,6 @@ miniupnpd-install:
 	install -D miniupnpd/miniupnpd $(INSTALLDIR)/miniupnpd/usr/sbin/miniupnpd
 	$(STRIP) $(INSTALLDIR)/miniupnpd/usr/sbin/miniupnpd
 
-# !!TB
 shared: busybox
 
 vsftpd: $(if $(TCONFIG_FTP_SSL),openssl,)
@@ -1901,19 +1896,13 @@ libatomic_ops-clean:
 	-@$(MAKE) -C libatomic_ops clean
 	@rm -f libatomic_ops/stamp-h1
 
-ifeq ($(TCONFIG_AIO),y)
-LDFPHPADD:=-Wl,-rpath,$(TOP)/openssl
-else
-LDFPHPADD:=
-endif
-
 php/stamp-h1: pcre zlib libiconv sqlite libxml2 libpng jpeg libcurl
 	$(call patch_files,php)
 	cd php && CC=$(CC) CXX=$(ARCH)-g++ AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) \
 	CFLAGS="-Os -Wall -I$(TOP)/zlib -I$(TOP)/libxml2/include/libxml -I$(TOP)/libxml2/include -I$(TOP)/pcre -I$(TOP)/libiconv/include \
 		-I$(TOP)/libpng/staged/usr/include -I$(TOP)/libcurl/staged/usr/include" \
 	LDFLAGS="-L$(TOP)/pcre/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/zlib -L$(TOP)/libxml2/.libs -L$(TOP)/libiconv/lib/.libs \
-		-L$(TOP)/libpng/.libs -L$(TOP)/libcurl/staged/usr/lib $(LDFPHPADD)" \
+		-L$(TOP)/libpng/.libs -L$(TOP)/libcurl/staged/usr/lib -Wl,-rpath,$(TOP)/openssl" \
 	CPPFLAGS="-L$(TOP)/pcre/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/zlib -L$(TOP)/libxml2/.libs -L$(TOP)/libiconv/lib/.libs -L$(TOP)/libpng/.libs" \
 	LIBS="-L$(TOP)/pcre/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/zlib -L$(TOP)/libxml2/.libs -L$(TOP)/libiconv/lib/.libs -L$(TOP)/libpng/.libs -L$(TOP)/libcurl/lib/.libs \
 		-lz -lsqlite3 -ldl -lpthread -liconv -lxml2 -lstdc++ -lcurl" \
@@ -2239,30 +2228,25 @@ nano-install:
 
 ifeq ($(TCONFIG_AIO),y)
 CACERT:=--with-ca-bundle=/rom/cacert.pem
-CPPFADD:=-I$(TOP)/openssl/include
-LDFADD:=-L$(TOP)/openssl -Wl,-rpath,$(TOP)/openssl
 else
 CACERT:=
-CPPFADD:=
-LDFADD:=
 endif
 
 libcurl/stamp-h1: zlib openssl
-	$(call patch_files,libcurl)
-	cd $(TOP)/libcurl && ./buildconf && \
+	cd libcurl && ./buildconf && \
 		CFLAGS="-Os -Wall -pipe -funit-at-a-time -Wno-pointer-sign -mtune=mips32 -mips32 -ffunction-sections -fdata-sections" \
-		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections $(CPPFADD)" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC $(LDFADD)" \
+		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -I$(TOP)/openssl/include" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC -L$(TOP)/openssl -Wl,-rpath,$(TOP)/openssl" \
 		$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib \
 			--enable-shared --enable-static --enable-cookies --enable-crypto-auth \
 			--enable-nonblocking --enable-file --enable-ftp --enable-http --enable-tftp \
 			$(if $(TCONFIG_IPV6),--enable-ipv6,) \
-			--with-random="/dev/urandom" --with-ssl="$(TOP)/openssl/ssl" --with-zlib="$(TOP)/zlib/staged/usr" \
+			--with-random="/dev/urandom" --with-ssl="$(TOP)/openssl" --with-zlib="$(TOP)/zlib/staged/usr" \
 			--disable-nls --disable-dict --disable-debug --disable-gopher --disable-threaded-resolver \
 			--disable-ldap --disable-manual --disable-telnet --disable-verbose \
 			--without-gnutls --without-krb4 --without-libidn2 --without-libpsl --disable-tls-srp \
 			--with-linux-headers=$(LINUXDIR)/include $(CACERT)
-		touch libcurl/stamp-h1
+		@touch $@
 
 libcurl: libcurl/stamp-h1
 	@$(SEP)
@@ -2280,7 +2264,6 @@ libcurl-clean:
 	-@$(MAKE) -C libcurl clean
 	@rm -f libcurl/stamp-h1 libcurl/Makefile
 	@rm -rf libcurl/staged
-	$(call unpatch_files,libcurl)
 
 libevent/stamp-h1:
 	cd libevent && CC=$(CC) \
@@ -2395,8 +2378,8 @@ libnfsidmap-install:
 portmap/stamp-h1:
 	$(call patch_files,portmap)
 	cd portmap \
-	$(MAKE) -C portmap CC=$(CC) AR=$(AR) LD=$(LD) RANLIB=$(RANLIB)
-	touch portmap/stamp-h1
+	$(MAKE) -C portmap
+	@touch $@
 
 portmap: portmap/stamp-h1
 	@$(SEP)
@@ -2432,26 +2415,22 @@ e2fsprogs-clean:
 
 nfs-utils/stamp-h1: libevent-install e2fsprogs portmap libnfsidmap-install
 	$(call patch_files,nfs-utils)
-	cd nfs-utils && ./autogen.sh && STRIP=$(CROSS_COMPILE)strip \
-	CFLAGS="-Os -Wall -fno-delete-null-pointer-checks -funit-at-a-time \
-	    -I$(TOP)/libevent/staged/usr/local/include -I$(TOP)/e2fsprogs/lib \
-	    -I$(TOP)/libnfsidmap/staged/usr/include -ffunction-sections -fdata-sections" \
+	cd nfs-utils && ./autogen.sh && \
+	CPPFLAGS="-Os $(EXTRACFLAGS)" \
+	CFLAGS="-Os -Wall -fno-delete-null-pointer-checks -funit-at-a-time -pipe -mtune=mips32 -mips32 -ffunction-sections -fdata-sections \
+		-I$(TOP)/libevent/staged/usr/local/include -I$(TOP)/e2fsprogs/lib \
+		-I$(TOP)/libnfsidmap/staged/usr/include -ffunction-sections -fdata-sections" \
 	LDFLAGS="-L$(TOP)/libevent/staged/usr/local/lib -L$(TOP)/e2fsprogs/lib \
-	    -L$(TOP)/libnfsidmap/staged/usr/lib -ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
-	    ac_cv_func_malloc_0_nonnull=yes \
-	    ac_cv_func_realloc_0_nonnull=yes \
-	$(CONFIGURE) --disable-gss --without-tcp-wrappers --enable-static --enable-shared \
-	    --enable-nfsv4 --enable-nfsv3 --disable-tirpc --disable-dependency-tracking
-	touch nfs-utils/stamp-h1
+		-L$(TOP)/libnfsidmap/staged/usr/lib -ffunction-sections -fdata-sections -Wl,--gc-sections" \
+		knfsd_cv_bsd_signals=no \
+	CC_FOR_BUILD=$(CC) $(CONFIGURE) --disable-gss --without-tcp-wrappers \
+		--disable-nfsv4 --disable-ipv6 \
+		--disable-uuid --disable-tirpc --disable-dependency-tracking
+	@touch $@
 
 nfs-utils: nfs-utils/stamp-h1
 	@$(SEP)
-	$(MAKE) -C nfs-utils $(PARALLEL_BUILD)
-
-nfs-utils-clean:
-	-@$(MAKE) -C nfs-utils clean
-	@rm -f nfs-utils/stamp-h1
-	$(call unpatch_files,nfs-utils)
+	$(MAKE) -C $@ $(PARALLEL_BUILD)
 
 nfs-utils-install:
 	install -d $(INSTALLDIR)/nfs-utils/usr/sbin
@@ -2462,6 +2441,11 @@ nfs-utils-install:
 	install -D nfs-utils/utils/statd/statd $(INSTALLDIR)/nfs-utils/usr/sbin/statd
 	install -D nfs-utils/utils/mountd/mountd $(INSTALLDIR)/nfs-utils/usr/sbin/mountd
 	$(STRIP) -s $(INSTALLDIR)/nfs-utils/usr/sbin/*
+
+nfs-utils-clean:
+	-@$(MAKE) -C nfs-utils clean
+	@rm -f nfs-utils/stamp-h1
+	$(call unpatch_files,nfs-utils)
 
 tinc/stamp-h1: openssl zlib lzo
 	$(call patch_files,tinc)
@@ -2616,11 +2600,12 @@ dnscrypt-clean:
 	@rm -rf dnscrypt/stamp-h1 dnscrypt/src/dnscrypt-proxy/.deps dnscrypt/Makefile
 
 libyaml/stamp-h1:
-	cd $(TOP)/libyaml && CC=$(CC) AR=$(AR) LD=$(LD) STRIP=$(CROSS_COMPILE)strip \
-	autoreconf -sfi && \
+	cd libyaml && autoreconf -sfi && \
 	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
-	$(CONFIGURE) --prefix=/usr
-	touch libyaml/stamp-h1
+	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
+	$(CONFIGURE) --prefix=/usr --sysconfdir=/etc \
+		--enable-static --disable-shared
+	@touch $@
 
 libyaml: libyaml/stamp-h1
 	@$(SEP)
@@ -2635,14 +2620,17 @@ libyaml-clean:
 
 getdns/stamp-h1: openssl libyaml
 	$(call patch_files,getdns)
-	cd $(TOP)/getdns && CC=$(CC) AR=$(AR) LD=$(LD) STRIP=$(CROSS_COMPILE)strip \
-	autoreconf -fsi && \
-	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
-	CPPFLAGS="-I$(TOP)/libyaml/include -I$(TOP)/openssl" \
-	LDFLAGS="-static -L$(TOP)/libyaml/src/.libs -lyaml -L$(TOP)/openssl -lcrypto -lssl" \
-	$(CONFIGURE) --enable-static --disable-shared --prefix=/usr --sysconfdir=/etc --localstatedir=/var --without-libidn --without-libidn2 \
-	--without-libunbound --enable-stub-only --with-ssl=$(TOP)/openssl --with-libyaml=$(TOP)/libyaml --with-stubby
-	touch getdns/stamp-h1
+	cd getdns && autoreconf -fsi && \
+	CFLAGS="-Os -Wall $(EXTRACFLAGS) -I$(TOP)/openssl/include -I$(TOP)/libyaml/include -ffunction-sections -fdata-sections" \
+	LDFLAGS="-L$(TOP)/openssl -L$(TOP)/libyaml/src/.libs -ffunction-sections -fdata-sections -Wl,--gc-sections" \
+	LIBS="-lcrypto -lssl -lyaml" \
+	$(CONFIGURE) --prefix=/usr --sysconfdir=/etc --localstatedir=/var \
+		--enable-static --disable-shared --disable-gost \
+		--without-libidn --without-libidn2 \
+		--without-getdns_query --without-getdns_server_mon \
+		--without-libunbound --enable-stub-only --with-stubby \
+		--with-ssl=$(TOP)/openssl --with-libyaml=$(TOP)/libyaml
+	@touch $@
 
 getdns: getdns/stamp-h1
 	@$(SEP)
