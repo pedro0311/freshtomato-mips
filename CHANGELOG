@@ -3,6 +3,30 @@ FreshTomato-MIPS Changelog
 
 
 
+2020.1          2020.01.20
+--------------------------
+
+- openssl: update to 1.0.2u
+- nano: update to 4.7
+- tinc: update to de7d5a0 (2019.07.17) snapshot
+- dnsmasq: update to ab53883 (2020.01.11) snapshot
+- e2fsprogs: update to 1.45.5
+- libcurl: update to 7.68.0
+- GUI: FTP Server Configuration: add usage notes
+- GUI: advanced-vlan-r1.asp - Prevent vlan reset to default at init (fixes #11)
+- GUI: advanced-vlan.asp - make it possible to create a VLAN with all ports (including tag on!). Fixes issue #12
+- GUI: Static DHCP/ARP/IPT: also restart dnsmasq when saving
+- GUI: Advanced: DHCP / DNS Server (LAN): change the ‘DHCPC Options’ format to a 256 character textarea
+- mdu: fix some bugs (again)
+- stubby: add syslog support
+- pppd: restore the use of libcrypt to support DES instead of OpenSSL (commit #5c08f06 introduced an upstream change: 'Use openssl for DES instead of libcrypt / glibc', with no choice of libcrypt (only libdes and OpenSSL). It requires OpenSSL 1.0.2 and prevents compilation with OpenSSL 1.1. This commit fixes it))
+- pppd: fixes from upstream (pppd.h: Add missing headers; pppd: Don't free static string; pppd: Limit memory accessed by string formats with max length specified; pppd: Make sure word read from options file is null-terminated; pppd: Avoid use of strnlen (and strlen) in vslprintf)
+- miniupnpd: get rid of OpenSSL dependencies in miniupnpd, optimization, cosmetics
+- router: Makefile: tune libyaml/getdns recipes - reduce size
+- vpnrouting: fix the extraction of foreign options from the OpenVPN server, add a warning if the option is enabled but nothing was received from the server, change firewall restart - move to the very end
+- NFS: allow selection of protocol version; optimization and clean-up; move code from nfs.rc script to nfs.c
+
+
 2019.4          2019.12.29
 --------------------------
 
