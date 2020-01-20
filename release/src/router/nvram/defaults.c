@@ -1394,6 +1394,7 @@ const defaults_t defaults[] = {
 
 #ifdef TCONFIG_TOR
 	{ "tor_enable",			"0"				},
+	{ "tor_solve_only",		"0"				},
 	{ "tor_socksport",		"9050"				},
 	{ "tor_transport",		"9040"				},
 	{ "tor_dnsport",		"9053"				},
