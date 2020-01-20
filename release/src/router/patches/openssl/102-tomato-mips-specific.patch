@@ -1,5 +1,5 @@
---- openssl/apps/Makefile	2017-01-26 14:22:03.000000000 +0100
-+++ openssl/apps/Makefile	2018-05-14 00:49:03.282178984 +0200
+--- openssl/apps/Makefile
++++ openssl/apps/Makefile
 @@ -50,21 +50,26 @@ S_SRC=	s_cb.c s_socket.c
  RAND_OBJ=app_rand.o
  RAND_SRC=app_rand.c
@@ -20,8 +20,8 @@
 -	s_time.c $(A_SRC) $(S_SRC) $(RAND_SRC) version.c sess_id.c \
 -	ciphers.c nseq.c pkcs12.c pkcs8.c pkey.c pkeyparam.c pkeyutl.c \
 -	spkac.c smime.c cms.c rand.c engine.c ocsp.c prime.c ts.c srp.c
-+E_OBJ= req.o rsa.o x509.o $(A_OBJ) $(RAND_OBJ) enc.o $(S_OBJ) s_client.o
-+E_SRC= req.c rsa.c x509.c $(A_SRC) $(RAND_SRC) enc.c $(S_SRC) s_client.c
++E_OBJ= req.o genpkey.o rsa.o x509.o $(A_OBJ) $(RAND_OBJ) enc.o $(S_OBJ) s_client.o
++E_SRC= req.c genpkey.c rsa.c x509.c $(A_SRC) $(RAND_SRC) enc.c $(S_SRC) s_client.c
 +
 +#E_OBJ=	verify.o asn1pars.o req.o dgst.o dh.o dhparam.o enc.o passwd.o gendh.o errstr.o \
 +#	ca.o pkcs7.o crl2p7.o crl.o \
@@ -55,8 +55,8 @@
  
  progs.h: progs.pl
  	$(PERL) progs.pl $(E_EXE) >progs.h
---- openssl/apps/openssl.c	2017-01-26 14:22:03.000000000 +0100
-+++ openssl/apps/openssl.c	2018-05-14 00:49:03.294179077 +0200
+--- openssl/apps/openssl.c
++++ openssl/apps/openssl.c
 @@ -463,11 +463,15 @@ int main(int Argc, char *ARGV[])
      f.name = argv[0];
      fp = lh_FUNCTION_retrieve(prog, &f);
@@ -74,13 +74,14 @@
              f.type = FUNC_TYPE_CIPHER;
              f.func = enc_main;
              fp = &f;
---- openssl/apps/progs.h	2017-01-26 14:22:03.000000000 +0100
-+++ openssl/apps/progs.h	2018-05-14 15:58:37.000000000 +0200
-@@ -63,9 +63,45 @@ typedef struct {
+--- openssl/apps/progs.h
++++ openssl/apps/progs.h
+@@ -63,9 +63,46 @@ typedef struct {
  DECLARE_LHASH_OF(FUNCTION);
  
  FUNCTION functions[] = {
 +    {FUNC_TYPE_GENERAL,"req",req_main},
++    {FUNC_TYPE_GENERAL, "genpkey", genpkey_main},
 +#ifndef OPENSSL_NO_RSA
 +    {FUNC_TYPE_GENERAL,"rsa",rsa_main},
 +#endif
@@ -123,7 +124,7 @@
      {FUNC_TYPE_GENERAL, "dgst", dgst_main},
  #ifndef OPENSSL_NO_DH
      {FUNC_TYPE_GENERAL, "dh", dh_main},
-@@ -73,7 +109,6 @@ FUNCTION functions[] = {
+@@ -73,7 +110,6 @@ FUNCTION functions[] = {
  #ifndef OPENSSL_NO_DH
      {FUNC_TYPE_GENERAL, "dhparam", dhparam_main},
  #endif
@@ -131,7 +132,7 @@
      {FUNC_TYPE_GENERAL, "passwd", passwd_main},
  #ifndef OPENSSL_NO_DH
      {FUNC_TYPE_GENERAL, "gendh", gendh_main},
-@@ -82,9 +117,6 @@ FUNCTION functions[] = {
+@@ -82,9 +118,6 @@ FUNCTION functions[] = {
      {FUNC_TYPE_GENERAL, "ca", ca_main},
      {FUNC_TYPE_GENERAL, "crl", crl_main},
  #ifndef OPENSSL_NO_RSA
@@ -141,7 +142,7 @@
      {FUNC_TYPE_GENERAL, "rsautl", rsautl_main},
  #endif
  #ifndef OPENSSL_NO_DSA
-@@ -99,7 +131,6 @@ FUNCTION functions[] = {
+@@ -99,20 +132,15 @@ FUNCTION functions[] = {
  #ifndef OPENSSL_NO_EC
      {FUNC_TYPE_GENERAL, "ecparam", ecparam_main},
  #endif
@@ -149,7 +150,10 @@
  #ifndef OPENSSL_NO_RSA
      {FUNC_TYPE_GENERAL, "genrsa", genrsa_main},
  #endif
-@@ -110,9 +141,6 @@ FUNCTION functions[] = {
+ #ifndef OPENSSL_NO_DSA
+     {FUNC_TYPE_GENERAL, "gendsa", gendsa_main},
+ #endif
+-    {FUNC_TYPE_GENERAL, "genpkey", genpkey_main},
  #if !defined(OPENSSL_NO_SOCK)
      {FUNC_TYPE_GENERAL, "s_server", s_server_main},
  #endif
@@ -206,8 +210,8 @@
 +
      {0, NULL, NULL}
  };
---- openssl/apps/x509.c	2017-01-26 14:22:03.000000000 +0100
-+++ openssl/apps/x509.c	2018-05-14 15:39:23.000000000 +0200
+--- openssl/apps/x509.c
++++ openssl/apps/x509.c
 @@ -218,7 +218,9 @@ int MAIN(int argc, char **argv)
      char *checkhost = NULL;
      char *checkemail = NULL;
