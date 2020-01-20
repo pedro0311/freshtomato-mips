@@ -783,8 +783,8 @@ endif
 	AR=$(AR:$(CROSS_COMPILE)%=%) \
 	NM=$(NM:$(CROSS_COMPILE)%=%) \
 	RANLIB=$(RANLIB:$(CROSS_COMPILE)%=%) \
-	./Configure $(HOSTCONFIG) --openssldir=/etc \
-	-ffunction-sections -fdata-sections -Wl,--gc-sections \
+	./Configure $(HOSTCONFIG) -Os -DOPENSSL_NO_BUF_FREELISTS --openssldir=/etc \
+	-ffunction-sections -fdata-sections -Wl,--gc-sections -fomit-frame-pointer \
 	shared $(OPENSSL_CIPHERS) no-ssl2 no-ssl3 no-err $(if $(TCONFIG_BBT),,no-rc4)
 ifeq ($(TCONFIG_KEYGEN),)
 	cd openssl && mkdir -p include/openssl && \
@@ -836,14 +836,15 @@ openssl-1.1/stamp-h1:
 	NM=$(NM:$(CROSS_COMPILE)%=%) \
 	RANLIB=$(RANLIB) \
 	./Configure $(HOSTCONFIG) --prefix=/usr --openssldir=/etc \
-	-ffunction-sections -fdata-sections -Wl,--gc-sections \
-	shared $(OPENSSL_CIPHERS) no-ssl3 no-err no-async --api=1.0.0
+	-Os -ffunction-sections -fdata-sections -Wl,--gc-sections -fomit-frame-pointer \
+	shared $(OPENSSL_CIPHERS) no-ssl3 no-err no-async --api=1.0.0 \
+	no-aria no-sm2 no-sm3 no-sm4
 	-@$(MAKE) -C openssl-1.1 depend clean
 	@touch $@
 
 openssl-1.1: openssl-1.1/stamp-h1
 	$(SEP)
-	$(MAKE) -C openssl-1.1
+	$(MAKE) -C openssl-1.1 $(PARALLEL_BUILD)
 
 
 openssl-1.1-clean:
