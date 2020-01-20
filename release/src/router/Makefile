@@ -91,6 +91,7 @@ ifneq ($(TCONFIG_TOR)$(TCONFIG_MEDIA_SERVER)$(TCONFIG_BBT),)
 obj-y += zlib
 endif
 ifneq ($(TCONFIG_HTTPS)$(TCONFIG_BBT)$(TCONFIG_NGINX),)
+obj-$(TCONFIG_OPENSSL11) += openssl-1.1
 obj-y += openssl
 endif
 ifneq ($(TCONFIG_TOR)$(TCONFIG_NFS)$(TCONFIG_BBT),)
@@ -803,7 +804,7 @@ else
 	cd openssl && mkdir -p include/openssl && \
 	ln -sf ../../crypto/krb5/krb5_asn.h include/openssl/krb5_asn.h
 endif
-	@$(MAKE) -C openssl clean depend
+	@$(MAKE) -C openssl depend clean
 	@touch openssl/stamp-h1
 
 openssl: openssl/stamp-h1
@@ -818,28 +819,55 @@ openssl-clean:
 
 openssl-install:
 	install -D openssl/libcrypto.so.1.0.0 $(INSTALLDIR)/openssl/usr/lib/libcrypto.so.1.0.0
+	install -D openssl/libssl.so.1.0.0 $(INSTALLDIR)/openssl/usr/lib/libssl.so.1.0.0
 	$(STRIP) $(INSTALLDIR)/openssl/usr/lib/libcrypto.so.1.0.0
+	$(STRIP) $(INSTALLDIR)/openssl/usr/lib/libssl.so.1.0.0
 	cd $(INSTALLDIR)/openssl/usr/lib && ln -sf libcrypto.so.1.0.0 libcrypto.so
-
+	cd $(INSTALLDIR)/openssl/usr/lib && ln -sf libssl.so.1.0.0 libssl.so
 	install -D openssl/apps/openssl $(INSTALLDIR)/openssl/usr/sbin/openssl
 	$(STRIP) $(INSTALLDIR)/openssl/usr/sbin/openssl
 	chmod 0500 $(INSTALLDIR)/openssl/usr/sbin/openssl
-
 	install -D -m 0500 httpd/gencert.sh $(INSTALLDIR)/openssl/usr/sbin/gencert.sh
 
+openssl-1.1/stamp-h1:
+	cd openssl-1.1 && \
+	CC=$(CC:$(CROSS_COMPILE)%=%) \
+	AR=$(AR:$(CROSS_COMPILE)%=%) \
+	NM=$(NM:$(CROSS_COMPILE)%=%) \
+	RANLIB=$(RANLIB) \
+	./Configure $(HOSTCONFIG) --prefix=/usr --openssldir=/etc \
+	-ffunction-sections -fdata-sections -Wl,--gc-sections \
+	shared $(OPENSSL_CIPHERS) no-ssl3 no-err no-async --api=1.0.0
+	-@$(MAKE) -C openssl-1.1 depend clean
+	@touch $@
 
-#ifeq ($(FULL_OPENSSL),y)
-	install -D openssl/libssl.so.1.0.0 $(INSTALLDIR)/openssl/usr/lib/libssl.so.1.0.0
-	$(STRIP) $(INSTALLDIR)/openssl/usr/lib/libssl.so.1.0.0
-	cd $(INSTALLDIR)/openssl/usr/lib && ln -sf libssl.so.1.0.0 libssl.so
-#endif
+openssl-1.1: openssl-1.1/stamp-h1
+	$(SEP)
+	$(MAKE) -C openssl-1.1
 
-mssl:	$(if $(FULL_OPENSSL),openssl,cyassl)
+
+openssl-1.1-clean:
+	[ ! -f openssl-1.1/stamp-h1 ] || $(MAKE) -C openssl-1.1 clean
+	@rm -f openssl-1.1/stamp-h1
+
+openssl-1.1-install:
+	if [ -f openssl-1.1/stamp-h1 ] ; then \
+		install -D openssl-1.1/libcrypto.so.1.1 $(INSTALLDIR)/openssl-1.1/usr/lib/libcrypto.so.1.1 ; \
+		install -D openssl-1.1/libssl.so.1.1 $(INSTALLDIR)/openssl-1.1/usr/lib/libssl.so.1.1 ; \
+		$(STRIP) $(INSTALLDIR)/openssl-1.1/usr/lib/libssl.so.1.1 ; \
+		$(STRIP) $(INSTALLDIR)/openssl-1.1/usr/lib/libcrypto.so.1.1 ; \
+		install -D openssl-1.1/apps/openssl $(INSTALLDIR)/openssl-1.1/usr/sbin/openssl11 ; \
+		$(STRIP) $(INSTALLDIR)/openssl-1.1/usr/sbin/openssl11 ; \
+		chmod 0500 $(INSTALLDIR)/openssl-1.1/usr/sbin/openssl11 ; \
+	fi
+	@true
+
+mssl: $(if $(FULL_OPENSSL),openssl,cyassl)
 
 ifneq ($(TCONFIG_BBT)$(TCONFIG_NGINX),)
-mdu:	shared libcurl
+mdu: shared libcurl
 else
-mdu:	shared mssl
+mdu: shared mssl
 endif
 
 rc: nvram shared

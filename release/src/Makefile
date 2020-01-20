@@ -433,6 +433,10 @@ define RouterOptions
 		sed -i "/TCONFIG_TINC/d" $(1); \
 		echo "TCONFIG_TINC=y" >>$(1); \
 	fi; \
+	if [ "$(OPENSSL11)" = "y" ]; then \
+		sed -i "/TCONFIG_OPENSSL11/d" $(1); \
+		echo "TCONFIG_OPENSSL11=y" >>$(1); \
+	fi; \
 	if [ "$(IPERF)" = "y" ]; then \
 		sed -i "/TCONFIG_IPERF/d" $(1); \
 		echo "TCONFIG_IPERF=y" >>$(1); \
