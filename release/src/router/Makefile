@@ -90,12 +90,19 @@ endif
 ifneq ($(TCONFIG_TOR)$(TCONFIG_MEDIA_SERVER)$(TCONFIG_BBT),)
 obj-y += zlib
 endif
+
 ifneq ($(TCONFIG_HTTPS),)
-obj-$(TCONFIG_OPENSSL11) += openssl-1.1
 obj-y += openssl
+ifeq ($(TCONFIG_OPENSSL11),y)
+obj-y += openssl-1.1
+OPENSSLDIR = openssl-1.1
+else
+OPENSSLDIR = openssl
+endif
 else
 obj-y += cyassl
 endif
+
 ifneq ($(TCONFIG_TOR)$(TCONFIG_NFS)$(TCONFIG_BBT),)
 obj-y += libevent
 endif
