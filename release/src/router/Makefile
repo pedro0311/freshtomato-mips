@@ -2132,27 +2132,27 @@ lzo-install:
 		ln -sf liblzo2.so.2.0.0 liblzo2.so.2 && \
 		ln -sf liblzo2.so.2.0.0 liblzo2.so
 
-openvpn/.conf: openssl lzo
+openvpn/Makefile:
 	$(call patch_files,openvpn)
-	cd $(TOP)/openvpn && autoreconf && \
-	OPENSSL_CFLAGS="-I$(TOP)/openssl/include" \
-	OPENSSL_LIBS="-L$(TOP)/openssl -lcrypto -lssl" \
+	cd openvpn && autoreconf && \
+	OPENSSL_CFLAGS="-I$(TOP)/$(OPENSSLDIR)/include" \
+	OPENSSL_LIBS="-L$(TOP)/$(OPENSSLDIR) -lcrypto -lssl" \
 	CFLAGS="$(CFLAG_OPTIMIZE) -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
-	LDFLAGS="-L$(TOP)/openssl -L$(TOP)/lzo/src/.libs -ffunction-sections -fdata-sections -Wl,--gc-sections" \
-	CPPFLAGS="-I$(TOP)/lzo/include -I$(TOP)/openssl/include" \
+	LDFLAGS="-L$(TOP)/$(OPENSSLDIR) -L$(TOP)/zlib -lz -lpthread -ldl -L$(TOP)/lzo/src/.libs -ffunction-sections -fdata-sections -Wl,--gc-sections" \
+	CPPFLAGS="-I$(TOP)/lzo/include -I$(TOP)/$(OPENSSLDIR)/include" \
 	PLUGINDIR="/lib" \
 	$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib \
 		--enable-management --disable-debug --disable-plugin-auth-pam --disable-plugin-down-root --disable-dependency-tracking \
 		$(if $(TCONFIG_OPTIMIZE_SIZE_MORE),--disable-lz4 --enable-small --disable-server) ac_cv_lib_resolv_gethostbyname=no
 	touch openvpn/.conf
 
-openvpn: openvpn/.conf
+openvpn: $(OPENSSLDIR) lzo zlib openvpn/Makefile
 	@$(SEP)
 	@$(MAKE) -C openvpn $(PARALLEL_BUILD)
 
 openvpn-clean:
-	-@$(MAKE) -C openvpn clean
-	@rm -f openvpn/.conf
+	[ ! -f openvpn/Makefile ] || $(MAKE) -C openvpn clean
+	@rm -f openvpn/Makefile
 	$(call unpatch_files,openvpn)
 
 openvpn-install:
