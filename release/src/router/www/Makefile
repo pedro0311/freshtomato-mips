@@ -334,9 +334,6 @@ endif
 # Only include the https option if it is compiled in
 ifneq ($(TCONFIG_HTTPS),y)
 	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/HTTPS-BEGIN/,/HTTPS-END/d"
-	sed -i $(INSTALLDIR)/www/basic-ddns.asp -e "/HTTPS-BEGIN/,/HTTPS-END/d"
-else
-	sed -i $(INSTALLDIR)/www/basic-ddns.asp -e "/HTTPS0-BEGIN/,/HTTPS0-END/d"
 endif
 
 # Only include the TLS keys generator option if it is compiled in
@@ -414,7 +411,6 @@ endif
 		-e "/MULTIWAN-BEGIN/d"	-e "/MULTIWAN-END/d"\
 		-e "/DUALWAN-BEGIN/d"	-e "/DUALWAN-END/d"\
 		-e "/HTTPS-BEGIN/d"	-e "/HTTPS-END/d"\
-		-e "/HTTPS0-BEGIN/d"	-e "/HTTPS0-END/d"\
 		-e "/KEYGEN-BEGIN/d"	-e "/KEYGEN-END/d"\
 		-e "/TERMLIB-BEGIN/d"	-e "/TERMLIB-END/d"\
 		-e "/TERMLIB0-BEGIN/d"	-e "/TERMLIB0-END/d"\

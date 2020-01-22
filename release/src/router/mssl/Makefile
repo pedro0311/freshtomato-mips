@@ -4,7 +4,7 @@ CFLAGS	= -Os -Wall $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections
 LIBS =
 LDFLAGS	= -ffunction-sections -fdata-sections -Wl,--gc-sections
 
-ifeq ($(FULL_OPENSSL),y)
+ifneq ($(TCONFIG_HTTPS),)
 CFLAGS	+= -I$(TOP)/openssl/include -DUSE_OPENSSL
 LIBS += -L$(TOP)/openssl -lssl -lcrypto
 else

@@ -24,9 +24,9 @@ OBJS += openvpn.o
 endif
 
 LIBS = -L$(TOP)/nvram -lnvram -L$(TOP)/shared -lshared
-LIBS += -L$(TOP)/mssl -lmssl
 
-ifeq ($(FULL_OPENSSL),y)
+ifneq ($(TCONFIG_HTTPS),)
+LIBS += -L$(TOP)/mssl -lmssl
 LIBS += -L$(TOP)/openssl -lssl -lcrypto
 endif
 

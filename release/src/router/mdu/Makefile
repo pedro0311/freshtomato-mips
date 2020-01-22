@@ -5,7 +5,7 @@ CFLAGS	+= -I$(SRCBASE)/include -I$(TOP)/shared
 LDFLAGS	=
 LIBS = -L$(TOP)/nvram -lnvram -L$(TOP)/shared -lshared
 
-ifeq ($(FULL_OPENSSL),y)
+ifneq ($(TCONFIG_HTTPS),)
 LIBS += -L$(TOP)/openssl -lssl -lcrypto
 endif
 

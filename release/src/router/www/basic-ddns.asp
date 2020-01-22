@@ -44,7 +44,6 @@ REMOVE-END */
 
 var services = [
 	['', 'None', '', ''],
-/* HTTPS-BEGIN */
 	['changeip', 'ChangeIP (https)', 'https://www.changeip.com/', 'uh', 'Email Address'],
 	['cloudflare', 'Cloudflare (https)', 'https://www.cloudflare.com/', 'uhbnws', 'Email Address', 'API Key', null, 'Proxied', 'Create record if needed', 'Zone ID'],
 	['dnsexit', 'DNS Exit (https)', 'https://www.dnsexit.com/', 'uh'],
@@ -67,31 +66,6 @@ var services = [
 	['pubyun', 'PubYun [3322]', 'https://www.pubyun.com', 'uhwmb'],
 	['pubyun-static', 'PubYun [3322] - Static', 'https://www.pubyun.com', 'uhwmb'],
 	['zoneedit', 'ZoneEdit (https)', 'https://www.zoneedit.com/', 'uh'],
-/* HTTPS-END */
-/* HTTPS0-BEGIN */
-	['changeip', 'ChangeIP', 'https://www.changeip.com/', 'uh', 'Email Address'],
-	['cloudflare', 'Cloudflare', 'https://www.cloudflare.com/', 'uhbnws', 'Email Address', 'API Key', null, 'Proxied', 'Create record if needed', 'Zone ID'],
-	['dnsexit', 'DNS Exit', 'https://www.dnsexit.com/', 'uh'],
-	['dnshenet', 'dns.he.net', 'https://dns.he.net/', 'u', 'Host name', 'DDNS key'],
-	['dnsomatic', 'DNS-O-Matic', 'https://www.dnsomatic.com/', 'uj', null, null, 'Domain <small>(optional)<\/small>'],
-	['dyndns', 'DynDNS - Dynamic', 'https://www.dyndns.com/', 'uhwmbs'],
-	['dyndns-static', 'DynDNS - Static', 'https://www.dyndns.com/', 'uhwmbs'],
-	['dyndns-custom', 'DynDNS - Custom', 'https://www.dyndns.com/', 'uhwmbs'],
-	['dyns', 'DyNS', 'http://www.dyns.cx/', 'uh'],
-	['easydns', 'easyDNS', 'https://www.easydns.com/', 'uhwm'],
-	['enom', 'eNom', 'https://www.enom.com/', 'ut', 'Domain'],
-	['afraid', 'FreeDNS', 'https://freedns.afraid.org/', 'n'],
-	['heipv6tb', 'HE.net IPv6 Tunnel Broker', 'https://www.tunnelbroker.net/', 'uh', 'Account Name', 'Update Key', 'Tunnel ID'],
-	['ieserver', 'ieServer.net', 'http://www.ieserver.net/', 'uhz', 'Username / Hostname', null, 'Domain'],
-	['namecheap', 'namecheap', 'https://www.namecheap.com/', 'ut', 'Domain'],
-	['noip', 'No-IP.com', 'https://www.noip.com/', 'uh', 'Email Address', null, 'Hostname / Group'],
-	['opendns', 'OpenDNS', 'https://www.opendns.com/', 'uhoz', null, null, 'Network <small>(optional)<\/small>'],
-	['ovh', 'OVH', 'https://www.ovh.com/', 'uh'],
-	['pairdomains', 'pairDOMAINS', 'https://www.pairdomains.com/', 'uh'],
-	['pubyun', 'PubYun [3322]', 'https://www.pubyun.com', 'uhwmb'],
-	['pubyun-static', 'PubYun [3322] - Static', 'https://www.pubyun.com', 'uhwmb'],
-	['zoneedit', 'ZoneEdit', 'https://www.zoneedit.com/', 'uh'],
-/* HTTPS0-END */
 	['custom', 'Custom URL', '', 'c']];
 
 var opendns = ['208.67.222.222', '208.67.220.220'];

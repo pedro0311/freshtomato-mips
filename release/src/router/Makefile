@@ -90,9 +90,11 @@ endif
 ifneq ($(TCONFIG_TOR)$(TCONFIG_MEDIA_SERVER)$(TCONFIG_BBT),)
 obj-y += zlib
 endif
-ifneq ($(TCONFIG_HTTPS)$(TCONFIG_BBT)$(TCONFIG_NGINX),)
+ifneq ($(TCONFIG_HTTPS),)
 obj-$(TCONFIG_OPENSSL11) += openssl-1.1
 obj-y += openssl
+else
+obj-y += cyassl
 endif
 ifneq ($(TCONFIG_TOR)$(TCONFIG_NFS)$(TCONFIG_BBT),)
 obj-y += libevent
@@ -112,7 +114,6 @@ obj-$(TCONFIG_STUBBY) += getdns
 obj-$(TCONFIG_SNMP) += snmp
 obj-$(TCONFIG_SDHC) += mmc
 
-obj-y += cyassl
 obj-y += mssl
 obj-y += mdu
 obj-$(TCONFIG_RAID) += mdadm
@@ -131,26 +132,19 @@ obj-$(TCONFIG_USB) += p910nd
 obj-$(TCONFIG_USB) += comgt
 obj-$(TCONFIG_USB) += uqmi
 obj-$(TCONFIG_USB) += pdureader
+obj-$(TCONFIG_USB) += sd-idle
 
 obj-$(TCONFIG_UPS) += apcupsd
-
-ifeq ($(CONFIG_LINUX26),y)
-obj-$(TCONFIG_USB) += sd-idle
-else
-obj-$(TCONFIG_USB) += scsi-idle
-endif
 
 obj-y += libusb10
 obj-y += usbmodeswitch
 obj-$(TCONFIG_FTP) += vsftpd
 
-ifeq ($(CONFIG_LINUX26),y)
 ifeq ($(TCONFIG_SAMBASRV),y)
 NEED_EX_NLS = y
 endif
 ifeq ($(TCONFIG_USB_EXTRAS),y)
 NEED_EX_USB = y
-endif
 endif
 
 ifeq ($(TCONFIG_SAMBASRV),y)
@@ -201,7 +195,7 @@ MEDIA_SERVER_STATIC=y
 
 #obj-y += libnfnetlink
 obj-y += miniupnpd
-obj-$(CONFIG_LINUX26) += ipset
+obj-y += ipset
 
 
 #
@@ -246,15 +240,8 @@ obj-$(TCONFIG_NANO) += nano
 obj-$(TCONFIG_BBT) += libcurl
 obj-$(TCONFIG_BBT) += transmission
 
-obj-$(CONFIG_LINUX26) += hotplug2
-obj-$(CONFIG_LINUX26) += udevtrigger
-
-ifneq ($(TCONFIG_OPENVPN)$(TCONFIG_FTP_SSL)$(TCONFIG_BBT)$(TCONFIG_TOR)$(TCONFIG_TINC),)
-    export FULL_OPENSSL := y
-else
-    FULL_OPENSSL :=
-endif
-
+obj-y += hotplug2
+obj-y += udevtrigger
 obj-y += wanuptime
 
 
@@ -287,9 +274,7 @@ kernel: $(LINUXDIR)/.config
 	if grep -q "CONFIG_MODULES=y" $(LINUXDIR)/.config ; then \
 	    $(MAKE) -C $(LINUXDIR) modules CC=$(KERNELCC) $(PARALLEL_BUILD); \
 	fi
-ifeq ($(CONFIG_LINUX26),y)
 	$(MAKE) -C $(LINUXDIR)/arch/mips/brcm-boards/bcm947xx/compressed srctree=$(LINUXDIR) $(PARALLEL_BUILD)
-endif
 
 
 lzma-loader:
@@ -321,18 +306,6 @@ install package: countInstallSteps $(obj-install) $(LINUXDIR)/.config
 	$(MAKE) -C $(LINUXDIR) modules_install \
 	INSTALL_MOD_STRIP="--strip-debug -x -R .comment -R .note -R .pdr -R .mdebug.abi32 -R .note.gnu.build-id -R .gnu.attributes -R .reginfo" \
 	DEPMOD=/bin/true INSTALL_MOD_PATH=$(TARGETDIR)
-
-ifneq ($(CONFIG_LINUX26),y)
-	find $(TARGETDIR)/lib/modules -name wl.*o -exec $(STRIP) --strip-unneeded -x {} \;
-	find $(TARGETDIR)/lib/modules -name et.*o -exec $(STRIP) --strip-unneeded -x {} \;
-	find $(TARGETDIR)/lib/modules -name bcm57*.*o -exec $(STRIP) --strip-unneeded -x {} \;
-	find $(TARGETDIR)/lib/modules -name ctf.*o -exec $(STRIP) --strip-unneeded -x {} \;
-	find $(TARGETDIR)/lib/modules -name emf.*o -exec $(STRIP) --strip-unneeded -x {} \;
-	find $(TARGETDIR)/lib/modules -name igs.*o -exec $(STRIP) --strip-unneeded -x {} \;
-	find $(TARGETDIR)/lib/modules -name jffs*.*o -exec $(STRIP) --strip-unneeded -x {} \;
-	find $(TARGETDIR)/lib/modules -name *.*o -exec $(STRIP) --strip-debug -x -R .mdebug.abi32 {} \;
-endif
-
 	-cd $(TARGETDIR)/lib/modules/*/kernel/drivers/net && mv diag/* . && rm -rf diag
 
 # nice and clean
@@ -649,7 +622,6 @@ libc:	$(LIBDIR)/ld-uClibc.so.0
 clean: clean-build $(obj-clean)
 	rm -rf layer7/squished
 	rm -f .ipv6-y .ipv6-n
-	rm -f .fullssl-y .fullssl-n
 	make -C config clean
 
 clean-build: dummy
@@ -705,12 +677,7 @@ menuconfig mconf: rmconf kmconf
 	@$(MAKE) iptables-clean ebtables-clean pppd-clean zebra-clean dnsmasq-clean iproute2-clean
 	@touch $@
 
-.fullssl-y .fullssl-n:
-	@rm -f .fullssl-y .fullssl-n
-	@$(MAKE) openssl-clean vsftpd-clean mssl-clean mdu-clean httpd-clean
-	@touch $@
-
-dependconf: .ipv6-$(if $(TCONFIG_IPV6),y,n) .fullssl-$(if $(FULL_OPENSSL),y,n)
+dependconf: .ipv6-$(if $(TCONFIG_IPV6),y,n)
 
 oldconfig oldconf: koldconf roldconf dependconf bboldconf
 
@@ -733,8 +700,7 @@ busybox-clean:
 busybox-config:
 	$(MAKE) -C busybox menuconfig
 
-
-httpd: shared nvram mssl
+httpd: shared nvram $(if $(TCONFIG_HTTPS),mssl,)
 	@$(SEP)
 	@$(MAKE) -C httpd
 
@@ -742,13 +708,13 @@ www-install:
 	@$(MAKE) -C www install INSTALLDIR=$(INSTALLDIR)/www TOMATO_EXPERIMENTAL=$(TOMATO_EXPERIMENTAL)
 
 cyassl/stamp-h1:
-	@cd cyassl && CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) \
-	CFLAGS="-Os -Wall -fPIC $(EXTRACFLAGS) -ffunction-sections -fdata-sections \
-	-DNO_MD4 -DNO_AES -DNO_ERROR_STRINGS -DNO_HC128 -DNO_RABBIT -DNO_PSK -DNO_DSA -DNO_DH -DNO_PWDBASED" \
+	cd cyassl && autoreconf -fsi && \
+	CFLAGS="$(EXTRACFLAGS) -ffunction-sections -fdata-sections -DNO_MD4 -DNO_ERROR_STRINGS -DNO_HC128 -DNO_RABBIT -DNO_PSK -DNO_DSA -DNO_DH -DNO_PWDBASED" \
+	CXXFLAGS="-Os -Wall" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
 	PTHREAD_LIBS="-lpthread" \
 	$(CONFIGURE)
-	@touch cyassl/stamp-h1
+	@touch $@
 
 cyassl: cyassl/stamp-h1
 	@$(SEP)
@@ -761,14 +727,8 @@ cyassl-clean:
 	-@$(MAKE) -C cyassl clean
 	@rm -f cyassl/stamp-h1
 
-ifeq ($(FULL_OPENSSL),y)
-OPENSSL_CIPHERS:=enable-rc5
-else
-OPENSSL_CIPHERS:=no-dh no-idea no-rc2 no-rc5 no-engine no-aes192 no-cast
-endif
-
 ifeq ($(TCONFIG_KEYGEN),)
-OPENSSL_CIPHERS+=no-sha0 no-smime no-camellia no-krb5 no-rmd160 no-ripemd no-seed no-capieng no-gms no-gmp no-rfc3779 no-hw no-jpake no-zlib no-engines no-sse2 no-libunbound no-ssl-trace no-dtls1 no-store no-psk no-md2 no-mdc2 no-ts
+OPENSSL_CIPHERS := no-sha0 no-smime no-camellia no-krb5 no-rmd160 no-ripemd no-seed no-capieng no-gms no-gmp no-rfc3779 no-hw no-jpake no-zlib no-engines no-sse2 no-libunbound no-ssl-trace no-dtls1 no-store no-psk no-md2 no-mdc2 no-ts
 endif
 
 openssl/stamp-h1:
@@ -785,7 +745,7 @@ endif
 	RANLIB=$(RANLIB:$(CROSS_COMPILE)%=%) \
 	./Configure $(HOSTCONFIG) -Os -DOPENSSL_NO_BUF_FREELISTS --openssldir=/etc \
 	-ffunction-sections -fdata-sections -Wl,--gc-sections -fomit-frame-pointer \
-	shared $(OPENSSL_CIPHERS) no-ssl2 no-ssl3 no-err $(if $(TCONFIG_BBT),,no-rc4)
+	shared $(OPENSSL_CIPHERS) enable-rc5 no-ssl2 no-ssl3 no-err $(if $(TCONFIG_BBT),,no-rc4)
 ifeq ($(TCONFIG_KEYGEN),)
 	cd openssl && mkdir -p include/openssl && \
 	ln -sf ../../crypto/camellia/camellia.h include/openssl/camellia.h && \
@@ -805,7 +765,7 @@ else
 	ln -sf ../../crypto/krb5/krb5_asn.h include/openssl/krb5_asn.h
 endif
 	@$(MAKE) -C openssl depend clean
-	@touch openssl/stamp-h1
+	@touch $@
 
 openssl: openssl/stamp-h1
 	@$(SEP)
@@ -863,7 +823,7 @@ openssl-1.1-install:
 	fi
 	@true
 
-mssl: $(if $(FULL_OPENSSL),openssl,cyassl)
+mssl: $(if $(TCONFIG_HTTPS),openssl,cyassl)
 
 ifneq ($(TCONFIG_BBT)$(TCONFIG_NGINX),)
 mdu: shared libcurl
@@ -948,30 +908,20 @@ gmp-clean:
 	$(call unpatch_files,gmp)
 
 iptables:
-	$(call patch_files,iptables)
-ifeq ($(CONFIG_LINUX26),y)
-	cp -f iptables/extensions/libipt_ipp2p_K26.c iptables/extensions/libipt_ipp2p.c
-else
-	cp -f iptables/extensions/libipt_ipp2p_K24.c iptables/extensions/libipt_ipp2p.c
-endif
 	@$(SEP)
+	$(call patch_files,iptables)
+	cp -f iptables/extensions/libipt_ipp2p_K26.c iptables/extensions/libipt_ipp2p.c
 	$(MAKE) -C iptables BINDIR=/usr/sbin LIBDIR=/usr/lib KERNEL_DIR=$(LINUXDIR) COPT_FLAGS="-Os $(EXTRACFLAGS) -U CONFIG_NVRAM_SIZE $(OPTSIZE_FLAG)"
 
 iptables-install:
 	install -D iptables/iptables $(INSTALLDIR)/iptables/usr/sbin/iptables
-	cd $(INSTALLDIR)/iptables/usr/sbin && \
-		ln -sf iptables iptables-restore && \
-		ln -sf iptables iptables-save
-
+	cd $(INSTALLDIR)/iptables/usr/sbin && ln -sf iptables iptables-restore && ln -sf iptables iptables-save
 	install -d $(INSTALLDIR)/iptables/usr/lib/iptables
 	install -D iptables/extensions/*.so $(INSTALLDIR)/iptables/usr/lib/iptables/
-
 	install -D iptables/libiptc.so $(INSTALLDIR)/iptables/usr/lib/libiptc.so
-
 	$(STRIP) $(INSTALLDIR)/iptables/usr/sbin/iptables
 	$(STRIP) $(INSTALLDIR)/iptables/usr/lib/iptables/*.so
 	$(STRIP) $(INSTALLDIR)/iptables/usr/lib/libiptc.so
-
 ifeq ($(TCONFIG_IPV6),y)
 	install iptables/ip6tables $(INSTALLDIR)/iptables/usr/sbin/ip6tables
 	$(STRIP) $(INSTALLDIR)/iptables/usr/sbin/ip6tables
@@ -1216,7 +1166,7 @@ pppd/Makefile: pppd/linux/Makefile.top
 
 pppd: pppd/Makefile
 	@$(SEP)
-	@$(MAKE) -C pppd MFLAGS='$(if $(TCONFIG_IPV6),HAVE_INET6=y,) $(if $(filter y,$(FULL_OPENSSL)),,USE_CRYPT=y) EXTRACFLAGS="$(EXTRACFLAGS) $(OPTSIZE_FLAG)"'
+	@$(MAKE) -C pppd MFLAGS='$(if $(TCONFIG_IPV6),HAVE_INET6=y,) $(if $(TCONFIG_HTTPS),,USE_CRYPT=y) EXTRACFLAGS="$(EXTRACFLAGS) $(OPTSIZE_FLAG)"'
 
 pppd-install:
 	install -D pppd/pppd/pppd $(INSTALLDIR)/pppd/usr/sbin/pppd
