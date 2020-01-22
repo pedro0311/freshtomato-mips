@@ -1946,9 +1946,13 @@ php-install:
 	cd $(INSTALLDIR)/php/usr/sbin && ln -sf php-cgi php-fcgi
 	$(STRIP) $(INSTALLDIR)/php/usr/sbin/php-cgi
 
-nginx/stamp-h1: openssl zlib pcre libatomic_ops
+nginx/stamp-h1: $(OPENSSLDIR) zlib pcre libatomic_ops
 	$(call patch_files,nginx)
-	cd $(TOP)/nginx && ./configure --crossbuild=Linux::$(ARCH) \
+	cd nginx && \
+	./configure --crossbuild=Linux::$(ARCH) \
+		--with-cc="$(CC)" \
+		--with-cc-opt="-Os -Wall $(EXTRACFLAGS) -I$(TOP)/$(OPENSSLDIR)/include -I$(TOP)/pcre -I$(TOP)/zlib -I$(TOP)/libatomic_ops/src/.libs" \
+		--with-ld-opt="-L$(TOP)/pcre/.libs -L$(TOP)/zlib -L$(TOP)/$(OPENSSLDIR) -L$(TOP)/libatomic_ops/src" \
 		--prefix=/usr \
 		--sbin-path=/usr/sbin \
 		--conf-path=/etc/nginx/nginx.conf \
@@ -1958,18 +1962,16 @@ nginx/stamp-h1: openssl zlib pcre libatomic_ops
 		--lock-path=/tmp/var/run/nginx.lock.accept \
 		--http-client-body-temp-path=/tmp/var/lib/nginx/client \
 		--http-fastcgi-temp-path=/tmp/var/lib/nginx/fastcgi \
+		--http-uwsgi-temp-path=/tmp/var/lib/nginx/uwsgi \
+		--http-scgi-temp-path=/tmp/var/lib/nginx/scgi \
+		--http-proxy-temp-path=/tmp/var/lib/nginx/proxy \
 		--with-http_flv_module \
 		--with-http_ssl_module \
 		--with-http_gzip_static_module \
 		--with-http_v2_module \
-		--http-uwsgi-temp-path=/tmp/var/lib/nginx/uwsgi \
-		--http-scgi-temp-path=/tmp/var/lib/nginx/scgi \
-		--http-proxy-temp-path=/tmp/var/lib/nginx/proxy \
 		--with-libatomic="$(TOP)/libatomic_ops" \
-		--with-cc="$(CC)" \
-		--with-ld-opt="$(LDFLAGS) -L $(TOP)/pcre/.libs -L $(TOP)/zlib -L $(TOP)/openssl -L $(TOP)/libatomic_ops/src" \
-		--with-cc-opt="-Os $(EXTRACFLAGS) $(CPPFLAGS) $(CFLAGS) -I $(TOP)/openssl/include -I $(TOP)/openssl/include/openssl -I $(TOP)/pcre -I $(TOP)/zlib -I $(TOP)/libatomic_ops/src/.libs" \
 		$(ADDITIONAL_MODULES)
+	@touch $@
 
 nginx: nginx/stamp-h1
 	@$(SEP)
@@ -1981,8 +1983,7 @@ nginx-clean:
 	$(call unpatch_files,nginx)
 
 nginx-install:
-	install -d $(INSTALLDIR)/nginx/usr/sbin
-	install -D nginx/objs/nginx $(INSTALLDIR)/nginx/usr/sbin/nginx && chmod 755 $(INSTALLDIR)/nginx/usr/sbin/nginx
+	install -D nginx/objs/nginx $(INSTALLDIR)/nginx/usr/sbin/nginx && chmod 0755 $(INSTALLDIR)/nginx/usr/sbin/nginx
 	$(STRIP) $(INSTALLDIR)/nginx/usr/sbin/nginx
 
 libncurses/stamp-h1:
