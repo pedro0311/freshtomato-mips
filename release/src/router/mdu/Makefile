@@ -6,7 +6,13 @@ LDFLAGS	=
 LIBS = -L$(TOP)/nvram -lnvram -L$(TOP)/shared -lshared
 
 ifneq ($(TCONFIG_HTTPS),)
+ifeq ($(TCONFIG_OPENSSL11),y)
+CFLAGS += -I$(TOP)/openssl-1.1/include
+LIBS += -L$(TOP)/openssl-1.1 -lssl -lcrypto
+else
+CFLAGS += -I$(TOP)/openssl/include
 LIBS += -L$(TOP)/openssl -lssl -lcrypto
+endif
 endif
 
 ifneq ($(TCONFIG_BBT)$(TCONFIG_NGINX),)

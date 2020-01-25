@@ -831,7 +831,7 @@ openssl-1.1-install:
 	fi
 	@true
 
-mssl: $(if $(TCONFIG_HTTPS),openssl,cyassl)
+mssl: $(if $(TCONFIG_HTTPS),$(OPENSSLDIR),cyassl)
 
 ifneq ($(TCONFIG_BBT)$(TCONFIG_NGINX),)
 mdu: shared libcurl

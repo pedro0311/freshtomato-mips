@@ -5,8 +5,13 @@ LIBS =
 LDFLAGS	= -ffunction-sections -fdata-sections -Wl,--gc-sections
 
 ifneq ($(TCONFIG_HTTPS),)
+ifeq ($(TCONFIG_OPENSSL11),y)
+CFLAGS	+= -I$(TOP)/openssl-1.1/include -DUSE_OPENSSL
+LIBS += -L$(TOP)/openssl-1.1 -lssl -lcrypto
+else
 CFLAGS	+= -I$(TOP)/openssl/include -DUSE_OPENSSL
 LIBS += -L$(TOP)/openssl -lssl -lcrypto
+endif
 else
 CFLAGS	+= -I$(TOP)/cyassl/include -I$(TOP)/cyassl/ctaocrypt/include
 LIBS += $(TOP)/cyassl/src/.libs/libcyassl.a
