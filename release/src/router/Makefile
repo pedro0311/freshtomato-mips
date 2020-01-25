@@ -90,9 +90,19 @@ endif
 ifneq ($(TCONFIG_TOR)$(TCONFIG_MEDIA_SERVER)$(TCONFIG_BBT),)
 obj-y += zlib
 endif
-ifneq ($(TCONFIG_HTTPS)$(TCONFIG_BBT)$(TCONFIG_NGINX),)
+
+ifneq ($(TCONFIG_HTTPS),)
 obj-y += openssl
+ifeq ($(TCONFIG_OPENSSL11),y)
+obj-y += openssl-1.1
+OPENSSLDIR = openssl-1.1
+else
+OPENSSLDIR = openssl
 endif
+else
+obj-y += cyassl
+endif
+
 ifneq ($(TCONFIG_TOR)$(TCONFIG_NFS)$(TCONFIG_BBT),)
 obj-y += libevent
 endif
@@ -111,7 +121,6 @@ obj-$(TCONFIG_STUBBY) += getdns
 obj-$(TCONFIG_SNMP) += snmp
 obj-$(TCONFIG_SDHC) += mmc
 
-obj-y += cyassl
 obj-y += mssl
 obj-y += mdu
 obj-$(TCONFIG_RAID) += mdadm
@@ -130,20 +139,14 @@ obj-$(TCONFIG_USB) += p910nd
 obj-$(TCONFIG_USB) += comgt
 obj-$(TCONFIG_USB) += uqmi
 obj-$(TCONFIG_USB) += pdureader
+obj-$(TCONFIG_USB) += sd-idle
 
 obj-$(TCONFIG_UPS) += apcupsd
-
-ifeq ($(CONFIG_LINUX26),y)
-obj-$(TCONFIG_USB) += sd-idle
-else
-obj-$(TCONFIG_USB) += scsi-idle
-endif
 
 obj-y += libusb10
 obj-y += usbmodeswitch
 obj-$(TCONFIG_FTP) += vsftpd
 
-ifeq ($(CONFIG_LINUX26),y)
 ifeq ($(TCONFIG_SAMBASRV),y)
 NEED_EX_NLS = y
 endif
@@ -152,7 +155,6 @@ NEED_EX_USB = y
 endif
 ifeq ($(TCONFIG_MICROSD),y)
 NEED_SD_MODULES = y
-endif
 endif
 
 ifeq ($(TCONFIG_SAMBASRV),y)
@@ -213,7 +215,7 @@ MEDIA_SERVER_STATIC=y
 
 #obj-y += libnfnetlink
 obj-y += miniupnpd
-obj-$(CONFIG_LINUX26) += ipset
+obj-y += ipset
 
 
 #
@@ -258,15 +260,8 @@ obj-$(TCONFIG_NANO) += nano
 obj-$(TCONFIG_BBT) += libcurl
 obj-$(TCONFIG_BBT) += transmission
 
-obj-$(CONFIG_LINUX26) += hotplug2
-obj-$(CONFIG_LINUX26) += udevtrigger
-
-ifneq ($(TCONFIG_OPENVPN)$(TCONFIG_FTP_SSL)$(TCONFIG_BBT)$(TCONFIG_TOR)$(TCONFIG_TINC),)
-    export FULL_OPENSSL := y
-else
-    FULL_OPENSSL :=
-endif
-
+obj-y += hotplug2
+obj-y += udevtrigger
 obj-y += wanuptime
 
 
@@ -299,9 +294,7 @@ kernel: $(LINUXDIR)/.config
 	if grep -q "CONFIG_MODULES=y" $(LINUXDIR)/.config ; then \
 	    $(MAKE) -C $(LINUXDIR) modules CC=$(KERNELCC) $(PARALLEL_BUILD); \
 	fi
-ifeq ($(CONFIG_LINUX26),y)
 	$(MAKE) -C $(LINUXDIR)/arch/mips/brcm-boards/bcm947xx/compressed srctree=$(LINUXDIR) $(PARALLEL_BUILD)
-endif
 
 
 lzma-loader:
@@ -333,17 +326,6 @@ install package: countInstallSteps $(obj-install) $(LINUXDIR)/.config
 	$(MAKE) -C $(LINUXDIR) modules_install \
 	INSTALL_MOD_STRIP="--strip-debug -x -R .comment -R .note -R .pdr -R .mdebug.abi32 -R .note.gnu.build-id -R .gnu.attributes -R .reginfo" \
 	DEPMOD=/bin/true INSTALL_MOD_PATH=$(TARGETDIR)
-
-ifneq ($(CONFIG_LINUX26),y)
-	find $(TARGETDIR)/lib/modules -name wl.*o -exec $(STRIP) --strip-unneeded -x {} \;
-	find $(TARGETDIR)/lib/modules -name et.*o -exec $(STRIP) --strip-unneeded -x {} \;
-	find $(TARGETDIR)/lib/modules -name bcm57*.*o -exec $(STRIP) --strip-unneeded -x {} \;
-	find $(TARGETDIR)/lib/modules -name ctf.*o -exec $(STRIP) --strip-unneeded -x {} \;
-	find $(TARGETDIR)/lib/modules -name emf.*o -exec $(STRIP) --strip-unneeded -x {} \;
-	find $(TARGETDIR)/lib/modules -name igs.*o -exec $(STRIP) --strip-unneeded -x {} \;
-	find $(TARGETDIR)/lib/modules -name jffs*.*o -exec $(STRIP) --strip-unneeded -x {} \;
-	find $(TARGETDIR)/lib/modules -name *.*o -exec $(STRIP) --strip-debug -x -R .mdebug.abi32 {} \;
-endif
 
 # nice and clean
 ifneq ($(TCONFIG_USBAP),y)
@@ -668,7 +650,6 @@ libc:	$(LIBDIR)/ld-uClibc.so.0
 clean: clean-build $(obj-clean)
 	rm -rf layer7/squished
 	rm -f .ipv6-y .ipv6-n
-	rm -f .fullssl-y .fullssl-n
 	make -C config clean
 
 clean-build: dummy
@@ -724,12 +705,7 @@ menuconfig mconf: rmconf kmconf
 	@$(MAKE) iptables-clean ebtables-clean pppd-clean zebra-clean dnsmasq-clean iproute2-clean
 	@touch $@
 
-.fullssl-y .fullssl-n:
-	@rm -f .fullssl-y .fullssl-n
-	@$(MAKE) openssl-clean vsftpd-clean mssl-clean mdu-clean httpd-clean
-	@touch $@
-
-dependconf: .ipv6-$(if $(TCONFIG_IPV6),y,n) .fullssl-$(if $(FULL_OPENSSL),y,n)
+dependconf: .ipv6-$(if $(TCONFIG_IPV6),y,n)
 
 oldconfig oldconf: koldconf roldconf dependconf bboldconf
 
@@ -740,11 +716,11 @@ oldconfig oldconf: koldconf roldconf dependconf bboldconf
 
 busybox: dummy
 	@$(SEP)
-	@$(MAKE) -C busybox EXTRA_CFLAGS="-fPIC $(EXTRACFLAGS)" $(PARALLEL_BUILD)
+	@$(MAKE) -C busybox EXTRA_CFLAGS="-fPIC $(EXTRACFLAGS) $(if $(TCONFIG_OPENSSL11),-DOPENSSL11,)" $(PARALLEL_BUILD)
 
 busybox-install:
 	rm -rf $(INSTALLDIR)/busybox
-	$(MAKE) -C busybox install EXTRA_CFLAGS="-fPIC $(EXTRACFLAGS)" CONFIG_PREFIX=$(INSTALLDIR)/busybox
+	$(MAKE) -C busybox install EXTRA_CFLAGS="-fPIC $(EXTRACFLAGS) $(if $(TCONFIG_OPENSSL11),-DOPENSSL11,)" CONFIG_PREFIX=$(INSTALLDIR)/busybox
 
 busybox-clean:
 	-@$(MAKE) -C busybox distclean
@@ -752,8 +728,7 @@ busybox-clean:
 busybox-config:
 	$(MAKE) -C busybox menuconfig
 
-
-httpd: shared nvram mssl
+httpd: shared nvram $(if $(TCONFIG_HTTPS),mssl,)
 	@$(SEP)
 	@$(MAKE) -C httpd
 
@@ -761,13 +736,13 @@ www-install:
 	@$(MAKE) -C www install INSTALLDIR=$(INSTALLDIR)/www TOMATO_EXPERIMENTAL=$(TOMATO_EXPERIMENTAL)
 
 cyassl/stamp-h1:
-	@cd cyassl && CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) \
-	CFLAGS="-Os -Wall -fPIC $(EXTRACFLAGS) -ffunction-sections -fdata-sections \
-	-DNO_MD4 -DNO_AES -DNO_ERROR_STRINGS -DNO_HC128 -DNO_RABBIT -DNO_PSK -DNO_DSA -DNO_DH -DNO_PWDBASED" \
+	cd cyassl && autoreconf -fsi && \
+	CFLAGS="$(EXTRACFLAGS) -ffunction-sections -fdata-sections -DNO_MD4 -DNO_ERROR_STRINGS -DNO_HC128 -DNO_RABBIT -DNO_PSK -DNO_DSA -DNO_DH -DNO_PWDBASED" \
+	CXXFLAGS="-Os -Wall" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
 	PTHREAD_LIBS="-lpthread" \
 	$(CONFIGURE)
-	@touch cyassl/stamp-h1
+	@touch $@
 
 cyassl: cyassl/stamp-h1
 	@$(SEP)
@@ -780,14 +755,8 @@ cyassl-clean:
 	-@$(MAKE) -C cyassl clean
 	@rm -f cyassl/stamp-h1
 
-ifeq ($(FULL_OPENSSL),y)
-OPENSSL_CIPHERS:=enable-rc5
-else
-OPENSSL_CIPHERS:=no-dh no-idea no-rc2 no-rc5 no-engine no-aes192 no-cast
-endif
-
 ifeq ($(TCONFIG_KEYGEN),)
-OPENSSL_CIPHERS+=no-sha0 no-smime no-camellia no-krb5 no-rmd160 no-ripemd no-seed no-capieng no-gms no-gmp no-rfc3779 no-hw no-jpake no-zlib no-engines no-sse2 no-libunbound no-ssl-trace no-dtls1 no-store no-psk no-md2 no-mdc2 no-ts
+OPENSSL_CIPHERS := no-sha0 no-smime no-camellia no-krb5 no-rmd160 no-ripemd no-seed no-capieng no-gms no-gmp no-rfc3779 no-hw no-jpake no-zlib no-engines no-sse2 no-libunbound no-ssl-trace no-dtls1 no-store no-psk no-md2 no-mdc2 no-ts
 endif
 
 openssl/stamp-h1:
@@ -802,9 +771,9 @@ endif
 	AR=$(AR:$(CROSS_COMPILE)%=%) \
 	NM=$(NM:$(CROSS_COMPILE)%=%) \
 	RANLIB=$(RANLIB:$(CROSS_COMPILE)%=%) \
-	./Configure $(HOSTCONFIG) --openssldir=/etc \
-	-ffunction-sections -fdata-sections -Wl,--gc-sections \
-	shared $(OPENSSL_CIPHERS) no-ssl2 no-ssl3 no-err $(if $(TCONFIG_BBT),,no-rc4)
+	./Configure $(HOSTCONFIG) -Os -DOPENSSL_NO_BUF_FREELISTS --openssldir=/etc \
+	-ffunction-sections -fdata-sections -Wl,--gc-sections -fomit-frame-pointer \
+	shared $(OPENSSL_CIPHERS) enable-rc5 no-ssl2 no-ssl3 no-err $(if $(TCONFIG_BBT),,no-rc4)
 ifeq ($(TCONFIG_KEYGEN),)
 	cd openssl && mkdir -p include/openssl && \
 	ln -sf ../../crypto/camellia/camellia.h include/openssl/camellia.h && \
@@ -823,8 +792,8 @@ else
 	cd openssl && mkdir -p include/openssl && \
 	ln -sf ../../crypto/krb5/krb5_asn.h include/openssl/krb5_asn.h
 endif
-	@$(MAKE) -C openssl clean depend
-	@touch openssl/stamp-h1
+	@$(MAKE) -C openssl depend clean
+	@touch $@
 
 openssl: openssl/stamp-h1
 	@$(SEP)
@@ -838,28 +807,57 @@ openssl-clean:
 
 openssl-install:
 	install -D openssl/libcrypto.so.1.0.0 $(INSTALLDIR)/openssl/usr/lib/libcrypto.so.1.0.0
+	install -D openssl/libssl.so.1.0.0 $(INSTALLDIR)/openssl/usr/lib/libssl.so.1.0.0
 	$(STRIP) $(INSTALLDIR)/openssl/usr/lib/libcrypto.so.1.0.0
+	$(STRIP) $(INSTALLDIR)/openssl/usr/lib/libssl.so.1.0.0
 	cd $(INSTALLDIR)/openssl/usr/lib && ln -sf libcrypto.so.1.0.0 libcrypto.so
-
+	cd $(INSTALLDIR)/openssl/usr/lib && ln -sf libssl.so.1.0.0 libssl.so
 	install -D openssl/apps/openssl $(INSTALLDIR)/openssl/usr/sbin/openssl
 	$(STRIP) $(INSTALLDIR)/openssl/usr/sbin/openssl
 	chmod 0500 $(INSTALLDIR)/openssl/usr/sbin/openssl
-
 	install -D -m 0500 httpd/gencert.sh $(INSTALLDIR)/openssl/usr/sbin/gencert.sh
 
+openssl-1.1/stamp-h1:
+	$(call patch_files,openssl-1.1)
+	cd openssl-1.1 && \
+	CC=$(CC:$(CROSS_COMPILE)%=%) \
+	AR=$(AR:$(CROSS_COMPILE)%=%) \
+	NM=$(NM:$(CROSS_COMPILE)%=%) \
+	RANLIB=$(RANLIB) \
+	./Configure $(HOSTCONFIG) --prefix=/usr --openssldir=/etc \
+	-Os -ffunction-sections -fdata-sections -Wl,--gc-sections -fomit-frame-pointer \
+	shared $(OPENSSL_CIPHERS) no-ssl3 no-err no-async --api=1.0.0 \
+	no-aria no-sm2 no-sm3 no-sm4
+	-@$(MAKE) -C openssl-1.1 depend clean
+	@touch $@
 
-#ifeq ($(FULL_OPENSSL),y)
-	install -D openssl/libssl.so.1.0.0 $(INSTALLDIR)/openssl/usr/lib/libssl.so.1.0.0
-	$(STRIP) $(INSTALLDIR)/openssl/usr/lib/libssl.so.1.0.0
-	cd $(INSTALLDIR)/openssl/usr/lib && ln -sf libssl.so.1.0.0 libssl.so
-#endif
+openssl-1.1: openssl-1.1/stamp-h1
+	$(SEP)
+	$(MAKE) -C openssl-1.1 $(PARALLEL_BUILD)
 
-mssl:	$(if $(FULL_OPENSSL),openssl,cyassl)
+openssl-1.1-clean:
+	[ ! -f openssl-1.1/stamp-h1 ] || $(MAKE) -C openssl-1.1 clean
+	@rm -f openssl-1.1/stamp-h1
+	$(call unpatch_files,openssl-1.1)
+
+openssl-1.1-install:
+	if [ -f openssl-1.1/stamp-h1 ] ; then \
+		install -D openssl-1.1/libcrypto.so.1.1 $(INSTALLDIR)/openssl-1.1/usr/lib/libcrypto.so.1.1 ; \
+		install -D openssl-1.1/libssl.so.1.1 $(INSTALLDIR)/openssl-1.1/usr/lib/libssl.so.1.1 ; \
+		$(STRIP) $(INSTALLDIR)/openssl-1.1/usr/lib/libssl.so.1.1 ; \
+		$(STRIP) $(INSTALLDIR)/openssl-1.1/usr/lib/libcrypto.so.1.1 ; \
+		install -D openssl-1.1/apps/openssl $(INSTALLDIR)/openssl-1.1/usr/sbin/openssl11 ; \
+		$(STRIP) $(INSTALLDIR)/openssl-1.1/usr/sbin/openssl11 ; \
+		chmod 0500 $(INSTALLDIR)/openssl-1.1/usr/sbin/openssl11 ; \
+	fi
+	@true
+
+mssl: $(if $(TCONFIG_HTTPS),$(OPENSSLDIR),cyassl)
 
 ifneq ($(TCONFIG_BBT)$(TCONFIG_NGINX),)
-mdu:	shared libcurl
+mdu: shared libcurl
 else
-mdu:	shared mssl
+mdu: shared mssl
 endif
 
 rc: nvram shared
@@ -939,30 +937,20 @@ gmp-clean:
 	$(call unpatch_files,gmp)
 
 iptables:
-	$(call patch_files,iptables)
-ifeq ($(CONFIG_LINUX26),y)
-	cp -f iptables/extensions/libipt_ipp2p_K26.c iptables/extensions/libipt_ipp2p.c
-else
-	cp -f iptables/extensions/libipt_ipp2p_K24.c iptables/extensions/libipt_ipp2p.c
-endif
 	@$(SEP)
+	$(call patch_files,iptables)
+	cp -f iptables/extensions/libipt_ipp2p_K26.c iptables/extensions/libipt_ipp2p.c
 	$(MAKE) -C iptables BINDIR=/usr/sbin LIBDIR=/usr/lib KERNEL_DIR=$(LINUXDIR) COPT_FLAGS="-Os $(EXTRACFLAGS) -U CONFIG_NVRAM_SIZE $(OPTSIZE_FLAG)"
 
 iptables-install:
 	install -D iptables/iptables $(INSTALLDIR)/iptables/usr/sbin/iptables
-	cd $(INSTALLDIR)/iptables/usr/sbin && \
-		ln -sf iptables iptables-restore && \
-		ln -sf iptables iptables-save
-
+	cd $(INSTALLDIR)/iptables/usr/sbin && ln -sf iptables iptables-restore && ln -sf iptables iptables-save
 	install -d $(INSTALLDIR)/iptables/usr/lib/iptables
 	install -D iptables/extensions/*.so $(INSTALLDIR)/iptables/usr/lib/iptables/
-
 	install -D iptables/libiptc.so $(INSTALLDIR)/iptables/usr/lib/libiptc.so
-
 	$(STRIP) $(INSTALLDIR)/iptables/usr/sbin/iptables
 	$(STRIP) $(INSTALLDIR)/iptables/usr/lib/iptables/*.so
 	$(STRIP) $(INSTALLDIR)/iptables/usr/lib/libiptc.so
-
 ifeq ($(TCONFIG_IPV6),y)
 	install iptables/ip6tables $(INSTALLDIR)/iptables/usr/sbin/ip6tables
 	$(STRIP) $(INSTALLDIR)/iptables/usr/sbin/ip6tables
@@ -1055,7 +1043,7 @@ miniupnpd-install:
 
 shared: busybox
 
-vsftpd: $(if $(TCONFIG_FTP_SSL),openssl,)
+vsftpd: $(if $(TCONFIG_FTP_SSL),$(OPENSSLDIR),)
 	@$(SEP)
 	$(call patch_files,vsftpd)
 	$(MAKE) -C vsftpd $(PARALLEL_BUILD)
@@ -1213,7 +1201,7 @@ pppd/Makefile: pppd/linux/Makefile.top
 
 pppd: pppd/Makefile
 	@$(SEP)
-	@$(MAKE) -C pppd MFLAGS='$(if $(TCONFIG_IPV6),HAVE_INET6=y,) $(if $(filter y,$(FULL_OPENSSL)),,USE_CRYPT=y) EXTRACFLAGS="$(EXTRACFLAGS) $(OPTSIZE_FLAG)"'
+	@$(MAKE) -C pppd MFLAGS='$(if $(TCONFIG_IPV6),HAVE_INET6=y,) $(if $(TCONFIG_HTTPS),,USE_CRYPT=y) EXTRACFLAGS="$(EXTRACFLAGS) $(OPTSIZE_FLAG)"'
 
 pppd-install:
 	install -D pppd/pppd/pppd $(INSTALLDIR)/pppd/usr/sbin/pppd
@@ -1902,7 +1890,7 @@ php/stamp-h1: pcre zlib libiconv sqlite libxml2 libpng jpeg libcurl
 	CFLAGS="-Os -Wall -I$(TOP)/zlib -I$(TOP)/libxml2/include/libxml -I$(TOP)/libxml2/include -I$(TOP)/pcre -I$(TOP)/libiconv/include \
 		-I$(TOP)/libpng/staged/usr/include -I$(TOP)/libcurl/staged/usr/include" \
 	LDFLAGS="-L$(TOP)/pcre/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/zlib -L$(TOP)/libxml2/.libs -L$(TOP)/libiconv/lib/.libs \
-		-L$(TOP)/libpng/.libs -L$(TOP)/libcurl/staged/usr/lib -Wl,-rpath,$(TOP)/openssl" \
+		-L$(TOP)/libpng/.libs -L$(TOP)/libcurl/staged/usr/lib -Wl,-rpath,$(TOP)/$(OPENSSLDIR)" \
 	CPPFLAGS="-L$(TOP)/pcre/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/zlib -L$(TOP)/libxml2/.libs -L$(TOP)/libiconv/lib/.libs -L$(TOP)/libpng/.libs" \
 	LIBS="-L$(TOP)/pcre/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/zlib -L$(TOP)/libxml2/.libs -L$(TOP)/libiconv/lib/.libs -L$(TOP)/libpng/.libs -L$(TOP)/libcurl/lib/.libs \
 		-lz -lsqlite3 -ldl -lpthread -liconv -lxml2 -lstdc++ -lcurl" \
@@ -1985,9 +1973,13 @@ php-install:
 	cd $(INSTALLDIR)/php/usr/sbin && ln -sf php-cgi php-fcgi
 	$(STRIP) $(INSTALLDIR)/php/usr/sbin/php-cgi
 
-nginx/stamp-h1: openssl zlib pcre libatomic_ops
+nginx/stamp-h1: $(OPENSSLDIR) zlib pcre libatomic_ops
 	$(call patch_files,nginx)
-	cd $(TOP)/nginx && ./configure --crossbuild=Linux::$(ARCH) \
+	cd nginx && \
+	./configure --crossbuild=Linux::$(ARCH) \
+		--with-cc="$(CC)" \
+		--with-cc-opt="-Os -Wall $(EXTRACFLAGS) -I$(TOP)/$(OPENSSLDIR)/include -I$(TOP)/pcre -I$(TOP)/zlib -I$(TOP)/libatomic_ops/src/.libs" \
+		--with-ld-opt="-L$(TOP)/pcre/.libs -L$(TOP)/zlib -L$(TOP)/$(OPENSSLDIR) -L$(TOP)/libatomic_ops/src" \
 		--prefix=/usr \
 		--sbin-path=/usr/sbin \
 		--conf-path=/etc/nginx/nginx.conf \
@@ -1997,18 +1989,16 @@ nginx/stamp-h1: openssl zlib pcre libatomic_ops
 		--lock-path=/tmp/var/run/nginx.lock.accept \
 		--http-client-body-temp-path=/tmp/var/lib/nginx/client \
 		--http-fastcgi-temp-path=/tmp/var/lib/nginx/fastcgi \
+		--http-uwsgi-temp-path=/tmp/var/lib/nginx/uwsgi \
+		--http-scgi-temp-path=/tmp/var/lib/nginx/scgi \
+		--http-proxy-temp-path=/tmp/var/lib/nginx/proxy \
 		--with-http_flv_module \
 		--with-http_ssl_module \
 		--with-http_gzip_static_module \
 		--with-http_v2_module \
-		--http-uwsgi-temp-path=/tmp/var/lib/nginx/uwsgi \
-		--http-scgi-temp-path=/tmp/var/lib/nginx/scgi \
-		--http-proxy-temp-path=/tmp/var/lib/nginx/proxy \
 		--with-libatomic="$(TOP)/libatomic_ops" \
-		--with-cc="$(CC)" \
-		--with-ld-opt="$(LDFLAGS) -L $(TOP)/pcre/.libs -L $(TOP)/zlib -L $(TOP)/openssl -L $(TOP)/libatomic_ops/src" \
-		--with-cc-opt="-Os $(EXTRACFLAGS) $(CPPFLAGS) $(CFLAGS) -I $(TOP)/openssl/include -I $(TOP)/openssl/include/openssl -I $(TOP)/pcre -I $(TOP)/zlib -I $(TOP)/libatomic_ops/src/.libs" \
 		$(ADDITIONAL_MODULES)
+	@touch $@
 
 nginx: nginx/stamp-h1
 	@$(SEP)
@@ -2020,8 +2010,7 @@ nginx-clean:
 	$(call unpatch_files,nginx)
 
 nginx-install:
-	install -d $(INSTALLDIR)/nginx/usr/sbin
-	install -D nginx/objs/nginx $(INSTALLDIR)/nginx/usr/sbin/nginx && chmod 755 $(INSTALLDIR)/nginx/usr/sbin/nginx
+	install -D nginx/objs/nginx $(INSTALLDIR)/nginx/usr/sbin/nginx && chmod 0755 $(INSTALLDIR)/nginx/usr/sbin/nginx
 	$(STRIP) $(INSTALLDIR)/nginx/usr/sbin/nginx
 
 libncurses/stamp-h1:
@@ -2067,18 +2056,18 @@ libncurses-install:
 		ln -sf libform.so.6 libform.so && \
 		ln -sf libmenu.so.6 libmenu.so
 
-mysql/stamp-h1: openssl zlib libncurses
+mysql/stamp-h1: $(OPENSSLDIR) zlib libncurses
 	@cp -f $(TOP)/patches/mysql/.host.tgz $(TOP)/mysql/ || true
 	$(call patch_files,mysql)
 	cd mysql && \
 	CFLAGS="-Os -Wall -fno-delete-null-pointer-checks -funit-at-a-time --param large-function-growth=800 \
 		--param max-inline-insns-single=3000 -ffunction-sections -fdata-sections -I$(TOP)/zlib \
-		-I$(TOP)/openssl/include -I$(TOP)/libncurses/include" \
+		-I$(TOP)/$(OPENSSLDIR)/include -I$(TOP)/libncurses/include" \
 	CPPFLAGS="-Os -Wall -fno-delete-null-pointer-checks -funit-at-a-time --param large-function-growth=800 \
 		--param max-inline-insns-single=3000 -ffunction-sections -fdata-sections -I$(TOP)/zlib \
-		-I$(TOP)/openssl/include -I$(TOP)/libncurses/include" \
-	LDFLAGS="-L$(TOP)/openssl -L$(TOP)/zlib/staged/usr/lib -L$(TOP)/libncurses/lib -fPIC -EL" \
-	LIBS="-lcrypt -lz -lstdc++ -lssl -lcrypto -lncurses" \
+		-I$(TOP)/$(OPENSSLDIR)/include -I$(TOP)/libncurses/include" \
+	LDFLAGS="-L$(TOP)/$(OPENSSLDIR) -L$(TOP)/zlib/staged/usr/lib -L$(TOP)/libncurses/lib -fPIC -EL" \
+	LIBS="-lcrypt -lz -lstdc++ -lssl -lcrypto -lncurses -lpthread" \
 	$(CONFIGURE) --prefix=/usr \
 		--without-debug --without-docs --without-man --with-charset=utf8 --with-extra-charsets=ascii,latin1,gb2312,gbk \
 		--enable-shared --disable-static \
@@ -2092,7 +2081,7 @@ mysql/stamp-h1: openssl zlib libncurses
 		--with-zlib-dir="$(TOP)/zlib/staged/usr" \
 		ac_cv_c_stack_direction=-1
 	cd mysql && tar xvfz .host.tgz
-	touch mysql/stamp-h1
+	@touch $@
 
 mysql: mysql/stamp-h1
 	@$(SEP)
@@ -2171,27 +2160,27 @@ lzo-install:
 		ln -sf liblzo2.so.2.0.0 liblzo2.so.2 && \
 		ln -sf liblzo2.so.2.0.0 liblzo2.so
 
-openvpn/.conf: openssl lzo
+openvpn/Makefile:
 	$(call patch_files,openvpn)
-	cd $(TOP)/openvpn && autoreconf && \
-	OPENSSL_CFLAGS="-I$(TOP)/openssl/include" \
-	OPENSSL_LIBS="-L$(TOP)/openssl -lcrypto -lssl" \
+	cd openvpn && autoreconf && \
+	OPENSSL_CFLAGS="-I$(TOP)/$(OPENSSLDIR)/include" \
+	OPENSSL_LIBS="-L$(TOP)/$(OPENSSLDIR) -lcrypto -lssl" \
 	CFLAGS="$(CFLAG_OPTIMIZE) -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
-	LDFLAGS="-L$(TOP)/openssl -L$(TOP)/lzo/src/.libs -ffunction-sections -fdata-sections -Wl,--gc-sections" \
-	CPPFLAGS="-I$(TOP)/lzo/include -I$(TOP)/openssl/include" \
+	LDFLAGS="-L$(TOP)/$(OPENSSLDIR) -L$(TOP)/zlib -lz -lpthread -ldl -L$(TOP)/lzo/src/.libs -ffunction-sections -fdata-sections -Wl,--gc-sections" \
+	CPPFLAGS="-I$(TOP)/lzo/include -I$(TOP)/$(OPENSSLDIR)/include" \
 	PLUGINDIR="/lib" \
 	$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib \
 		--enable-management --disable-debug --disable-plugin-auth-pam --disable-plugin-down-root --disable-dependency-tracking \
 		$(if $(TCONFIG_OPTIMIZE_SIZE_MORE),--disable-lz4 --enable-small --disable-server) ac_cv_lib_resolv_gethostbyname=no
 	touch openvpn/.conf
 
-openvpn: openvpn/.conf
+openvpn: $(OPENSSLDIR) lzo zlib openvpn/Makefile
 	@$(SEP)
 	@$(MAKE) -C openvpn $(PARALLEL_BUILD)
 
 openvpn-clean:
-	-@$(MAKE) -C openvpn clean
-	@rm -f openvpn/.conf
+	[ ! -f openvpn/Makefile ] || $(MAKE) -C openvpn clean
+	@rm -f openvpn/Makefile
 	$(call unpatch_files,openvpn)
 
 openvpn-install:
@@ -2232,16 +2221,17 @@ else
 CACERT:=
 endif
 
-libcurl/stamp-h1: zlib openssl
+libcurl/stamp-h1: zlib $(OPENSSLDIR)
 	cd libcurl && ./buildconf && \
 		CFLAGS="-Os -Wall -pipe -funit-at-a-time -Wno-pointer-sign -mtune=mips32 -mips32 -ffunction-sections -fdata-sections" \
-		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -I$(TOP)/openssl/include" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC -L$(TOP)/openssl -Wl,-rpath,$(TOP)/openssl" \
+		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -I$(TOP)/$(OPENSSLDIR)/include" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC -L$(TOP)/$(OPENSSLDIR) -Wl,-rpath,$(TOP)/$(OPENSSLDIR)" \
+		LIBS="-lpthread" \
 		$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib \
 			--enable-shared --enable-static --enable-cookies --enable-crypto-auth \
 			--enable-nonblocking --enable-file --enable-ftp --enable-http --enable-tftp \
 			$(if $(TCONFIG_IPV6),--enable-ipv6,) \
-			--with-random="/dev/urandom" --with-ssl="$(TOP)/openssl" --with-zlib="$(TOP)/zlib/staged/usr" \
+			--with-random="/dev/urandom" --with-ssl="$(TOP)/$(OPENSSLDIR)" --with-zlib="$(TOP)/zlib/staged/usr" \
 			--disable-nls --disable-dict --disable-debug --disable-gopher --disable-threaded-resolver \
 			--disable-ldap --disable-manual --disable-telnet --disable-verbose \
 			--without-gnutls --without-krb4 --without-libidn2 --without-libpsl --disable-tls-srp \
@@ -2312,15 +2302,16 @@ libiconv-install:
 		ln -sf libiconv.so.2.6.1 libiconv.so.2 && \
 		ln -sf libiconv.so.2.6.1 libiconv.so
 
-transmission/stamp-h1: openssl libcurl libevent zlib
+transmission/stamp-h1: $(OPENSSLDIR) libcurl libevent zlib
+	$(call patch_files,transmission)
 	cd $(TOP)/transmission && autoreconf -f && \
-		CFLAGS="-Os -Wall -fno-delete-null-pointer-checks -funit-at-a-time \
+		CFLAGS="-Os -Wall -pipe -mtune=mips32 -mips32 -fno-delete-null-pointer-checks -funit-at-a-time \
 			--param large-function-growth=800 --param max-inline-insns-single=3000 \
 			-ffunction-sections -fdata-sections" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC \
-			-L$(TOP)/zlib -L$(TOP)/openssl -L$(TOP)/libcurl/lib/.libs -L$(TOP)/libevent/.libs" \
+			-L$(TOP)/zlib -L$(TOP)/$(OPENSSLDIR) -L$(TOP)/libcurl/lib/.libs -L$(TOP)/libevent/.libs" \
 		HAVE_CXX=yes \
-		CXXFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+		CXXFLAGS="-Os -Wall -pipe -mtune=mips32 -mips32 -ffunction-sections -fdata-sections" \
 		$(CONFIGURE) --target=$(HOST) --host=$(HOST) --build=x86_64-linux-gnu --prefix=/usr --disable-nls \
 			--enable-lightweight --enable-largefile --enable-utp --without-gtk --disable-cli --without-systemd-daemon \
 			LIBCURL_CFLAGS="-I$(TOP)/libcurl/include" \
@@ -2329,17 +2320,16 @@ transmission/stamp-h1: openssl libcurl libevent zlib
 			LIBEVENT_CFLAGS="-I$(TOP)/libevent/include" \
 			LIBEVENT_LDFLAGS="-L$(TOP)/libevent/.libs" \
 			LIBEVENT_LIBS="-levent" \
-			OPENSSL_CFLAGS="-I$(TOP)/openssl/include" \
-			OPENSSL_LDFLAGS="-L$(TOP)/openssl" \
+			OPENSSL_CFLAGS="-I$(TOP)/$(OPENSSLDIR)/include" \
+			OPENSSL_LDFLAGS="-L$(TOP)/$(OPENSSLDIR)" \
 			OPENSSL_LIBS="-lcrypto -lssl" \
 			ZLIB_CFLAGS="-I$(TOP)/zlib" \
 			ZLIB_LDFLAGS="-L$(TOP)/zlib" \
 			ZLIB_LIBS="-lz"
-		touch transmission/stamp-h1
+		@touch $@
 
 transmission: transmission/stamp-h1
 	@$(SEP)
-	$(call patch_files,transmission)
 	$(MAKE) -C transmission $(PARALLEL_BUILD)
 
 transmission-clean:
@@ -2447,29 +2437,29 @@ nfs-utils-clean:
 	@rm -f nfs-utils/stamp-h1
 	$(call unpatch_files,nfs-utils)
 
-tinc/stamp-h1: openssl zlib lzo
+tinc/stamp-h1: $(OPENSSLDIR) zlib lzo
 	$(call patch_files,tinc)
-	@cd tinc && autoreconf -fsi && \
-	CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) \
-	CFLAGS="-Os -Wall $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections" \
-	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
+	cd tinc && autoreconf -fsi && \
+	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -I$(TOP)/$(OPENSSLDIR)/include" \
+	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(TOP)/$(OPENSSLDIR) -Wl,-rpath,$(TOP)/$(OPENSSLDIR)" \
+	LIBS="-lpthread" \
 	$(CONFIGURE) \
-	--prefix=/usr \
-	--sysconfdir=/etc \
-	--localstatedir=/var \
-	--with-zlib-include="$(TOP)/zlib" \
-	--with-zlib-lib="$(TOP)/zlib" \
-	--with-lzo-include="$(TOP)/lzo/include" \
-	--with-lzo-lib="$(TOP)/lzo/src/.libs" \
-	--with-openssl-include="$(TOP)/openssl/include" \
-	--with-openssl-lib="$(TOP)/openssl" \
-	--disable-curses \
-	--disable-readline
-	@touch tinc/stamp-h1
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--localstatedir=/var \
+		--with-zlib-include="$(TOP)/zlib" \
+		--with-zlib-lib="$(TOP)/zlib" \
+		--with-lzo-include="$(TOP)/lzo/include" \
+		--with-lzo-lib="$(TOP)/lzo/src/.libs" \
+		--with-openssl-include="$(TOP)/$(OPENSSLDIR)/include" \
+		--with-openssl-lib="$(TOP)/$(OPENSSLDIR)" \
+		--disable-curses \
+		--disable-readline
+	@touch $@
 
 tinc: tinc/stamp-h1
 	@$(SEP)
-	@$(MAKE) -C tinc LIBS="-lcrypto $(TOP)/zlib/libz.a -llzo2 -lm" $(PARALLEL_BUILD)
+	@$(MAKE) -C tinc LIBS="-lcrypto $(TOP)/zlib/libz.a -llzo2 -lm -lpthread" $(PARALLEL_BUILD)
 
 tinc-clean:
 	-@$(MAKE) -C tinc clean
@@ -2528,15 +2518,15 @@ snmp-install:
 	$(STRIP) $(INSTALLDIR)/snmp/usr/sbin/snmpd
 
 apcupsd/stamp-h1:
-	cd apcupsd && touch autoconf/variables.mak && CC=$(CC) STRIP=$(CROSS_COMPILE)strip \
+	cd apcupsd && touch autoconf/variables.mak && \
 	$(MAKE) configure && \
 	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 	CPPFLAGS="-Os -Wall -ffunction-sections -fdata-sections" \
 	LDFLAGS="-L$(TOOLCHAIN)/lib -ffunction-sections -fdata-sections" \
 	$(CONFIGURE) --prefix=/usr --without-x --enable-usb --disable-pcnet --enable-cgi \
 		--disable-lgd --enable-net --sysconfdir=/usr/local/apcupsd --bindir=/bin \
-		--disable-dumb --disable-snmp --disable-net-snmp --with-cgi-bin=/www/apcupsd --with-serial-dev=
-	touch apcupsd/stamp-h1
+		--disable-dumb --disable-snmp --with-cgi-bin=/www/apcupsd --with-serial-dev=
+	@touch $@
 
 apcupsd: apcupsd/stamp-h1
 	@$(SEP)
@@ -2600,7 +2590,7 @@ dnscrypt-clean:
 	@rm -rf dnscrypt/stamp-h1 dnscrypt/src/dnscrypt-proxy/.deps dnscrypt/Makefile
 
 libyaml/stamp-h1:
-	cd libyaml && autoreconf -sfi && \
+	cd libyaml && autoreconf -fsi && \
 	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	$(CONFIGURE) --prefix=/usr --sysconfdir=/etc \
@@ -2618,18 +2608,18 @@ libyaml-clean:
 	-$(MAKE) -C libyaml clean
 	@rm -rf libyaml/stamp-h1 libyaml/src/.deps libyaml/src/tests/.deps
 
-getdns/stamp-h1: openssl libyaml
+getdns/stamp-h1: $(OPENSSLDIR) libyaml
 	$(call patch_files,getdns)
 	cd getdns && autoreconf -fsi && \
-	CFLAGS="-Os -Wall $(EXTRACFLAGS) -I$(TOP)/openssl/include -I$(TOP)/libyaml/include -ffunction-sections -fdata-sections" \
-	LDFLAGS="-L$(TOP)/openssl -L$(TOP)/libyaml/src/.libs -ffunction-sections -fdata-sections -Wl,--gc-sections" \
-	LIBS="-lcrypto -lssl -lyaml" \
+	CFLAGS="-Os -Wall $(EXTRACFLAGS) -I$(TOP)/$(OPENSSLDIR)/include -I$(TOP)/libyaml/include -ffunction-sections -fdata-sections" \
+	LDFLAGS="-L$(TOP)/$(OPENSSLDIR) -L$(TOP)/libyaml/src/.libs -ffunction-sections -fdata-sections -Wl,--gc-sections" \
+	LIBS="-lcrypto -lssl -lyaml -lpthread" \
 	$(CONFIGURE) --prefix=/usr --sysconfdir=/etc --localstatedir=/var \
 		--enable-static --disable-shared --disable-gost \
 		--without-libidn --without-libidn2 \
 		--without-getdns_query --without-getdns_server_mon \
 		--without-libunbound --enable-stub-only --with-stubby \
-		--with-ssl=$(TOP)/openssl --with-libyaml=$(TOP)/libyaml
+		--with-ssl=$(TOP)/$(OPENSSLDIR) --with-libyaml=$(TOP)/libyaml
 	@touch $@
 
 getdns: getdns/stamp-h1
@@ -2646,12 +2636,13 @@ getdns-clean:
 	@rm -rf getdns/stamp-h1 getdns/src/.libs getdns/src/tools/.libs
 	$(call unpatch_files,getdns)
 
-tor/stamp-h1: openssl zlib libevent
-	cd $(TOP)/tor && autoreconf -fsi && \
-	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+tor/stamp-h1: $(OPENSSLDIR) zlib libevent
+	cd tor && autoreconf -fsi && \
+	CFLAGS="-Os -Wall $(EXTRACFLAGS) -I$(TOP)/$(OPENSSLDIR)/include -ffunction-sections -fdata-sections" \
+	CPPFLAGS="-I$(TOP)/$(OPENSSLDIR)/include" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	$(CONFIGURE) --prefix=/usr --with-libevent-dir=$(TOP)/libevent/staged/usr/local \
-		--with-openssl-dir=$(TOP)/openssl --with-zlib-dir=$(TOP)/zlib \
+		--with-openssl-dir=$(TOP)/$(OPENSSLDIR) --with-zlib-dir=$(TOP)/zlib \
 		--disable-asciidoc --disable-tool-name-check --disable-unittests --disable-lzma \
 		--disable-seccomp --disable-libscrypt --disable-zstd-advanced-apis --disable-dependency-tracking
 	touch tor/stamp-h1
@@ -2715,10 +2706,10 @@ ipset-clean:
 	-@$(MAKE) -C ipset clean
 
 libjson-c/stamp-h1:
-	cd $(TOP)/libjson-c && CC=$(CC) STRIP=$(CROSS_COMPILE)strip \
+	cd libjson-c && \
 	./autogen.sh && \
 	$(CONFIGURE) --prefix=/usr
-	touch libjson-c/stamp-h1
+	@touch $@
 
 libjson-c: libjson-c/stamp-h1
 	@$(SEP)

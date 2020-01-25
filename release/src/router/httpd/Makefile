@@ -24,10 +24,16 @@ OBJS += openvpn.o
 endif
 
 LIBS = -L$(TOP)/nvram -lnvram -L$(TOP)/shared -lshared
-LIBS += -L$(TOP)/mssl -lmssl
 
-ifeq ($(FULL_OPENSSL),y)
+ifneq ($(TCONFIG_HTTPS),)
+LIBS += -L$(TOP)/mssl -lmssl
+ifeq ($(TCONFIG_OPENSSL11),y)
+CFLAGS += -I$(TOP)/openssl-1.1/include
+LIBS += -L$(TOP)/openssl-1.1 -lssl -lcrypto -lpthread
+else
+CFLAGS += -I$(TOP)/openssl/include
 LIBS += -L$(TOP)/openssl -lssl -lcrypto
+endif
 endif
 
 ifeq ($(TCONFIG_PPTPD),y)

@@ -688,6 +688,10 @@ define RouterOptions
 		sed -i "/TCONFIG_TINC/d" $(1); \
 		echo "TCONFIG_TINC=y" >>$(1); \
 	fi; \
+	if [ "$(OPENSSL11)" = "y" ]; then \
+		sed -i "/TCONFIG_OPENSSL11/d" $(1); \
+		echo "TCONFIG_OPENSSL11=y" >>$(1); \
+	fi; \
 	if [ "$(IPERF)" = "y" ]; then \
 		sed -i "/TCONFIG_IPERF/d" $(1); \
 		echo "TCONFIG_IPERF=y" >>$(1); \
@@ -1077,13 +1081,13 @@ b:
 ## Mega-VPN
 o:
 	@$(MAKE) bin USB="USB" B=E NTFS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y USBEXTRAS=y BCMNAT=y OPENVPN=y PPTPD=y \
-	    BBEXTRAS=y MEDIASRV=y DNSCRYPT=y STUBBY=y NOCAT=y TOR=y BTCLIENT=y SNMP=y UPS=y TR_EXTRAS=y IPSEC=y DNSSEC=y TINC=y NANO=y KEYGEN=y TERMLIB=y BUILD_DESC="Mega-VPN"
+	    BBEXTRAS=y MEDIASRV=y DNSCRYPT=y STUBBY=y NOCAT=y TOR=y BTCLIENT=y NFS=y SNMP=y UPS=y TR_EXTRAS=y IPSEC=y DNSSEC=y TINC=y NANO=y IPERF=y KEYGEN=y TERMLIB=y BUILD_DESC="Mega-VPN"
 
 
 ## All-In-One (AIO) MIPS1 - only for router with more than 8MB flash!! ZTE H618B
 z:
 	@$(MAKE) bin USB="USB" B=E NTFS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y USBEXTRAS=y BCMNAT=y OPENVPN=y PPTPD=y \
-	    BBEXTRAS=y MEDIASRV=y DNSCRYPT=y STUBBY=y NOCAT=y TOR=y BTCLIENT=y NFS=y SNMP=y UPS=y TR_EXTRAS=y IPSEC=y DNSSEC=y TINC=y NANO=y HFS=y NGINX=y IPERF=y TERMLIB=y KEYGEN=y BUILD_DESC="AIO"
+	    BBEXTRAS=y MEDIASRV=y DNSCRYPT=y STUBBY=y NOCAT=y TOR=y BTCLIENT=y NFS=y SNMP=y UPS=y TR_EXTRAS=y IPSEC=y DNSSEC=y TINC=y NANO=y HFS=y NGINX=y IPERF=y KEYGEN=y TERMLIB=y BUILD_DESC="AIO"
 
 
 #################################
