@@ -736,7 +736,11 @@ cyassl-clean:
 	@rm -f cyassl/stamp-h1
 
 ifeq ($(TCONFIG_KEYGEN),)
+ifeq ($(TCONFIG_OPENSSL11),y)
+OPENSSL_CIPHERS :=
+else
 OPENSSL_CIPHERS := no-sha0 no-smime no-camellia no-krb5 no-rmd160 no-ripemd no-seed no-capieng no-gms no-gmp no-rfc3779 no-hw no-jpake no-zlib no-engines no-sse2 no-libunbound no-ssl-trace no-dtls1 no-store no-psk no-md2 no-mdc2 no-ts
+endif
 endif
 
 openssl/stamp-h1:
