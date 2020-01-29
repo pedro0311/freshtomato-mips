@@ -11,7 +11,7 @@ clean:
 
 install:
 	mkdir -p $(INSTALLDIR)
-	( tar --exclude=.svn --exclude=*.bak -cpf - rom ) | ( cd $(INSTALLDIR) && tar -xpf - )
+	( tar --exclude=.svn --exclude=*.bak --exclude=*.yml -cpf - rom ) | ( cd $(INSTALLDIR) && tar -xpf - )
 
 	# remove comments, compress whitespace
 	sed 's/#.*//g;s/[ \t]\+/ /g;s/^[ \t]*//;s/[ \t]*$$//;/^$$/d' < rom/etc/services > $(INSTALLDIR)/rom/etc/services
@@ -109,11 +109,15 @@ else
 	done
 endif
 
-ifneq ($(TCONFIG_STUBBY),y)
-	rm -f $(INSTALLDIR)/rom/etc/stubby.yml
+ifeq ($(TCONFIG_STUBBY),y)
+ifeq ($(TCONFIG_AIO),y)
+	cp -f rom/etc/stubby.yml $(INSTALLDIR)/rom/etc/stubby.yml
+else
+	cp -f rom/etc/stubby-no-CA.yml $(INSTALLDIR)/rom/etc/stubby.yml
+endif
 endif
 
+# Used by Curl
 ifeq ($(TCONFIG_AIO),y)
-#	Used by Curl
 	cp -f others/cacert.pem $(INSTALLDIR)/rom/cacert.pem
 endif

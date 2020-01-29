@@ -92,12 +92,12 @@ obj-y += zlib
 endif
 
 ifneq ($(TCONFIG_HTTPS),)
-obj-y += openssl
 ifeq ($(TCONFIG_OPENSSL11),y)
 obj-y += openssl-1.1
-OPENSSLDIR = openssl-1.1
+export OPENSSLDIR = openssl-1.1
 else
-OPENSSLDIR = openssl
+obj-y += openssl
+export OPENSSLDIR = openssl
 endif
 else
 obj-y += cyassl
@@ -212,6 +212,7 @@ obj-$(TCONFIG_MEDIA_SERVER) += libid3tag
 obj-$(TCONFIG_MEDIA_SERVER) += libvorbis
 obj-$(TCONFIG_MEDIA_SERVER) += minidlna
 MEDIA_SERVER_STATIC=y
+INSTALL_ZLIB := $(if $(or $(TCONFIG_BT)$(TCONFIG_TOR)$(TCONFIG_NGINX),$(if $(MEDIA_SERVER_STATIC),,y)),y,)
 
 #obj-y += libnfnetlink
 obj-y += miniupnpd
@@ -756,7 +757,11 @@ cyassl-clean:
 	@rm -f cyassl/stamp-h1
 
 ifeq ($(TCONFIG_KEYGEN),)
+ifeq ($(TCONFIG_OPENSSL11),y)
+OPENSSL_CIPHERS :=
+else
 OPENSSL_CIPHERS := no-sha0 no-smime no-camellia no-krb5 no-rmd160 no-ripemd no-seed no-capieng no-gms no-gmp no-rfc3779 no-hw no-jpake no-zlib no-engines no-sse2 no-libunbound no-ssl-trace no-dtls1 no-store no-psk no-md2 no-mdc2 no-ts
+endif
 endif
 
 openssl/stamp-h1:
@@ -827,7 +832,8 @@ openssl-1.1/stamp-h1:
 	./Configure $(HOSTCONFIG) --prefix=/usr --openssldir=/etc \
 	-Os -ffunction-sections -fdata-sections -Wl,--gc-sections -fomit-frame-pointer \
 	shared $(OPENSSL_CIPHERS) no-ssl3 no-err no-async --api=1.0.0 \
-	no-aria no-sm2 no-sm3 no-sm4
+	no-aria no-sm2 no-sm3 no-sm4 \
+	-DOPENSSL_PREFER_CHACHA_OVER_GCM
 	-@$(MAKE) -C openssl-1.1 depend clean
 	@touch $@
 
@@ -849,6 +855,7 @@ openssl-1.1-install:
 		install -D openssl-1.1/apps/openssl $(INSTALLDIR)/openssl-1.1/usr/sbin/openssl11 ; \
 		$(STRIP) $(INSTALLDIR)/openssl-1.1/usr/sbin/openssl11 ; \
 		chmod 0500 $(INSTALLDIR)/openssl-1.1/usr/sbin/openssl11 ; \
+		install -D -m 0500 httpd/gencert.sh $(INSTALLDIR)/openssl-1.1/usr/sbin/gencert.sh ; \
 	fi
 	@true
 
@@ -879,17 +886,34 @@ bridge-clean:
 	-@$(MAKE) -C bridge clean
 	@rm -f bridge/Makefile
 
-dnsmasq: $(if $(TCONFIG_DNSSEC),nettle,)
+ifeq ($(TCONFIG_DNSSEC),y)
+ifneq ($(TCONFIG_HTTPS)$(TCONFIG_BBT)$(TCONFIG_NGINX)$(TCONFIG_OPENSSL11),)
+DNSSEC_BACKEND := $(OPENSSLDIR)
+DNSSEC_OPENSSL := y
+else
+DNSSEC_BACKEND := nettle
+DNSSEC_NETTLE := y
+endif
+else
+DNSSEC_BACKEND :=
+DNSSEC_OPENSSL :=
+DNSSEC_NETTLE :=
+endif
+
+dnsmasq: $(DNSSEC_BACKEND)
 	@$(SEP)
 	$(call patch_files,dnsmasq)
-	@$(MAKE) -C dnsmasq $(PARALLEL_BUILD) \
+	$(MAKE) -C dnsmasq $(PARALLEL_BUILD) \
 	CFLAGS="-Os -ffunction-sections -fdata-sections $(EXTRACFLAGS) $(OPTSIZE_FLAG)" \
 	COPTS="-DNO_INOTIFY -DHAVE_BROKEN_RTC -DHAVE_TOMATO -DNO_DUMPFILE -DNO_ID -DNO_GMP -DNO_TFTP -DNO_SCRIPT $(if $(TCONFIG_OPTIMIZE_SIZE_MORE),-DNO_LOOP -DNO_AUTH,) -DUSE_IPSET \
-		$(if $(TCONFIG_DNSSEC),-I$(TOP)/nettle/include -I$(TOP)/gmp -DHAVE_DNSSEC -DHAVE_DNSSEC_STATIC -DNO_GOST,) \
+		$(if $(DNSSEC_OPENSSL),-I$(TOP)/$(OPENSSLDIR)/include -DHAVE_DNSSEC,) \
+		$(if $(DNSSEC_NETTLE),-I$(TOP)/nettle/include -I$(TOP)/gmp -DHAVE_DNSSEC -DHAVE_DNSSEC_STATIC -DNO_GOST,) \
 		$(if $(TCONFIG_IPV6),-DUSE_IPV6,-DNO_IPV6)" \
-	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC \
-		$(if $(TCONFIG_DNSSEC),-L$(TOP)/nettle/lib -L$(TOP)/gmp/.libs,)" \
-		$(if $(TCONFIG_DNSSEC),PKG_CONFIG_PATH="$(TOP)/nettle/lib/pkgconfig",)
+	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections \
+		$(if $(DNSSEC_OPENSSL),-pthread -L$(TOP)/$(OPENSSLDIR),) \
+		$(if $(DNSSEC_NETTLE),-L$(TOP)/nettle/lib -L$(TOP)/gmp/.libs,)" \
+	$(if $(DNSSEC_OPENSSL),PKG_CONFIG_PATH="$(TOP)/$(OPENSSLDIR)" CRYPTO=openssl,) \
+	$(if $(DNSSEC_NETTLE),PKG_CONFIG_PATH="$(TOP)/nettle/lib/pkgconfig",)
 
 dnsmasq-install:
 	install -D dnsmasq/src/dnsmasq $(INSTALLDIR)/dnsmasq/usr/sbin/dnsmasq
@@ -901,12 +925,12 @@ dnsmasq-clean:
 
 nettle/stamp-h1: gmp
 	$(call patch_files,nettle)
-	@cd nettle && CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) \
+	@cd nettle && \
 	CPPFLAGS="-I$(TOP)/gmp" \
 	CFLAGS="-Os -Wall $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections" \
 	LDFLAGS="-L$(TOP)/gmp/.libs -ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
 	$(CONFIGURE) prefix=$(TOP)/nettle --enable-mini-gmp --disable-documentation --disable-shared --disable-openssl
-	@touch nettle/stamp-h1
+	@touch $@
 
 nettle: nettle/stamp-h1
 	@$(SEP)
@@ -1149,7 +1173,8 @@ dhcpv6-clean:
 	@rm -f dhcpv6/Makefile dhcpv6/stamp-h1
 
 p910nd:
-samba3:
+
+samba3: $(if $(TCONFIG_NGINX),libiconv,)
 
 nvram: shared
 
@@ -1531,22 +1556,7 @@ zlib-clean:
 	@rm -rf zlib/staged
 
 zlib-install:
-ifneq ($(MEDIA_SERVER_STATIC),y)
-	install -d $(INSTALLDIR)/zlib/usr/lib
-	install -D zlib/libz.so.1 $(INSTALLDIR)/zlib/usr/lib/
-	$(STRIP) $(INSTALLDIR)/zlib/usr/lib/libz.so.1
-endif
-ifeq ($(TCONFIG_BT),y)
-	install -d $(INSTALLDIR)/zlib/usr/lib
-	install -D zlib/libz.so.1 $(INSTALLDIR)/zlib/usr/lib/
-	$(STRIP) $(INSTALLDIR)/zlib/usr/lib/libz.so.1
-endif
-ifeq ($(TCONFIG_TOR),y)
-	install -d $(INSTALLDIR)/zlib/usr/lib
-	install -D zlib/libz.so.1 $(INSTALLDIR)/zlib/usr/lib/
-	$(STRIP) $(INSTALLDIR)/zlib/usr/lib/libz.so.1
-endif
-ifeq ($(TCONFIG_NGINX),y)
+ifeq ($(INSTALL_ZLIB),y)
 	install -d $(INSTALLDIR)/zlib/usr/lib
 	install -D zlib/libz.so.1 $(INSTALLDIR)/zlib/usr/lib/
 	$(STRIP) $(INSTALLDIR)/zlib/usr/lib/libz.so.1
@@ -2166,7 +2176,7 @@ openvpn/Makefile:
 	OPENSSL_CFLAGS="-I$(TOP)/$(OPENSSLDIR)/include" \
 	OPENSSL_LIBS="-L$(TOP)/$(OPENSSLDIR) -lcrypto -lssl" \
 	CFLAGS="$(CFLAG_OPTIMIZE) -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
-	LDFLAGS="-L$(TOP)/$(OPENSSLDIR) -L$(TOP)/zlib -lz -lpthread -ldl -L$(TOP)/lzo/src/.libs -ffunction-sections -fdata-sections -Wl,--gc-sections" \
+	LDFLAGS="-L$(TOP)/$(OPENSSLDIR) $(if $(INSTALL_ZLIB),-L$(TOP)/zlib -lz,) -lpthread -ldl -L$(TOP)/lzo/src/.libs -ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	CPPFLAGS="-I$(TOP)/lzo/include -I$(TOP)/$(OPENSSLDIR)/include" \
 	PLUGINDIR="/lib" \
 	$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib \
@@ -2174,7 +2184,7 @@ openvpn/Makefile:
 		$(if $(TCONFIG_OPTIMIZE_SIZE_MORE),--disable-lz4 --enable-small --disable-server) ac_cv_lib_resolv_gethostbyname=no
 	touch openvpn/.conf
 
-openvpn: $(OPENSSLDIR) lzo zlib openvpn/Makefile
+openvpn: $(OPENSSLDIR) lzo $(if $(INSTALL_ZLIB),zlib,) openvpn/Makefile
 	@$(SEP)
 	@$(MAKE) -C openvpn $(PARALLEL_BUILD)
 
@@ -2308,6 +2318,7 @@ transmission/stamp-h1: $(OPENSSLDIR) libcurl libevent zlib
 		CFLAGS="-Os -Wall -pipe -mtune=mips32 -mips32 -fno-delete-null-pointer-checks -funit-at-a-time \
 			--param large-function-growth=800 --param max-inline-insns-single=3000 \
 			-ffunction-sections -fdata-sections" \
+		CPPFLAGS="--param large-function-growth=800 --param max-inline-insns-single=3000" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC \
 			-L$(TOP)/zlib -L$(TOP)/$(OPENSSLDIR) -L$(TOP)/libcurl/lib/.libs -L$(TOP)/libevent/.libs" \
 		HAVE_CXX=yes \
@@ -2602,7 +2613,7 @@ libyaml: libyaml/stamp-h1
 	$(MAKE) -C libyaml $(PARALLEL_BUILD)
 
 libyaml-install:
-	install -d $(INSTALLDIR)/libyaml/usr/lib
+	@true
 
 libyaml-clean:
 	-$(MAKE) -C libyaml clean

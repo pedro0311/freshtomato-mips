@@ -10,6 +10,7 @@
 $root = $ENV{"TARGETDIR"};
 $uclibc = $ENV{"TOOLCHAIN"};
 $router = $ENV{"SRCBASE"} . "/router";
+$openssldir = $ENV{"OPENSSLDIR"};
 
 sub error
 {
@@ -28,7 +29,7 @@ sub basename
 
 sub load
 {
-    my $fname = shift;
+	my $fname = shift;
 
 	if ((-l $fname) ||
 		($fname =~ /\/lib\/modules\/\d+\.\d+\.\d+/) ||
@@ -176,7 +177,7 @@ sub fixDyn
 	fixDynDep("minidlna", "libz.so.1");
 	fixDynDep("minidlna", "libstdc.so.6");
 	fixDynDep("minidlna", "libiconv.so.2.6.1");
-	fixDynDep("minidlna", "libssl.so.1.0.0");
+#	fixDynDep("minidlna", "libssl.so.1.0.0");
 	fixDynDep("minidlna", "libjpeg.so");
 	fixDynDep("minidlna", "libogg.so.0");
 	fixDynDep("minidlna", "libvorbis.so.0");
@@ -294,6 +295,9 @@ sub fixDyn
 
 # ebtables (pedro)
 	fixDynDep("ebtables-legacy", "libebtc.so.0.0.0");
+
+# samba3 (pedro)
+	fixDynDep("samba_multicall", "libiconv.so.2.6.1");
 }
 
 sub usersOf
@@ -537,9 +541,9 @@ if ((!-d $root) || (!-d $uclibc) || (!-d $router)) {
 #open(LOG, ">libfoo.debug");
 open(LOG, ">/dev/null");
 
-print "Loading...\r";
+print "\r--- Loading...\r\r";
 load($root);
-print "Finished loading files.", " " x 30, "\r";
+print "\r--- Finished loading files. ---\r\r";
 
 fixDyn();
 fillGaps();
@@ -557,11 +561,17 @@ genSO("${root}/lib/libcrypt.so.0", "${uclibc}/lib/libcrypt.a", "${stripshared}")
 genSO("${root}/lib/libm.so.0", "${uclibc}/lib/libm.a");
 genSO("${root}/lib/libpthread.so.0", "${uclibc}/lib/libpthread.a", "${stripshared}", "-u pthread_mutexattr_init -Wl,-init=__pthread_initialize_minimal_internal");
 genSO("${root}/lib/libutil.so.0", "${uclibc}/lib/libutil.a", "${stripshared}");
-#  genSO("${root}/lib/libdl.so.0", "${uclibc}/lib/libdl.a", "${stripshared}");
-#  genSO("${root}/lib/libnsl.so.0", "${uclibc}/lib/libnsl.a", "${stripshared}");
+#genSO("${root}/lib/libdl.so.0", "${uclibc}/lib/libdl.a", "${stripshared}");
+#genSO("${root}/lib/libnsl.so.0", "${uclibc}/lib/libnsl.a", "${stripshared}");
 
-genSO("${root}/usr/lib/libcrypto.so.1.0.0", "${router}/openssl/libcrypto.a");
-genSO("${root}/usr/lib/libssl.so.1.0.0", "${router}/openssl/libssl.a", "${stripshared}", "-L${router}/openssl");
+if ($openssldir eq "openssl") {
+	genSO("${root}/usr/lib/libcrypto.so.1.0.0", "${router}/${openssldir}/libcrypto.a");
+	genSO("${root}/usr/lib/libssl.so.1.0.0", "${router}/${openssldir}/libssl.a", "${stripshared}", "-L${router}/${openssldir}");
+}
+else {
+	genSO("${root}/usr/lib/libcrypto.so.1.1", "${router}/${openssldir}/libcrypto.a");
+#	genSO("${root}/usr/lib/libssl.so.1.1", "${router}/${openssldir}/libssl.a", "${stripshared}", "-L${router}/${openssldir}");
+}
 
 genSO("${root}/usr/lib/libzebra.so", "${router}/zebra/lib/libzebra.a");
 genSO("${root}/usr/lib/libz.so.1", "${router}/zlib/libz.a");
@@ -574,21 +584,18 @@ genSO("${root}/usr/lib/libFLAC.so.8", "${router}/flac/src/libFLAC/.libs/libFLAC.
 genSO("${root}/usr/lib/libavcodec.so.52", "${router}/ffmpeg/libavcodec/libavcodec.a", "", "-L${router}/ffmpeg/libavutil -L${router}/zlib");
 genSO("${root}/usr/lib/libavutil.so.50", "${router}/ffmpeg/libavutil/libavutil.a", "-L${router}/zlib");
 genSO("${root}/usr/lib/libavformat.so.52", "${router}/ffmpeg/libavformat/libavformat.a", "", "-L${router}/ffmpeg/libavutil -L${router}/ffmpeg/libavcodec -L${router}/zlib");
-#	genSO("${root}/usr/lib/libsmb.so", "${router}/samba/source/bin/libsmb.a");
-#	genSO("${root}/usr/lib/libbigballofmud.so", "${router}/samba3/source/bin/libbigballofmud.a");
 
 genSO("${root}/usr/lib/liblzo2.so.2.0.0", "${router}/lzo/src/.libs/liblzo2.a");
-#	genSO("${root}/usr/lib/libtamba.so", "${router}/samba3/source/bin/libtamba.a");
-#	genSO("${root}/usr/lib/libiptc.so", "${router}/iptables/libiptc/libiptc.a");
-#	genSO("${root}/usr/lib/libshared.so", "${router}/shared/libshared.a");
-#	genSO("${root}/usr/lib/libnvram.so", "${router}/nvram/libnvram.a");
-#	genSO("${root}/usr/lib/libusb-1.0.so.0", "${router}/libusb10/libusb/.libs/libusb-1.0.a");
-#	genSO("${root}/usr/lib/libusb-0.1.so.4", "${router}/libusb/libusb/.libs/libusb.a", "", "-L${router}/libusb10/libusb/.libs");
+#genSO("${root}/usr/lib/libiptc.so", "${router}/iptables/libiptc/libiptc.a");
+#genSO("${root}/usr/lib/libshared.so", "${router}/shared/libshared.a");
+#genSO("${root}/usr/lib/libnvram.so", "${router}/nvram/libnvram.a");
+#genSO("${root}/usr/lib/libusb-1.0.so.0", "${router}/libusb10/libusb/.libs/libusb-1.0.a");
+#genSO("${root}/usr/lib/libusb-0.1.so.4", "${router}/libusb/libusb/.libs/libusb.a", "", "-L${router}/libusb10/libusb/.libs");
 
 genSO("${root}/usr/lib/libbcmcrypto.so", "${router}/libbcmcrypto/libbcmcrypto.a");
 
 #shibby
-genSO("${root}/usr/lib/libcurl.so.4.6.0", "${router}/libcurl/lib/.libs/libcurl.a", "", "-L${router}/zlib -L${router}/openssl");
+genSO("${root}/usr/lib/libcurl.so.4.6.0", "${router}/libcurl/lib/.libs/libcurl.a", "", "-L${router}/zlib -L${router}/${openssldir}");
 genSO("${root}/usr/lib/libevent-2.0.so.5", "${router}/libevent/.libs/libevent.a");
 genSO("${root}/usr/lib/libdaemon.so.0.5.0", "${router}/libdaemon/libdaemon/.libs/libdaemon.a");
 genSO("${root}/usr/lib/libiconv.so.2.6.1", "${router}/libiconv/lib/.libs/libiconv.a");
@@ -605,7 +612,7 @@ genSO("${root}/usr/lib/libncurses.so.6", "${router}/libncurses/lib/libncurses.a"
 # iperf (pedro)
 genSO("${root}/usr/lib/libiperf.so.0.0.0", "${router}/iperf/src/.libs/libiperf.a");
 
-print "\n";
+print "\n--- end ---\n\n";
 
 close(LOG);
 exit(0);
