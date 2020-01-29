@@ -1146,7 +1146,8 @@ dhcpv6-clean:
 	@rm -f dhcpv6/Makefile dhcpv6/stamp-h1
 
 p910nd:
-samba3:
+
+samba3: $(if $(TCONFIG_NGINX),libiconv,)
 
 nvram: shared
 

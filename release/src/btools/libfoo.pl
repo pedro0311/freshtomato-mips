@@ -295,6 +295,9 @@ sub fixDyn
 
 # ebtables (pedro)
 	fixDynDep("ebtables-legacy", "libebtc.so.0.0.0");
+
+# samba3 (pedro)
+	fixDynDep("samba_multicall", "libiconv.so.2.6.1");
 }
 
 sub usersOf
