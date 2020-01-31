@@ -8,6 +8,7 @@ install:
 			continue; \
 		fi; \
 		sed -i $$F -e "/^#!/p" -e "/^\s*#/d"; \
+		sed -i $$F -e '/^\/\*\s*$$/,/\*\//! { s/^\s\+//; s/\s\+$$//; /^$$/d }'; \
 	done
 
 	install -d $(INSTALLDIR)/sbin
@@ -19,14 +20,12 @@ ifeq ($(TCONFIG_USB),y)
 	install -d $(INSTALLDIR)/usr/bin
 	ln -sf /opt/bin/perl $(INSTALLDIR)/usr/bin/perl
 
-ifeq ($(CONFIG_LINUX26),y)
 #3G modem switch script
 	install -m 0700 switch3g $(INSTALLDIR)/usr/sbin
 #4G modem switch script
 	install -m 0700 switch4g $(INSTALLDIR)/usr/sbin
 #modem status script
 	install -m 0700 wwansignal $(INSTALLDIR)/usr/sbin
-endif
 endif
 
 ifeq ($(TCONFIG_NGINX),y)
