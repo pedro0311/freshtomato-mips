@@ -867,6 +867,9 @@ bridge-clean:
 	-@$(MAKE) -C bridge clean
 	@rm -f bridge/Makefile
 
+DNSSEC_BACKEND :=
+DNSSEC_OPENSSL :=
+DNSSEC_NETTLE :=
 ifeq ($(TCONFIG_DNSSEC),y)
 ifneq ($(TCONFIG_HTTPS)$(TCONFIG_BBT)$(TCONFIG_NGINX)$(TCONFIG_OPENSSL11),)
 DNSSEC_BACKEND := $(OPENSSLDIR)
@@ -875,10 +878,6 @@ else
 DNSSEC_BACKEND := nettle
 DNSSEC_NETTLE := y
 endif
-else
-DNSSEC_BACKEND :=
-DNSSEC_OPENSSL :=
-DNSSEC_NETTLE :=
 endif
 
 dnsmasq: $(DNSSEC_BACKEND)
@@ -906,7 +905,7 @@ dnsmasq-clean:
 
 nettle/stamp-h1: gmp
 	$(call patch_files,nettle)
-	@cd nettle && \
+	cd nettle && \
 	CPPFLAGS="-I$(TOP)/gmp" \
 	CFLAGS="-Os -Wall $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections" \
 	LDFLAGS="-L$(TOP)/gmp/.libs -ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
@@ -925,15 +924,15 @@ nettle-clean:
 	$(call unpatch_files,nettle)
 
 gmp/stamp-h1:
-	@cd gmp && autoreconf -fvi && CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) \
+	$(call patch_files,gmp)
+	cd gmp && autoreconf -fsi && \
 	CFLAGS="-Os -Wall $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
 	$(CONFIGURE)
-	@touch gmp/stamp-h1
+	@touch $@
 
 gmp: gmp/stamp-h1
 	@$(SEP)
-	$(call patch_files,gmp)
 	@$(MAKE) -C gmp $(PARALLEL_BUILD)
 
 gmp-clean:
