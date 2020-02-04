@@ -83,19 +83,7 @@ touch $LOCK
 
 [ -n "$1" ] && {
 	if [ $1 == "help" ]; then
-		echo "
-
-NOTE: This is to be used for troubleshooting, always prefer the tomato GUI whenever possible.
-
-	TTB 2.05 - usage
-
-ttb	<no parameter>		- execute TTB based on NVRAM settings
-	help			- Shows this info
-	list			- Display list of available themes, this uses a themes.txt from the defined URL.
-	<theme name>		- Download, sets the theme name and sets NVRAM variables
-	<theme name> <folder>	- Download, sets the theme name, stores locally and sets NVRAM variables
-
-"
+		echo -e "\nNOTE: This is to be used for troubleshooting, always prefer the tomato GUI whenever possible.\n\n	TTB 2.05 - usage\n\nttb	<no parameter>		- execute TTB based on NVRAM settings\n	help			- Shows this info\n	list			- Display list of available themes, this uses a themes.txt from the defined URL.\n	<theme name>		- Download, sets the theme name and sets NVRAM variables\n	<theme name> <folder>	- Download, sets the theme name, stores locally and sets NVRAM variables\n\n"
 		ttbexit 0
 	elif [ $1 == "list" ]; then
 		wget -q -O - $URL/themes.txt | more

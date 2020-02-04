@@ -758,7 +758,9 @@ cyassl-clean:
 
 ifeq ($(TCONFIG_KEYGEN),)
 ifeq ($(TCONFIG_OPENSSL11),y)
-OPENSSL_CIPHERS :=
+OPENSSL_CIPHERS := no-camellia no-idea no-rc2 no-cast no-seed no-gost no-md4 no-mdc2 no-rmd160 no-cms no-engine no-ocsp no-srp no-ts no-afalgeng no-ocb no-ocsp \
+                   no-tests no-unit-test no-ui-console no-whirlpool no-blake2 no-cmac no-multiblock no-nextprotoneg no-comp no-ct no-scrypt no-sctp no-siphash no-ubsan \
+                   no-rc5 no-rdrand no-capieng no-rfc3779 no-hw no-zlib no-sse2 no-ssl-trace no-dtls1 no-psk no-md2 no-devcryptoeng no-dgram no-dtls
 else
 OPENSSL_CIPHERS := no-sha0 no-smime no-camellia no-krb5 no-rmd160 no-ripemd no-seed no-capieng no-gms no-gmp no-rfc3779 no-hw no-jpake no-zlib no-engines no-sse2 no-libunbound no-ssl-trace no-dtls1 no-store no-psk no-md2 no-mdc2 no-ts
 endif
@@ -832,7 +834,7 @@ openssl-1.1/stamp-h1:
 	./Configure $(HOSTCONFIG) --prefix=/usr --openssldir=/etc \
 	-Os -ffunction-sections -fdata-sections -Wl,--gc-sections -fomit-frame-pointer \
 	shared $(OPENSSL_CIPHERS) no-ssl3 no-err no-async --api=1.0.0 \
-	no-aria no-sm2 no-sm3 no-sm4 \
+	no-aria no-sm2 no-sm3 no-sm4 $(if $(TCONFIG_BBT),,no-rc4) \
 	-DOPENSSL_PREFER_CHACHA_OVER_GCM
 	-@$(MAKE) -C openssl-1.1 depend clean
 	@touch $@
