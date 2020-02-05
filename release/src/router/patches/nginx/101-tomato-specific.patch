@@ -27,6 +27,17 @@
      ngx_feature_incs="#include <stdio.h>
  #define var(dummy, args...)  sprintf(args)"
      ngx_feature_path=
+--- nginx/auto/cc/gcc
++++ nginx/auto/cc/gcc
+@@ -166,7 +166,7 @@
+ 
+ 
+ # stop on warning
+-CFLAGS="$CFLAGS -Werror"
++CFLAGS="$CFLAGS"
+ 
+ # debug
+ CFLAGS="$CFLAGS -g"
 --- nginx/auto/cc/name
 +++ nginx/auto/cc/name
 @@ -7,7 +7,7 @@
@@ -71,6 +82,34 @@
  
  eval "$ngx_test >> $NGX_AUTOCONF_ERR 2>&1"
  
+--- nginx/auto/lib/libatomic/conf
++++ nginx/auto/lib/libatomic/conf
+@@ -7,8 +7,8 @@
+ 
+     have=NGX_HAVE_LIBATOMIC . auto/have
+     CORE_INCS="$CORE_INCS $NGX_LIBATOMIC/src"
+-    LINK_DEPS="$LINK_DEPS $NGX_LIBATOMIC/src/libatomic_ops.a"
+-    CORE_LIBS="$CORE_LIBS $NGX_LIBATOMIC/src/libatomic_ops.a"
++    LINK_DEPS="$LINK_DEPS $NGX_LIBATOMIC/src/.libs/libatomic_ops.a"
++    CORE_LIBS="$CORE_LIBS $NGX_LIBATOMIC/src/.libs/libatomic_ops.a"
+ 
+ else
+ 
+--- nginx/auto/lib/make
++++ nginx/auto/lib/make
+@@ -15,9 +15,9 @@
+     . auto/lib/zlib/make
+ fi
+ 
+-if [ $NGX_LIBATOMIC != NO -a $NGX_LIBATOMIC != YES ]; then
+-    . auto/lib/libatomic/make
+-fi
++#if [ $NGX_LIBATOMIC != NO -a $NGX_LIBATOMIC != YES ]; then
++#    . auto/lib/libatomic/make
++#fi
+ 
+ if [ $USE_PERL != NO ]; then
+     . auto/lib/perl/make
 --- nginx/auto/lib/pcre/make
 +++ nginx/auto/lib/pcre/make
 @@ -53,7 +53,7 @@
