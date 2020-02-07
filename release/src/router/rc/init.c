@@ -527,6 +527,7 @@ static int init_vlan_ports(void)
 	case MODEL_RTN12C1:
 	case MODEL_RTN12D1:
 	case MODEL_RTN12VP:
+	case MODEL_RTN12K:
 		dirty |= check_nv("vlan0ports", "3 2 1 0 5*"); /* L1 L2 L3 L4 CPU */
 		dirty |= check_nv("vlan1ports", "4 5"); /* WAN CPU */
 		break;
@@ -1458,6 +1459,7 @@ static int init_nvram(void)
 		break;
 	case MODEL_RTN12D1:
 	case MODEL_RTN12VP:
+	case MODEL_RTN12K:
 		mfr = "Asus";
 		name = "RT-N12 D1";
 		features = SUP_SES | SUP_80211N;

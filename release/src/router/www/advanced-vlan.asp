@@ -139,7 +139,7 @@ switch (nvram['t_model_name']) {
 	case 'Asus RT-N12 A1':
 	case 'Asus RT-N12 B1':
 	case 'Asus RT-N12 C1':
-	case 'Asus RT-N12 D1': /* also used for RT-N12 VP */
+	case 'Asus RT-N12 D1': /* also used for RT-N12 VP/K */
 	case 'Asus RT-N15U':
 	case 'Asus RT-N53':
 	case 'Asus RT-N53 A1':
