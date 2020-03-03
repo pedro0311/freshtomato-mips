@@ -186,7 +186,7 @@ Linux kernel <% version(2); %> and Broadcom Wireless Driver <% version(3); %><br
 - Static ARP binding<br/>
 - VLAN administration GUI<br/>
 - Multiple LAN support integration and GUI<br/>
-- Multiple/virtual SSID support (experimental)<br/>
+- Multiple/virtual SSID support<br/>
 - UDPxy integration and GUI<br/>
 <!-- PPTPD-BEGIN -->
 - PPTP Server integration and GUI<br/>
