@@ -31,6 +31,56 @@
 
 #define SHELL "/bin/sh"
 
+static void
+restore_defaults(void)
+{
+	int restore_defaults = 0;
+	struct sysinfo info;
+
+	/* Restore defaults if told to or OS has changed */
+	if (!restore_defaults)
+		restore_defaults = !nvram_match("restore_defaults", "0");
+
+	if (restore_defaults)
+		fprintf(stderr, "\n## Restoring defaults... ##\n");
+
+	/* Restore defaults if necessary */
+	eval("nvram", "defaults", "--initcheck");
+
+	nvram_set("os_name", "linux");
+	nvram_set("os_version", tomato_version);
+	nvram_set("os_date", tomato_buildtime);
+
+	/* Adjust et and wl thresh value after reset (for wifi-driver and et_linux.c) */
+	if (restore_defaults) {
+		memset(&info, 0, sizeof(struct sysinfo));
+		sysinfo(&info);
+		if (info.totalram <= (TOMATO_RAM_LOW_END * 1024)) { /* Router with less than 50 MB RAM */
+			/* Set to 512 as long as onboard memory <= 50 MB RAM */
+			nvram_set("wl_txq_thresh", "512");
+			nvram_set("et_txq_thresh", "512");
+#ifdef TCONFIG_USBAP
+			nvram_set("wl_rpcq_rxthresh", "512");
+#endif
+
+		}
+		else if (info.totalram <= (TOMATO_RAM_MID_END * 1024)) { /* Router with less than 100 MB RAM */
+			nvram_set("wl_txq_thresh", "1024");
+			nvram_set("et_txq_thresh", "1536");
+#ifdef TCONFIG_USBAP
+			nvram_set("wl_rpcq_rxthresh", "1024");
+#endif
+		}
+		else { /* Router with more than 100 MB RAM */
+			nvram_set("wl_txq_thresh", "1024");
+			nvram_set("et_txq_thresh", "3300");
+#ifdef TCONFIG_USBAP
+			nvram_set("wl_rpcq_rxthresh", "1024");
+#endif
+		}
+	}
+}
+
 static int fatalsigs[] = {
 	SIGILL,
 	SIGABRT,
@@ -3968,7 +4018,7 @@ static void sysinit(void)
 
 	config_loopback();
 
-	eval("nvram", "defaults", "--initcheck");
+	restore_defaults(); /* restore default if necessary */
 	init_nvram();
 
 	/* set the packet size */
