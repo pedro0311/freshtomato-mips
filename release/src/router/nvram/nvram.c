@@ -355,9 +355,9 @@ static int defaults_main(int argc, char **argv)
 		commit = 1;
 	}
 
-	nvram_set("os_name", "linux");
-	nvram_set("os_version", tomato_version);
-	nvram_set("os_date", tomato_buildtime);
+	//nvram_set("os_name", "linux");
+	//nvram_set("os_version", tomato_version);
+	//nvram_set("os_date", tomato_buildtime);
 
 	if ((commit) || (force)) {
 		printf("Saving...\n");
