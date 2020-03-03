@@ -3273,7 +3273,6 @@ TOP:
 			start_vlan();
 			start_lan();
 			start_arpbind();
-			start_wan(BOOT);
 			start_nas();
 			start_dnsmasq();
 			start_httpd();
@@ -3281,6 +3280,10 @@ TOP:
 #ifdef TCONFIG_USB
 			start_nas_services();
 #endif
+			/*
+			 * last one as ssh telnet httpd samba etc can fail to load until start_wan_done
+			 */
+			start_wan(BOOT);
 		}
 		goto CLEAR;
 	}
@@ -3290,7 +3293,7 @@ TOP:
 			stop_wireless();
 		}
 		if (act_start) {
-			start_wireless();
+			restart_wireless();
 		}
 		goto CLEAR;
 	}
@@ -3298,13 +3301,9 @@ TOP:
 	if (strcmp(service, "wl") == 0) {
 		if (act_stop) {
 			stop_wireless();
-			unload_wl();
 		}
 		if (act_start) {
-			load_wl();
-			start_wireless();
-			stop_wireless();
-			start_wireless();
+			restart_wireless();
 		}
 		goto CLEAR;
 	}
