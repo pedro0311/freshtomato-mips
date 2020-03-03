@@ -48,6 +48,10 @@ int blink_br_main(int argc, char *argv[])
 				led(LED_BRIDGE, LED_OFF);
 			}
 		}
+		else {
+			/* nothing to do for this router --> exit / stop blink_br */
+			exit(0);
+		}
 		/* sleep 3 sec before check again */
 		sleep(3);
 	}
