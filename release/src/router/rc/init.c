@@ -1317,6 +1317,12 @@ static inline void set_kernel_panic(void)
 	f_write_string("/proc/sys/kernel/panic_on_oops", "3", 0, 0);
 }
 
+static inline void set_kernel_memory(void)
+{
+	f_write_string("/proc/sys/vm/overcommit_memory", "2", 0, 0); /* Linux kernel will not overcommit memory */
+	f_write_string("/proc/sys/vm/overcommit_ratio", "100", 0, 0); /* allow userspace to commit up to 100% of total memory */
+}
+
 #if defined(TCONFIG_USB)
 static inline void tune_min_free_kbytes(void)
 {
@@ -1499,6 +1505,7 @@ static void sysinit(void)
 #endif
 
 	set_kernel_panic(); /* Reboot automatically when the kernel panics and set waiting time */
+	set_kernel_memory(); /* set overcommit_memory and overcommit_ratio */
 
 	setup_conntrack();
 	set_host_domain_name();
