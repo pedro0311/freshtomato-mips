@@ -1310,6 +1310,13 @@ static void load_files_from_nvram(void)
 		run_nvscript(".autorun", NULL, 3);
 }
 
+static inline void set_kernel_panic(void)
+{
+	/* automatically reboot after a kernel panic */
+	f_write_string("/proc/sys/kernel/panic", "3", 0, 0);
+	f_write_string("/proc/sys/kernel/panic_on_oops", "3", 0, 0);
+}
+
 #if defined(TCONFIG_USB)
 static inline void tune_min_free_kbytes(void)
 {
@@ -1490,6 +1497,9 @@ static void sysinit(void)
 #if defined(TCONFIG_USB)
 	tune_min_free_kbytes();
 #endif
+
+	set_kernel_panic(); /* Reboot automatically when the kernel panics and set waiting time */
+
 	setup_conntrack();
 	set_host_domain_name();
 
