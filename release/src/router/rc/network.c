@@ -460,7 +460,7 @@ void restart_wl(void)
 							if (wlan_5g_cnt < 2) strcpy(blink_wlan_5g_ifname, ifname);
 						}
 					}
-#endif	/* CONFIG_BCMWL5 */
+#endif /* CONFIG_BCMWL5 */
 				}
 				free(lan_ifnames);
 			}
@@ -470,7 +470,7 @@ void restart_wl(void)
 			/* specific non-bridged lan iface */
 			eval("wlconf", lan_ifname, "start");
 		}
-#endif	/* CONFIG_BCMWL5 */
+#endif /* CONFIG_BCMWL5 */
 	}
 
 	killall("wldist", SIGTERM);
