@@ -127,89 +127,89 @@ require_once('skipifconnectfailure.inc');
 Warning: mysqli_field_seek(): Invalid field offset in %s on line %d
 bool(false)
 object(stdClass)#%d (13) {
-  ["name"]=>
-  string(2) "id"
-  ["orgname"]=>
-  string(2) "id"
-  ["table"]=>
-  string(4) "test"
-  ["orgtable"]=>
-  string(4) "test"
-  ["def"]=>
-  string(0) ""
-  ["db"]=>
-  string(%d) "%s"
-  ["catalog"]=>
-  string(%d) "%s"
-  ["max_length"]=>
+  [%u|b%"name"]=>
+  %unicode|string%(2) "id"
+  [%u|b%"orgname"]=>
+  %unicode|string%(2) "id"
+  [%u|b%"table"]=>
+  %unicode|string%(4) "test"
+  [%u|b%"orgtable"]=>
+  %unicode|string%(4) "test"
+  [%u|b%"def"]=>
+  %unicode|string%(0) ""
+  [%u|b%"db"]=>
+  %unicode|string%(%d) "%s"
+  [%u|b%"catalog"]=>
+  %unicode|string%(%d) "%s"
+  [%u|b%"max_length"]=>
   int(0)
-  ["length"]=>
+  [%u|b%"length"]=>
   int(11)
-  ["charsetnr"]=>
+  [%u|b%"charsetnr"]=>
   int(63)
-  ["flags"]=>
+  [%u|b%"flags"]=>
   int(49155)
-  ["type"]=>
+  [%u|b%"type"]=>
   int(3)
-  ["decimals"]=>
+  [%u|b%"decimals"]=>
   int(0)
 }
 bool(true)
 object(stdClass)#%d (13) {
-  ["name"]=>
-  string(2) "id"
-  ["orgname"]=>
-  string(2) "id"
-  ["table"]=>
-  string(4) "test"
-  ["orgtable"]=>
-  string(4) "test"
-  ["def"]=>
-  string(0) ""
-  ["db"]=>
-  string(%d) "%s"
-  ["catalog"]=>
-  string(%d) "%s"
-  ["max_length"]=>
+  [%u|b%"name"]=>
+  %unicode|string%(2) "id"
+  [%u|b%"orgname"]=>
+  %unicode|string%(2) "id"
+  [%u|b%"table"]=>
+  %unicode|string%(4) "test"
+  [%u|b%"orgtable"]=>
+  %unicode|string%(4) "test"
+  [%u|b%"def"]=>
+  %unicode|string%(0) ""
+  [%u|b%"db"]=>
+  %unicode|string%(%d) "%s"
+  [%u|b%"catalog"]=>
+  %unicode|string%(%d) "%s"
+  [%u|b%"max_length"]=>
   int(0)
-  ["length"]=>
+  [%u|b%"length"]=>
   int(11)
-  ["charsetnr"]=>
+  [%u|b%"charsetnr"]=>
   int(63)
-  ["flags"]=>
+  [%u|b%"flags"]=>
   int(49155)
-  ["type"]=>
+  [%u|b%"type"]=>
   int(3)
-  ["decimals"]=>
+  [%u|b%"decimals"]=>
   int(0)
 }
 bool(true)
 object(stdClass)#%d (13) {
-  ["name"]=>
-  string(5) "label"
-  ["orgname"]=>
-  string(5) "label"
-  ["table"]=>
-  string(4) "test"
-  ["orgtable"]=>
-  string(4) "test"
-  ["def"]=>
-  string(0) ""
-  ["db"]=>
-  string(%d) "%s"
-  ["catalog"]=>
-  string(%d) "%s"
-  ["max_length"]=>
+  [%u|b%"name"]=>
+  %unicode|string%(5) "label"
+  [%u|b%"orgname"]=>
+  %unicode|string%(5) "label"
+  [%u|b%"table"]=>
+  %unicode|string%(4) "test"
+  [%u|b%"orgtable"]=>
+  %unicode|string%(4) "test"
+  [%u|b%"def"]=>
+  %unicode|string%(0) ""
+  [%u|b%"db"]=>
+  %unicode|string%(%d) "%s"
+  [%u|b%"catalog"]=>
+  %unicode|string%(%d) "%s"
+  [%u|b%"max_length"]=>
   int(%d)
-  ["length"]=>
+  [%u|b%"length"]=>
   int(%d)
-  ["charsetnr"]=>
+  [%u|b%"charsetnr"]=>
   int(%d)
-  ["flags"]=>
+  [%u|b%"flags"]=>
   int(0)
-  ["type"]=>
+  [%u|b%"type"]=>
   int(254)
-  ["decimals"]=>
+  [%u|b%"decimals"]=>
   int(0)
 }
 int(2)
@@ -218,35 +218,35 @@ Warning: mysqli_field_seek(): Invalid field offset in %s on line %d
 bool(false)
 bool(false)
 
-Warning: mysqli_field_seek() expects parameter 2 to be integer, float given in %s on line %d
-NULL
+Warning: mysqli_field_seek(): Invalid field offset in %s on line %d
+bool(false)
 bool(true)
 object(stdClass)#%d (13) {
-  ["name"]=>
-  string(5) "_null"
-  ["orgname"]=>
-  string(0) ""
-  ["table"]=>
-  string(0) ""
-  ["orgtable"]=>
-  string(0) ""
-  ["def"]=>
-  string(0) ""
-  ["db"]=>
-  string(0) ""
-  ["catalog"]=>
-  string(%d) "%s"
-  ["max_length"]=>
+  [%u|b%"name"]=>
+  %unicode|string%(5) "_null"
+  [%u|b%"orgname"]=>
+  %unicode|string%(0) ""
+  [%u|b%"table"]=>
+  %unicode|string%(0) ""
+  [%u|b%"orgtable"]=>
+  %unicode|string%(0) ""
+  [%u|b%"def"]=>
+  %unicode|string%(0) ""
+  [%u|b%"db"]=>
+  %unicode|string%(0) ""
+  [%u|b%"catalog"]=>
+  %unicode|string%(%d) "%s"
+  [%u|b%"max_length"]=>
   int(0)
-  ["length"]=>
+  [%u|b%"length"]=>
   int(0)
-  ["charsetnr"]=>
+  [%u|b%"charsetnr"]=>
   int(63)
-  ["flags"]=>
+  [%u|b%"flags"]=>
   int(32896)
-  ["type"]=>
+  [%u|b%"type"]=>
   int(6)
-  ["decimals"]=>
+  [%u|b%"decimals"]=>
   int(0)
 }
 

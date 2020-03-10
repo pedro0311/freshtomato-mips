@@ -15,3 +15,4 @@ echo $a->asXML();
 Warning: SimpleXMLElement::addAttribute(): Attribute name is required in %s on line %d
 <?xml version="1.0"?>
 <php>testfest</php>
+

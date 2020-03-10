@@ -30,6 +30,7 @@ var_dump($retval_2);
 
 socket_close($socket);
 ?>
+
 --EXPECTF--
 bool(true)
 

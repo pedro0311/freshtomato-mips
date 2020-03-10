@@ -13,7 +13,7 @@ awk=$1
 shift
 
 if test -z "$infile" || test -z "$srcdir"; then
-	echo "please supply infile and srcdir" >&2
+	echo "please supply infile and srcdir"
 	exit 1
 fi
 
@@ -24,8 +24,7 @@ cd $srcdir
 module_ptrs="$extra_module_ptrs`echo $@ | $awk -f ./build/order_by_dep.awk`"
 
 for ext in ${1+"$@"} ; do
-	ext_dir=`echo "$ext" | cut -d ';' -f 2`
-	header_list="$header_list $ext_dir/*.h*"
+	header_list="$header_list ext/$ext/*.h*"
 done
 
 includes=`$awk -f ./build/print_include.awk $header_list`
@@ -38,3 +37,5 @@ cat $infile | \
 	-e "s'@EXT_MODULE_PTRS@'$module_ptrs'" \
 	-e 's/@NEWLINE@/\
 /g'
+
+

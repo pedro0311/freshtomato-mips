@@ -1,9 +1,9 @@
 --TEST--
-Test uasort() function : usage variations - sort array having subarrays
+Test uasort() function : usage variations - sort array having subarrays 
 --FILE--
 <?php
 /* Prototype  : bool uasort(array $array_arg, string $cmp_function)
- * Description: Sort an array with a user-defined comparison function and maintain index association
+ * Description: Sort an array with a user-defined comparison function and maintain index association 
  * Source code: ext/standard/array.c
 */
 
@@ -62,15 +62,15 @@ array(8) {
     [0]=>
     int(-1)
   }
-  [3]=>
-  array(1) {
-    [0]=>
-    int(0)
-  }
   [6]=>
   array(1) {
     [0]=>
     string(0) ""
+  }
+  [3]=>
+  array(1) {
+    [0]=>
+    int(0)
   }
   [1]=>
   array(1) {

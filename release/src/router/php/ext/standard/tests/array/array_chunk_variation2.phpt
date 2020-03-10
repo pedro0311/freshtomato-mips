@@ -1,17 +1,15 @@
 --TEST--
-Test array_chunk() function : usage variations - unexpected values for 'size' argument
---SKIPIF--
-<?php if (PHP_INT_SIZE != 8) die("skip this test is for 64-bit only");
+Test array_chunk() function : usage variations - unexpected values for 'size' argument 
 --FILE--
 <?php
 /* Prototype  : array array_chunk(array $array, int $size [, bool $preserve_keys])
- * Description: Split array into chunks
+ * Description: Split array into chunks 
               : Chunks an array into size  large chunks
  * Source code: ext/standard/array.c
 */
 
 /*
-* Testing array_chunk() function with unexpected values for 'size' argument
+* Testing array_chunk() function with unexpected values for 'size' argument 
 */
 
 echo "*** Testing array_chunk() : usage variations ***\n";
@@ -177,57 +175,57 @@ NULL
 
 -- Iteration 6 --
 
-Warning: array_chunk() expects parameter 2 to be integer, array given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, array given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, array given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, array given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, array given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, array given in %s on line %d
 NULL
 
 -- Iteration 7 --
 
-Warning: array_chunk() expects parameter 2 to be integer, array given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, array given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, array given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, array given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, array given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, array given in %s on line %d
 NULL
 
 -- Iteration 8 --
 
-Warning: array_chunk() expects parameter 2 to be integer, array given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, array given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, array given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, array given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, array given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, array given in %s on line %d
 NULL
 
 -- Iteration 9 --
 
-Warning: array_chunk() expects parameter 2 to be integer, array given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, array given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, array given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, array given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, array given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, array given in %s on line %d
 NULL
 
 -- Iteration 10 --
 
-Warning: array_chunk() expects parameter 2 to be integer, array given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, array given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, array given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, array given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, array given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, array given in %s on line %d
 NULL
 
 -- Iteration 11 --
@@ -352,78 +350,78 @@ NULL
 
 -- Iteration 17 --
 
-Warning: array_chunk() expects parameter 2 to be integer, string given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, string given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, string given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, string given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, string given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, string given in %s on line %d
 NULL
 
 -- Iteration 18 --
 
-Warning: array_chunk() expects parameter 2 to be integer, string given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, string given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, string given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, string given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, string given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, string given in %s on line %d
 NULL
 
 -- Iteration 19 --
 
-Warning: array_chunk() expects parameter 2 to be integer, string given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, string given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, string given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, string given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, string given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, string given in %s on line %d
 NULL
 
 -- Iteration 20 --
 
-Warning: array_chunk() expects parameter 2 to be integer, string given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, string given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, string given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, string given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, string given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, string given in %s on line %d
 NULL
 
 -- Iteration 21 --
 
-Warning: array_chunk() expects parameter 2 to be integer, object given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, object given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, object given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, object given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, object given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, object given in %s on line %d
 NULL
 
 -- Iteration 22 --
 
-Warning: array_chunk() expects parameter 2 to be integer, string given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, string given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, string given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, string given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, string given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, string given in %s on line %d
 NULL
 
 -- Iteration 23 --
 
-Warning: array_chunk() expects parameter 2 to be integer, string given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, string given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, string given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, string given in %s on line %d
 NULL
 
-Warning: array_chunk() expects parameter 2 to be integer, string given in %s on line %d
+Warning: array_chunk() expects parameter 2 to be long, string given in %s on line %d
 NULL
 Done

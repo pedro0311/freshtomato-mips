@@ -1,9 +1,9 @@
 --TEST--
-Test strval() function : usage variations  - error conditions
+Test strval() function : usage variations  - error conditions 
 --FILE--
 <?php
 /* Prototype  : string strval  ( mixed $var  )
- * Description: Get the string value of a variable.
+ * Description: Get the string value of a variable. 
  * Source code: ext/standard/string.c
  */
 
@@ -13,7 +13,7 @@ error_reporting(E_ALL ^ E_NOTICE);
 
 class MyClass
 {
-	// no toString() method defined
+	// no toString() method defined 
 }
 
 $string  = "Hello";
@@ -48,4 +48,4 @@ NULL
 
 -- Testing strval() function with object which has not toString() method  --
 
-Recoverable fatal error: Object of class MyClass could not be converted to string in %s on line %d
+Catchable fatal error: Object of class MyClass could not be converted to string in %s on line %d

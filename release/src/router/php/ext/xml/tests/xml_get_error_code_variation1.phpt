@@ -1,17 +1,17 @@
 --TEST--
 Test xml_get_error_code() function : usage variations
 --SKIPIF--
-<?php
+<?php 
 if (!extension_loaded("xml")) {
-	print "skip - XML extension not loaded";
-}
+	print "skip - XML extension not loaded"; 
+}	 
 ?>
 --FILE--
 <?php
 /* Prototype  : proto int xml_get_error_code(resource parser)
- * Description: Get XML parser error code
+ * Description: Get XML parser error code 
  * Source code: ext/xml/xml.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing xml_get_error_code() : usage variations ***\n";
@@ -73,9 +73,9 @@ $values = array(
 
       // object data
       new aClass(),
-
+      
       // resource data
-      $fp,
+      $fp, 
 
       // undefined data
       $undefined_var,
@@ -119,27 +119,27 @@ NULL
 
 Arg value 10.5 
 
-Warning: xml_get_error_code() expects parameter 1 to be resource, float given in %s on line %d
+Warning: xml_get_error_code() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 Arg value -10.5 
 
-Warning: xml_get_error_code() expects parameter 1 to be resource, float given in %s on line %d
+Warning: xml_get_error_code() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 Arg value 101234567000 
 
-Warning: xml_get_error_code() expects parameter 1 to be resource, float given in %s on line %d
+Warning: xml_get_error_code() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 Arg value 1.07654321E-9 
 
-Warning: xml_get_error_code() expects parameter 1 to be resource, float given in %s on line %d
+Warning: xml_get_error_code() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 Arg value 0.5 
 
-Warning: xml_get_error_code() expects parameter 1 to be resource, float given in %s on line %d
+Warning: xml_get_error_code() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 Arg value Array 
@@ -237,3 +237,4 @@ Arg value
 Warning: xml_get_error_code() expects parameter 1 to be resource, null given in %s on line %d
 NULL
 Done
+

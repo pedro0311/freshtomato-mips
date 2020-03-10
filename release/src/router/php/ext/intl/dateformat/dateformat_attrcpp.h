@@ -1,6 +1,6 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -19,6 +19,8 @@
 
 PHP_FUNCTION(datefmt_get_timezone_id);
 
+PHP_FUNCTION(datefmt_set_timezone_id);
+
 PHP_FUNCTION(datefmt_get_timezone);
 
 PHP_FUNCTION(datefmt_set_timezone);
@@ -30,3 +32,4 @@ PHP_FUNCTION(datefmt_set_calendar);
 PHP_FUNCTION(datefmt_get_calendar_object);
 
 #endif	/* DATEFORMAT_ATTRCPP_H */
+

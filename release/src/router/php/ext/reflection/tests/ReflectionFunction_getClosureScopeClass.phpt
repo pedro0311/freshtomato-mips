@@ -2,9 +2,11 @@
 Reflection::getClosureScopeClass()
 --SKIPIF--
 <?php
-if (!extension_loaded('reflection')) print 'skip';
+if (!extension_loaded('reflection') || !defined('PHP_VERSION_ID') || PHP_VERSION_ID < 50399) {
+  print 'skip';
+}
 ?>
---FILE--
+--FILE-- 
 <?php
 $closure = function($param) { return "this is a closure"; };
 $rf = new ReflectionFunction($closure);

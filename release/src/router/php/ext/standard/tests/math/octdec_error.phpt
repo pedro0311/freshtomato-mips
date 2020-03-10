@@ -3,7 +3,7 @@ Test octdec() - wrong params  test octdec()
 --FILE--
 <?php
 /* Prototype  : number octdec  ( string $octal_string  )
- * Description: Returns the decimal equivalent of the octal number represented by the octal_string  argument.
+ * Description: Returns the decimal equivalent of the octal number represented by the octal_string  argument. 
  * Source code: ext/standard/math.c
  */
 
@@ -14,7 +14,7 @@ class classA
 {
 }
 
-echo "\n-- Incorrect number of arguments --\n";
+echo "\n-- Incorrect number of arguments --\n"; 
 octdec();
 octdec('0123567',true);
 
@@ -34,4 +34,4 @@ Warning: octdec() expects exactly 1 parameter, 2 given in %s on line %d
 
 -- Incorrect input --
 
-Recoverable fatal error: Object of class classA could not be converted to string in %s on line %d
+Catchable fatal error: Object of class classA could not be converted to string in %s on line %d

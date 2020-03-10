@@ -80,3 +80,4 @@ start serialize/unserialize
 finish serialize/unserialize
 check successful
 SCRIPT END
+

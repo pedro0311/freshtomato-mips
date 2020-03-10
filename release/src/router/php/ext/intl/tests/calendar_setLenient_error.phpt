@@ -18,7 +18,9 @@ var_dump($c->setLenient(1, 2));
 
 var_dump(intlcal_set_lenient($c, array()));
 var_dump(intlcal_set_lenient(1, false));
+
 --EXPECTF--
+
 Warning: IntlCalendar::setLenient() expects exactly 1 parameter, 0 given in %s on line %d
 
 Warning: IntlCalendar::setLenient(): intlcal_set_lenient: bad arguments in %s on line %d
@@ -39,8 +41,4 @@ Warning: intlcal_set_lenient() expects parameter 2 to be boolean, array given in
 Warning: intlcal_set_lenient(): intlcal_set_lenient: bad arguments in %s on line %d
 bool(false)
 
-Fatal error: Uncaught TypeError: Argument 1 passed to intlcal_set_lenient() must be an instance of IntlCalendar, integer given in %s:%d
-Stack trace:
-#0 %s(%d): intlcal_set_lenient(1, false)
-#1 {main}
-  thrown in %s on line %d
+Catchable fatal error: Argument 1 passed to intlcal_set_lenient() must be an instance of IntlCalendar, integer given in %s on line %d

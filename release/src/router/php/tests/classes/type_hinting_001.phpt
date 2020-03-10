@@ -1,5 +1,7 @@
 --TEST--
 ZE2 class type hinting
+--SKIPIF--
+<?php if (version_compare(zend_version(), '2.0.0-dev', '<')) die('skip ZendEngine 2 needed'); ?>
 --FILE--
 <?php
 
@@ -32,8 +34,5 @@ $a->b($b);
 
 ?>
 --EXPECTF--
-Fatal error: Uncaught TypeError: Argument 1 passed to FooBar::a() must implement interface Foo, instance of Blort given, called in %s on line 27 and defined in %s:12
-Stack trace:
-#0 %s(%d): FooBar->a(Object(Blort))
-#1 {main}
-  thrown in %s on line 12
+
+Catchable fatal error: Argument 1 passed to FooBar::a() must implement interface Foo, instance of Blort given, called in %s on line 27 and defined in %s on line 12

@@ -3,9 +3,9 @@ Test date_sunrise() function : usage variation - Passing unexpected values to si
 --FILE--
 <?php
 /* Prototype  : mixed date_sunrise(mixed time [, int format [, float latitude [, float longitude [, float zenith [, float gmt_offset]]]]])
- * Description: Returns time of sunrise for a given day and location
+ * Description: Returns time of sunrise for a given day and location 
  * Source code: ext/date/php_date.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing date_sunrise() : usage variation ***\n";
@@ -102,194 +102,194 @@ foreach($inputs as $key =>$value) {
 *** Testing date_sunrise() : usage variation ***
 
 --int 0--
-string(5) "05:47"
-float(5.796%d)
-int(1218174468)
+string(5) "05:48"
+float(5.800%d)
+int(1218174483)
 
 --int 1--
-string(5) "06:47"
-float(6.796%d)
-int(1218174468)
+string(5) "06:48"
+float(6.800%d)
+int(1218174483)
 
 --int 12345--
-string(5) "14:47"
-float(14.796%d)
-int(1218174468)
+string(5) "14:48"
+float(14.800%d)
+int(1218174483)
 
 --int -12345--
-string(5) "12:47"
-float(12.796%d)
-int(1218174468)
+string(5) "12:48"
+float(12.800%d)
+int(1218174483)
 
 --empty array--
 
-Warning: date_sunrise() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
 --int indexed array--
 
-Warning: date_sunrise() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
 --associative array--
 
-Warning: date_sunrise() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
 --nested arrays--
 
-Warning: date_sunrise() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
 --uppercase NULL--
-string(5) "05:47"
-float(5.796%d)
-int(1218174468)
+string(5) "05:48"
+float(5.800%d)
+int(1218174483)
 
 --lowercase null--
-string(5) "05:47"
-float(5.796%d)
-int(1218174468)
+string(5) "05:48"
+float(5.800%d)
+int(1218174483)
 
 --lowercase true--
-string(5) "06:47"
-float(6.796%d)
-int(1218174468)
+string(5) "06:48"
+float(6.800%d)
+int(1218174483)
 
 --lowercase false--
-string(5) "05:47"
-float(5.796%d)
-int(1218174468)
+string(5) "05:48"
+float(5.800%d)
+int(1218174483)
 
 --uppercase TRUE--
-string(5) "06:47"
-float(6.796%d)
-int(1218174468)
+string(5) "06:48"
+float(6.800%d)
+int(1218174483)
 
 --uppercase FALSE--
-string(5) "05:47"
-float(5.796%d)
-int(1218174468)
+string(5) "05:48"
+float(5.800%d)
+int(1218174483)
 
 --empty string DQ--
 
-Warning: date_sunrise() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
 --empty string SQ--
 
-Warning: date_sunrise() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
 --string DQ--
 
-Warning: date_sunrise() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
 --string SQ--
 
-Warning: date_sunrise() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
 --mixed case string--
 
-Warning: date_sunrise() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
 --heredoc--
 
-Warning: date_sunrise() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
 --instance of classWithToString--
 
-Warning: date_sunrise() expects parameter 6 to be float, object given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, object given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, object given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, object given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, object given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, object given in %s on line %d
 bool(false)
 
 --instance of classWithoutToString--
 
-Warning: date_sunrise() expects parameter 6 to be float, object given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, object given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, object given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, object given in %s on line %d
 bool(false)
 
-Warning: date_sunrise() expects parameter 6 to be float, object given in %s on line %d
+Warning: date_sunrise() expects parameter 6 to be double, object given in %s on line %d
 bool(false)
 
 --undefined var--
-string(5) "05:47"
-float(5.796%d)
-int(1218174468)
+string(5) "05:48"
+float(5.800%d)
+int(1218174483)
 
 --unset var--
-string(5) "05:47"
-float(5.796%d)
-int(1218174468)
+string(5) "05:48"
+float(5.800%d)
+int(1218174483)
 ===DONE===

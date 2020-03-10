@@ -41,7 +41,7 @@ class TheObj {
 
 	var_dump($SomeObj->RealVar1);
 	print $SomeObj->{'RealVar'.(3)}."\n";
-
+	
 	unset($SomeObj->RealVar1);
 	unset($SomeObj->{'RealVar'.(3)});
 
@@ -53,7 +53,7 @@ class TheObj {
 	unset($SomeObj->Virtual1);
 	unset($SomeObj->{'Virtual'.(3)});
 
-	//but, these variables are still available??? even though they're "unset"-ed
+	//but, these variables are still available??? eventhough they're "unset"-ed
 	print $SomeObj->Virtual1."\n";
 	print $SomeObj->{'Virtual'.(3)}."\n";
 ?>

@@ -43,3 +43,4 @@ Warning: DOMDocument::loadXML(): No declaration for element NYPHP in Entity, lin
 
 Warning: DOMDocument::loadXML(): Element from was declared #PCDATA but contains non text nodes in Entity, line: %d in %s on line %d
 Error Report Above
+

@@ -1,27 +1,29 @@
 --TEST--
 is_a and is_subclass_of behaviour (with and without autoload)
+--SKIPIF--
+<?php if (version_compare(zend_version(), '2.0.0-dev', '<')) die('skip ZendEngine 2 needed'); ?>
 --FILE--
 <?php
 
 interface if_a {
 	function f_a();
 }
-
+	
 interface if_b extends if_a {
 	function f_b();
 }
 
 class base {
 	function _is_a($sub) {
-
+		
 		echo "\n>>> With Defined class\n";
 		echo str_pad('is_a( OBJECT:'.get_class($this).', '.$sub.') = ', 60) . (is_a($this, $sub) ? 'yes' : 'no')."\n";
 		echo str_pad('is_a( STRING:'.get_class($this).', '.$sub.') = ', 60). (is_a(get_class($this), $sub) ? 'yes' : 'no')."\n";
-		echo str_pad('is_a( STRING:'.get_class($this).', '.$sub.', true) = ', 60). (is_a(get_class($this), $sub, true) ? 'yes' : 'no')."\n";
+		echo str_pad('is_a( STRING:'.get_class($this).', '.$sub.', true) = ', 60). (is_a(get_class($this), $sub, true) ? 'yes' : 'no')."\n";		
 		echo str_pad('is_subclass_of( OBJECT:'.get_class($this).', '.$sub.') = ', 60).  (is_subclass_of($this, $sub) ? 'yes' : 'no')."\n";
 		echo str_pad('is_subclass_of( STRING:'.get_class($this).', '.$sub.') = ', 60). (is_subclass_of(get_class($this), $sub) ? 'yes' : 'no')."\n";
 		echo str_pad('is_subclass_of( STRING:'.get_class($this).', '.$sub.',false) = ', 60). (is_subclass_of(get_class($this), $sub , false) ? 'yes' : 'no')."\n";
-
+		 
 		// with autoload options..
 		echo ">>> With Undefined\n";
 		echo  str_pad('is_a( STRING:undefB, '.$sub.',true) = ', 60). (is_a('undefB', $sub, true) ? 'yes' : 'no')."\n";
@@ -31,8 +33,8 @@ class base {
 	}
 	function test() {
 		echo $this->_is_a('base');
-		echo $this->_is_a('derived_a');
-		echo $this->_is_a('if_a');
+		echo $this->_is_a('derived_a');  
+		echo $this->_is_a('if_a'); 
 		echo $this->_is_a('undefA');
 		echo "\n";
 	}
@@ -60,10 +62,13 @@ $t->test();
 $t = new derived_a();
 $t->test();
 
-spl_autoload_register(function ($name) {
-    echo ">>>> In autoload: ";
-    var_dump($name);
-});
+eval('
+  function __autoload($name)
+  {
+      echo ">>>> In __autoload: ";
+      var_dump($name);
+  }
+');
 
 echo "NOW WITH AUTOLOAD\n\n";
 
@@ -75,7 +80,7 @@ $t->test();
 
 $t = new derived_b();
 $t->test();
-
+ 
 
 
 
@@ -198,11 +203,11 @@ is_subclass_of( OBJECT:base, base) =                        no
 is_subclass_of( STRING:base, base) =                        no
 is_subclass_of( STRING:base, base,false) =                  no
 >>> With Undefined
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_a( STRING:undefB, base,true) =                           no
 is_a( STRING:undefB, base) =                                no
 is_subclass_of( STRING:undefB, base,false) =                no
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_subclass_of( STRING:undefB, base) =                      no
 
 >>> With Defined class
@@ -213,11 +218,11 @@ is_subclass_of( OBJECT:base, derived_a) =                   no
 is_subclass_of( STRING:base, derived_a) =                   no
 is_subclass_of( STRING:base, derived_a,false) =             no
 >>> With Undefined
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_a( STRING:undefB, derived_a,true) =                      no
 is_a( STRING:undefB, derived_a) =                           no
 is_subclass_of( STRING:undefB, derived_a,false) =           no
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_subclass_of( STRING:undefB, derived_a) =                 no
 
 >>> With Defined class
@@ -228,11 +233,11 @@ is_subclass_of( OBJECT:base, if_a) =                        no
 is_subclass_of( STRING:base, if_a) =                        no
 is_subclass_of( STRING:base, if_a,false) =                  no
 >>> With Undefined
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_a( STRING:undefB, if_a,true) =                           no
 is_a( STRING:undefB, if_a) =                                no
 is_subclass_of( STRING:undefB, if_a,false) =                no
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_subclass_of( STRING:undefB, if_a) =                      no
 
 >>> With Defined class
@@ -243,11 +248,11 @@ is_subclass_of( OBJECT:base, undefA) =                      no
 is_subclass_of( STRING:base, undefA) =                      no
 is_subclass_of( STRING:base, undefA,false) =                no
 >>> With Undefined
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_a( STRING:undefB, undefA,true) =                         no
 is_a( STRING:undefB, undefA) =                              no
 is_subclass_of( STRING:undefB, undefA,false) =              no
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_subclass_of( STRING:undefB, undefA) =                    no
 
 
@@ -259,11 +264,11 @@ is_subclass_of( OBJECT:derived_a, base) =                   yes
 is_subclass_of( STRING:derived_a, base) =                   yes
 is_subclass_of( STRING:derived_a, base,false) =             no
 >>> With Undefined
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_a( STRING:undefB, base,true) =                           no
 is_a( STRING:undefB, base) =                                no
 is_subclass_of( STRING:undefB, base,false) =                no
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_subclass_of( STRING:undefB, base) =                      no
 
 >>> With Defined class
@@ -274,11 +279,11 @@ is_subclass_of( OBJECT:derived_a, derived_a) =              no
 is_subclass_of( STRING:derived_a, derived_a) =              no
 is_subclass_of( STRING:derived_a, derived_a,false) =        no
 >>> With Undefined
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_a( STRING:undefB, derived_a,true) =                      no
 is_a( STRING:undefB, derived_a) =                           no
 is_subclass_of( STRING:undefB, derived_a,false) =           no
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_subclass_of( STRING:undefB, derived_a) =                 no
 
 >>> With Defined class
@@ -289,11 +294,11 @@ is_subclass_of( OBJECT:derived_a, if_a) =                   yes
 is_subclass_of( STRING:derived_a, if_a) =                   yes
 is_subclass_of( STRING:derived_a, if_a,false) =             no
 >>> With Undefined
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_a( STRING:undefB, if_a,true) =                           no
 is_a( STRING:undefB, if_a) =                                no
 is_subclass_of( STRING:undefB, if_a,false) =                no
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_subclass_of( STRING:undefB, if_a) =                      no
 
 >>> With Defined class
@@ -304,11 +309,11 @@ is_subclass_of( OBJECT:derived_a, undefA) =                 no
 is_subclass_of( STRING:derived_a, undefA) =                 no
 is_subclass_of( STRING:derived_a, undefA,false) =           no
 >>> With Undefined
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_a( STRING:undefB, undefA,true) =                         no
 is_a( STRING:undefB, undefA) =                              no
 is_subclass_of( STRING:undefB, undefA,false) =              no
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_subclass_of( STRING:undefB, undefA) =                    no
 
 
@@ -320,11 +325,11 @@ is_subclass_of( OBJECT:derived_b, base) =                   yes
 is_subclass_of( STRING:derived_b, base) =                   yes
 is_subclass_of( STRING:derived_b, base,false) =             no
 >>> With Undefined
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_a( STRING:undefB, base,true) =                           no
 is_a( STRING:undefB, base) =                                no
 is_subclass_of( STRING:undefB, base,false) =                no
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_subclass_of( STRING:undefB, base) =                      no
 
 >>> With Defined class
@@ -335,11 +340,11 @@ is_subclass_of( OBJECT:derived_b, derived_a) =              no
 is_subclass_of( STRING:derived_b, derived_a) =              no
 is_subclass_of( STRING:derived_b, derived_a,false) =        no
 >>> With Undefined
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_a( STRING:undefB, derived_a,true) =                      no
 is_a( STRING:undefB, derived_a) =                           no
 is_subclass_of( STRING:undefB, derived_a,false) =           no
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_subclass_of( STRING:undefB, derived_a) =                 no
 
 >>> With Defined class
@@ -350,11 +355,11 @@ is_subclass_of( OBJECT:derived_b, if_a) =                   yes
 is_subclass_of( STRING:derived_b, if_a) =                   yes
 is_subclass_of( STRING:derived_b, if_a,false) =             no
 >>> With Undefined
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_a( STRING:undefB, if_a,true) =                           no
 is_a( STRING:undefB, if_a) =                                no
 is_subclass_of( STRING:undefB, if_a,false) =                no
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_subclass_of( STRING:undefB, if_a) =                      no
 
 >>> With Defined class
@@ -365,9 +370,9 @@ is_subclass_of( OBJECT:derived_b, undefA) =                 no
 is_subclass_of( STRING:derived_b, undefA) =                 no
 is_subclass_of( STRING:derived_b, undefA,false) =           no
 >>> With Undefined
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_a( STRING:undefB, undefA,true) =                         no
 is_a( STRING:undefB, undefA) =                              no
 is_subclass_of( STRING:undefB, undefA,false) =              no
->>>> In autoload: string(6) "undefB"
+>>>> In __autoload: string(6) "undefB"
 is_subclass_of( STRING:undefB, undefA) =                    no

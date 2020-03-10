@@ -1,4 +1,4 @@
---TEST--
+--TEST--                                 
 Function snmp2_getnext
 --CREDITS--
 Olivier Doucet & Boris Lytochkin
@@ -24,16 +24,16 @@ var_dump(snmp2_getnext($hostname, $community, array('.1.3.6.1.2.1.1.1.0', '.1.3.
 ?>
 --EXPECTF--
 Single OID
-string(%d) "%s"
+%unicode|string%(%d) "%s"
 Single OID in array
 array(1) {
   ["%s"]=>
-  string(%d) "%s"
+  %unicode|string%(%d) "%s"
 }
 Multiple OID
 array(2) {
   ["%s"]=>
-  string(%d) "%s"
+  %unicode|string%(%d) "%s"
   ["%s"]=>
-  string(%d) "%d"
+  %unicode|string%(%d) "%d"
 }

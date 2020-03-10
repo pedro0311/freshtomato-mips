@@ -1,6 +1,6 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -24,10 +24,9 @@
 #endif
 
 #include <unicode/unistr.h>
-#include <zend_types.h>
 
-int intl_stringFromChar(UnicodeString &ret, char *str, size_t str_len, UErrorCode *status);
+int intl_stringFromChar(UnicodeString &ret, char *str, int32_t str_len, UErrorCode *status);
 
-zend_string* intl_charFromString(const UnicodeString &from, UErrorCode *status);
+int intl_charFromString(const UnicodeString &from, char **res, int *res_len, UErrorCode *status);
 
 #endif /* INTL_CONVERTCPP_H */

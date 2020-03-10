@@ -35,7 +35,9 @@ print $dom->saveXML($top_element);
 
 ?>
 --EXPECT--
+
 Language: en
 Language: en-US
 Is ID?: NO
 <chapter language="en-US" num="1"/>
+

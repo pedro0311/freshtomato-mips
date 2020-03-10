@@ -97,7 +97,7 @@ memory_limit=256M
 	require_once("clean_table.inc");
 ?>
 --EXPECTF--
-int(%d)
+int(1)
 executing
 bool(true)
 done!

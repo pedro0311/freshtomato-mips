@@ -13,8 +13,8 @@ namespace test {
 }
 
 ?>
---EXPECTF--
-array(%d) {%A
-  [%d]=>
+--EXPECT--
+array(1) {
+  [0]=>
   string(6) "test\c"
 }

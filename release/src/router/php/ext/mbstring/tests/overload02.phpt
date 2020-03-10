@@ -1,8 +1,8 @@
 --TEST--
-Function overloading test 2
+Function overloading test 2 
 --SKIPIF--
-<?php
-	extension_loaded('mbstring') or die('skip mbstring not available');
+<?php 
+	extension_loaded('mbstring') or die('skip mbstring not available'); 
 	if (!function_exists("mail")) {
 		die('skip mail() function is not available.');
 	}
@@ -24,12 +24,11 @@ $converted_str = mb_convert_encoding($str, 'Shift_JIS');
 mb_regex_encoding('Shift_JIS');
 foreach($ngchars as $c) {
 	$c = mb_convert_encoding($c, 'Shift_JIS');
-	$replaced = mb_convert_encoding(str_replace($c, '!!', $converted_str), mb_internal_encoding(), 'Shift_JIS');
+	$replaced = mb_convert_encoding(ereg_replace($c, '!!', $converted_str), mb_internal_encoding(), 'Shift_JIS');
 	var_dump(strpos($replaced, '!!'));
 }
 ?>
 --EXPECT--
-Deprecated: The mbstring.func_overload directive is deprecated in Unknown on line 0
 EUC-JP
 int(10)
 int(8)

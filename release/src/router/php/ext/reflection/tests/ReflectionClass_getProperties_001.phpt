@@ -14,7 +14,7 @@ class subpubf extends pubf {
 
 class protf {
 	protected $a;
-	static protected $s;
+	static protected $s;	
 }
 class subprotf extends protf {
 }
@@ -26,7 +26,7 @@ class privf {
 class subprivf extends privf  {
 }
 
-$classes = array("pubf", "subpubf", "protf", "subprotf",
+$classes = array("pubf", "subpubf", "protf", "subprotf", 
 				 "privf", "subprivf");
 foreach($classes as $class) {
 	echo "Reflecting on class $class: \n";
@@ -39,86 +39,86 @@ foreach($classes as $class) {
 Reflecting on class pubf: 
 array(2) {
   [0]=>
-  object(ReflectionProperty)#%d (2) {
-    ["name"]=>
-    string(1) "a"
-    ["class"]=>
-    string(4) "pubf"
+  &object(ReflectionProperty)#%d (2) {
+    [%u|b%"name"]=>
+    %unicode|string%(1) "a"
+    [%u|b%"class"]=>
+    %unicode|string%(4) "pubf"
   }
   [1]=>
-  object(ReflectionProperty)#%d (2) {
-    ["name"]=>
-    string(1) "s"
-    ["class"]=>
-    string(4) "pubf"
+  &object(ReflectionProperty)#%d (2) {
+    [%u|b%"name"]=>
+    %unicode|string%(1) "s"
+    [%u|b%"class"]=>
+    %unicode|string%(4) "pubf"
   }
 }
 Reflecting on class subpubf: 
 array(2) {
   [0]=>
-  object(ReflectionProperty)#%d (2) {
-    ["name"]=>
-    string(1) "a"
-    ["class"]=>
-    string(4) "pubf"
+  &object(ReflectionProperty)#%d (2) {
+    [%u|b%"name"]=>
+    %unicode|string%(1) "a"
+    [%u|b%"class"]=>
+    %unicode|string%(4) "pubf"
   }
   [1]=>
-  object(ReflectionProperty)#%d (2) {
-    ["name"]=>
-    string(1) "s"
-    ["class"]=>
-    string(4) "pubf"
+  &object(ReflectionProperty)#%d (2) {
+    [%u|b%"name"]=>
+    %unicode|string%(1) "s"
+    [%u|b%"class"]=>
+    %unicode|string%(4) "pubf"
   }
 }
 Reflecting on class protf: 
 array(2) {
   [0]=>
-  object(ReflectionProperty)#%d (2) {
-    ["name"]=>
-    string(1) "a"
-    ["class"]=>
-    string(5) "protf"
+  &object(ReflectionProperty)#%d (2) {
+    [%u|b%"name"]=>
+    %unicode|string%(1) "a"
+    [%u|b%"class"]=>
+    %unicode|string%(5) "protf"
   }
   [1]=>
-  object(ReflectionProperty)#%d (2) {
-    ["name"]=>
-    string(1) "s"
-    ["class"]=>
-    string(5) "protf"
+  &object(ReflectionProperty)#%d (2) {
+    [%u|b%"name"]=>
+    %unicode|string%(1) "s"
+    [%u|b%"class"]=>
+    %unicode|string%(5) "protf"
   }
 }
 Reflecting on class subprotf: 
 array(2) {
   [0]=>
-  object(ReflectionProperty)#%d (2) {
-    ["name"]=>
-    string(1) "a"
-    ["class"]=>
-    string(5) "protf"
+  &object(ReflectionProperty)#%d (2) {
+    [%u|b%"name"]=>
+    %unicode|string%(1) "a"
+    [%u|b%"class"]=>
+    %unicode|string%(5) "protf"
   }
   [1]=>
-  object(ReflectionProperty)#%d (2) {
-    ["name"]=>
-    string(1) "s"
-    ["class"]=>
-    string(5) "protf"
+  &object(ReflectionProperty)#%d (2) {
+    [%u|b%"name"]=>
+    %unicode|string%(1) "s"
+    [%u|b%"class"]=>
+    %unicode|string%(5) "protf"
   }
 }
 Reflecting on class privf: 
 array(2) {
   [0]=>
-  object(ReflectionProperty)#%d (2) {
-    ["name"]=>
-    string(1) "a"
-    ["class"]=>
-    string(5) "privf"
+  &object(ReflectionProperty)#%d (2) {
+    [%u|b%"name"]=>
+    %unicode|string%(1) "a"
+    [%u|b%"class"]=>
+    %unicode|string%(5) "privf"
   }
   [1]=>
-  object(ReflectionProperty)#%d (2) {
-    ["name"]=>
-    string(1) "s"
-    ["class"]=>
-    string(5) "privf"
+  &object(ReflectionProperty)#%d (2) {
+    [%u|b%"name"]=>
+    %unicode|string%(1) "s"
+    [%u|b%"class"]=>
+    %unicode|string%(5) "privf"
   }
 }
 Reflecting on class subprivf: 

@@ -1,5 +1,5 @@
 --TEST--
-PDO MySQL Bug #37445 (Premature stmt object destruction)
+PDO MySQL Bug #37445 (Premature stmt object destruction) 
 --SKIPIF--
 <?php
 if (!extension_loaded('pdo') || !extension_loaded('pdo_mysql')) die('skip not loaded');
@@ -17,7 +17,4 @@ $stmt = $db->prepare("SELECT 1");
 $stmt->bindParam(':a', 'b');
 ?>
 --EXPECTF--
-Fatal error: Uncaught Error: Cannot pass parameter 2 by reference in %sbug_37445.php:%d
-Stack trace:
-#0 {main}
-  thrown in %sbug_37445.php on line %d
+Fatal error: Cannot pass parameter 2 by reference in %sbug_37445.php on line %d

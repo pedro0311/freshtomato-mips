@@ -1,7 +1,7 @@
 #  +----------------------------------------------------------------------+
-#  | PHP Version 7                                                        |
+#  | PHP Version 5                                                        |
 #  +----------------------------------------------------------------------+
-#  | Copyright (c) 1997-2018 The PHP Group                                |
+#  | Copyright (c) 1997-2016 The PHP Group                                |
 #  +----------------------------------------------------------------------+
 #  | This source file is subject to version 3.01 of the PHP license,      |
 #  | that is bundled with this package in the file LICENSE, and is        |
@@ -14,7 +14,7 @@
 #  | Author: Sascha Schumann <sascha@schumann.cx>                         |
 #  +----------------------------------------------------------------------+
 #
-# $Id$
+# $Id$ 
 #
 
 include generated_lists
@@ -35,7 +35,7 @@ SUPPRESS_WARNINGS ?= 2>&1 | (egrep -v '(AC_TRY_RUN called without default to all
 all: $(targets)
 
 $(config_h_in): configure
-# explicitly remove target since autoheader does not seem to work
+# explicitly remove target since autoheader does not seem to work 
 # correctly otherwise (timestamps are not updated)
 	@echo rebuilding $@
 	@rm -f $@
@@ -44,11 +44,12 @@ $(config_h_in): configure
 $(TOUCH_FILES):
 	touch $(TOUCH_FILES)
 
-aclocal.m4: configure.ac acinclude.m4
+aclocal.m4: configure.in acinclude.m4
 	@echo rebuilding $@
 	cat acinclude.m4 ./build/libtool.m4 > $@
 
-configure: aclocal.m4 configure.ac $(config_m4_files)
+configure: aclocal.m4 configure.in $(config_m4_files)
 	@echo rebuilding $@
 	@rm -f $@
 	$(PHP_AUTOCONF) -f $(SUPPRESS_WARNINGS)
+

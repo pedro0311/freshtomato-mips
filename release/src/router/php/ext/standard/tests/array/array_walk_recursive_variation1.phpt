@@ -1,9 +1,9 @@
 --TEST--
-Test array_walk_recursive() function : usage variations - unexpected values for 'input' argument
+Test array_walk_recursive() function : usage variations - unexpected values for 'input' argument 
 --FILE--
 <?php
 /* Prototype  : bool array_walk_recursive(array $input, string $funcname [, mixed $userdata])
- * Description: Apply a user function to every member of an array
+ * Description: Apply a user function to every member of an array 
  * Source code: ext/standard/array.c
 */
 
@@ -65,7 +65,7 @@ $input_values = array(
 
          // empty data
 /* 16*/  "",
-         '',
+         '', 
 
          // string data
 /* 18*/  "string",
@@ -123,38 +123,38 @@ Warning: array_walk_recursive() expects parameter 1 to be array, integer given i
 NULL
 -- Iteration 5 --
 
-Warning: array_walk_recursive() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_walk_recursive() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
-Warning: array_walk_recursive() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_walk_recursive() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 6 --
 
-Warning: array_walk_recursive() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_walk_recursive() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
-Warning: array_walk_recursive() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_walk_recursive() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 7 --
 
-Warning: array_walk_recursive() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_walk_recursive() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
-Warning: array_walk_recursive() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_walk_recursive() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 8 --
 
-Warning: array_walk_recursive() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_walk_recursive() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
-Warning: array_walk_recursive() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_walk_recursive() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 9 --
 
-Warning: array_walk_recursive() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_walk_recursive() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
-Warning: array_walk_recursive() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_walk_recursive() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 10 --
 

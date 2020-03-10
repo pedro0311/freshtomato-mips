@@ -5,6 +5,8 @@
 
 #include "zipint.h"
 
+
+
 const char * const _zip_err_str[] = {
     "No error",
     "Multi-disk zip archives not supported",
@@ -23,7 +25,7 @@ const char * const _zip_err_str[] = {
     "Malloc failure",
     "Entry has been changed",
     "Compression method not supported",
-    "Premature end of file",
+    "Premature EOF",
     "Invalid argument",
     "Not a zip archive",
     "Internal error",
@@ -34,9 +36,6 @@ const char * const _zip_err_str[] = {
     "Read-only archive", 
     "No password provided",
     "Wrong password provided",
-    "Operation not supported",
-    "Resource still in use",
-    "Tell error",
 };
 
 const int _zip_nerr_str = sizeof(_zip_err_str)/sizeof(_zip_err_str[0]);
@@ -74,7 +73,4 @@ const int _zip_err_type[] = {
     N, 
     N,
     N,
-    N,
-    N,
-    S,
 };

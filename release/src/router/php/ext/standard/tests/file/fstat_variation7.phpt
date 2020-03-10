@@ -20,6 +20,7 @@ foreach ( $variation_array as $var ) {
 ?>
 ===DONE===
 --EXPECTF--
+
 Warning: fstat() expects parameter 1 to be resource, string given in %s on line %d
 bool(false)
 

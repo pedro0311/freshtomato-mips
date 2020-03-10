@@ -1,6 +1,6 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -44,13 +44,12 @@ static inline DateFormat *fetch_datefmt(IntlDateFormatter_object *dfo) {
  */
 U_CFUNC PHP_FUNCTION(datefmt_get_timezone_id)
 {
-	zend_string *u8str;
 	DATE_FORMAT_METHOD_INIT_VARS;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "O",
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "O",
 			&object, IntlDateFormatter_ce_ptr ) == FAILURE) {
 		intl_error_set(NULL, U_ILLEGAL_ARGUMENT_ERROR,	"datefmt_get_timezone_"
-				"id: unable to parse input params", 0);
+				"id: unable to parse input params", 0 TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
@@ -58,10 +57,11 @@ U_CFUNC PHP_FUNCTION(datefmt_get_timezone_id)
 
 	UnicodeString res = UnicodeString();
 	fetch_datefmt(dfo)->getTimeZone().getID(res);
-	u8str = intl_charFromString(res, &INTL_DATA_ERROR_CODE(dfo));
+	intl_charFromString(res, &Z_STRVAL_P(return_value),
+			&Z_STRLEN_P(return_value), &INTL_DATA_ERROR_CODE(dfo));
 	INTL_METHOD_CHECK_STATUS(dfo, "Could not convert time zone id to UTF-8");
 
-	RETVAL_STR(u8str);
+	Z_TYPE_P(return_value) = IS_STRING;
 }
 
 /* {{{ proto IntlTimeZone IntlDateFormatter::getTimeZone()
@@ -73,10 +73,10 @@ U_CFUNC PHP_FUNCTION(datefmt_get_timezone)
 {
 	DATE_FORMAT_METHOD_INIT_VARS;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "O",
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "O",
 			&object, IntlDateFormatter_ce_ptr ) == FAILURE) {
 		intl_error_set( NULL, U_ILLEGAL_ARGUMENT_ERROR,
-			"datefmt_get_timezone: unable to parse input params", 0 );
+			"datefmt_get_timezone: unable to parse input params", 0 TSRMLS_CC );
 		RETURN_FALSE;
 	}
 
@@ -87,33 +87,46 @@ U_CFUNC PHP_FUNCTION(datefmt_get_timezone)
 	if (tz_clone == NULL) {
 		intl_errors_set(INTL_DATA_ERROR_P(dfo), U_MEMORY_ALLOCATION_ERROR,
 				"datefmt_get_timezone: Out of memory when cloning time zone",
-				0);
+				0 TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
-	timezone_object_construct(tz_clone, return_value, 1);
+	object_init_ex(return_value, TimeZone_ce_ptr);
+	timezone_object_construct(tz_clone, return_value, 1 TSRMLS_CC);
+}
+
+U_CFUNC PHP_FUNCTION(datefmt_set_timezone_id)
+{
+	php_error_docref0(NULL TSRMLS_CC, E_DEPRECATED,
+			"Use datefmt_set_timezone() instead, which also accepts a plain "
+			"time zone identifier and for which this function is now an "
+			"alias");
+	PHP_FN(datefmt_set_timezone)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 /* {{{ proto boolean IntlDateFormatter::setTimeZone(mixed $timezone)
- * Set formatter's timezone. */
+ * Set formatter's timezone. }}} */
+/* {{{ proto boolean datefmt_set_timezone_id(IntlDateFormatter $mf, $timezone_id)
+ * Set formatter timezone_id.
+ */
 U_CFUNC PHP_FUNCTION(datefmt_set_timezone)
 {
-	zval		*timezone_zv;
+	zval		**timezone_zv;
 	TimeZone	*timezone;
 
 	DATE_FORMAT_METHOD_INIT_VARS;
 
-	if ( zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(),
-			"Oz", &object, IntlDateFormatter_ce_ptr, &timezone_zv) == FAILURE) {
+	if ( zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(),
+			"OZ", &object, IntlDateFormatter_ce_ptr, &timezone_zv) == FAILURE) {
 		intl_error_set(NULL, U_ILLEGAL_ARGUMENT_ERROR, "datefmt_set_timezone: "
-				"unable to parse input params", 0);
+				"unable to parse input params", 0 TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
 	DATE_FORMAT_METHOD_FETCH_OBJECT;
 
 	timezone = timezone_process_timezone_argument(timezone_zv,
-			INTL_DATA_ERROR_P(dfo), "datefmt_set_timezone");
+			INTL_DATA_ERROR_P(dfo), "datefmt_set_timezone" TSRMLS_CC);
 	if (timezone == NULL) {
 		RETURN_FALSE;
 	}
@@ -130,10 +143,10 @@ U_CFUNC PHP_FUNCTION(datefmt_get_calendar)
 {
 	DATE_FORMAT_METHOD_INIT_VARS;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "O",
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "O",
 			&object, IntlDateFormatter_ce_ptr ) == FAILURE) {
 		intl_error_set(NULL, U_ILLEGAL_ARGUMENT_ERROR,
-			"datefmt_get_calendar: unable to parse input params", 0);
+			"datefmt_get_calendar: unable to parse input params", 0 TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
@@ -157,11 +170,11 @@ U_CFUNC PHP_FUNCTION(datefmt_get_calendar_object)
 {
 	DATE_FORMAT_METHOD_INIT_VARS;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "O",
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "O",
 			&object, IntlDateFormatter_ce_ptr ) == FAILURE) {
 		intl_error_set(NULL, U_ILLEGAL_ARGUMENT_ERROR,
 				"datefmt_get_calendar_object: unable to parse input params",
-				0);
+				0 TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
@@ -176,11 +189,11 @@ U_CFUNC PHP_FUNCTION(datefmt_get_calendar_object)
 	if (cal_clone == NULL) {
 		intl_errors_set(INTL_DATA_ERROR_P(dfo), U_MEMORY_ALLOCATION_ERROR,
 				"datefmt_get_calendar_object: Out of memory when cloning "
-				"calendar", 0);
+				"calendar", 0 TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
-	calendar_object_create(return_value, cal_clone);
+	calendar_object_create(return_value, cal_clone TSRMLS_CC);
 }
 /* }}} */
 
@@ -194,17 +207,17 @@ U_CFUNC PHP_FUNCTION(datefmt_set_calendar)
 	zval	*calendar_zv;
 	DATE_FORMAT_METHOD_INIT_VARS;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Oz",
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Oz",
 			&object, IntlDateFormatter_ce_ptr, &calendar_zv) == FAILURE) {
 		intl_error_set(NULL, U_ILLEGAL_ARGUMENT_ERROR,
-			"datefmt_set_calendar: unable to parse input params", 0);
+			"datefmt_set_calendar: unable to parse input params", 0 TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
 	DATE_FORMAT_METHOD_FETCH_OBJECT;
 
 	Calendar	*cal;
-	zend_long		cal_type;
+	long		cal_type;
 	bool		cal_owned;
 	Locale		locale = Locale::createFromName(dfo->requested_locale);
 	// getting the actual locale from the DateFormat is not enough
@@ -213,7 +226,7 @@ U_CFUNC PHP_FUNCTION(datefmt_set_calendar)
 
 	if (datefmt_process_calendar_arg(calendar_zv, locale,
 			"datefmt_set_calendar",	INTL_DATA_ERROR_P(dfo), cal, cal_type,
-			cal_owned) == FAILURE) {
+			cal_owned TSRMLS_CC) == FAILURE) {
 		RETURN_FALSE;
 	}
 
@@ -223,7 +236,7 @@ U_CFUNC PHP_FUNCTION(datefmt_set_calendar)
 		if (old_timezone == NULL) {
 			intl_errors_set(INTL_DATA_ERROR_P(dfo), U_MEMORY_ALLOCATION_ERROR,
 					"datefmt_set_calendar: Out of memory when cloning calendar",
-					0);
+					0 TSRMLS_CC);
 			delete cal;
 			RETURN_FALSE;
 		}
@@ -233,7 +246,7 @@ U_CFUNC PHP_FUNCTION(datefmt_set_calendar)
 		if (cal == NULL) {
 			intl_errors_set(INTL_DATA_ERROR_P(dfo), U_MEMORY_ALLOCATION_ERROR,
 					"datefmt_set_calendar: Out of memory when cloning calendar",
-					0);
+					0 TSRMLS_CC);
 			RETURN_FALSE;
 		}
 	}
@@ -245,3 +258,4 @@ U_CFUNC PHP_FUNCTION(datefmt_set_calendar)
 	RETURN_TRUE;
 }
 /* }}} */
+

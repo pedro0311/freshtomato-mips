@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2018 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -49,9 +49,9 @@ char *day_short_names[] = {
 	"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
 };
 
-/* {{{ PHPAPI char *php_std_date(time_t t)
+/* {{{ PHPAPI char *php_std_date(time_t t TSRMLS_DC)
    Return date string in standard format for http headers */
-PHPAPI char *php_std_date(time_t t)
+PHPAPI char *php_std_date(time_t t TSRMLS_DC)
 {
 	struct tm *tm1, tmbuf;
 	char *str;
@@ -86,16 +86,15 @@ char *strptime(const char *s, const char *format, struct tm *tm);
 PHP_FUNCTION(strptime)
 {
 	char      *ts;
-	size_t        ts_length;
+	int        ts_length;
 	char      *format;
-	size_t        format_length;
+	int        format_length;
 	struct tm  parsed_time;
 	char      *unparsed_part;
 
-	ZEND_PARSE_PARAMETERS_START(2, 2)
-		Z_PARAM_STRING(ts, ts_length)
-		Z_PARAM_STRING(format, format_length)
-	ZEND_PARSE_PARAMETERS_END();
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &ts, &ts_length, &format, &format_length) == FAILURE) {
+		return;
+	}
 
 	memset(&parsed_time, 0, sizeof(parsed_time));
 
@@ -113,7 +112,7 @@ PHP_FUNCTION(strptime)
 	add_assoc_long(return_value, "tm_year",  parsed_time.tm_year);
 	add_assoc_long(return_value, "tm_wday",  parsed_time.tm_wday);
 	add_assoc_long(return_value, "tm_yday",  parsed_time.tm_yday);
-	add_assoc_string(return_value, "unparsed", unparsed_part);
+	add_assoc_string(return_value, "unparsed", unparsed_part, 1);
 }
 /* }}} */
 

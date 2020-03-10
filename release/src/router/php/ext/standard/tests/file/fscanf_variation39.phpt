@@ -1,5 +1,5 @@
 --TEST--
-Test fscanf() function: usage variations - unsigned int formats with integer values
+Test fscanf() function: usage variations - unsigned int formats with integer values 
 --SKIPIF--
 <?php
 if (PHP_INT_SIZE != 4) {
@@ -18,7 +18,7 @@ if (PHP_INT_SIZE != 4) {
 
 $file_path = dirname(__FILE__);
 
-echo "*** Test fscanf(): different unsigned int format types with different integer values ***\n";
+echo "*** Test fscanf(): different unsigned int format types with different integer values ***\n"; 
 
 // create a file
 $filename = "$file_path/fscanf_variation39.tmp";
@@ -40,10 +40,10 @@ $valid_ints = array(
   0Xfff,
   0XFA,
   -0x80000000, // max negative integer as hexadecimal
-  0x7fffffff,  // max positive integer as hexadecimal
-  0x7FFFFFFF,  // max positive integer as hexadecimal
+  0x7fffffff,  // max postive integer as hexadecimal
+  0x7FFFFFFF,  // max postive integer as hexadecimal
   0123,        // integer as octal
-  01,       // should be quivalent to octal 1
+  01912,       // should be quivalent to octal 1
   -020000000000, // max negative integer as octal
   017777777777  // max positive integer as octal
 );
@@ -1011,3 +1011,4 @@ array(0) {
 bool(false)
 
 *** Done ***
+

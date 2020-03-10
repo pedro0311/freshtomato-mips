@@ -2,11 +2,6 @@
 SPL: class_parents() and class_implements()
 --FILE--
 <?php
-
-spl_autoload_register(function ($cname) {
-    var_dump($cname);
-});
-
 class a{}
 class b extends a{}
 class c extends b{}
@@ -28,6 +23,10 @@ var_dump(class_implements(new a),
          class_implements("aaa"),
          class_implements("bbb", 0)
 );
+
+function __autoload($cname) {
+    var_dump($cname);
+}
 
 ?>
 ===DONE===

@@ -1,14 +1,7 @@
 --TEST--
 using invalid combinations of cmdline options
 --SKIPIF--
-<?php
-
-if (substr(PHP_OS, 0, 3) == 'WIN') {
-	die ("skip not for Windows");
-}
-
-include "skipif.inc";
-?>
+<?php include "skipif.inc"; ?>
 --FILE--
 <?php
 
@@ -22,7 +15,7 @@ var_dump(`$php -n -f 'wrong' -a`);
 
 echo "Done\n";
 ?>
---EXPECTF--
+--EXPECTF--	
 string(51) "No input file specified.
 Interactive mode enabled
 

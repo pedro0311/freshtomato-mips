@@ -35,7 +35,7 @@ if (!isset($config['ENV']['PDOTEST_DSN']) || $config['ENV']['PDOTEST_DSN']===fal
 //       -otherwise, you'll have to open MS Access, create a database, then load that file in this Window to map it to a DSN
 // 7. set the environment variable PDOTEST_DSN="odbc:<system dsn from step 5>" ex: SET PDOTEST_DSN=odbc:accdb12
 //         -note: on Windows, " is included in environment variable
-//
+// 
 // easy way to compile:
 // configure --disable-all --enable-cli --enable-zts --enable-pdo --with-pdo-odbc --enable-debug
 // configure --disable-all --eanble-cli --enable-pdo --with-pdo-odbc=unixODBC,/usr,/usr --with-unixODBC=/usr --enable-debug
@@ -77,7 +77,7 @@ foreach ($sizes as $num) {
 }
 
 // verify data
-foreach ($db->query('SELECT id, data from TEST ORDER BY LEN(data) ASC') as $row) {
+foreach ($db->query('SELECT id, data from TEST') as $row) {
 	$expect = alpha_repeat($row[0]);
 	if (strcmp($expect, $row[1])) {
 		echo "Failed on size $row[id]:\n";
@@ -90,6 +90,7 @@ foreach ($db->query('SELECT id, data from TEST ORDER BY LEN(data) ASC') as $row)
 }
 
 echo "Finished\n";
+
 --EXPECT--
 Passed on size 32
 Passed on size 53
@@ -102,31 +103,31 @@ Passed on size 255
 Passed on size 256
 Passed on size 257
 Passed on size 258
-Passed on size 510
-Passed on size 511
-Passed on size 512
-Passed on size 513
-Passed on size 514
 Passed on size 1022
 Passed on size 1023
 Passed on size 1024
 Passed on size 1025
 Passed on size 1026
+Passed on size 510
+Passed on size 511
+Passed on size 512
+Passed on size 513
+Passed on size 514
 Passed on size 1278
 Passed on size 1279
 Passed on size 1280
 Passed on size 1281
 Passed on size 1282
-Passed on size 1534
-Passed on size 1535
-Passed on size 1536
-Passed on size 1537
-Passed on size 1538
 Passed on size 2046
 Passed on size 2047
 Passed on size 2048
 Passed on size 2049
 Passed on size 2050
+Passed on size 1534
+Passed on size 1535
+Passed on size 1536
+Passed on size 1537
+Passed on size 1538
 Passed on size 3070
 Passed on size 3071
 Passed on size 3072
@@ -136,3 +137,4 @@ Passed on size 3998
 Passed on size 3999
 Passed on size 4000
 Finished
+

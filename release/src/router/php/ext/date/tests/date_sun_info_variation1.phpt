@@ -6,7 +6,7 @@ Test date_sun_info() function : error variations - Pass unexpected values for ti
  * Description:  Returns an array with information about sunset/sunrise and twilight begin/end.
  * Source code: ext/standard/data/php_date.c
  */
-
+ 
 date_default_timezone_set("UTC");
 
 echo "*** Testing date_sun_info() : usage variations ***\n";
@@ -47,7 +47,7 @@ $inputs = array(
        false,
        TRUE,
        FALSE,
-
+       
        // empty data
 /*16*/ "",
        '',
@@ -57,7 +57,7 @@ $inputs = array(
 /*19*/ "abcxyz",
        'abcxyz',
        $heredoc,
-
+       
        // undefined data
 /*22*/ @$undefined_var,
 
@@ -84,409 +84,409 @@ foreach($inputs as $input) {
 -- Iteration 1 --
 array(9) {
   ["sunrise"]=>
-  int(16742)
+  int(16748)
   ["sunset"]=>
-  int(53161)
+  int(53182)
   ["transit"]=>
-  int(34951)
+  int(34965)
   ["civil_twilight_begin"]=>
-  int(15138)
+  int(15145)
   ["civil_twilight_end"]=>
-  int(54765)
+  int(54786)
   ["nautical_twilight_begin"]=>
-  int(13316)
+  int(13324)
   ["nautical_twilight_end"]=>
-  int(56587)
+  int(56607)
   ["astronomical_twilight_begin"]=>
-  int(11534)
+  int(11542)
   ["astronomical_twilight_end"]=>
-  int(58369)
+  int(58389)
 }
 
 -- Iteration 2 --
 array(9) {
   ["sunrise"]=>
-  int(16742)
+  int(16748)
   ["sunset"]=>
-  int(53161)
+  int(53182)
   ["transit"]=>
-  int(34951)
+  int(34965)
   ["civil_twilight_begin"]=>
-  int(15138)
+  int(15145)
   ["civil_twilight_end"]=>
-  int(54765)
+  int(54786)
   ["nautical_twilight_begin"]=>
-  int(13316)
+  int(13324)
   ["nautical_twilight_end"]=>
-  int(56587)
+  int(56607)
   ["astronomical_twilight_begin"]=>
-  int(11534)
+  int(11542)
   ["astronomical_twilight_end"]=>
-  int(58369)
+  int(58389)
 }
 
 -- Iteration 3 --
 array(9) {
   ["sunrise"]=>
-  int(16742)
+  int(16748)
   ["sunset"]=>
-  int(53161)
+  int(53182)
   ["transit"]=>
-  int(34951)
+  int(34965)
   ["civil_twilight_begin"]=>
-  int(15138)
+  int(15145)
   ["civil_twilight_end"]=>
-  int(54765)
+  int(54786)
   ["nautical_twilight_begin"]=>
-  int(13316)
+  int(13324)
   ["nautical_twilight_end"]=>
-  int(56587)
+  int(56607)
   ["astronomical_twilight_begin"]=>
-  int(11534)
+  int(11542)
   ["astronomical_twilight_end"]=>
-  int(58369)
+  int(58389)
 }
 
 -- Iteration 4 --
 array(9) {
   ["sunrise"]=>
-  int(-69672)
+  int(-69665)
   ["sunset"]=>
-  int(-33281)
+  int(-33260)
   ["transit"]=>
-  int(-51476)
+  int(-51462)
   ["civil_twilight_begin"]=>
-  int(-71277)
+  int(-71269)
   ["civil_twilight_end"]=>
-  int(-31675)
+  int(-31655)
   ["nautical_twilight_begin"]=>
-  int(-73100)
+  int(-73092)
   ["nautical_twilight_end"]=>
-  int(-29852)
+  int(-29832)
   ["astronomical_twilight_begin"]=>
-  int(-74883)
+  int(-74874)
   ["astronomical_twilight_end"]=>
-  int(-28069)
+  int(-28050)
 }
 
 -- Iteration 5 --
 array(9) {
   ["sunrise"]=>
-  int(16742)
+  int(16748)
   ["sunset"]=>
-  int(53161)
+  int(53182)
   ["transit"]=>
-  int(34951)
+  int(34965)
   ["civil_twilight_begin"]=>
-  int(15138)
+  int(15145)
   ["civil_twilight_end"]=>
-  int(54765)
+  int(54786)
   ["nautical_twilight_begin"]=>
-  int(13316)
+  int(13324)
   ["nautical_twilight_end"]=>
-  int(56587)
+  int(56607)
   ["astronomical_twilight_begin"]=>
-  int(11534)
+  int(11542)
   ["astronomical_twilight_end"]=>
-  int(58369)
+  int(58389)
 }
 
 -- Iteration 6 --
 array(9) {
   ["sunrise"]=>
-  int(-69672)
+  int(-69665)
   ["sunset"]=>
-  int(-33281)
+  int(-33260)
   ["transit"]=>
-  int(-51476)
+  int(-51462)
   ["civil_twilight_begin"]=>
-  int(-71277)
+  int(-71269)
   ["civil_twilight_end"]=>
-  int(-31675)
+  int(-31655)
   ["nautical_twilight_begin"]=>
-  int(-73100)
+  int(-73092)
   ["nautical_twilight_end"]=>
-  int(-29852)
+  int(-29832)
   ["astronomical_twilight_begin"]=>
-  int(-74883)
+  int(-74874)
   ["astronomical_twilight_end"]=>
-  int(-28069)
+  int(-28050)
 }
 
 -- Iteration 7 --
 array(9) {
   ["sunrise"]=>
-  int(1226368)
+  int(1226363)
   ["sunset"]=>
-  int(1263442)
+  int(1263468)
   ["transit"]=>
-  int(1244905)
+  int(1244916)
   ["civil_twilight_begin"]=>
-  int(1224792)
+  int(1224788)
   ["civil_twilight_end"]=>
-  int(1265019)
+  int(1265044)
   ["nautical_twilight_begin"]=>
-  int(1222996)
+  int(1222993)
   ["nautical_twilight_end"]=>
-  int(1266815)
+  int(1266839)
   ["astronomical_twilight_begin"]=>
-  int(1221234)
+  int(1221233)
   ["astronomical_twilight_end"]=>
-  int(1268576)
+  int(1268599)
 }
 
 -- Iteration 8 --
 array(9) {
   ["sunrise"]=>
-  int(16742)
+  int(16748)
   ["sunset"]=>
-  int(53161)
+  int(53182)
   ["transit"]=>
-  int(34951)
+  int(34965)
   ["civil_twilight_begin"]=>
-  int(15138)
+  int(15145)
   ["civil_twilight_end"]=>
-  int(54765)
+  int(54786)
   ["nautical_twilight_begin"]=>
-  int(13316)
+  int(13324)
   ["nautical_twilight_end"]=>
-  int(56587)
+  int(56607)
   ["astronomical_twilight_begin"]=>
-  int(11534)
+  int(11542)
   ["astronomical_twilight_end"]=>
-  int(58369)
+  int(58389)
 }
 
 -- Iteration 9 --
 array(9) {
   ["sunrise"]=>
-  int(16742)
+  int(16748)
   ["sunset"]=>
-  int(53161)
+  int(53182)
   ["transit"]=>
-  int(34951)
+  int(34965)
   ["civil_twilight_begin"]=>
-  int(15138)
+  int(15145)
   ["civil_twilight_end"]=>
-  int(54765)
+  int(54786)
   ["nautical_twilight_begin"]=>
-  int(13316)
+  int(13324)
   ["nautical_twilight_end"]=>
-  int(56587)
+  int(56607)
   ["astronomical_twilight_begin"]=>
-  int(11534)
+  int(11542)
   ["astronomical_twilight_end"]=>
-  int(58369)
+  int(58389)
 }
 
 -- Iteration 10 --
 array(9) {
   ["sunrise"]=>
-  int(16742)
+  int(16748)
   ["sunset"]=>
-  int(53161)
+  int(53182)
   ["transit"]=>
-  int(34951)
+  int(34965)
   ["civil_twilight_begin"]=>
-  int(15138)
+  int(15145)
   ["civil_twilight_end"]=>
-  int(54765)
+  int(54786)
   ["nautical_twilight_begin"]=>
-  int(13316)
+  int(13324)
   ["nautical_twilight_end"]=>
-  int(56587)
+  int(56607)
   ["astronomical_twilight_begin"]=>
-  int(11534)
+  int(11542)
   ["astronomical_twilight_end"]=>
-  int(58369)
+  int(58389)
 }
 
 -- Iteration 11 --
 array(9) {
   ["sunrise"]=>
-  int(16742)
+  int(16748)
   ["sunset"]=>
-  int(53161)
+  int(53182)
   ["transit"]=>
-  int(34951)
+  int(34965)
   ["civil_twilight_begin"]=>
-  int(15138)
+  int(15145)
   ["civil_twilight_end"]=>
-  int(54765)
+  int(54786)
   ["nautical_twilight_begin"]=>
-  int(13316)
+  int(13324)
   ["nautical_twilight_end"]=>
-  int(56587)
+  int(56607)
   ["astronomical_twilight_begin"]=>
-  int(11534)
+  int(11542)
   ["astronomical_twilight_end"]=>
-  int(58369)
+  int(58389)
 }
 
 -- Iteration 12 --
 array(9) {
   ["sunrise"]=>
-  int(16742)
+  int(16748)
   ["sunset"]=>
-  int(53161)
+  int(53182)
   ["transit"]=>
-  int(34951)
+  int(34965)
   ["civil_twilight_begin"]=>
-  int(15138)
+  int(15145)
   ["civil_twilight_end"]=>
-  int(54765)
+  int(54786)
   ["nautical_twilight_begin"]=>
-  int(13316)
+  int(13324)
   ["nautical_twilight_end"]=>
-  int(56587)
+  int(56607)
   ["astronomical_twilight_begin"]=>
-  int(11534)
+  int(11542)
   ["astronomical_twilight_end"]=>
-  int(58369)
+  int(58389)
 }
 
 -- Iteration 13 --
 array(9) {
   ["sunrise"]=>
-  int(16742)
+  int(16748)
   ["sunset"]=>
-  int(53161)
+  int(53182)
   ["transit"]=>
-  int(34951)
+  int(34965)
   ["civil_twilight_begin"]=>
-  int(15138)
+  int(15145)
   ["civil_twilight_end"]=>
-  int(54765)
+  int(54786)
   ["nautical_twilight_begin"]=>
-  int(13316)
+  int(13324)
   ["nautical_twilight_end"]=>
-  int(56587)
+  int(56607)
   ["astronomical_twilight_begin"]=>
-  int(11534)
+  int(11542)
   ["astronomical_twilight_end"]=>
-  int(58369)
+  int(58389)
 }
 
 -- Iteration 14 --
 array(9) {
   ["sunrise"]=>
-  int(16742)
+  int(16748)
   ["sunset"]=>
-  int(53161)
+  int(53182)
   ["transit"]=>
-  int(34951)
+  int(34965)
   ["civil_twilight_begin"]=>
-  int(15138)
+  int(15145)
   ["civil_twilight_end"]=>
-  int(54765)
+  int(54786)
   ["nautical_twilight_begin"]=>
-  int(13316)
+  int(13324)
   ["nautical_twilight_end"]=>
-  int(56587)
+  int(56607)
   ["astronomical_twilight_begin"]=>
-  int(11534)
+  int(11542)
   ["astronomical_twilight_end"]=>
-  int(58369)
+  int(58389)
 }
 
 -- Iteration 15 --
 array(9) {
   ["sunrise"]=>
-  int(16742)
+  int(16748)
   ["sunset"]=>
-  int(53161)
+  int(53182)
   ["transit"]=>
-  int(34951)
+  int(34965)
   ["civil_twilight_begin"]=>
-  int(15138)
+  int(15145)
   ["civil_twilight_end"]=>
-  int(54765)
+  int(54786)
   ["nautical_twilight_begin"]=>
-  int(13316)
+  int(13324)
   ["nautical_twilight_end"]=>
-  int(56587)
+  int(56607)
   ["astronomical_twilight_begin"]=>
-  int(11534)
+  int(11542)
   ["astronomical_twilight_end"]=>
-  int(58369)
+  int(58389)
 }
 
 -- Iteration 16 --
 
-Warning: date_sun_info() expects parameter 1 to be integer, string given in %s on line %d
+Warning: date_sun_info() expects parameter 1 to be long, string given in %s on line %d
 bool(false)
 
 -- Iteration 17 --
 
-Warning: date_sun_info() expects parameter 1 to be integer, string given in %s on line %d
+Warning: date_sun_info() expects parameter 1 to be long, string given in %s on line %d
 bool(false)
 
 -- Iteration 18 --
 
-Warning: date_sun_info() expects parameter 1 to be integer, array given in %s on line %d
+Warning: date_sun_info() expects parameter 1 to be long, array given in %s on line %d
 bool(false)
 
 -- Iteration 19 --
 
-Warning: date_sun_info() expects parameter 1 to be integer, string given in %s on line %d
+Warning: date_sun_info() expects parameter 1 to be long, string given in %s on line %d
 bool(false)
 
 -- Iteration 20 --
 
-Warning: date_sun_info() expects parameter 1 to be integer, string given in %s on line %d
+Warning: date_sun_info() expects parameter 1 to be long, string given in %s on line %d
 bool(false)
 
 -- Iteration 21 --
 
-Warning: date_sun_info() expects parameter 1 to be integer, string given in %s on line %d
+Warning: date_sun_info() expects parameter 1 to be long, string given in %s on line %d
 bool(false)
 
 -- Iteration 22 --
 array(9) {
   ["sunrise"]=>
-  int(16742)
+  int(16748)
   ["sunset"]=>
-  int(53161)
+  int(53182)
   ["transit"]=>
-  int(34951)
+  int(34965)
   ["civil_twilight_begin"]=>
-  int(15138)
+  int(15145)
   ["civil_twilight_end"]=>
-  int(54765)
+  int(54786)
   ["nautical_twilight_begin"]=>
-  int(13316)
+  int(13324)
   ["nautical_twilight_end"]=>
-  int(56587)
+  int(56607)
   ["astronomical_twilight_begin"]=>
-  int(11534)
+  int(11542)
   ["astronomical_twilight_end"]=>
-  int(58369)
+  int(58389)
 }
 
 -- Iteration 23 --
 array(9) {
   ["sunrise"]=>
-  int(16742)
+  int(16748)
   ["sunset"]=>
-  int(53161)
+  int(53182)
   ["transit"]=>
-  int(34951)
+  int(34965)
   ["civil_twilight_begin"]=>
-  int(15138)
+  int(15145)
   ["civil_twilight_end"]=>
-  int(54765)
+  int(54786)
   ["nautical_twilight_begin"]=>
-  int(13316)
+  int(13324)
   ["nautical_twilight_end"]=>
-  int(56587)
+  int(56607)
   ["astronomical_twilight_begin"]=>
-  int(11534)
+  int(11542)
   ["astronomical_twilight_end"]=>
-  int(58369)
+  int(58389)
 }
 
 -- Iteration 24 --
 
-Warning: date_sun_info() expects parameter 1 to be integer, resource given in %s on line %d
+Warning: date_sun_info() expects parameter 1 to be long, resource given in %s on line %d
 bool(false)
 ===Done===

@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2018 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -55,28 +55,28 @@
 PHP_FUNCTION(readlink)
 {
 	char *link;
-	size_t link_len;
+	int link_len;
 	char buff[MAXPATHLEN];
 	int ret;
 
-	ZEND_PARSE_PARAMETERS_START(1, 1)
-		Z_PARAM_PATH(link, link_len)
-	ZEND_PARSE_PARAMETERS_END();
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "p", &link, &link_len) == FAILURE) {
+		return;
+	}
 
-	if (php_check_open_basedir(link)) {
+	if (php_check_open_basedir(link TSRMLS_CC)) {
 		RETURN_FALSE;
 	}
 
 	ret = php_sys_readlink(link, buff, MAXPATHLEN-1);
 
 	if (ret == -1) {
-		php_error_docref(NULL, E_WARNING, "%s", strerror(errno));
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "%s", strerror(errno));
 		RETURN_FALSE;
 	}
 	/* Append NULL to the end of the string */
 	buff[ret] = '\0';
 
-	RETURN_STRING(buff);
+	RETURN_STRING(buff, 1);
 }
 /* }}} */
 
@@ -86,31 +86,31 @@ PHP_FUNCTION(linkinfo)
 {
 	char *link;
 	char *dirname;
-	size_t link_len;
-	zend_stat_t sb;
+	int link_len, dir_len;
+	struct stat sb;
 	int ret;
 
-	ZEND_PARSE_PARAMETERS_START(1, 1)
-		Z_PARAM_PATH(link, link_len)
-	ZEND_PARSE_PARAMETERS_END();
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "p", &link, &link_len) == FAILURE) {
+		return;
+	}
 
 	dirname = estrndup(link, link_len);
-	php_dirname(dirname, link_len);
+	dir_len = php_dirname(dirname, link_len);
 
-	if (php_check_open_basedir(dirname)) {
+	if (php_check_open_basedir(dirname TSRMLS_CC)) {
 		efree(dirname);
 		RETURN_FALSE;
 	}
 
 	ret = VCWD_LSTAT(link, &sb);
 	if (ret == -1) {
-		php_error_docref(NULL, E_WARNING, "%s", strerror(errno));
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "%s", strerror(errno));
 		efree(dirname);
 		RETURN_LONG(-1L);
 	}
 
 	efree(dirname);
-	RETURN_LONG((zend_long) sb.st_dev);
+	RETURN_LONG((long) sb.st_dev);
 }
 /* }}} */
 
@@ -119,43 +119,42 @@ PHP_FUNCTION(linkinfo)
 PHP_FUNCTION(symlink)
 {
 	char *topath, *frompath;
-	size_t topath_len, frompath_len;
+	int topath_len, frompath_len;
 	int ret;
 	char source_p[MAXPATHLEN];
 	char dest_p[MAXPATHLEN];
 	char dirname[MAXPATHLEN];
 	size_t len;
 
-	ZEND_PARSE_PARAMETERS_START(2, 2)
-		Z_PARAM_PATH(topath, topath_len)
-		Z_PARAM_PATH(frompath, frompath_len)
-	ZEND_PARSE_PARAMETERS_END();
-
-	if (!expand_filepath(frompath, source_p)) {
-		php_error_docref(NULL, E_WARNING, "No such file or directory");
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "pp", &topath, &topath_len, &frompath, &frompath_len) == FAILURE) {
+		return;
+	}
+	
+	if (!expand_filepath(frompath, source_p TSRMLS_CC)) {
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "No such file or directory");
 		RETURN_FALSE;
 	}
 
 	memcpy(dirname, source_p, sizeof(source_p));
 	len = php_dirname(dirname, strlen(dirname));
 
-	if (!expand_filepath_ex(topath, dest_p, dirname, len)) {
-		php_error_docref(NULL, E_WARNING, "No such file or directory");
+	if (!expand_filepath_ex(topath, dest_p, dirname, len TSRMLS_CC)) {
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "No such file or directory");
 		RETURN_FALSE;
 	}
 
-	if (php_stream_locate_url_wrapper(source_p, NULL, STREAM_LOCATE_WRAPPERS_ONLY) ||
-		php_stream_locate_url_wrapper(dest_p, NULL, STREAM_LOCATE_WRAPPERS_ONLY) )
+	if (php_stream_locate_url_wrapper(source_p, NULL, STREAM_LOCATE_WRAPPERS_ONLY TSRMLS_CC) ||
+		php_stream_locate_url_wrapper(dest_p, NULL, STREAM_LOCATE_WRAPPERS_ONLY TSRMLS_CC) ) 
 	{
-		php_error_docref(NULL, E_WARNING, "Unable to symlink to a URL");
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unable to symlink to a URL");
 		RETURN_FALSE;
 	}
 
-	if (php_check_open_basedir(dest_p)) {
+	if (php_check_open_basedir(dest_p TSRMLS_CC)) {
 		RETURN_FALSE;
 	}
 
-	if (php_check_open_basedir(source_p)) {
+	if (php_check_open_basedir(source_p TSRMLS_CC)) {
 		RETURN_FALSE;
 	}
 
@@ -165,7 +164,7 @@ PHP_FUNCTION(symlink)
 	ret = symlink(topath, source_p);
 
 	if (ret == -1) {
-		php_error_docref(NULL, E_WARNING, "%s", strerror(errno));
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "%s", strerror(errno));
 		RETURN_FALSE;
 	}
 
@@ -178,43 +177,42 @@ PHP_FUNCTION(symlink)
 PHP_FUNCTION(link)
 {
 	char *topath, *frompath;
-	size_t topath_len, frompath_len;
+	int topath_len, frompath_len;
 	int ret;
 	char source_p[MAXPATHLEN];
 	char dest_p[MAXPATHLEN];
 
-	ZEND_PARSE_PARAMETERS_START(2, 2)
-		Z_PARAM_PATH(topath, topath_len)
-		Z_PARAM_PATH(frompath, frompath_len)
-	ZEND_PARSE_PARAMETERS_END();
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "pp", &topath, &topath_len, &frompath, &frompath_len) == FAILURE) {
+		return;
+	}
 
-	if (!expand_filepath(frompath, source_p) || !expand_filepath(topath, dest_p)) {
-		php_error_docref(NULL, E_WARNING, "No such file or directory");
+	if (!expand_filepath(frompath, source_p TSRMLS_CC) || !expand_filepath(topath, dest_p TSRMLS_CC)) {
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "No such file or directory");
 		RETURN_FALSE;
 	}
 
-	if (php_stream_locate_url_wrapper(source_p, NULL, STREAM_LOCATE_WRAPPERS_ONLY) ||
-		php_stream_locate_url_wrapper(dest_p, NULL, STREAM_LOCATE_WRAPPERS_ONLY) )
+	if (php_stream_locate_url_wrapper(source_p, NULL, STREAM_LOCATE_WRAPPERS_ONLY TSRMLS_CC) ||
+		php_stream_locate_url_wrapper(dest_p, NULL, STREAM_LOCATE_WRAPPERS_ONLY TSRMLS_CC) ) 
 	{
-		php_error_docref(NULL, E_WARNING, "Unable to link to a URL");
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unable to link to a URL");
 		RETURN_FALSE;
 	}
 
-	if (php_check_open_basedir(dest_p)) {
+	if (php_check_open_basedir(dest_p TSRMLS_CC)) {
 		RETURN_FALSE;
 	}
 
-	if (php_check_open_basedir(source_p)) {
+	if (php_check_open_basedir(source_p TSRMLS_CC)) {
 		RETURN_FALSE;
 	}
 
 #ifndef ZTS
 	ret = link(topath, frompath);
-#else
-	ret = link(dest_p, source_p);
-#endif
+#else 
+	ret = link(dest_p, source_p);	
+#endif	
 	if (ret == -1) {
-		php_error_docref(NULL, E_WARNING, "%s", strerror(errno));
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "%s", strerror(errno));
 		RETURN_FALSE;
 	}
 

@@ -5,6 +5,9 @@ Phar::setStub()/stopBuffering() zip-based
 --INI--
 phar.require_hash=0
 phar.readonly=0
+--ENV--
+TEMP=.
+TMP=.
 --FILE--
 <?php
 $p = new Phar(dirname(__FILE__) . '/brandnewphar.phar.zip', 0, 'brandnewphar.phar');
@@ -25,7 +28,7 @@ var_dump($p->isFileFormat(Phar::ZIP));
 ?>
 ===DONE===
 --CLEAN--
-<?php
+<?php 
 unlink(dirname(__FILE__) . '/brandnewphar.phar.zip');
 ?>
 --EXPECT--

@@ -6,7 +6,7 @@ JSON (http://www.crockford.com/JSON/JSON_checker/test/fail*.json)
 ?>
 --FILE--
 <?php
-
+    
 $tests = array(
 	'"A JSON payload should be an object or array, not a string."',
 	'["Unclosed array"',
@@ -164,3 +164,4 @@ AS OBJECT
 NULL
 AS ARRAY
 NULL
+

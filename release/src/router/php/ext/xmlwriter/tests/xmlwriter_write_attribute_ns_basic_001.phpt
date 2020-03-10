@@ -25,3 +25,4 @@ Koen Kuipers koenk82@gmail.com
 <root prefix:id="elem1" xmlns:prefix="http://www.php.net/uri">
  <elem1 attr1="first"/>
 </root>
+

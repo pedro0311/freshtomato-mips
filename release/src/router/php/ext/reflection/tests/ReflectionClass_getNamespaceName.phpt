@@ -27,3 +27,4 @@ bool(true)
 string(7) "A\B\Foo"
 string(3) "A\B"
 string(3) "Foo"
+

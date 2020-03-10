@@ -3,7 +3,7 @@ Test end() function : usage variations - Pass different data types as $array_arg
 --FILE--
 <?php
 /* Prototype  : mixed end(array $array_arg)
- * Description: Advances array argument's internal pointer to the last element and return it
+ * Description: Advances array argument's internal pointer to the last element and return it 
  * Source code: ext/standard/array.c
  */
 
@@ -59,7 +59,7 @@ $inputs = array(
        false,
        TRUE,
        FALSE,
-
+       
        // empty data
 /*16*/ "",
        '',
@@ -69,7 +69,7 @@ $inputs = array(
 /*19*/ "string",
        'string',
        $heredoc,
-
+       
        // object data
 /*22*/ new classA(),
 
@@ -119,27 +119,27 @@ NULL
 
 -- Iteration 5 --
 
-Warning: end() expects parameter 1 to be array, float given in %s on line %d
+Warning: end() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 6 --
 
-Warning: end() expects parameter 1 to be array, float given in %s on line %d
+Warning: end() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 7 --
 
-Warning: end() expects parameter 1 to be array, float given in %s on line %d
+Warning: end() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 8 --
 
-Warning: end() expects parameter 1 to be array, float given in %s on line %d
+Warning: end() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 9 --
 
-Warning: end() expects parameter 1 to be array, float given in %s on line %d
+Warning: end() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 10 --

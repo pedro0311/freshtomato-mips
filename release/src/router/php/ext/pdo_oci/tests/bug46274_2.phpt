@@ -2,7 +2,7 @@
 Bug #46274 (pdo_pgsql - Segfault when using PDO::ATTR_STRINGIFY_FETCHES and blob)
 --SKIPIF--
 <?php
-if (!extension_loaded('pdo') || !extension_loaded('pdo_oci'))
+if (!extension_loaded('pdo') || !extension_loaded('pdo_oci')) 
 die('skip not loaded');
 require dirname(__FILE__).'/../../pdo/tests/pdo_test.inc';
 PDOTest::skip();
@@ -60,6 +60,8 @@ fclose($row[0]);
 $db->exec("DROP TABLE test_one_blob");
 
 ?>
+--XFAIL--
+Corrupts memory
 --EXPECTF--
 array(2) {
   ["blob1"]=>

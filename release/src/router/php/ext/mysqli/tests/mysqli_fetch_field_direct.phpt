@@ -48,31 +48,31 @@ require_once('skipifconnectfailure.inc');
 Warning: mysqli_fetch_field_direct(): Field offset is invalid for resultset in %s on line %d
 bool(false)
 object(stdClass)#%d (13) {
-  ["name"]=>
-  string(2) "ID"
-  ["orgname"]=>
-  string(2) "id"
-  ["table"]=>
-  string(4) "TEST"
-  ["orgtable"]=>
-  string(4) "test"
-  ["def"]=>
-  string(0) ""
-  ["db"]=>
-  string(%d) "%s"
-  ["catalog"]=>
-  string(%d) "%s"
-  ["max_length"]=>
+  [%u|b%"name"]=>
+  %unicode|string%(2) "ID"
+  [%u|b%"orgname"]=>
+  %unicode|string%(2) "id"
+  [%u|b%"table"]=>
+  %unicode|string%(4) "TEST"
+  [%u|b%"orgtable"]=>
+  %unicode|string%(4) "test"
+  [%u|b%"def"]=>
+  %unicode|string%(0) ""
+  [%u|b%"db"]=>
+  %unicode|string%(%d) "%s"
+  [%u|b%"catalog"]=>
+  %unicode|string%(%d) "%s"
+  [%u|b%"max_length"]=>
   int(%d)
-  ["length"]=>
+  [%u|b%"length"]=>
   int(%d)
-  ["charsetnr"]=>
+  [%u|b%"charsetnr"]=>
   int(%d)
-  ["flags"]=>
+  [%u|b%"flags"]=>
   int(%d)
-  ["type"]=>
+  [%u|b%"type"]=>
   int(%d)
-  ["decimals"]=>
+  [%u|b%"decimals"]=>
   int(%d)
 }
 

@@ -42,7 +42,7 @@ if test "$PHP_XMLRPC" != "no"; then
         PHP_ADD_BUILD_DIR(ext/xml)
       fi
     ], [
-      AC_MSG_ERROR([libxml2 not found. Use --with-libxml-dir=<DIR>])
+      AC_MSG_ERROR([xml2-config not found. Use --with-libxml-dir=<DIR>])
     ])
   else
     testval=no
@@ -67,11 +67,11 @@ if test "$PHP_XMLRPC" != "no"; then
     if test "$PHP_ICONV_DIR" != "no"; then
       PHP_ICONV=$PHP_ICONV_DIR
     fi
-
+  
     if test -z "$PHP_ICONV" || test "$PHP_ICONV" = "no"; then
       PHP_ICONV=yes
     fi
-
+  
     PHP_SETUP_ICONV(XMLRPC_SHARED_LIBADD, [], [
       AC_MSG_ERROR([iconv not found, in order to build xmlrpc you need the iconv library])
     ])
@@ -89,7 +89,6 @@ if test "$PHP_XMLRPC" = "yes"; then
           -I@ext_srcdir@/libxmlrpc -DVERSION="0.50")
   PHP_ADD_BUILD_DIR($ext_builddir/libxmlrpc)
   XMLRPC_MODULE_TYPE=builtin
-  AC_DEFINE(HAVE_XMLRPC_BUNDLED, 1, [ ])
 
 elif test "$PHP_XMLRPC" != "no"; then
 

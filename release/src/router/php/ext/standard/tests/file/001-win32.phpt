@@ -97,3 +97,4 @@ test.file is a regular file
 test.file is not a directory
 test.file does not exist
 test.file does not exist
+

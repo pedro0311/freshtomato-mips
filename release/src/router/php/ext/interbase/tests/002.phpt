@@ -3,10 +3,10 @@ InterBase: connect, close and pconnect
 --SKIPIF--
 <?php include("skipif.inc"); ?>
 --FILE--
-<?php
+<?php /* $Id$ */
 
 	require("interbase.inc");
-
+    
 	ibase_connect($test_base);
 	out_table("test1");
 	ibase_close();

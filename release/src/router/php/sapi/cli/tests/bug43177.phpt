@@ -2,7 +2,7 @@
 Bug #61977 Test exit code for various errors
 --SKIPIF--
 <?php
-include "skipif.inc";
+include "skipif.inc"; 
 ?>
 --FILE--
 <?php
@@ -11,10 +11,7 @@ php_cli_server_start(<<<'SCRIPT'
 	ini_set('display_errors', 0);
 	switch($_SERVER["REQUEST_URI"]) {
 	        case "/parse":
-	                try {
-                        eval("this is a parse error");
-                    } catch (ParseError $e) {
-                    }
+	                eval("this is a parse error");
 					echo "OK\n";
 	                break;
 	        case "/fatal":
@@ -61,7 +58,6 @@ HEADER
 --EXPECTF--
 HTTP/1.1 200 OK
 Host: localhost
-Date: %s
 Connection: close
 X-Powered-By: %s
 Content-type: text/html; charset=UTF-8
@@ -69,21 +65,18 @@ Content-type: text/html; charset=UTF-8
 OK
 HTTP/1.0 500 Internal Server Error
 Host: localhost
-Date: %s
 Connection: close
 X-Powered-By: %s
 Content-type: text/html; charset=UTF-8
 
 HTTP/1.0 500 Internal Server Error
 Host: localhost
-Date: %s
 Connection: close
 X-Powered-By: %s
 Content-type: text/html; charset=UTF-8
 
 HTTP/1.0 500 Internal Server Error
 Host: localhost
-Date: %s
 Connection: close
 X-Powered-By: %s
 Content-type: text/html; charset=UTF-8

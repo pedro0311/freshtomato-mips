@@ -1,5 +1,7 @@
 --TEST--
 ZE2 A derived class does not know about privates of ancestors
+--SKIPIF--
+<?php if (version_compare(zend_version(), '2.0.0-dev', '<')) die('skip ZendEngine 2 needed'); ?>
 --FILE--
 <?php
 
@@ -12,7 +14,7 @@ class Bar {
 	}
 }
 class Foo extends Bar {
-	public function priv()	{
+	public function priv()	{ 
 		echo "Foo::priv()\n";
 	}
 }

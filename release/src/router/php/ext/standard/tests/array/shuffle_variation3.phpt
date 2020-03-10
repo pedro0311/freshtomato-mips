@@ -3,7 +3,7 @@ Test shuffle() function : usage variation - arrays with diff types of values
 --FILE--
 <?php
 /* Prototype  : bool shuffle(array $array_arg)
- * Description: Randomly shuffle the contents of an array
+ * Description: Randomly shuffle the contents of an array 
  * Source code: ext/standard/array.c
 */
 
@@ -41,10 +41,10 @@ $array_arg = array(
        array(-0x123, -0xabc, -0xABC, -0xAb1, -0x9fa),
 
        // array with positive octal values
-/*9*/  array(0123, 0234, 034, 00),
+/*9*/  array(0123, 02348, 034, 00),
 
        // array with negative octal values
-/*10*/ array(-0123, -0234, -034),
+/*10*/ array(-0123, -02348, -034),
 
 );
 
@@ -53,9 +53,9 @@ echo "\n*** Testing shuffle() with arrays having different types of values ***\n
 $counter = 1;
 foreach($array_arg as $arr) {
   echo "\n-- Iteration $counter --\n";
-  var_dump( shuffle($arr) );
+  var_dump( shuffle($arr) );  
   echo "\nThe output array is:\n";
-  var_dump( $arr );
+  var_dump( $arr ); 
   $counter++;
 }
 
@@ -230,3 +230,4 @@ array(3) {
   int(-%d)
 }
 Done
+

@@ -5,7 +5,7 @@ ReflectionParameter::isDefaultValueConstant() && getDefaultValueConstantName()
 
 define("CONST_TEST_1", "const1");
 
-function ReflectionParameterTest($test1=array(), $test2 = CONST_TEST_1, $test3 = CASE_LOWER) {
+function ReflectionParameterTest($test1=array(), $test2 = CONST_TEST_1) {
 	echo $test;
 }
 $reflect = new ReflectionFunction('ReflectionParameterTest');
@@ -46,7 +46,6 @@ foreach ($params as $param) {
 bool(false)
 bool(true)
 string(12) "CONST_TEST_1"
-string(10) "CASE_LOWER"
 string(9) "self::bar"
 string(9) "Foo2::bar"
 string(12) "CONST_TEST_1"

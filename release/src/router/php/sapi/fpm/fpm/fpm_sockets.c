@@ -1,3 +1,4 @@
+
 	/* $Id: fpm_sockets.c,v 1.20.2.1 2008/12/13 03:21:18 anight Exp $ */
 	/* (c) 2007,2008 Andrei Nigmatulin */
 
@@ -43,10 +44,6 @@ enum { FPM_GET_USE_SOCKET = 1, FPM_STORE_SOCKET = 2, FPM_STORE_USE_SOCKET = 3 };
 static void fpm_sockets_cleanup(int which, void *arg) /* {{{ */
 {
 	unsigned i;
-	unsigned socket_set_count = 0;
-	unsigned socket_set[FPM_ENV_SOCKET_SET_MAX];
-	unsigned socket_set_buf = 0;
-	char envname[32];
 	char *env_value = 0;
 	int p = 0;
 	struct listening_socket_s *ls = sockets_list.data;
@@ -57,20 +54,8 @@ static void fpm_sockets_cleanup(int which, void *arg) /* {{{ */
 		} else { /* on PARENT EXEC we want socket fds to be inherited through environment variable */
 			char fd[32];
 			sprintf(fd, "%d", ls->sock);
-
-			socket_set_buf = (i % FPM_ENV_SOCKET_SET_SIZE == 0 && i) ? 1 : 0;
-			env_value = realloc(env_value, p + (p ? 1 : 0) + strlen(ls->key) + 1 + strlen(fd) + socket_set_buf + 1);
-
-			if (i % FPM_ENV_SOCKET_SET_SIZE == 0) {
-				socket_set[socket_set_count] = p + socket_set_buf;
-				socket_set_count++;
-				if (i) {
-					*(env_value + p + 1) = 0;
-				}
-			}
-
-			p += sprintf(env_value + p + socket_set_buf, "%s%s=%s", (p && !socket_set_buf) ? "," : "", ls->key, fd);
-			p += socket_set_buf;
+			env_value = realloc(env_value, p + (p ? 1 : 0) + strlen(ls->key) + 1 + strlen(fd) + 1);
+			p += sprintf(env_value + p, "%s%s=%s", p ? "," : "", ls->key, fd);
 		}
 
 		if (which == FPM_CLEANUP_PARENT_EXIT_MAIN) {
@@ -82,14 +67,7 @@ static void fpm_sockets_cleanup(int which, void *arg) /* {{{ */
 	}
 
 	if (env_value) {
-		for (i = 0; i < socket_set_count; i++) {
-			if (!i) {
-				strcpy(envname, "FPM_SOCKETS");
-			} else {
-				sprintf(envname, "FPM_SOCKETS_%d", i);
-			}
-			setenv(envname, env_value + socket_set[i], 1);
-		}
+		setenv("FPM_SOCKETS", env_value, 1);
 		free(env_value);
 	}
 
@@ -268,60 +246,22 @@ enum fpm_address_domain fpm_sockets_domain_from_address(char *address) /* {{{ */
 }
 /* }}} */
 
-static int fpm_socket_af_inet_socket_by_addr(struct fpm_worker_pool_s *wp, const char *addr, const char *port) /* {{{ */
-{
-	struct addrinfo hints, *servinfo, *p;
-	char tmpbuf[INET6_ADDRSTRLEN];
-	int status;
-	int sock = -1;
-
-	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-
-	if ((status = getaddrinfo(addr, port, &hints, &servinfo)) != 0) {
-		zlog(ZLOG_ERROR, "getaddrinfo: %s\n", gai_strerror(status));
-		return -1;
-	}
-
-	for (p = servinfo; p != NULL; p = p->ai_next) {
-		inet_ntop(p->ai_family, fpm_get_in_addr(p->ai_addr), tmpbuf, INET6_ADDRSTRLEN);
-		if (sock < 0) {
-			if ((sock = fpm_sockets_get_listening_socket(wp, p->ai_addr, p->ai_addrlen)) != -1) {
-				zlog(ZLOG_DEBUG, "Found address for %s, socket opened on %s", addr, tmpbuf);
-			}
-		} else {
-			zlog(ZLOG_WARNING, "Found multiple addresses for %s, %s ignored", addr, tmpbuf);
-		}
-	}
-
-	freeaddrinfo(servinfo);
-
-	return sock;
-}
-/* }}} */
-
 static int fpm_socket_af_inet_listening_socket(struct fpm_worker_pool_s *wp) /* {{{ */
 {
+	struct addrinfo hints, *servinfo, *p;
 	char *dup_address = strdup(wp->config->listen_address);
 	char *port_str = strrchr(dup_address, ':');
 	char *addr = NULL;
+	char tmpbuf[INET6_ADDRSTRLEN];
 	int addr_len;
 	int port = 0;
 	int sock = -1;
+	int status;
 
 	if (port_str) { /* this is host:port pair */
 		*port_str++ = '\0';
 		port = atoi(port_str);
 		addr = dup_address;
-
-		/* strip brackets from address for getaddrinfo */
-		addr_len = strlen(addr);
-		if (addr[0] == '[' && addr[addr_len - 1] == ']') {
-			addr[addr_len - 1] = '\0';
-			addr++;
-		}
-
 	} else if (strlen(dup_address) == strspn(dup_address, "0123456789")) { /* this is port */
 		port = atoi(dup_address);
 		port_str = dup_address;
@@ -332,28 +272,48 @@ static int fpm_socket_af_inet_listening_socket(struct fpm_worker_pool_s *wp) /* 
 		return -1;
 	}
 
-	if (addr) {
-		/* Bind a specific address */
-		sock = fpm_socket_af_inet_socket_by_addr(wp, addr, port_str);
-	} else {
-		/* Bind ANYADDR
-		 *
-		 * Try "::" first as that covers IPv6 ANYADDR and mapped IPv4 ANYADDR
-		 * silencing warnings since failure is an option
-		 *
-		 * If that fails (because AF_INET6 is unsupported) retry with 0.0.0.0
-		 */
-		int old_level = zlog_set_level(ZLOG_ALERT);
-		sock = fpm_socket_af_inet_socket_by_addr(wp, "::", port_str);
-		zlog_set_level(old_level);
+	if (!addr) {
+		/* no address: default documented behavior, all IPv4 addresses */
+		struct sockaddr_in sa_in;
 
+		memset(&sa_in, 0, sizeof(sa_in));
+		sa_in.sin_family = AF_INET;
+		sa_in.sin_port = htons(port);
+		sa_in.sin_addr.s_addr = htonl(INADDR_ANY);
+		free(dup_address);
+		return fpm_sockets_get_listening_socket(wp, (struct sockaddr *) &sa_in, sizeof(struct sockaddr_in));
+	}
+
+	/* strip brackets from address for getaddrinfo */
+	addr_len = strlen(addr);
+	if (addr[0] == '[' && addr[addr_len - 1] == ']') {
+		addr[addr_len - 1] = '\0';
+		addr++;
+	}
+
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+
+	if ((status = getaddrinfo(addr, port_str, &hints, &servinfo)) != 0) {
+		zlog(ZLOG_ERROR, "getaddrinfo: %s\n", gai_strerror(status));
+		free(dup_address);
+		return -1;
+	}
+
+	for (p = servinfo; p != NULL; p = p->ai_next) {
+		inet_ntop(p->ai_family, fpm_get_in_addr(p->ai_addr), tmpbuf, INET6_ADDRSTRLEN);
 		if (sock < 0) {
-			zlog(ZLOG_NOTICE, "Failed implicitly binding to ::, retrying with 0.0.0.0");
-			sock = fpm_socket_af_inet_socket_by_addr(wp, "0.0.0.0", port_str);
+			if ((sock = fpm_sockets_get_listening_socket(wp, p->ai_addr, p->ai_addrlen)) != -1) {
+				zlog(ZLOG_DEBUG, "Found address for %s, socket opened on %s", dup_address, tmpbuf);
+			}
+		} else {
+			zlog(ZLOG_WARNING, "Found multiple addresses for %s, %s ignored", dup_address, tmpbuf);
 		}
 	}
 
 	free(dup_address);
+	freeaddrinfo(servinfo);
 
 	return sock;
 }
@@ -374,9 +334,7 @@ int fpm_sockets_init_main() /* {{{ */
 {
 	unsigned i, lq_len;
 	struct fpm_worker_pool_s *wp;
-	char sockname[32];
-	char sockpath[256];
-	char *inherited;
+	char *inherited = getenv("FPM_SOCKETS");
 	struct listening_socket_s *ls;
 
 	if (0 == fpm_array_init(&sockets_list, sizeof(struct listening_socket_s), 10)) {
@@ -384,46 +342,28 @@ int fpm_sockets_init_main() /* {{{ */
 	}
 
 	/* import inherited sockets */
-	for (i = 0; i < FPM_ENV_SOCKET_SET_MAX; i++) {
-		if (!i) {
-			strcpy(sockname, "FPM_SOCKETS");
+	while (inherited && *inherited) {
+		char *comma = strchr(inherited, ',');
+		int type, fd_no;
+		char *eq;
+
+		if (comma) {
+			*comma = '\0';
+		}
+
+		eq = strchr(inherited, '=');
+		if (eq) {
+			*eq = '\0';
+			fd_no = atoi(eq + 1);
+			type = fpm_sockets_domain_from_address(inherited);
+			zlog(ZLOG_NOTICE, "using inherited socket fd=%d, \"%s\"", fd_no, inherited);
+			fpm_sockets_hash_op(fd_no, 0, inherited, type, FPM_STORE_SOCKET);
+		}
+
+		if (comma) {
+			inherited = comma + 1;
 		} else {
-			sprintf(sockname, "FPM_SOCKETS_%d", i);
-		}
-		inherited = getenv(sockname);
-		if (!inherited) {
-			break;
-		}
-
-		while (inherited && *inherited) {
-			char *comma = strchr(inherited, ',');
-			int type, fd_no;
-			char *eq;
-
-			if (comma) {
-				*comma = '\0';
-			}
-
-			eq = strchr(inherited, '=');
-			if (eq) {
-				int sockpath_len = eq - inherited;
-				if (sockpath_len > 255) {
-					/* this should never happen as UDS limit is lower */
-					sockpath_len = 255;
-				}
-				memcpy(sockpath, inherited, sockpath_len);
-				sockpath[sockpath_len] = '\0';
-				fd_no = atoi(eq + 1);
-				type = fpm_sockets_domain_from_address(sockpath);
-				zlog(ZLOG_NOTICE, "using inherited socket fd=%d, \"%s\"", fd_no, sockpath);
-				fpm_sockets_hash_op(fd_no, 0, sockpath, type, FPM_STORE_SOCKET);
-			}
-
-			if (comma) {
-				inherited = comma + 1;
-			} else {
-				inherited = 0;
-			}
+			inherited = 0;
 		}
 	}
 
@@ -490,7 +430,7 @@ int fpm_socket_get_listening_queue(int sock, unsigned *cur_lq, unsigned *max_lq)
 		zlog(ZLOG_SYSERROR, "failed to retrieve TCP_INFO for socket");
 		return -1;
 	}
-#if defined(__FreeBSD__) || defined(__NetBSD__)
+#if defined(__FreeBSD__)
 	if (info.__tcpi_sacked == 0) {
 		return -1;
 	}

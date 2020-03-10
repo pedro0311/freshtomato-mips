@@ -27,14 +27,14 @@ $paths = array (
 			'/usr/include/arpa',
 			'/usr/include/arpa/',
 			'usr/include/arpa',
-			'usr/include/arpa/',
+			'usr/include/arpa/',			
 			'c:\test\afile',
 			'c:\\test\\afile',
 			'c://test//afile',
 			'c:\test\afile\\',
 			'c:\test\prog.exe',
 			'c:\\test\\prog.exe',
-			'c:/test/prog.exe',
+			'c:/test/prog.exe',			
 			'/usr/include/arpa/inet.h',
 			'//usr/include//arpa/inet.h',
 			'\\',
@@ -99,42 +99,42 @@ array(3) {
 }
 -- Iteration 3 --
 string(2) "c:"
-string(1) "c"
+string(2) "c:"
 string(0) ""
-string(1) "c"
+string(2) "c:"
 array(3) {
   ["dirname"]=>
   string(2) "c:"
   ["basename"]=>
-  string(1) "c"
+  string(2) "c:"
   ["filename"]=>
-  string(1) "c"
+  string(2) "c:"
 }
 -- Iteration 4 --
 string(3) "c:\"
-string(1) "c"
+string(2) "c:"
 string(0) ""
-string(1) "c"
+string(2) "c:"
 array(3) {
   ["dirname"]=>
   string(3) "c:\"
   ["basename"]=>
-  string(1) "c"
+  string(2) "c:"
   ["filename"]=>
-  string(1) "c"
+  string(2) "c:"
 }
 -- Iteration 5 --
 string(3) "c:\"
-string(1) "c"
+string(2) "c:"
 string(0) ""
-string(1) "c"
+string(2) "c:"
 array(3) {
   ["dirname"]=>
   string(3) "c:\"
   ["basename"]=>
-  string(1) "c"
+  string(2) "c:"
   ["filename"]=>
-  string(1) "c"
+  string(2) "c:"
 }
 -- Iteration 6 --
 string(1) "."

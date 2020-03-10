@@ -1,6 +1,6 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -32,20 +32,21 @@
 #endif
 
 /* {{{ */
-static void msgfmt_do_format(MessageFormatter_object *mfo, zval *args, zval *return_value)
+static void msgfmt_do_format(MessageFormatter_object *mfo, zval *args, zval *return_value TSRMLS_DC)
 {
 	int count;
 	UChar* formatted = NULL;
-	int32_t formatted_len = 0;
+	int formatted_len = 0;
 	HashTable *args_copy;
 
 	count = zend_hash_num_elements(Z_ARRVAL_P(args));
 
 	ALLOC_HASHTABLE(args_copy);
 	zend_hash_init(args_copy, count, NULL, ZVAL_PTR_DTOR, 0);
-	zend_hash_copy(args_copy, Z_ARRVAL_P(args), (copy_ctor_func_t)zval_add_ref);
+	zend_hash_copy(args_copy, Z_ARRVAL_P(args), (copy_ctor_func_t)zval_add_ref,
+		NULL, sizeof(zval*));
 
-	umsg_format_helper(mfo, args_copy, &formatted, &formatted_len);
+	umsg_format_helper(mfo, args_copy, &formatted, &formatted_len TSRMLS_CC);
 
 	zend_hash_destroy(args_copy);
 	efree(args_copy);
@@ -73,11 +74,11 @@ PHP_FUNCTION( msgfmt_format )
 
 
 	/* Parse parameters. */
-	if( zend_parse_method_parameters( ZEND_NUM_ARGS(), getThis(), "Oa",
+	if( zend_parse_method_parameters( ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Oa",
 		&object, MessageFormatter_ce_ptr,  &args ) == FAILURE )
 	{
 		intl_error_set( NULL, U_ILLEGAL_ARGUMENT_ERROR,
-			"msgfmt_format: unable to parse input params", 0 );
+			"msgfmt_format: unable to parse input params", 0 TSRMLS_CC );
 
 		RETURN_FALSE;
 	}
@@ -85,7 +86,7 @@ PHP_FUNCTION( msgfmt_format )
 	/* Fetch the object. */
 	MSG_FORMAT_METHOD_FETCH_OBJECT;
 
-	msgfmt_do_format(mfo, args, return_value);
+	msgfmt_do_format(mfo, args, return_value TSRMLS_CC);
 }
 /* }}} */
 
@@ -100,33 +101,32 @@ PHP_FUNCTION( msgfmt_format_message )
 	UChar      *spattern = NULL;
 	int         spattern_len = 0;
 	char       *pattern = NULL;
-	size_t      pattern_len = 0;
+	int         pattern_len = 0;
 	const char *slocale = NULL;
-	size_t      slocale_len = 0;
-	MessageFormatter_object mf;
+	int         slocale_len = 0;
+	MessageFormatter_object mf = {0};
 	MessageFormatter_object *mfo = &mf;
 
 	/* Parse parameters. */
-	if( zend_parse_method_parameters( ZEND_NUM_ARGS(), getThis(), "ssa",
+	if( zend_parse_method_parameters( ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "ssa",
 		  &slocale, &slocale_len, &pattern, &pattern_len, &args ) == FAILURE )
 	{
 		intl_error_set( NULL, U_ILLEGAL_ARGUMENT_ERROR,
-			"msgfmt_format_message: unable to parse input params", 0 );
+			"msgfmt_format_message: unable to parse input params", 0 TSRMLS_CC );
 
 		RETURN_FALSE;
 	}
 
 	INTL_CHECK_LOCALE_LEN(slocale_len);
 
-	memset(mfo, 0, sizeof(*mfo));
-	msgformat_data_init(&mfo->mf_data);
+	msgformat_data_init(&mfo->mf_data TSRMLS_CC);
 
 	if(pattern && pattern_len) {
 		intl_convert_utf8_to_utf16(&spattern, &spattern_len, pattern, pattern_len, &INTL_DATA_ERROR_CODE(mfo));
 		if( U_FAILURE(INTL_DATA_ERROR_CODE((mfo))) )
 		{
 			intl_error_set( NULL, U_ILLEGAL_ARGUMENT_ERROR,
-				"msgfmt_format_message: error converting pattern to UTF-16", 0 );
+				"msgfmt_format_message: error converting pattern to UTF-16", 0 TSRMLS_CC );
 			RETURN_FALSE;
 		}
 	} else {
@@ -135,13 +135,13 @@ PHP_FUNCTION( msgfmt_format_message )
 	}
 
 	if(slocale_len == 0) {
-		slocale = intl_locale_get_default();
+		slocale = intl_locale_get_default(TSRMLS_C);
 	}
 
 #ifdef MSG_FORMAT_QUOTE_APOS
 	if(msgformat_fix_quotes(&spattern, &spattern_len, &INTL_DATA_ERROR_CODE(mfo)) != SUCCESS) {
 		intl_error_set( NULL, U_INVALID_FORMAT_ERROR,
-			"msgfmt_format_message: error converting pattern to quote-friendly format", 0 );
+			"msgfmt_format_message: error converting pattern to quote-friendly format", 0 TSRMLS_CC );
 		RETURN_FALSE;
 	}
 #endif
@@ -153,10 +153,10 @@ PHP_FUNCTION( msgfmt_format_message )
 	}
 	INTL_METHOD_CHECK_STATUS(mfo, "Creating message formatter failed");
 
-	msgfmt_do_format(mfo, args, return_value);
+	msgfmt_do_format(mfo, args, return_value TSRMLS_CC);
 
 	/* drop the temporary formatter */
-	msgformat_data_free(&mfo->mf_data);
+	msgformat_data_free(&mfo->mf_data TSRMLS_CC);
 }
 /* }}} */
 

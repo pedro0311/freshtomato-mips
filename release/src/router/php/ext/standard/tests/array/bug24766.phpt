@@ -16,30 +16,30 @@ var_dump($a[$i]);
 $i=$l[0];
 var_dump($b[$i]);
 ?>
---EXPECTF--
-array(2) refcount(%d){
+--EXPECT--
+array(2) refcount(2){
   [1]=>
-  int(18)
+  long(18) refcount(1)
   [2]=>
-  int(52)
+  long(52) refcount(1)
 }
-array(2) refcount(%d){
+array(2) refcount(2){
   [1]=>
-  int(18)
+  long(18) refcount(1)
   [2]=>
-  int(52)
+  long(52) refcount(1)
 }
-array(2) refcount(%d){
+array(2) refcount(2){
   [0]=>
-  int(1)
+  long(1) refcount(1)
   [1]=>
-  int(2)
+  long(2) refcount(1)
 }
-array(2) refcount(%d){
+array(2) refcount(2){
   [0]=>
-  int(1)
+  long(1) refcount(1)
   [1]=>
-  int(2)
+  long(2) refcount(1)
 }
 int(18)
 int(18)

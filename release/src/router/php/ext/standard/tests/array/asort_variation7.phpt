@@ -1,9 +1,9 @@
 --TEST--
-Test asort() function : usage variations - sort bool values
+Test asort() function : usage variations - sort bool values 
 --FILE--
 <?php
 /* Prototype  : bool asort ( array &$array [, int $sort_flags] )
- * Description: This function asorts an array.
+ * Description: This function asorts an array. 
                 Elements will be arranged from lowest to highest when this function has completed.
  * Source code: ext/standard/array.c
 */
@@ -47,9 +47,9 @@ echo "Done\n";
 -- Testing asort() by supplying bool value array, 'flag' value is defualt --
 bool(true)
 array(4) {
-  [2]=>
-  bool(false)
   [4]=>
+  bool(false)
+  [2]=>
   bool(false)
   [1]=>
   bool(true)
@@ -60,9 +60,9 @@ array(4) {
 -- Testing asort() by supplying bool value array, 'flag' value is SORT_REGULAR --
 bool(true)
 array(4) {
-  [2]=>
-  bool(false)
   [4]=>
+  bool(false)
+  [2]=>
   bool(false)
   [1]=>
   bool(true)
@@ -73,9 +73,9 @@ array(4) {
 -- Testing asort() by supplying bool value array, 'flag' value is SORT_NUMERIC  --
 bool(true)
 array(4) {
-  [2]=>
-  bool(false)
   [4]=>
+  bool(false)
+  [2]=>
   bool(false)
   [1]=>
   bool(true)
@@ -86,9 +86,9 @@ array(4) {
 -- Testing asort() by supplying bool value array, 'flag' value is SORT_STRING --
 bool(true)
 array(4) {
-  [2]=>
-  bool(false)
   [4]=>
+  bool(false)
+  [2]=>
   bool(false)
   [1]=>
   bool(true)

@@ -7,7 +7,7 @@ class VariableStream {
 	var $position;
 	var $varname;
 
-	function __construct($var = null) {
+	function __construct($var) {
 		var_dump("constructor!");
 	}
 
@@ -88,9 +88,9 @@ $myvar = "";
 
 $fp = fopen("var://myvar", "r+");
 
-fwrite($fp, "line1\n");
-fwrite($fp, "line2\n");
-fwrite($fp, "line3\n");
+fwrite($fp, b"line1\n");
+fwrite($fp, b"line2\n");
+fwrite($fp, b"line3\n");
 
 rewind($fp);
 while (!feof($fp)) {
@@ -101,7 +101,8 @@ var_dump($myvar);
 
 echo "Done\n";
 ?>
---EXPECTF--
+--EXPECTF--	
+Warning: Missing argument 1 for VariableStream::__construct() in %s on line %d
 string(12) "constructor!"
 line1
 line2

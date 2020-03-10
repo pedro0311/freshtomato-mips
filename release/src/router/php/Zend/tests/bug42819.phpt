@@ -299,8 +299,4 @@ Array
     [1] => 1
 )
 
-Fatal error: Uncaught Error: Undefined constant 'foo\foo\unknown' in %sbug42819.php:%d
-Stack trace:
-#0 %s(%d): foo\oops()
-#1 {main}
-  thrown in %sbug42819.php on line %d
+Fatal error: Undefined constant 'foo\foo\unknown' in %sbug42819.php on line %d

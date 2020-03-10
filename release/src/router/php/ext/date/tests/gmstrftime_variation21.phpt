@@ -1,5 +1,5 @@
 --TEST--
-Test gmstrftime() function : usage variation - Checking Preferred date and time representation on Windows.
+Test gmstrftime() function : usage variation - Checking Preferred date and time representation on Windows. 
 --SKIPIF--
 <?php
 if (strtoupper(substr(PHP_OS, 0, 3)) != 'WIN') {
@@ -9,16 +9,16 @@ if (strtoupper(substr(PHP_OS, 0, 3)) != 'WIN') {
 --FILE--
 <?php
 /* Prototype  : string gmstrftime(string format [, int timestamp])
- * Description: Format a GMT/UCT time/date according to locale settings
+ * Description: Format a GMT/UCT time/date according to locale settings 
  * Source code: ext/date/php_date.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing gmstrftime() : usage variation ***\n";
 
 // Initialise function arguments not being substituted (if any)
 $timestamp = gmmktime(8, 8, 8, 8, 8, 2008);
-setlocale(LC_ALL, "C");
+setlocale(LC_ALL, "en_US");
 date_default_timezone_set("Asia/Calcutta");
 
 //array of values to iterate over
@@ -42,8 +42,8 @@ foreach($inputs as $key =>$value) {
 *** Testing gmstrftime() : usage variation ***
 
 --Preferred date and time representation--
-string(%d) "%s %s %d %d:%d:%d %d"
-string(24) "Fri Aug  8 08:08:08 2008"
+string(%d) "%d/%d/%d %d:%d:%d"
+string(17) "08/08/08 08:08:08"
 
 --Preferred date representation--
 string(%d) "%d/%d/%d"

@@ -8,7 +8,7 @@ function_exists('mb_strpos') or die("skip mb_strpos() is not available in this b
 --FILE--
 <?php
 /* Prototype  : int mb_strpos(string $haystack, string $needle [, int $offset [, string $encoding]])
- * Description: Find position of first occurrence of a string within another
+ * Description: Find position of first occurrence of a string within another 
  * Source code: ext/mbstring/mbstring.c
  */
 
@@ -19,7 +19,7 @@ function_exists('mb_strpos') or die("skip mb_strpos() is not available in this b
 echo "*** Testing mb_strpos() : usage variations ***\n";
 
 // Initialise function arguments not being substituted
-$haystack = 'string_val';
+$haystack = b'string_val';
 $offset = 0;
 $encoding = 'utf-8';
 
@@ -31,12 +31,12 @@ unset ($unset_var);
 class classA
 {
   public function __toString() {
-    return "Class A object";
+    return b"Class A object";
   }
 }
 
 // heredoc string
-$heredoc = <<<EOT
+$heredoc = b<<<EOT
 hello world
 EOT;
 
@@ -68,16 +68,16 @@ $inputs = array(
        false,
        TRUE,
        FALSE,
-
+       
        // empty data
 /*16*/ "",
        '',
 
        // string data
-/*18*/ "string",
-       'string',
+/*18*/ b"string",
+       b'string',
        $heredoc,
-
+       
        // object data
 /*21*/ new classA(),
 
@@ -194,5 +194,5 @@ bool(false)
 -- Iteration 24 --
 
 Warning: mb_strpos() expects parameter 2 to be string, resource given in %s on line %d
-NULL
+bool(false)
 Done

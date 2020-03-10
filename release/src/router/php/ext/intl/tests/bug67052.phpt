@@ -32,3 +32,4 @@ ut_run();
 --EXPECT--
 1234567,891
 de_DE.UTF-8
+

@@ -8,8 +8,8 @@ function_exists('mb_internal_encoding') or die("skip mb_internal_encoding() is n
 --FILE--
 <?php
 /* Prototype  : string mb_internal_encoding([string $encoding])
- * Description: Sets the current internal encoding or Returns
- * the current internal encoding as a string
+ * Description: Sets the current internal encoding or Returns 
+ * the current internal encoding as a string 
  * Source code: ext/mbstring/mbstring.c
  */
 
@@ -65,7 +65,7 @@ $inputs = array(
        false,
        TRUE,
        FALSE,
-
+       
        // empty data
 /*16*/ "",
        '',
@@ -74,7 +74,7 @@ $inputs = array(
 /*18*/ "UTF-8",
        'UTF-8',
        $heredoc,
-
+       
        // object data
 /*21*/ new classA(),
 
@@ -100,6 +100,7 @@ fclose($fp);
 echo "Done";
 ?>
 --EXPECTF--
+
 *** Testing mb_internal_encoding() : usage variations ***
 
 -- Iteration 1 --
@@ -212,5 +213,5 @@ bool(false)
 -- Iteration 24 --
 
 Warning: mb_internal_encoding() expects parameter 1 to be string, resource given in %s on line %d
-NULL
+bool(false)
 Done

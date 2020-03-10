@@ -1,9 +1,9 @@
 --TEST--
 new mysqli()
 --SKIPIF--
-<?php
+<?php 
 require_once('skipif.inc');
-require_once('skipifemb.inc');
+require_once('skipifemb.inc'); 
 require_once('skipifconnectfailure.inc');
 ?>
 --FILE--
@@ -158,23 +158,23 @@ require_once('skipifconnectfailure.inc');
 ?>
 --EXPECTF--
 array(1) {
-  ["testing"]=>
-  string(19) "mysqli.default_port"
+  [%u|b%"testing"]=>
+  %unicode|string%(19) "mysqli.default_port"
 }
 array(1) {
-  ["testing"]=>
-  string(17) "mysqli.default_pw"
+  [%u|b%"testing"]=>
+  %unicode|string%(17) "mysqli.default_pw"
 }
 array(1) {
-  ["testing"]=>
-  string(19) "mysqli.default_user"
+  [%u|b%"testing"]=>
+  %unicode|string%(19) "mysqli.default_user"
 }
 array(1) {
-  ["all_defaults"]=>
-  string(13) "have been set"
+  [%u|b%"all_defaults"]=>
+  %unicode|string%(13) "have been set"
 }
 array(1) {
-  ["all_defaults"]=>
-  string(13) "have been set"
+  [%u|b%"all_defaults"]=>
+  %unicode|string%(13) "have been set"
 }
 done!

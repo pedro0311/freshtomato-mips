@@ -1,17 +1,19 @@
 --TEST--
-Bug #37251 (deadlock when custom error handler is to catch array type hint error)
+Bug #37251 (deadlock when custom error handler is to catch array type hint error) 
 --FILE--
 <?php
-class Foo {
+function error_handler($errno, $errstr, $errfile, $errline, $context) {
+	echo 'OK';
+}
+
+set_error_handler('error_handler');
+
+class Foo {	
 	function bar(array $foo) {
 	}
 }
 
-try {
-	$foo = new Foo();
-	$foo->bar();
-} catch (Error $e) {
-	echo 'OK';
-}
+$foo = new Foo();
+$foo->bar();
 --EXPECT--
 OK

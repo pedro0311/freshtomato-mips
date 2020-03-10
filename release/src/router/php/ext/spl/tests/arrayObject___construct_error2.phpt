@@ -13,7 +13,7 @@ Class C implements Iterator {
 
 try {
   var_dump(new ArrayObject(new stdClass, 0, "C", "extra"));
-} catch (TypeError $e) {
+} catch (InvalidArgumentException $e) {
   echo $e->getMessage() . "(" . $e->getLine() .  ")\n";
 }
 ?>

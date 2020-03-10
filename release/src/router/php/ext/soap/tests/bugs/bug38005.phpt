@@ -6,7 +6,7 @@ Bug #38005 (SoapFault faultstring doesn't follow encoding rules)
 soap.wsdl_cache_enabled=0
 --FILE--
 <?php
-function Test($param=NULL) {
+function Test($param) {
 	return new SoapFault('Test', 'This is our fault: Ä');
 }
 
@@ -31,7 +31,7 @@ $client = new TestSoapClient(NULL, array(
 	'uri' => "test://",
 	'location' => "test://",
 	'soap_version'=>SOAP_1_2,
-	'trace'=>1,
+	'trace'=>1, 
 	'exceptions'=>0));
 $res = $client->Test();
 echo($res->faultstring."\n");

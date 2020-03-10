@@ -3,7 +3,7 @@ Test vsprintf() function : usage variations - int formats with int values
 --FILE--
 <?php
 /* Prototype  : string vsprintf(string format, array args)
- * Description: Return a formatted string
+ * Description: Return a formatted string 
  * Source code: ext/standard/formatted_print.c
 */
 
@@ -35,7 +35,7 @@ $args_array = array(
   array(2147483647, -2147483648, +2147483640, -2147483640),
   array(123456, 12345678, -1234567, 1234567),
   array(111, 2222, 333333, 44444444),
-  array(0x123b, 0xfAb, 0123, 012),
+  array(0x123b, 0xfAb, 0123, 01293),
   array(1234, -5678, 2345),
   array(3, 4, 1, 2)
 
@@ -45,13 +45,14 @@ $args_array = array(
 // and with int values from the above $args_array array
 $counter = 1;
 foreach($formats as $format) {
-  echo "\n-- Iteration $counter --\n";
+  echo "\n-- Iteration $counter --\n";   
   var_dump( vsprintf($format, $args_array[$counter-1]) );
   $counter++;
 }
 
 echo "Done";
 ?>
+
 --EXPECTF--
 *** Testing vsprintf() : int formats with int values ***
 

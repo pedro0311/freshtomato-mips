@@ -11,11 +11,11 @@ chdir(dirname(__FILE__));
 
 class myclass
 {
-	function startElement($parser, $name, $attribs)
+	function startElement($parser, $name, $attribs) 
 	{
 		print '{'.$name;
 		if (sizeof($attribs)) {
-            foreach ($attribs as $k => $v) {
+			while (list($k, $v) = each($attribs)) {
 				print " $k=\"$v\"";
 			}
 		}

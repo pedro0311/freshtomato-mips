@@ -1,7 +1,7 @@
 --TEST--
 Testing multiples 'default:' in switch
 --FILE--
-<?php
+<?php 
 
 switch (1) {
 	case 2:
@@ -22,5 +22,5 @@ switch (1) {
 }
 
 ?>
---EXPECTF--
-Fatal error: Switch statements may only contain one default clause in %s on line 13
+--EXPECT--
+3

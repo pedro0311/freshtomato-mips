@@ -1,18 +1,18 @@
 --TEST--
-Test uasort() function : object functionality - sort diff. objects
+Test uasort() function : object functionality - sort diff. objects 
 --FILE--
 <?php
 /* Prototype  : bool uasort(array $array_arg, string $cmp_function)
- * Description: Sort an array with a user-defined comparison function and maintain index association
+ * Description: Sort an array with a user-defined comparison function and maintain index association 
  * Source code: ext/standard/array.c
 *
 
 /*
  * This testcase tests uasort() functionality with different objects
- * Objects of different classes:
+ * Objects of different classes: 
  *  simple class,
  *  child class,
- *  empty class &
+ *  empty class & 
  *  static class
  */
 
@@ -43,11 +43,11 @@ function cmp_function($value1, $value2)
 class SimpleClass
 {
   private $int_value;
-
+  
   public function __construct($value) {
     $this->int_value = $value;
   }
-
+  
 }
 
 // Class without any member
@@ -123,32 +123,32 @@ echo "Done"
 -- Testing uasort() with StaticClass objects --
 bool(true)
 array(4) {
-  [0]=>
-  object(StaticClass)#%d (0) {
-  }
-  [1]=>
+  [3]=>
   object(StaticClass)#%d (0) {
   }
   [2]=>
   object(StaticClass)#%d (0) {
   }
-  [3]=>
+  [1]=>
+  object(StaticClass)#%d (0) {
+  }
+  [0]=>
   object(StaticClass)#%d (0) {
   }
 }
 -- Testing uasort() with EmptyClass objects --
 bool(true)
 array(4) {
-  [0]=>
-  object(EmptyClass)#%d (0) {
-  }
-  [1]=>
+  [3]=>
   object(EmptyClass)#%d (0) {
   }
   [2]=>
   object(EmptyClass)#%d (0) {
   }
-  [3]=>
+  [1]=>
+  object(EmptyClass)#%d (0) {
+  }
+  [0]=>
   object(EmptyClass)#%d (0) {
   }
 }

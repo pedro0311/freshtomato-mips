@@ -7,10 +7,10 @@ Test session_unset() function : variation
 
 ob_start();
 
-/*
+/* 
  * Prototype : void session_unset(void)
  * Description : Free all session variables
- * Source code : ext/session/session.c
+ * Source code : ext/session/session.c 
  */
 
 echo "*** Testing session_unset() : variation ***\n";
@@ -32,7 +32,7 @@ ob_end_flush();
 *** Testing session_unset() : variation ***
 bool(false)
 bool(true)
-bool(true)
+NULL
 array(1) {
   ["foo"]=>
   string(12) "Hello World!"
@@ -45,3 +45,4 @@ array(1) {
 }
 bool(false)
 Done
+

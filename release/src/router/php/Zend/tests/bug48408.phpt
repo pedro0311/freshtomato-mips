@@ -22,7 +22,8 @@ catch(Exception $e){
 }
 ?>
 --EXPECTF--
-Fatal error: Uncaught Exception in %s
+
+Fatal error: Uncaught exception 'Exception' in %s
 Stack trace:
 #0 %s(%d): C->generate(0)
 #1 {main}

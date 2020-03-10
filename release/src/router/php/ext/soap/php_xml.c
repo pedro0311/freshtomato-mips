@@ -1,8 +1,8 @@
 /*
   +----------------------------------------------------------------------+
-  | PHP Version 7                                                        |
+  | PHP Version 5                                                        |
   +----------------------------------------------------------------------+
-  | Copyright (c) 1997-2018 The PHP Group                                |
+  | Copyright (c) 1997-2016 The PHP Group                                |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -77,7 +77,7 @@ static void soap_Comment(void *ctx, const xmlChar *value)
 {
 }
 
-xmlDocPtr soap_xmlParseFile(const char *filename)
+xmlDocPtr soap_xmlParseFile(const char *filename TSRMLS_DC)
 {
 	xmlParserCtxtPtr ctxt = NULL;
 	xmlDocPtr ret;
@@ -103,9 +103,9 @@ xmlDocPtr soap_xmlParseFile(const char *filename)
 #if LIBXML_VERSION >= 20703
 		ctxt->options |= XML_PARSE_HUGE;
 #endif
-		old = php_libxml_disable_entity_loader(1);
+		old = php_libxml_disable_entity_loader(1 TSRMLS_CC);
 		xmlParseDocument(ctxt);
-		php_libxml_disable_entity_loader(old);
+		php_libxml_disable_entity_loader(old TSRMLS_CC);
 		if (ctxt->wellFormed) {
 			ret = ctxt->myDoc;
 			if (ret->URL == NULL && ctxt->directory != NULL) {
@@ -136,6 +136,7 @@ xmlDocPtr soap_xmlParseMemory(const void *buf, size_t buf_size)
 	xmlParserCtxtPtr ctxt = NULL;
 	xmlDocPtr ret;
 
+	TSRMLS_FETCH();
 
 /*
 	xmlInitParser();
@@ -152,9 +153,9 @@ xmlDocPtr soap_xmlParseMemory(const void *buf, size_t buf_size)
 #if LIBXML_VERSION >= 20703
 		ctxt->options |= XML_PARSE_HUGE;
 #endif
-		old = php_libxml_disable_entity_loader(1);
+		old = php_libxml_disable_entity_loader(1 TSRMLS_CC);
 		xmlParseDocument(ctxt);
-		php_libxml_disable_entity_loader(old);
+		php_libxml_disable_entity_loader(old TSRMLS_CC);
 		if (ctxt->wellFormed) {
 			ret = ctxt->myDoc;
 			if (ret->URL == NULL && ctxt->directory != NULL) {

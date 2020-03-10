@@ -17,3 +17,4 @@ try {
 ?>
 --EXPECT--
 Object not found
+

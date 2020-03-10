@@ -26,7 +26,7 @@
                 Computer Science Department, 9062
                 Western Washington University
                 Bellingham, WA 98226-9062
-
+       
 *************************************************************************/
 
 #include <config.h>
@@ -85,3 +85,4 @@ bc_add (n1, n2, result, scale_min)
   bc_free_num (result);
   *result = sum;
 }
+

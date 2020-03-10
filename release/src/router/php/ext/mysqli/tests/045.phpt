@@ -31,6 +31,11 @@ mysqli_stmt_bind_result (SHOW)
 	mysqli_stmt_bind_result($stmt, $c1, $c2);
 	mysqli_stmt_fetch($stmt);
 	mysqli_stmt_close($stmt);
+	if ((version_compare(PHP_VERSION, '5.9.9', '>') == 1) && mysqli_get_server_version($link) < 50000) {
+		/* variables are binary */
+		settype($c1, "unicode");
+		settype($c2, "unicode");
+	}
 	$test = array ($c1,$c2);
 
 	var_dump($test);
@@ -41,8 +46,8 @@ mysqli_stmt_bind_result (SHOW)
 --EXPECTF--
 array(2) {
   [0]=>
-  string(4) "port"
+  %unicode|string%(4) "port"
   [1]=>
-  string(%d) "%s"
+  %unicode|string%(%d) "%s"
 }
 done!

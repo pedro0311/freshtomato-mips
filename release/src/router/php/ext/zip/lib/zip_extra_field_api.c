@@ -1,6 +1,6 @@
 /*
   zip_extra_field_api.c -- public extra fields API functions
-  Copyright (C) 2012-2014 Dieter Baron and Thomas Klausner
+  Copyright (C) 2012-2015 Dieter Baron and Thomas Klausner
 
   This file is part of libzip, a library to manipulate ZIP archives.
   The authors can be contacted at <libzip@nih.at>
@@ -31,22 +31,24 @@
   IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+
 
 #include "zipint.h"
 
+
 
 ZIP_EXTERN int
-zip_file_extra_field_delete(zip_t *za, zip_uint64_t idx, zip_uint16_t ef_idx, zip_flags_t flags)
+zip_file_extra_field_delete(struct zip *za, zip_uint64_t idx, zip_uint16_t ef_idx, zip_flags_t flags)
 {
-    zip_dirent_t *de;
+    struct zip_dirent *de;
 
     if ((flags & ZIP_EF_BOTH) == 0) {
-	zip_error_set(&za->error, ZIP_ER_INVAL, 0);
+	_zip_error_set(&za->error, ZIP_ER_INVAL, 0);
 	return -1;
     }
 
     if (((flags & ZIP_EF_BOTH) == ZIP_EF_BOTH) && (ef_idx != ZIP_EXTRA_FIELD_ALL)) {
-	zip_error_set(&za->error, ZIP_ER_INVAL, 0);
+	_zip_error_set(&za->error, ZIP_ER_INVAL, 0);
 	return -1;
     }
     
@@ -54,7 +56,7 @@ zip_file_extra_field_delete(zip_t *za, zip_uint64_t idx, zip_uint16_t ef_idx, zi
 	return -1;
     
     if (ZIP_IS_RDONLY(za)) {
-	zip_error_set(&za->error, ZIP_ER_RDONLY, 0);
+	_zip_error_set(&za->error, ZIP_ER_RDONLY, 0);
 	return -1;
     }
 
@@ -67,19 +69,20 @@ zip_file_extra_field_delete(zip_t *za, zip_uint64_t idx, zip_uint16_t ef_idx, zi
     return 0;
 }
 
+
 
 ZIP_EXTERN int
-zip_file_extra_field_delete_by_id(zip_t *za, zip_uint64_t idx, zip_uint16_t ef_id, zip_uint16_t ef_idx, zip_flags_t flags)
+zip_file_extra_field_delete_by_id(struct zip *za, zip_uint64_t idx, zip_uint16_t ef_id, zip_uint16_t ef_idx, zip_flags_t flags)
 {
-    zip_dirent_t *de;
+    struct zip_dirent *de;
 
     if ((flags & ZIP_EF_BOTH) == 0) {
-	zip_error_set(&za->error, ZIP_ER_INVAL, 0);
+	_zip_error_set(&za->error, ZIP_ER_INVAL, 0);
 	return -1;
     }
 
     if (((flags & ZIP_EF_BOTH) == ZIP_EF_BOTH) && (ef_idx != ZIP_EXTRA_FIELD_ALL)) {
-	zip_error_set(&za->error, ZIP_ER_INVAL, 0);
+	_zip_error_set(&za->error, ZIP_ER_INVAL, 0);
 	return -1;
     }
     
@@ -87,7 +90,7 @@ zip_file_extra_field_delete_by_id(zip_t *za, zip_uint64_t idx, zip_uint16_t ef_i
 	return -1;
 
     if (ZIP_IS_RDONLY(za)) {
-	zip_error_set(&za->error, ZIP_ER_RDONLY, 0);
+	_zip_error_set(&za->error, ZIP_ER_RDONLY, 0);
 	return -1;
     }
     
@@ -100,18 +103,19 @@ zip_file_extra_field_delete_by_id(zip_t *za, zip_uint64_t idx, zip_uint16_t ef_i
     return 0;
 }
 
+
 
 ZIP_EXTERN const zip_uint8_t *
-zip_file_extra_field_get(zip_t *za, zip_uint64_t idx, zip_uint16_t ef_idx, zip_uint16_t *idp, zip_uint16_t *lenp, zip_flags_t flags)
+zip_file_extra_field_get(struct zip *za, zip_uint64_t idx, zip_uint16_t ef_idx, zip_uint16_t *idp, zip_uint16_t *lenp, zip_flags_t flags)
 {
     static const zip_uint8_t empty[1] = { '\0' };
 
-    zip_dirent_t *de;
-    zip_extra_field_t *ef;
+    struct zip_dirent *de;
+    struct zip_extra_field *ef;
     int i;
 
     if ((flags & ZIP_EF_BOTH) == 0) {
-	zip_error_set(&za->error, ZIP_ER_INVAL, 0);
+	_zip_error_set(&za->error, ZIP_ER_INVAL, 0);
 	return NULL;
     }
 
@@ -141,19 +145,20 @@ zip_file_extra_field_get(zip_t *za, zip_uint64_t idx, zip_uint16_t ef_idx, zip_u
 	}
     }
 
-    zip_error_set(&za->error, ZIP_ER_NOENT, 0);
+    _zip_error_set(&za->error, ZIP_ER_NOENT, 0);
     return NULL;
 
 }
 
+
 
 ZIP_EXTERN const zip_uint8_t *
-zip_file_extra_field_get_by_id(zip_t *za, zip_uint64_t idx, zip_uint16_t ef_id, zip_uint16_t ef_idx, zip_uint16_t *lenp, zip_flags_t flags)
+zip_file_extra_field_get_by_id(struct zip *za, zip_uint64_t idx, zip_uint16_t ef_id, zip_uint16_t ef_idx, zip_uint16_t *lenp, zip_flags_t flags)
 {
-    zip_dirent_t *de;
+    struct zip_dirent *de;
 
     if ((flags & ZIP_EF_BOTH) == 0) {
-	zip_error_set(&za->error, ZIP_ER_INVAL, 0);
+	_zip_error_set(&za->error, ZIP_ER_INVAL, 0);
 	return NULL;
     }
 
@@ -167,16 +172,17 @@ zip_file_extra_field_get_by_id(zip_t *za, zip_uint64_t idx, zip_uint16_t ef_id, 
     return _zip_ef_get_by_id(de->extra_fields, lenp, ef_id, ef_idx, flags, &za->error);
 }
 
+
 
 ZIP_EXTERN zip_int16_t
-zip_file_extra_fields_count(zip_t *za, zip_uint64_t idx, zip_flags_t flags)
+zip_file_extra_fields_count(struct zip *za, zip_uint64_t idx, zip_flags_t flags)
 {
-    zip_dirent_t *de;
-    zip_extra_field_t *ef;
+    struct zip_dirent *de;
+    struct zip_extra_field *ef;
     zip_uint16_t n;
 
     if ((flags & ZIP_EF_BOTH) == 0) {
-	zip_error_set(&za->error, ZIP_ER_INVAL, 0);
+	_zip_error_set(&za->error, ZIP_ER_INVAL, 0);
 	return -1;
     }
 
@@ -195,16 +201,17 @@ zip_file_extra_fields_count(zip_t *za, zip_uint64_t idx, zip_flags_t flags)
     return (zip_int16_t)n;
 }
 
+
 
 ZIP_EXTERN zip_int16_t
-zip_file_extra_fields_count_by_id(zip_t *za, zip_uint64_t idx, zip_uint16_t ef_id, zip_flags_t flags)
+zip_file_extra_fields_count_by_id(struct zip *za, zip_uint64_t idx, zip_uint16_t ef_id, zip_flags_t flags)
 {
-    zip_dirent_t *de;
-    zip_extra_field_t *ef;
+    struct zip_dirent *de;
+    struct zip_extra_field *ef;
     zip_uint16_t n;
 
     if ((flags & ZIP_EF_BOTH) == 0) {
-	zip_error_set(&za->error, ZIP_ER_INVAL, 0);
+	_zip_error_set(&za->error, ZIP_ER_INVAL, 0);
 	return -1;
     }
 
@@ -223,17 +230,18 @@ zip_file_extra_fields_count_by_id(zip_t *za, zip_uint64_t idx, zip_uint16_t ef_i
     return (zip_int16_t)n;
 }
 
+
 
 ZIP_EXTERN int
-zip_file_extra_field_set(zip_t *za, zip_uint64_t idx, zip_uint16_t ef_id, zip_uint16_t ef_idx, const zip_uint8_t *data, zip_uint16_t len, zip_flags_t flags)
+zip_file_extra_field_set(struct zip *za, zip_uint64_t idx, zip_uint16_t ef_id, zip_uint16_t ef_idx, const zip_uint8_t *data, zip_uint16_t len, zip_flags_t flags)
 {
-    zip_dirent_t *de;
+    struct zip_dirent *de;
     zip_uint16_t ls, cs;
-    zip_extra_field_t *ef, *ef_prev, *ef_new;
+    struct zip_extra_field *ef, *ef_prev, *ef_new;
     int i, found, new_len;
 
     if ((flags & ZIP_EF_BOTH) == 0) {
-	zip_error_set(&za->error, ZIP_ER_INVAL, 0);
+	_zip_error_set(&za->error, ZIP_ER_INVAL, 0);
 	return -1;
     }
 
@@ -241,12 +249,12 @@ zip_file_extra_field_set(zip_t *za, zip_uint64_t idx, zip_uint16_t ef_id, zip_ui
 	return -1;
     
     if (ZIP_IS_RDONLY(za)) {
-	zip_error_set(&za->error, ZIP_ER_RDONLY, 0);
+	_zip_error_set(&za->error, ZIP_ER_RDONLY, 0);
 	return -1;
     }
     
     if (ZIP_EF_IS_INTERNAL(ef_id)) {
-	zip_error_set(&za->error, ZIP_ER_INVAL, 0);
+	_zip_error_set(&za->error, ZIP_ER_INVAL, 0);
 	return -1;
     }
 
@@ -272,7 +280,7 @@ zip_file_extra_field_set(zip_t *za, zip_uint64_t idx, zip_uint16_t ef_id, zip_ui
     }
 
     if (i < ef_idx && ef_idx != ZIP_EXTRA_FIELD_NEW) {
-	zip_error_set(&za->error, ZIP_ER_INVAL, 0);
+	_zip_error_set(&za->error, ZIP_ER_INVAL, 0);
 	return -1;
     }
 
@@ -291,12 +299,12 @@ zip_file_extra_field_set(zip_t *za, zip_uint64_t idx, zip_uint16_t ef_id, zip_ui
     new_len += len + 4;
 
     if (new_len > ZIP_UINT16_MAX) {
-	zip_error_set(&za->error, ZIP_ER_INVAL, 0);
+	_zip_error_set(&za->error, ZIP_ER_INVAL, 0);
 	return -1;
     }
     
     if ((ef_new=_zip_ef_new(ef_id, len, data, flags)) == NULL) {
-	zip_error_set(&za->error, ZIP_ER_MEMORY, 0);
+	_zip_error_set(&za->error, ZIP_ER_MEMORY, 0);
 	return -1;
     }
 
@@ -329,12 +337,12 @@ zip_file_extra_field_set(zip_t *za, zip_uint64_t idx, zip_uint16_t ef_id, zip_ui
 
 
 int
-_zip_file_extra_field_prepare_for_change(zip_t *za, zip_uint64_t idx)
+_zip_file_extra_field_prepare_for_change(struct zip *za, zip_uint64_t idx)
 {
-    zip_entry_t *e;
+    struct zip_entry *e;
     
     if (idx >= za->nentry) {
-        zip_error_set(&za->error, ZIP_ER_INVAL, 0);
+        _zip_error_set(&za->error, ZIP_ER_INVAL, 0);
         return -1;
     }
     
@@ -350,7 +358,7 @@ _zip_file_extra_field_prepare_for_change(zip_t *za, zip_uint64_t idx)
     
     if (e->changes == NULL) {
         if ((e->changes=_zip_dirent_clone(e->orig)) == NULL) {
-            zip_error_set(&za->error, ZIP_ER_MEMORY, 0);
+            _zip_error_set(&za->error, ZIP_ER_MEMORY, 0);
             return -1;
         }
     }

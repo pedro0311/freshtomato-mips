@@ -54,8 +54,8 @@ mysqli_close($link);
 --EXPECTF--
 array(2) {
   [0]=>
-  string(10) "1234567890"
+  %unicode|string%(10) "1234567890"
   [1]=>
-  string(13) "32K String ok"
+  %unicode|string%(13) "32K String ok"
 }
 done!

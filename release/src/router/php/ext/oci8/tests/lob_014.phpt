@@ -1,13 +1,13 @@
 --TEST--
-oci_lob_free()/close()
+oci_lob_free()/close() 
 --SKIPIF--
 <?php
 $target_dbs = array('oracledb' => true, 'timesten' => false);  // test runs on these DBs
 require(dirname(__FILE__).'/skipif.inc');
-?>
+?> 
 --FILE--
 <?php
-
+	
 require dirname(__FILE__).'/connect.inc';
 require dirname(__FILE__).'/create_table.inc';
 
@@ -50,7 +50,7 @@ bool(true)
 int(4)
 bool(true)
 
-Warning: OCI-Lob::write(): %s is not a valid oci8 descriptor resource in %slob_014.php on line %d
+Warning: OCI-Lob::write(): %d is not a valid oci8 descriptor resource in %slob_014.php on line %d
 bool(false)
 array(1) {
   [0]=>

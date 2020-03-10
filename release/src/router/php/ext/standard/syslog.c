@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2018 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -12,7 +12,7 @@
    | obtain it through the world-wide-web, please send a note to          |
    | license@php.net so we can mail you a copy immediately.               |
    +----------------------------------------------------------------------+
-   | Author: Stig SÃ¦ther Bakken <ssb@php.net>                             |
+   | Author: Stig Sæther Bakken <ssb@php.net>                             |
    +----------------------------------------------------------------------+
  */
 
@@ -44,7 +44,7 @@ PHP_MINIT_FUNCTION(syslog)
 	REGISTER_LONG_CONSTANT("LOG_EMERG", LOG_EMERG, CONST_CS | CONST_PERSISTENT); /* system unusable */
 	REGISTER_LONG_CONSTANT("LOG_ALERT", LOG_ALERT, CONST_CS | CONST_PERSISTENT); /* immediate action required */
 	REGISTER_LONG_CONSTANT("LOG_CRIT", LOG_CRIT, CONST_CS | CONST_PERSISTENT); /* critical conditions */
-	REGISTER_LONG_CONSTANT("LOG_ERR", LOG_ERR, CONST_CS | CONST_PERSISTENT);
+	REGISTER_LONG_CONSTANT("LOG_ERR", LOG_ERR, CONST_CS | CONST_PERSISTENT); 
 	REGISTER_LONG_CONSTANT("LOG_WARNING", LOG_WARNING, CONST_CS | CONST_PERSISTENT);
 	REGISTER_LONG_CONSTANT("LOG_NOTICE", LOG_NOTICE, CONST_CS | CONST_PERSISTENT);
 	REGISTER_LONG_CONSTANT("LOG_INFO", LOG_INFO, CONST_CS | CONST_PERSISTENT);
@@ -135,15 +135,13 @@ PHP_MSHUTDOWN_FUNCTION(syslog)
 PHP_FUNCTION(openlog)
 {
 	char *ident;
-	zend_long option, facility;
-	size_t ident_len;
+	long option, facility;
+	int ident_len;
 
-	ZEND_PARSE_PARAMETERS_START(3, 3)
-		Z_PARAM_STRING(ident, ident_len)
-		Z_PARAM_LONG(option)
-		Z_PARAM_LONG(facility)
-	ZEND_PARSE_PARAMETERS_END();
-
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sll", &ident,
+							  &ident_len, &option, &facility) == FAILURE) {
+		return;
+	}
 	if (BG(syslog_device)) {
 		free(BG(syslog_device));
 	}
@@ -177,14 +175,14 @@ PHP_FUNCTION(closelog)
    Generate a system log message */
 PHP_FUNCTION(syslog)
 {
-	zend_long priority;
+	long priority;
 	char *message;
-	size_t message_len;
+	int message_len;
 
-	ZEND_PARSE_PARAMETERS_START(2, 2)
-		Z_PARAM_LONG(priority)
-		Z_PARAM_STRING(message, message_len)
-	ZEND_PARSE_PARAMETERS_END();
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ls", &priority,
+							  &message, &message_len) == FAILURE) {
+		return;
+	}
 
 	php_syslog(priority, "%s", message);
 	RETURN_TRUE;

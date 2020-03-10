@@ -60,6 +60,7 @@ clearstatcache(true, $filename);  // clear previous size value in cache
 
 echo "\n*** Done ***";
 ?>
+
 --CLEAN--
 <?php
 $file_path = dirname(__FILE__);
@@ -73,3 +74,4 @@ bool(true)
 bool(true)
 
 *** Done ***
+

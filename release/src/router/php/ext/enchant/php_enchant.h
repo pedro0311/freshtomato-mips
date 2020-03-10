@@ -1,8 +1,8 @@
 /*
   +----------------------------------------------------------------------+
-  | PHP Version 7                                                        |
+  | PHP Version 4                                                        |
   +----------------------------------------------------------------------+
-  | Copyright (c) 1997-2018 The PHP Group                                |
+  | Copyright (c) 1997-2016 The PHP Group                                |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.0 of the PHP license,       |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -24,7 +24,7 @@
 extern zend_module_entry enchant_module_entry;
 #define phpext_enchant_ptr &enchant_module_entry
 
-#define PHP_ENCHANT_VERSION PHP_VERSION
+#define PHP_ENCHANT_VERSION "1.1.0"
 
 #ifdef PHP_WIN32
 #define PHP_ENCHANT_API __declspec(dllexport)
@@ -79,3 +79,4 @@ PHP_FUNCTION(enchant_dict_quick_check);
  * indent-tabs-mode: t
  * End:
  */
+

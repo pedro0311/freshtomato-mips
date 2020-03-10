@@ -6,7 +6,7 @@ SPL: ArrayIterator::append
 if (!class_exists('NoRewindIterator', false))
 {
 	require_once(dirname(__FILE__) . '/../examples/norewinditerator.inc');
-}
+}                                               
 
 echo "===Array===\n";
 
@@ -76,8 +76,4 @@ one=>1
 two=>2
 ===Append===
 
-Fatal error: Uncaught Error: Cannot append properties to objects, use ArrayIterator::offsetSet() instead in %s:%d
-Stack trace:
-#0 %s(%d): ArrayIterator->append('three')
-#1 {main}
-  thrown in %s on line %d
+Catchable fatal error: ArrayIterator::append(): Cannot append properties to objects, use ArrayIterator::offsetSet() instead in %sarray_013.php on line %d

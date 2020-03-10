@@ -24,7 +24,6 @@ foreach (array_keys($result) as $key) {
 }
 ?>
 --EXPECT--
-Deprecated: The mbstring.func_overload directive is deprecated in Unknown on line 0
 array(15) {
   ["internal_encoding"]=>
   string(5) "UTF-8"

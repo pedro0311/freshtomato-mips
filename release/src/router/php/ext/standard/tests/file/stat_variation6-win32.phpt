@@ -67,6 +67,7 @@ clearstatcache();  // clear statement cache
 
 echo "\n*** Done ***";
 ?>
+
 --CLEAN--
 <?php
 $file_path = dirname(__FILE__);
@@ -74,6 +75,7 @@ unlink("$file_path/stat_variation6.tmp");
 rmdir("$file_path/stat_variation6");
 ?>
 --EXPECTF--
+
 *** Testing stat() on file with miscelleneous file permission and content ***
 bool(true)
 bool(true)
@@ -87,3 +89,4 @@ bool(true)
 bool(true)
 
 *** Done ***
+

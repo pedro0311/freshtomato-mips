@@ -1,11 +1,11 @@
 --TEST--
-Test parse_url() function: Parse a load of URLs without specifying the component
+Test parse_url() function: Parse a load of URLs without specifying the component 
 --FILE--
 <?php
 /* Prototype  : proto mixed parse_url(string url, [int url_component])
- * Description: Parse a and return its components
+ * Description: Parse a and return its components 
  * Source code: ext/standard/url.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 /*
@@ -21,6 +21,7 @@ foreach ($urls as $url) {
 echo "Done";
 ?>
 --EXPECTF--
+
 --> 64.246.30.37: array(1) {
   ["path"]=>
   string(12) "64.246.30.37"
@@ -620,21 +621,6 @@ echo "Done";
   string(4) "user"
   ["pass"]=>
   string(6) "passwd"
-  ["query"]=>
-  string(12) "bar=1&boom=0"
-}
-
---> http://user_me-you:my_pas-word@www.example.com:8080?bar=1&boom=0: array(6) {
-  ["scheme"]=>
-  string(4) "http"
-  ["host"]=>
-  string(15) "www.example.com"
-  ["port"]=>
-  int(8080)
-  ["user"]=>
-  string(11) "user_me-you"
-  ["pass"]=>
-  string(11) "my_pas-word"
   ["query"]=>
   string(12) "bar=1&boom=0"
 }

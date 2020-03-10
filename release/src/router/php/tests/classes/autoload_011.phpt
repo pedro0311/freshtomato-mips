@@ -2,14 +2,15 @@
 Ensure extends does trigger autoload.
 --FILE--
 <?php
-spl_autoload_register(function ($name) {
-  echo "In autoload: ";
-  var_dump($name);
-});
-
-class C extends UndefBase
-{
-}
+  function __autoload($name)
+  {
+      echo "In autoload: ";
+      var_dump($name);
+  }
+  
+  class C extends UndefBase
+  {
+  }
 ?>
 --EXPECTF--
 In autoload: string(9) "UndefBase"

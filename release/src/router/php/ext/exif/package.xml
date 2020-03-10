@@ -18,8 +18,8 @@
   </maintainer>
  </maintainers>
  <description>
-The EXIF functions provide access to information stored in headers
-of JPEG and TIFF images. This way you can read meta data generated
+The EXIF functions provide access to information stored in headers 
+of JPEG and TIFF images. This way you can read meta data generated 
 by digital cameras and certain image processing applications.
  </description>
  <license>PHP</license>
@@ -35,6 +35,7 @@ package.xml added to support installation using pear installer
    <file role="doc" name="example.php"/>
    <file role="src" name="config.m4"/>
    <file role="src" name="config.w32"/>
+   <file role="src" name="exif.dsp"/>
    <file role="src" name="exif.c"/>
    <file role="src" name="php_exif.h"/>
    <file role="test" name="tests/exif000.phpt"/>

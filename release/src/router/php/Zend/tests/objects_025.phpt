@@ -1,13 +1,13 @@
 --TEST--
 Testing invalid method names with __call and __callstatic
 --FILE--
-<?php
+<?php 
 
 class foo {
 	public function __call($a, $b) {
 		print "non-static - ok\n";
 	}
-
+	
 	public static function __callstatic($a, $b) {
 		print "static - ok\n";
 	}
@@ -43,7 +43,4 @@ static - ok
 non-static - ok
 static - ok
 
-Fatal error: Uncaught Error: Method name must be a string in %s:%d
-Stack trace:
-#0 {main}
-  thrown in %s on line %d
+Fatal error: Method name must be a string in %s on line %d

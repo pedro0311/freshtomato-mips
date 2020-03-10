@@ -5,7 +5,7 @@ precision=14
 --FILE--
 <?php
 /* Prototype  : float expm1 ( float $arg  )
- * Description: Returns exp(number) - 1, computed in a way that is accurate even
+ * Description: Returns exp(number) - 1, computed in a way that is accurate even 
  *              when the value of number is close to zero.
  * Source code: ext/standard/math.c
  */
@@ -15,15 +15,16 @@ $values = array(10,
 				10.3,
 				3.9505e3,
 				037,
-				0x5F,
+				0x5F,	
 				"10",
 				"3950.5",
 				"3.9505e3",
 				"039",
+				"0x5F",
 				true,
 				false,
-				null,
-				);
+				null, 
+				);	
 
 // loop through each element of $values to check the behaviour of expm1()
 $iterator = 1;
@@ -65,11 +66,14 @@ float(INF)
 float(8.6593400423994E+16)
 
 -- Iteration 10 --
-float(1.718281828459)
+float(1.811239082889E+41)
 
 -- Iteration 11 --
-float(0)
+float(1.718281828459)
 
 -- Iteration 12 --
+float(0)
+
+-- Iteration 13 --
 float(0)
 ===Done===

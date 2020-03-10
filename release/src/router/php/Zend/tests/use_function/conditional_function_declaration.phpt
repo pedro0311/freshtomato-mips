@@ -1,5 +1,5 @@
 --TEST--
-function that is conditionally defined is subject to symbol use checks
+function that is conditionally defined at runtime should not cause compiler error
 --FILE--
 <?php
 
@@ -13,5 +13,5 @@ use function bar\foo;
 echo "Done";
 
 ?>
---EXPECTF--
-Fatal error: Cannot use function bar\foo as foo because the name is already in use in %s on line %d
+--EXPECT--
+Done

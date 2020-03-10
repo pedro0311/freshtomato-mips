@@ -4,10 +4,10 @@ Test variations in usage of cosh()
 precision = 10
 --FILE--
 <?php
-/*
+/* 
  * proto float cosh(float number)
  * Function is implemented in ext/standard/math.c
-*/
+*/ 
 
 
 //Test cosh with a different input values
@@ -21,12 +21,12 @@ $values = array(23,
 		"23",
 		"23.45",
 		"2.345e1",
-		"nonsense",
+		"nonsense",				
 		"1000",
 		"1000ABC",
 		null,
 		true,
-		false);
+		false);	
 
 for ($i = 0; $i < count($values); $i++) {
 	$res = cosh($values[$i]);
@@ -45,7 +45,7 @@ float(4872401723)
 float(7641446995)
 float(7641446995)
 
-Warning: cosh() expects parameter 1 to be float, string given in %s on line %d
+Warning: cosh() expects parameter 1 to be double, string given in %s on line %d
 NULL
 float(INF)
 

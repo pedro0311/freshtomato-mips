@@ -130,8 +130,7 @@ if (!$IS_MYSQLND)
 			}
 			reset($fields);
 			foreach ($fields_stmt as $fields_stmt_val) {
-				$fields_val = current($fields);
-				next($fields);
+				list(,$fields_val) = each($fields);
 				unset($fields_stmt_val->max_length);
 				unset($fields_val->max_length);
 				if ($fields_stmt_val != $fields_val) {

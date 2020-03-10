@@ -24,3 +24,4 @@ object(DirectoryIterator)#%d (3) {
 bool(false)
 bool(false)
 ===DONE===
+

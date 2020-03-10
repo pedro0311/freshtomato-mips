@@ -38,3 +38,4 @@ echo tidy_get_status($tidy);
 ?>
 --EXPECT--
 012
+

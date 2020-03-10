@@ -1,3 +1,4 @@
+
 	/* $Id: fpm_php_trace.c,v 1.27.2.1 2008/11/15 00:57:24 anight Exp $ */
 	/* (c) 2007,2008 Andrei Nigmatulin */
 
@@ -39,15 +40,14 @@
 #endif
 
 
-static int fpm_php_trace_dump(struct fpm_child_s *child, FILE *slowlog) /* {{{ */
+static int fpm_php_trace_dump(struct fpm_child_s *child, FILE *slowlog TSRMLS_DC) /* {{{ */
 {
-	int callers_limit = child->wp->config->request_slowlog_trace_depth;
+	int callers_limit = 20;
 	pid_t pid = child->pid;
 	struct timeval tv;
 	static const int buf_size = 1024;
 	char buf[buf_size];
 	long execute_data;
-	long path_translated;
 	long l;
 
 	gettimeofday(&tv, 0);
@@ -56,13 +56,7 @@ static int fpm_php_trace_dump(struct fpm_child_s *child, FILE *slowlog) /* {{{ *
 
 	fprintf(slowlog, "\n%s [pool %s] pid %d\n", buf, child->wp->config->name, (int) pid);
 
-	if (0 > fpm_trace_get_long((long) &SG(request_info).path_translated, &l)) {
-		return -1;
-	}
-
-	path_translated = l;
-
-	if (0 > fpm_trace_get_strz(buf, buf_size, path_translated)) {
+	if (0 > fpm_trace_get_strz(buf, buf_size, (long) &SG(request_info).path_translated)) {
 		return -1;
 	}
 
@@ -76,125 +70,74 @@ static int fpm_php_trace_dump(struct fpm_child_s *child, FILE *slowlog) /* {{{ *
 
 	while (execute_data) {
 		long function;
-		long function_name;
-		long file_name;
-		long prev;
-		uint32_t lineno = 0;
+		uint lineno = 0;
 
-		if (0 > fpm_trace_get_long(execute_data + offsetof(zend_execute_data, func), &l)) {
+		fprintf(slowlog, "[0x%" PTR_FMT "lx] ", execute_data);
+
+		if (0 > fpm_trace_get_long(execute_data + offsetof(zend_execute_data, function_state.function), &l)) {
 			return -1;
 		}
 
 		function = l;
 
 		if (valid_ptr(function)) {
-			if (0 > fpm_trace_get_long(function + offsetof(zend_function, common.function_name), &l)) {
+			if (0 > fpm_trace_get_strz(buf, buf_size, function + offsetof(zend_function, common.function_name))) {
 				return -1;
 			}
 
-			function_name = l;
-
-			if (function_name == 0) {
-				uint32_t *call_info = (uint32_t *)&l;
-				if (0 > fpm_trace_get_long(execute_data + offsetof(zend_execute_data, This.u1.type_info), &l)) {
-					return -1;
-				}
-
-				if (ZEND_CALL_KIND_EX((*call_info) >> ZEND_CALL_INFO_SHIFT) == ZEND_CALL_TOP_CODE) {
-					return 0;
-				} else if (ZEND_CALL_KIND_EX(*(call_info) >> ZEND_CALL_INFO_SHIFT) == ZEND_CALL_NESTED_CODE) {
-					memcpy(buf, "[INCLUDE_OR_EVAL]", sizeof("[INCLUDE_OR_EVAL]"));
-				} else {
-					ZEND_ASSERT(0);
-				}
-			} else {
-				if (0 > fpm_trace_get_strz(buf, buf_size, function_name + offsetof(zend_string, val))) {
-					return -1;
-				}
-
-			}
+			fprintf(slowlog, "%s()", buf);
 		} else {
-			memcpy(buf, "???", sizeof("???"));
+			fprintf(slowlog, "???");
 		}
 
-		fprintf(slowlog, "[0x%" PTR_FMT "lx] ", execute_data);
-
-		fprintf(slowlog, "%s()", buf);
+		if (0 > fpm_trace_get_long(execute_data + offsetof(zend_execute_data, op_array), &l)) {
+			return -1;
+		}
 
 		*buf = '\0';
+
+		if (valid_ptr(l)) {
+			long op_array = l;
+
+			if (0 > fpm_trace_get_strz(buf, buf_size, op_array + offsetof(zend_op_array, filename))) {
+				return -1;
+			}
+		}
+
+		if (0 > fpm_trace_get_long(execute_data + offsetof(zend_execute_data, opline), &l)) {
+			return -1;
+		}
+
+		if (valid_ptr(l)) {
+			long opline = l;
+			uint *lu = (uint *) &l;
+
+			if (0 > fpm_trace_get_long(opline + offsetof(struct _zend_op, lineno), &l)) {
+				return -1;
+			}
+
+			lineno = *lu;
+		}
+
+		fprintf(slowlog, " %s:%u\n", *buf ? buf : "unknown", lineno);
 
 		if (0 > fpm_trace_get_long(execute_data + offsetof(zend_execute_data, prev_execute_data), &l)) {
 			return -1;
 		}
 
-		execute_data = prev = l;
-
-		while (prev) {
-			zend_uchar *type;
-
-			if (0 > fpm_trace_get_long(prev + offsetof(zend_execute_data, func), &l)) {
-				return -1;
-			}
-
-			function = l;
-
-			if (!valid_ptr(function)) {
-				break;
-			}
-
-			type = (zend_uchar *)&l;
-			if (0 > fpm_trace_get_long(function + offsetof(zend_function, type), &l)) {
-				return -1;
-			}
-
-			if (ZEND_USER_CODE(*type)) {
-				if (0 > fpm_trace_get_long(function + offsetof(zend_op_array, filename), &l)) {
-					return -1;
-				}
-
-				file_name = l;
-
-				if (0 > fpm_trace_get_strz(buf, buf_size, file_name + offsetof(zend_string, val))) {
-					return -1;
-				}
-
-				if (0 > fpm_trace_get_long(prev + offsetof(zend_execute_data, opline), &l)) {
-					return -1;
-				}
-
-				if (valid_ptr(l)) {
-					long opline = l;
-					uint32_t *lu = (uint32_t *) &l;
-
-					if (0 > fpm_trace_get_long(opline + offsetof(struct _zend_op, lineno), &l)) {
-						return -1;
-					}
-
-					lineno = *lu;
-				}
-				break;
-			}
-
-			if (0 > fpm_trace_get_long(prev + offsetof(zend_execute_data, prev_execute_data), &l)) {
-				return -1;
-			}
-
-			prev = l;
-		}
-
-		fprintf(slowlog, " %s:%u\n", *buf ? buf : "unknown", lineno);
+		execute_data = l;
 
 		if (0 == --callers_limit) {
 			break;
 		}
 	}
-
 	return 0;
 }
 /* }}} */
 
 void fpm_php_trace(struct fpm_child_s *child) /* {{{ */
 {
+	TSRMLS_FETCH();
 	fpm_scoreboard_update(0, 0, 0, 0, 0, 0, 1, FPM_SCOREBOARD_ACTION_INC, child->wp->scoreboard);
 	FILE *slowlog;
 
@@ -211,7 +154,7 @@ void fpm_php_trace(struct fpm_child_s *child) /* {{{ */
 		goto done1;
 	}
 
-	if (0 > fpm_php_trace_dump(child, slowlog)) {
+	if (0 > fpm_php_trace_dump(child, slowlog TSRMLS_CC)) {
 		fprintf(slowlog, "+++ dump failed\n");
 	}
 
@@ -231,3 +174,4 @@ done0:
 /* }}} */
 
 #endif
+

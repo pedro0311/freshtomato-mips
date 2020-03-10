@@ -6,8 +6,6 @@ require_once('skipif.inc');
 require_once('skipifemb.inc');
 require_once('skipifconnectfailure.inc');
 ?>
---INI--
-mysqli.allow_local_infile=1
 --FILE--
 <?php
 	require("connect.inc");
@@ -22,7 +20,6 @@ mysqli.allow_local_infile=1
 		'MYSQLI_READ_DEFAULT_FILE'			=> true,
 		'MYSQLI_OPT_CONNECT_TIMEOUT'		=> true,
 		'MYSQLI_OPT_LOCAL_INFILE'			=> true,
-		'MYSQLI_OPT_READ_TIMEOUT'			=> true,
 		'MYSQLI_INIT_COMMAND'				=> true,
 		'MYSQLI_CLIENT_SSL'					=> true,
 		"MYSQLI_CLIENT_COMPRESS"			=> true,
@@ -202,7 +199,7 @@ mysqli.allow_local_infile=1
 		}
 	}
 
-	if ($IS_MYSQLND || (!$IS_MYSQLND && ($version > 50610))) {
+	if (($IS_MYSQLND && version_compare(PHP_VERSION, ' 5.4.12-dev', '>=')) || (!$IS_MYSQLND && ($version > 50610))) {
 		/* could be that MySQL/libmysql 5.6.9 had the flag already but it was no stable release */
 		$expected_constants["MYSQLI_OPT_CAN_HANDLE_EXPIRED_PASSWORDS"] = true;
 		$expected_constants["MYSQLI_CLIENT_CAN_HANDLE_EXPIRED_PASSWORDS"] = true;

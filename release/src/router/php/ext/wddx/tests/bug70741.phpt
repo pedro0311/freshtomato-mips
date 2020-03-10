@@ -3,7 +3,6 @@ Bug #70741 (Session WDDX Packet Deserialization Type Confusion Vulnerability)
 --SKIPIF--
 <?php
 if (!extension_loaded("wddx")) print "skip";
-if (!extension_loaded("session")) print "skip session extension not available";
 ?>
 --FILE--
 <?php
@@ -22,5 +21,6 @@ session_decode($wddx);
 ?>
 DONE
 --EXPECTF--
+
 Warning: session_decode(): Failed to decode session object. Session has been destroyed in %s on line %d
 DONE

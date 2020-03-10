@@ -21,7 +21,7 @@ $filename = "$file_path/fflush_error.tmp";
 $file_handle = fopen($filename, "w");
 if($file_handle == false)
   exit("Error:failed to open file $filename");
-
+   
 var_dump( fflush($file_handle, $file_handle) );
 fclose($file_handle);
 
@@ -43,11 +43,13 @@ for($loop_counter = 1; $loop_counter <= count($invalid_args); $loop_counter++) {
 }
 echo "\n*** Done ***";
 ?>
+
 --CLEAN--
 <?php
 $file_path = dirname(__FILE__);
 unlink("$file_path/fflush_error.tmp");
 ?>
+
 --EXPECTF--
 *** Testing error conditions ***
 -- Testing fflush(): with zero argument --
@@ -69,7 +71,7 @@ Warning: fflush() expects parameter 1 to be resource, integer given in %s on lin
 bool(false)
 -- Iteration 3 --
 
-Warning: fflush() expects parameter 1 to be resource, float given in %s on line %d
+Warning: fflush() expects parameter 1 to be resource, double given in %s on line %d
 bool(false)
 -- Iteration 4 --
 
@@ -85,3 +87,4 @@ Warning: fflush() expects parameter 1 to be resource, object given in %s on line
 bool(false)
 
 *** Done ***
+

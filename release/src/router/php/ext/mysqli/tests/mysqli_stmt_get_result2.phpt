@@ -157,17 +157,17 @@ if (!function_exists('mysqli_stmt_get_result'))
 ?>
 --EXPECTF--
 array(2) {
-  ["id"]=>
+  [%u|b%"id"]=>
   int(1)
-  ["label"]=>
-  string(1) "a"
+  [%u|b%"label"]=>
+  %unicode|string%(1) "a"
 }
 NULL
 array(2) {
-  ["id"]=>
+  [%u|b%"id"]=>
   int(1)
-  ["label"]=>
-  string(1) "a"
+  [%u|b%"label"]=>
+  %unicode|string%(1) "a"
 }
 NULL
 [017] [2014] Commands out of sync; you can't run this command now

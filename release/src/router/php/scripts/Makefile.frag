@@ -1,3 +1,4 @@
+
 #
 # Build environment install
 #
@@ -10,7 +11,6 @@ BUILD_FILES = \
 	build/mkdep.awk \
 	build/scan_makefile_in.awk \
 	build/libtool.m4 \
-	build/ax_check_compile_flag.m4 \
 	Makefile.global \
 	acinclude.m4 \
 	ltmain.sh \

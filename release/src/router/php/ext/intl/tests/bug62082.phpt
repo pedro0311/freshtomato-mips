@@ -13,3 +13,4 @@ var_dump(locale_get_display_name(str_repeat("a", 600), null));
 bool(false)
 bool(false)
 bool(false)
+

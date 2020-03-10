@@ -19,6 +19,7 @@ var_dump($c->roll(1));
 var_dump(intlcal_roll($c, 1, 2, 3));
 var_dump(intlcal_roll(1, 2, 3));
 --EXPECTF--
+
 Warning: IntlCalendar::roll(): intlcal_set: too many arguments in %s on line %d
 bool(false)
 
@@ -33,8 +34,4 @@ bool(false)
 Warning: intlcal_roll(): intlcal_set: too many arguments in %s on line %d
 bool(false)
 
-Fatal error: Uncaught TypeError: Argument 1 passed to intlcal_roll() must be an instance of IntlCalendar, integer given in %s:%d
-Stack trace:
-#0 %s(%d): intlcal_roll(1, 2, 3)
-#1 {main}
-  thrown in %s on line %d
+Catchable fatal error: Argument 1 passed to intlcal_roll() must be an instance of IntlCalendar, integer given in %s on line %d

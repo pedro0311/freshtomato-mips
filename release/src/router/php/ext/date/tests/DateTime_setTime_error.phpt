@@ -1,13 +1,13 @@
 --TEST--
-Test DateTime::setTime() function : error conditions
+Test DateTime::setTime() function : error conditions 
 --FILE--
 <?php
 /* Prototype  : public DateTime DateTime::setTime  ( int $hour  , int $minute  [, int $second  ] )
- * Description: Resets the current time of the DateTime object to a different time.
+ * Description: Resets the current time of the DateTime object to a different time. 
  * Source code: ext/date/php_date.c
  * Alias to functions: date_time_set
  */
-
+ 
 date_default_timezone_set("Europe/London");
 
 echo "*** Testing DateTime::setTime() : error conditions ***\n";
@@ -25,8 +25,7 @@ echo "\n-- Testing DateTime::setTime() function with more than expected no. of a
 $min = 15;
 $sec = 30;
 $extra_arg = 10;
-$microseconds = 123123;
-var_dump( $datetime->setTime($hour, $min, $sec, $microseconds, $extra_arg) );
+var_dump( $datetime->setTime($hour, $min, $sec, $extra_arg) );
 
 ?>
 ===DONE===
@@ -45,6 +44,6 @@ bool(false)
 
 -- Testing DateTime::setTime() function with more than expected no. of arguments --
 
-Warning: DateTime::setTime() expects at most 4 parameters, 5 given in %s on line %d
+Warning: DateTime::setTime() expects at most 3 parameters, 4 given in %s on line %d
 bool(false)
 ===DONE===

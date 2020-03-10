@@ -89,7 +89,7 @@ oci_execute($s);
 
 echo "Done\n";
 ?>
---EXPECT--
+--EXPECTF-- 
 Test 1. Check how many rows in the table
 array(1) {
   ["NUMROWS"]=>

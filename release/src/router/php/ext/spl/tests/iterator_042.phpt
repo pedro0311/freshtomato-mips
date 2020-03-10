@@ -3,7 +3,7 @@ SPL: AppendIterator and its ArrayIterator
 --FILE--
 <?php
 
-function test_error_handler($errno, $msg, $filename, $linenum)
+function test_error_handler($errno, $msg, $filename, $linenum, $vars)
 {
 	echo "Error $msg in $filename on line $linenum\n";
 	return true;
@@ -13,11 +13,7 @@ set_error_handler('test_error_handler');
 
 $it = new AppendIterator;
 
-try {
-	$it->append(array());
-} catch (Error $e) {
-	test_error_handler($e->getCode(), $e->getMessage(), $e->getFile(), $e->getLine());
-}
+$it->append(array());
 $it->append(new ArrayIterator(array(1)));
 $it->append(new ArrayIterator(array(21, 22)));
 
@@ -87,7 +83,7 @@ object(ArrayIterator)#%d (1) {
       }
     }
     [2]=>
-    object(ArrayIterator)#%d (1) {
+    object(ArrayIterator)#5 (1) {
       %s"storage"%s"ArrayIterator":private]=>
       array(3) {
         [0]=>

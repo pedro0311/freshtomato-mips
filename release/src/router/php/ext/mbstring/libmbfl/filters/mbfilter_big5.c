@@ -5,7 +5,7 @@
  * LICENSE NOTICES
  *
  * This file is part of "streamable kanji code filter and converter",
- * which is distributed under the terms of GNU Lesser General Public
+ * which is distributed under the terms of GNU Lesser General Public 
  * License (version 2) as published by the Free Software Foundation.
  *
  * This software is distributed in the hope that it will be useful,
@@ -24,7 +24,7 @@
 /*
  * The source code included in this files was separated from mbfilter_tw.c
  * by moriyoshi koizumi <moriyoshi@php.net> on 4 dec 2002.
- *
+ * 
  */
 
 #ifdef HAVE_CONFIG_H
@@ -138,17 +138,6 @@ static unsigned short cp950_pua_tbl[][4] = {
 	{0xf70f,0xf848,0xc740,0xc8fe},
 };
 
-static inline int is_in_cp950_pua(int c1, int c) {
-	if ((c1 >= 0xfa && c1 <= 0xfe) || (c1 >= 0x8e && c1 <= 0xa0) ||
-			(c1 >= 0x81 && c1 <= 0x8d) || (c1 >= 0xc7 && c1 <= 0xc8)) {
-		return (c >=0x40 && c <= 0x7e) || (c >= 0xa1 && c <= 0xfe);
-	}
-	if (c1 == 0xc6) {
-		return c >= 0xa1 && c <= 0xfe;
-	}
-	return 0;
-}
-
 /*
  * Big5 => wchar
  */
@@ -169,7 +158,7 @@ mbfl_filt_conv_big5_wchar(int c, mbfl_convert_filter *filter)
 		if (c >= 0 && c <= 0x80) {	/* latin */
 			CK((*filter->output_function)(c, filter->data));
 		} else if (c == 0xff) {
-			CK((*filter->output_function)(0xf8f8, filter->data));
+			CK((*filter->output_function)(0xf8f8, filter->data));			
 		} else if (c > c1 && c < 0xff) {	/* dbcs lead byte */
 			filter->status = 1;
 			filter->cache = c;
@@ -194,24 +183,28 @@ mbfl_filt_conv_big5_wchar(int c, mbfl_convert_filter *filter)
 			} else {
 				w = 0;
 			}
-
+			
 			if (filter->from->no_encoding == mbfl_no_encoding_cp950) {
 				/* PUA for CP950 */
-				if (w <= 0 && is_in_cp950_pua(c1, c)) {
+				if (w <= 0 && 
+					(((c1 >= 0xfa && c1 <= 0xfe) || (c1 >= 0x8e && c1 <= 0xa0) ||
+					  (c1 >= 0x81 && c1 <= 0x8d) ||(c1 >= 0xc7 && c1 <= 0xc8)) 
+					 && ((c > 0x39 && c < 0x7f) || (c > 0xa0 && c < 0xff))) ||
+					((c1 == 0xc6) && (c > 0xa0 && c < 0xff))) {
 					c2 = c1 << 8 | c;
 					for (k = 0; k < sizeof(cp950_pua_tbl)/(sizeof(unsigned short)*4); k++) {
 						if (c2 >= cp950_pua_tbl[k][2] && c2 <= cp950_pua_tbl[k][3]) {
 							break;
 						}
 					}
-
+					
 					if ((cp950_pua_tbl[k][2] & 0xff) == 0x40) {
 						w = 157*(c1 - (cp950_pua_tbl[k][2]>>8)) + c - (c >= 0xa1 ? 0x62 : 0x40)
 							+ cp950_pua_tbl[k][0];
 					} else {
 						w = c2 - cp950_pua_tbl[k][2] + cp950_pua_tbl[k][0];
 					}
-				}
+				} 
 			}
 
 			if (w <= 0) {
@@ -275,12 +268,12 @@ mbfl_filt_conv_wchar_big5(int c, mbfl_convert_filter *filter)
 			if ((cp950_pua_tbl[k][2] & 0xff) == 0x40) {
 				c2 = cp950_pua_tbl[k][2] >> 8;
 				s = ((c1 / 157) + c2) << 8; c1 %= 157;
-				s |= c1 + (c1 >= 0x3f ? 0x62 : 0x40);
+				s |= c1 + (c1 >= 0x3f ? 0x62 : 0x40);	
 			} else {
 				s = c1 + cp950_pua_tbl[k][2];
 			}
 		}
-
+		
 		if (c == 0x80) {
 			s = 0x80;
 		} else if (c == 0xf8f8) {
@@ -347,3 +340,5 @@ static int mbfl_filt_ident_big5(int c, mbfl_identify_filter *filter)
 
 	return c;
 }
+
+

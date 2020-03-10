@@ -1,7 +1,7 @@
 --TEST--
 Testing usage of object as array on clone statement
 --FILE--
-<?php
+<?php 
 
 error_reporting(E_ALL|E_STRICT);
 
@@ -17,7 +17,4 @@ $a = clone $c->b[1];
 
 ?>
 --EXPECTF--
-Fatal error: Uncaught Error: Cannot use object of type foo as array in %s:%d
-Stack trace:
-#0 {main}
-  thrown in %s on line %d
+Fatal error: Cannot use object of type foo as array in %s on line %d

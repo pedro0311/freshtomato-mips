@@ -8,6 +8,5 @@ $a = create_function('$x', 'return function($y) use ($x) { return $x * $y; };');
 var_dump($a(2)->__invoke(4));
 
 ?>
---EXPECTF--
-Deprecated: Function create_function() is deprecated in %s on line %d
+--EXPECT--
 int(8)

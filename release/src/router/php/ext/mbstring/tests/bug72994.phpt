@@ -13,7 +13,5 @@ var_dump($var1);
 ===DONE===
 --EXPECTF--
 Notice: Undefined variable: var in %s on line %d
-
-Warning: mbereg_replace(): Pattern is not valid under UTF-8 encoding in %s on line %d
-bool(false)
+string(0) ""
 ===DONE===

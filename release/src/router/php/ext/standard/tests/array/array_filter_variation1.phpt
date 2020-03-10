@@ -3,7 +3,7 @@ Test array_filter() function : usage variations - Unexpected values for 'input' 
 --FILE--
 <?php
 /* Prototype  : array array_filter(array $input [, callback $callback])
- * Description: Filters elements from the array via the callback.
+ * Description: Filters elements from the array via the callback. 
  * Source code: ext/standard/array.c
 */
 
@@ -76,7 +76,7 @@ $input_values = array(
 
         // object data
 /*20*/  new MyClass(),
-
+ 
         // resource data
         $fp,
 
@@ -118,23 +118,23 @@ Warning: array_filter() expects parameter 1 to be array, integer given in %s on 
 NULL
 -- Iteration 5 --
 
-Warning: array_filter() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_filter() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 6 --
 
-Warning: array_filter() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_filter() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 7 --
 
-Warning: array_filter() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_filter() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 8 --
 
-Warning: array_filter() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_filter() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 9 --
 
-Warning: array_filter() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_filter() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 10 --
 

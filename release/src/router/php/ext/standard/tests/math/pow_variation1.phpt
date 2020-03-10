@@ -38,7 +38,7 @@ $inputs = array(
 /*1*/  0,
        1,
        12345,
-       -2345,
+       -2345,       
        PHP_INT_MAX,
 
        // float data
@@ -57,7 +57,7 @@ $inputs = array(
        false,
        TRUE,
        FALSE,
-
+       
        // empty data
 /*17*/ "",
        '',
@@ -67,10 +67,10 @@ $inputs = array(
 /*20*/ "abcxyz",
        'abcxyz',
        $heredoc,
-
+       
        // object data
-/*23*/ new classA(),
-
+/*23*/ new classA(),       
+       
        // undefined data
 /*24*/ @$undefined_var,
 
@@ -143,31 +143,21 @@ int(1)
 int(0)
 
 -- Iteration 17 --
-
-Warning: A non-numeric value encountered in %s on line %d
 int(0)
 
 -- Iteration 18 --
-
-Warning: A non-numeric value encountered in %s on line %d
 int(0)
 
 -- Iteration 19 --
 int(0)
 
 -- Iteration 20 --
-
-Warning: A non-numeric value encountered in %s on line %d
 int(0)
 
 -- Iteration 21 --
-
-Warning: A non-numeric value encountered in %s on line %d
 int(0)
 
 -- Iteration 22 --
-
-Warning: A non-numeric value encountered in %s on line %d
 int(0)
 
 -- Iteration 23 --

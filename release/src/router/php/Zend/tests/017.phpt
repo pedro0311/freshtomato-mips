@@ -26,6 +26,7 @@ var_dump(count(get_defined_constants()));
 function test () {
 }
 
+var_dump(get_defined_functions(true));
 var_dump(gettype(get_defined_functions()));
 var_dump(count(get_defined_functions()));
 
@@ -43,7 +44,7 @@ var_dump(count(get_extension_funcs("zend")));
 
 echo "Done\n";
 ?>
---EXPECTF--
+--EXPECTF--	
 Warning: get_resource_type() expects exactly 1 parameter, 0 given in %s on line %d
 NULL
 
@@ -64,6 +65,9 @@ NULL
 string(5) "array"
 string(5) "array"
 int(%d)
+
+Warning: get_defined_functions() expects exactly 0 parameters, 1 given in %s on line %d
+NULL
 string(5) "array"
 int(%d)
 

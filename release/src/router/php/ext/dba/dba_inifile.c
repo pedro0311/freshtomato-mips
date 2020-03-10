@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2018 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -42,7 +42,7 @@
 #define INIFILE_GKEY \
 	key_type ini_key; \
 	if (!key) { \
-		php_error_docref(NULL, E_WARNING, "No key specified"); \
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "No key specified"); \
 		return 0; \
 	} \
 	ini_key = inifile_key_split((char*)key) /* keylen not needed here */
@@ -52,7 +52,7 @@
 
 DBA_OPEN_FUNC(inifile)
 {
-	info->dbf = inifile_alloc(info->fp, info->mode == DBA_READER, info->flags&DBA_PERSISTENT);
+	info->dbf = inifile_alloc(info->fp, info->mode == DBA_READER, info->flags&DBA_PERSISTENT TSRMLS_CC);
 
 	return info->dbf ? SUCCESS : FAILURE;
 }
@@ -71,7 +71,7 @@ DBA_FETCH_FUNC(inifile)
 	INIFILE_DATA;
 	INIFILE_GKEY;
 
-	ini_val = inifile_fetch(dba, &ini_key, skip);
+	ini_val = inifile_fetch(dba, &ini_key, skip TSRMLS_CC);
 	*newlen = ini_val.value ? strlen(ini_val.value) : 0;
 	INIFILE_DONE;
 	return ini_val.value;
@@ -84,18 +84,18 @@ DBA_UPDATE_FUNC(inifile)
 
 	INIFILE_DATA;
 	INIFILE_GKEY;
-
+	
 	ini_val.value = val;
-
+	
 	if (mode == 1) {
-		res = inifile_append(dba, &ini_key, &ini_val);
+		res = inifile_append(dba, &ini_key, &ini_val TSRMLS_CC);
 	} else {
-		res = inifile_replace(dba, &ini_key, &ini_val);
+		res = inifile_replace(dba, &ini_key, &ini_val TSRMLS_CC);
 	}
 	INIFILE_DONE;
 	switch(res) {
 	case -1:
-		php_error_docref1(NULL, key, E_WARNING, "Operation not possible");
+		php_error_docref1(NULL TSRMLS_CC, key, E_WARNING, "Operation not possible");
 		return FAILURE;
 	default:
 	case 0:
@@ -111,8 +111,8 @@ DBA_EXISTS_FUNC(inifile)
 
 	INIFILE_DATA;
 	INIFILE_GKEY;
-
-	ini_val = inifile_fetch(dba, &ini_key, 0);
+	
+	ini_val = inifile_fetch(dba, &ini_key, 0 TSRMLS_CC);
 	INIFILE_DONE;
 	if (ini_val.value) {
 		inifile_val_free(&ini_val);
@@ -124,22 +124,21 @@ DBA_EXISTS_FUNC(inifile)
 DBA_DELETE_FUNC(inifile)
 {
 	int res;
-	zend_bool found = 0;
 
 	INIFILE_DATA;
 	INIFILE_GKEY;
 
-	res =  inifile_delete_ex(dba, &ini_key, &found);
+	res =  inifile_delete(dba, &ini_key TSRMLS_CC);
 
 	INIFILE_DONE;
-	return (res == -1 || !found ? FAILURE : SUCCESS);
+	return (res == -1 ? FAILURE : SUCCESS);
 }
 
 DBA_FIRSTKEY_FUNC(inifile)
 {
 	INIFILE_DATA;
 
-	if (inifile_firstkey(dba)) {
+	if (inifile_firstkey(dba TSRMLS_CC)) {
 		char *result = inifile_key_string(&dba->curr.key);
 		*newlen = strlen(result);
 		return result;
@@ -151,12 +150,12 @@ DBA_FIRSTKEY_FUNC(inifile)
 DBA_NEXTKEY_FUNC(inifile)
 {
 	INIFILE_DATA;
-
+	
 	if (!dba->curr.key.group && !dba->curr.key.name) {
 		return NULL;
 	}
 
-	if (inifile_nextkey(dba)) {
+	if (inifile_nextkey(dba TSRMLS_CC)) {
 		char *result = inifile_key_string(&dba->curr.key);
 		*newlen = strlen(result);
 		return result;

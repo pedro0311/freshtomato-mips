@@ -16,12 +16,8 @@ var_dump($x);
 ?>
 --EXPECTF--
 object(PDOStatement)#%d (1) {
-  ["queryString"]=>
+  [%u|b%"queryString"]=>
   NULL
 }
 
-Fatal error: Uncaught PDOException: You may not create a PDORow manually in %spdo_036.php:8
-Stack trace:
-#0 %spdo_036.php(8): ReflectionClass->newInstance()
-#1 {main}
-  thrown in %spdo_036.php on line 8
+Fatal error: PDORow::__construct(): You should not create a PDOStatement manually in %spdo_036.php on line %d

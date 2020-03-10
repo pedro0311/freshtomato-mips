@@ -2,7 +2,7 @@
 Test open_basedir configuration
 --SKIPIF--
 <?php
-if(PHP_OS_FAMILY !== "Windows") {
+if (substr(PHP_OS, 0, 3) != 'WIN') {
     die('skip only run on Windows');
 }
 ?>
@@ -58,3 +58,4 @@ string(%d) "%s\test\ok\ok.txt"
 string(%d) "%s\test\ok\ok.txt"
 string(%d) "%s\test\ok\ok.txt"
 *** Finished testing open_basedir configuration [realpath] ***
+

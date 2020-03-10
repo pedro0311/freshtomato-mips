@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2018 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -79,9 +79,6 @@ static zend_class_entry *libxmlerror_class_entry;
 
 /* {{{ dynamically loadable module stuff */
 #ifdef COMPILE_DL_LIBXML
-#ifdef ZTS
-ZEND_TSRMLS_CACHE_DEFINE()
-#endif
 ZEND_GET_MODULE(libxml)
 #endif /* COMPILE_DL_LIBXML */
 /* }}} */
@@ -89,7 +86,6 @@ ZEND_GET_MODULE(libxml)
 /* {{{ function prototypes */
 static PHP_MINIT_FUNCTION(libxml);
 static PHP_RINIT_FUNCTION(libxml);
-static PHP_RSHUTDOWN_FUNCTION(libxml);
 static PHP_MSHUTDOWN_FUNCTION(libxml);
 static PHP_MINFO_FUNCTION(libxml);
 static int php_libxml_post_deactivate(void);
@@ -142,9 +138,9 @@ zend_module_entry libxml_module_entry = {
 	PHP_MINIT(libxml),       /* extension-wide startup function */
 	PHP_MSHUTDOWN(libxml),   /* extension-wide shutdown function */
 	PHP_RINIT(libxml),       /* per-request startup function */
-	PHP_RSHUTDOWN(libxml),   /* per-request shutdown function */
+	NULL,                    /* per-request shutdown function */
 	PHP_MINFO(libxml),       /* information function */
-	PHP_LIBXML_VERSION,
+	NO_VERSION_YET,
 	PHP_MODULE_GLOBALS(libxml), /* globals descriptor */
 	PHP_GINIT(libxml),          /* globals ctor */
 	NULL,                       /* globals dtor */
@@ -155,16 +151,16 @@ zend_module_entry libxml_module_entry = {
 /* }}} */
 
 /* {{{ internal functions for interoperability */
-static int php_libxml_clear_object(php_libxml_node_object *object)
+static int php_libxml_clear_object(php_libxml_node_object *object TSRMLS_DC)
 {
 	if (object->properties) {
 		object->properties = NULL;
 	}
-	php_libxml_decrement_node_ptr(object);
-	return php_libxml_decrement_doc_ref(object);
+	php_libxml_decrement_node_ptr(object TSRMLS_CC);
+	return php_libxml_decrement_doc_ref(object TSRMLS_CC);
 }
 
-static int php_libxml_unregister_node(xmlNodePtr nodep)
+static int php_libxml_unregister_node(xmlNodePtr nodep TSRMLS_DC)
 {
 	php_libxml_node_object *wrapper;
 
@@ -173,7 +169,7 @@ static int php_libxml_unregister_node(xmlNodePtr nodep)
 	if (nodeptr != NULL) {
 		wrapper = nodeptr->_private;
 		if (wrapper) {
-			php_libxml_clear_object(wrapper);
+			php_libxml_clear_object(wrapper TSRMLS_CC);
 		} else {
 			if (nodeptr->node != NULL && nodeptr->node->type != XML_DOCUMENT_NODE) {
 				nodeptr->node->_private = NULL;
@@ -224,7 +220,7 @@ static void php_libxml_node_free(xmlNodePtr node)
 	}
 }
 
-PHP_LIBXML_API void php_libxml_node_free_list(xmlNodePtr node)
+static void php_libxml_node_free_list(xmlNodePtr node TSRMLS_DC)
 {
 	xmlNodePtr curnode;
 
@@ -238,7 +234,7 @@ PHP_LIBXML_API void php_libxml_node_free_list(xmlNodePtr node)
 				case XML_ENTITY_DECL:
 					break;
 				case XML_ENTITY_REF_NODE:
-					php_libxml_node_free_list((xmlNodePtr) node->properties);
+					php_libxml_node_free_list((xmlNodePtr) node->properties TSRMLS_CC);
 					break;
 				case XML_ATTRIBUTE_NODE:
 						if ((node->doc != NULL) && (((xmlAttrPtr) node)->atype == XML_ATTRIBUTE_ID)) {
@@ -249,16 +245,16 @@ PHP_LIBXML_API void php_libxml_node_free_list(xmlNodePtr node)
 				case XML_DOCUMENT_TYPE_NODE:
 				case XML_NAMESPACE_DECL:
 				case XML_TEXT_NODE:
-					php_libxml_node_free_list(node->children);
+					php_libxml_node_free_list(node->children TSRMLS_CC);
 					break;
 				default:
-					php_libxml_node_free_list(node->children);
-					php_libxml_node_free_list((xmlNodePtr) node->properties);
+					php_libxml_node_free_list(node->children TSRMLS_CC);
+					php_libxml_node_free_list((xmlNodePtr) node->properties TSRMLS_CC);
 			}
 
 			curnode = node->next;
 			xmlUnlinkNode(node);
-			if (php_libxml_unregister_node(node) == 0) {
+			if (php_libxml_unregister_node(node TSRMLS_CC) == 0) {
 				node->doc = NULL;
 			}
 			php_libxml_node_free(node);
@@ -271,26 +267,21 @@ PHP_LIBXML_API void php_libxml_node_free_list(xmlNodePtr node)
 /* {{{ startup, shutdown and info functions */
 static PHP_GINIT_FUNCTION(libxml)
 {
-#if defined(COMPILE_DL_LIBXML) && defined(ZTS)
-	ZEND_TSRMLS_CACHE_UPDATE();
-#endif
-	ZVAL_UNDEF(&libxml_globals->stream_context);
-	libxml_globals->error_buffer.s = NULL;
+	libxml_globals->stream_context = NULL;
+	libxml_globals->error_buffer.c = NULL;
 	libxml_globals->error_list = NULL;
-	ZVAL_UNDEF(&libxml_globals->entity_loader.object);
 	libxml_globals->entity_loader.fci.size = 0;
 	libxml_globals->entity_loader_disabled = 0;
 }
 
-static void _php_libxml_destroy_fci(zend_fcall_info *fci, zval *object)
+static void _php_libxml_destroy_fci(zend_fcall_info *fci)
 {
 	if (fci->size > 0) {
 		zval_ptr_dtor(&fci->function_name);
+		if (fci->object_ptr != NULL) {
+			zval_ptr_dtor(&fci->object_ptr);
+		}
 		fci->size = 0;
-	}
-	if (!Z_ISUNDEF_P(object)) {
-		zval_ptr_dtor(object);
-		ZVAL_UNDEF(object);
 	}
 }
 
@@ -308,6 +299,7 @@ static void *php_libxml_streams_IO_open_wrapper(const char *filename, const char
 	int isescaped=0;
 	xmlURI *uri;
 
+	TSRMLS_FETCH();
 
 	uri = xmlParseURI(filename);
 	if (uri && (uri->scheme == NULL ||
@@ -347,9 +339,9 @@ static void *php_libxml_streams_IO_open_wrapper(const char *filename, const char
 	   that the streams layer puts out at times, but for libxml we
 	   may try to open files that don't exist, but it is not a failure
 	   in xml processing (eg. DTD files)  */
-	wrapper = php_stream_locate_url_wrapper(resolved_path, &path_to_open, 0);
+	wrapper = php_stream_locate_url_wrapper(resolved_path, &path_to_open, 0 TSRMLS_CC);
 	if (wrapper && read_only && wrapper->wops->url_stat) {
-		if (wrapper->wops->url_stat(wrapper, path_to_open, PHP_STREAM_URL_STAT_QUIET, &ssbuf, NULL) == -1) {
+		if (wrapper->wops->url_stat(wrapper, path_to_open, PHP_STREAM_URL_STAT_QUIET, &ssbuf, NULL TSRMLS_CC) == -1) {
 			if (isescaped) {
 				xmlFree(resolved_path);
 			}
@@ -357,8 +349,8 @@ static void *php_libxml_streams_IO_open_wrapper(const char *filename, const char
 		}
 	}
 
-	context = php_stream_context_from_zval(Z_ISUNDEF(LIBXML(stream_context))? NULL : &LIBXML(stream_context), 0);
-
+	context = php_stream_context_from_zval(LIBXML(stream_context), 0);
+	
 	ret_val = php_stream_open_wrapper_ex(path_to_open, (char *)mode, REPORT_ERRORS, NULL, context);
 	if (isescaped) {
 		xmlFree(resolved_path);
@@ -378,19 +370,19 @@ static void *php_libxml_streams_IO_open_write_wrapper(const char *filename)
 
 static int php_libxml_streams_IO_read(void *context, char *buffer, int len)
 {
+	TSRMLS_FETCH();
 	return php_stream_read((php_stream*)context, buffer, len);
 }
 
 static int php_libxml_streams_IO_write(void *context, const char *buffer, int len)
 {
-	if (CG(unclean_shutdown)) {
-		return -1;
-	}
+	TSRMLS_FETCH();
 	return php_stream_write((php_stream*)context, buffer, len);
 }
 
 static int php_libxml_streams_IO_close(void *context)
 {
+	TSRMLS_FETCH();
 	return php_stream_close((php_stream*)context);
 }
 
@@ -399,6 +391,7 @@ php_libxml_input_buffer_create_filename(const char *URI, xmlCharEncoding enc)
 {
 	xmlParserInputBufferPtr ret;
 	void *context = NULL;
+	TSRMLS_FETCH();
 
 	if (LIBXML(entity_loader_disabled)) {
 		return NULL;
@@ -482,6 +475,7 @@ static void _php_list_set_error_structure(xmlErrorPtr error, const char *msg)
 	xmlError error_copy;
 	int ret;
 
+	TSRMLS_FETCH();
 
 	memset(&error_copy, 0, sizeof(xmlError));
 
@@ -496,7 +490,7 @@ static void _php_list_set_error_structure(xmlErrorPtr error, const char *msg)
 		error_copy.int1 = 0;
 		error_copy.int2 = 0;
 		error_copy.ctxt = NULL;
-		error_copy.message = (char*)xmlStrdup((xmlChar*)msg);
+		error_copy.message = xmlStrdup(msg);
 		error_copy.file = NULL;
 		error_copy.str1 = NULL;
 		error_copy.str2 = NULL;
@@ -509,7 +503,7 @@ static void _php_list_set_error_structure(xmlErrorPtr error, const char *msg)
 	}
 }
 
-static void php_libxml_ctx_error_level(int level, void *ctx, const char *msg)
+static void php_libxml_ctx_error_level(int level, void *ctx, const char *msg TSRMLS_DC)
 {
 	xmlParserCtxtPtr parser;
 
@@ -517,19 +511,19 @@ static void php_libxml_ctx_error_level(int level, void *ctx, const char *msg)
 
 	if (parser != NULL && parser->input != NULL) {
 		if (parser->input->filename) {
-			php_error_docref(NULL, level, "%s in %s, line: %d", msg, parser->input->filename, parser->input->line);
+			php_error_docref(NULL TSRMLS_CC, level, "%s in %s, line: %d", msg, parser->input->filename, parser->input->line);
 		} else {
-			php_error_docref(NULL, level, "%s in Entity, line: %d", msg, parser->input->line);
+			php_error_docref(NULL TSRMLS_CC, level, "%s in Entity, line: %d", msg, parser->input->line);
 		}
 	}
 }
 
-void php_libxml_issue_error(int level, const char *msg)
+void php_libxml_issue_error(int level, const char *msg TSRMLS_DC)
 {
 	if (LIBXML(error_list)) {
 		_php_list_set_error_structure(NULL, msg);
 	} else {
-		php_error_docref(NULL, level, "%s", msg);
+		php_error_docref(NULL TSRMLS_CC, level, "%s", msg);
 	}
 }
 
@@ -538,6 +532,7 @@ static void php_libxml_internal_error_handler(int error_type, void *ctx, const c
 	char *buf;
 	int len, len_iter, output = 0;
 
+	TSRMLS_FETCH();
 
 	len = vspprintf(&buf, 0, *msg, ap);
 	len_iter = len;
@@ -554,17 +549,17 @@ static void php_libxml_internal_error_handler(int error_type, void *ctx, const c
 
 	if (output == 1) {
 		if (LIBXML(error_list)) {
-			_php_list_set_error_structure(NULL, ZSTR_VAL(LIBXML(error_buffer).s));
+			_php_list_set_error_structure(NULL, LIBXML(error_buffer).c);
 		} else {
 			switch (error_type) {
 				case PHP_LIBXML_CTX_ERROR:
-					php_libxml_ctx_error_level(E_WARNING, ctx, ZSTR_VAL(LIBXML(error_buffer).s));
+					php_libxml_ctx_error_level(E_WARNING, ctx, LIBXML(error_buffer).c TSRMLS_CC);
 					break;
 				case PHP_LIBXML_CTX_WARNING:
-					php_libxml_ctx_error_level(E_NOTICE, ctx, ZSTR_VAL(LIBXML(error_buffer).s));
+					php_libxml_ctx_error_level(E_NOTICE, ctx, LIBXML(error_buffer).c TSRMLS_CC);
 					break;
 				default:
-					php_error_docref(NULL, E_WARNING, "%s", ZSTR_VAL(LIBXML(error_buffer).s));
+					php_error_docref(NULL TSRMLS_CC, E_WARNING, "%s", LIBXML(error_buffer).c);
 			}
 		}
 		smart_str_free(&LIBXML(error_buffer));
@@ -576,75 +571,76 @@ static xmlParserInputPtr _php_libxml_external_entity_loader(const char *URL,
 {
 	xmlParserInputPtr	ret			= NULL;
 	const char			*resource	= NULL;
-	zval 				*ctxzv, retval;
-	zval				params[3];
-	int					status;
+	zval				*public		= NULL,
+						*system		= NULL,
+						*ctxzv		= NULL,
+						**params[]	= {&public, &system, &ctxzv},
+						*retval_ptr	= NULL;
+	int					retval;
 	zend_fcall_info		*fci;
+	TSRMLS_FETCH();
 
 	fci = &LIBXML(entity_loader).fci;
-
+	
 	if (fci->size == 0) {
 		/* no custom user-land callback set up; delegate to original loader */
 		return _php_libxml_default_entity_loader(URL, ID, context);
 	}
 
+	ALLOC_INIT_ZVAL(public);
 	if (ID != NULL) {
-		ZVAL_STRING(&params[0], ID);
-	} else {
-		ZVAL_NULL(&params[0]);
+		ZVAL_STRING(public, ID, 1);
 	}
+	ALLOC_INIT_ZVAL(system);
 	if (URL != NULL) {
-		ZVAL_STRING(&params[1], URL);
-	} else {
-		ZVAL_NULL(&params[1]);
+		ZVAL_STRING(system, URL, 1);
 	}
-	ctxzv = &params[2];
+	MAKE_STD_ZVAL(ctxzv);
 	array_init_size(ctxzv, 4);
 
 #define ADD_NULL_OR_STRING_KEY(memb) \
 	if (context->memb == NULL) { \
-		add_assoc_null_ex(ctxzv, #memb, sizeof(#memb) - 1); \
+		add_assoc_null_ex(ctxzv, #memb, sizeof(#memb)); \
 	} else { \
-		add_assoc_string_ex(ctxzv, #memb, sizeof(#memb) - 1, \
-				(char *)context->memb); \
+		add_assoc_string_ex(ctxzv, #memb, sizeof(#memb), \
+				(char *)context->memb, 1); \
 	}
-
+	
 	ADD_NULL_OR_STRING_KEY(directory)
 	ADD_NULL_OR_STRING_KEY(intSubName)
 	ADD_NULL_OR_STRING_KEY(extSubURI)
 	ADD_NULL_OR_STRING_KEY(extSubSystem)
-
+	
 #undef ADD_NULL_OR_STRING_KEY
-
-	fci->retval	= &retval;
-	fci->params	= params;
-	fci->param_count = sizeof(params)/sizeof(*params);
+	
+	fci->retval_ptr_ptr	= &retval_ptr;
+	fci->params			= params;
+	fci->param_count	= sizeof(params)/sizeof(*params);
 	fci->no_separation	= 1;
-
-	status = zend_call_function(fci, &LIBXML(entity_loader).fcc);
-	if (status != SUCCESS || Z_ISUNDEF(retval)) {
+	
+	retval = zend_call_function(fci, &LIBXML(entity_loader).fcc TSRMLS_CC);
+	if (retval != SUCCESS || fci->retval_ptr_ptr == NULL) {
 		php_libxml_ctx_error(context,
 				"Call to user entity loader callback '%s' has failed",
-				Z_STRVAL(fci->function_name));
+				fci->function_name);
 	} else {
-		/*
 		retval_ptr = *fci->retval_ptr_ptr;
 		if (retval_ptr == NULL) {
 			php_libxml_ctx_error(context,
 					"Call to user entity loader callback '%s' has failed; "
 					"probably it has thrown an exception",
 					fci->function_name);
-		} else */ if (Z_TYPE(retval) == IS_STRING) {
+		} else if (Z_TYPE_P(retval_ptr) == IS_STRING) {
 is_string:
-			resource = Z_STRVAL(retval);
-		} else if (Z_TYPE(retval) == IS_RESOURCE) {
+			resource = Z_STRVAL_P(retval_ptr);
+		} else if (Z_TYPE_P(retval_ptr) == IS_RESOURCE) {
 			php_stream *stream;
-			php_stream_from_zval_no_verify(stream, &retval);
+			php_stream_from_zval_no_verify(stream, &retval_ptr);
 			if (stream == NULL) {
 				php_libxml_ctx_error(context,
 						"The user entity loader callback '%s' has returned a "
 						"resource, but it is not a stream",
-						Z_STRVAL(fci->function_name));
+						fci->function_name);
 			} else {
 				/* TODO: allow storing the encoding in the stream context? */
 				xmlCharEncoding enc = XML_CHAR_ENCODING_NONE;
@@ -654,20 +650,21 @@ is_string:
 							"input buffer");
 				} else {
 					/* make stream not being closed when the zval is freed */
-					++GC_REFCOUNT(stream->res);
+					zend_list_addref(stream->rsrc_id);
 					pib->context = stream;
 					pib->readcallback = php_libxml_streams_IO_read;
 					pib->closecallback = php_libxml_streams_IO_close;
-
+					
 					ret = xmlNewIOInputStream(context, pib, enc);
 					if (ret == NULL) {
 						xmlFreeParserInputBuffer(pib);
 					}
 				}
 			}
-		} else if (Z_TYPE(retval) != IS_NULL) {
+		} else if (Z_TYPE_P(retval_ptr) != IS_NULL) {
 			/* retval not string nor resource nor null; convert to string */
-			convert_to_string(&retval);
+			SEPARATE_ZVAL(&retval_ptr);
+			convert_to_string(retval_ptr);
 			goto is_string;
 		} /* else is null; don't try anything */
 	}
@@ -685,16 +682,19 @@ is_string:
 		}
 	}
 
-	zval_ptr_dtor(&params[0]);
-	zval_ptr_dtor(&params[1]);
-	zval_ptr_dtor(&params[2]);
-	zval_ptr_dtor(&retval);
+	zval_ptr_dtor(&public);
+	zval_ptr_dtor(&system);
+	zval_ptr_dtor(&ctxzv);
+	if (retval_ptr != NULL) {
+		zval_ptr_dtor(&retval_ptr);
+	}
 	return ret;
 }
 
 static xmlParserInputPtr _php_libxml_pre_ext_ent_loader(const char *URL,
 		const char *ID, xmlParserCtxtPtr context)
 {
+	TSRMLS_FETCH();
 
 	/* Check whether we're running in a PHP context, since the entity loader
 	 * we've defined is an application level (true global) setting.
@@ -743,21 +743,17 @@ PHP_LIBXML_API void php_libxml_error_handler(void *ctx, const char *msg, ...)
 	va_end(args);
 }
 
-static void php_libxml_exports_dtor(zval *zv)
-{
-	free(Z_PTR_P(zv));
-}
 
 PHP_LIBXML_API void php_libxml_initialize(void)
 {
 	if (!_php_libxml_initialized) {
 		/* we should be the only one's to ever init!! */
 		xmlInitParser();
-
+		
 		_php_libxml_default_entity_loader = xmlGetExternalEntityLoader();
 		xmlSetExternalEntityLoader(_php_libxml_pre_ext_ent_loader);
 
-		zend_hash_init(&php_libxml_exports, 0, NULL, php_libxml_exports_dtor, 1);
+		zend_hash_init(&php_libxml_exports, 0, NULL, NULL, 1);
 
 		_php_libxml_initialized = 1;
 	}
@@ -769,22 +765,22 @@ PHP_LIBXML_API void php_libxml_shutdown(void)
 #if defined(LIBXML_SCHEMAS_ENABLED)
 		xmlRelaxNGCleanupTypes();
 #endif
-		/* xmlCleanupParser(); */
+		xmlCleanupParser();
 		zend_hash_destroy(&php_libxml_exports);
-
+		
 		xmlSetExternalEntityLoader(_php_libxml_default_entity_loader);
 		_php_libxml_initialized = 0;
 	}
 }
 
-PHP_LIBXML_API void php_libxml_switch_context(zval *context, zval *oldcontext)
+PHP_LIBXML_API zval *php_libxml_switch_context(zval *context TSRMLS_DC)
 {
-	if (oldcontext) {
-		ZVAL_COPY_VALUE(oldcontext, &LIBXML(stream_context));
-	}
-	if (context) {
-		ZVAL_COPY_VALUE(&LIBXML(stream_context), context);
-	}
+	zval *oldcontext;
+
+	oldcontext = LIBXML(stream_context);
+	LIBXML(stream_context) = context;
+	return oldcontext;
+
 }
 
 static PHP_MINIT_FUNCTION(libxml)
@@ -817,9 +813,6 @@ static PHP_MINIT_FUNCTION(libxml)
 #if LIBXML_VERSION >= 20703
 	REGISTER_LONG_CONSTANT("LIBXML_PARSEHUGE",	XML_PARSE_HUGE,			CONST_CS | CONST_PERSISTENT);
 #endif
-#if LIBXML_VERSION >= 20900
-	REGISTER_LONG_CONSTANT("LIBXML_BIGLINES",	XML_PARSE_BIG_LINES,	CONST_CS | CONST_PERSISTENT);
-#endif
 	REGISTER_LONG_CONSTANT("LIBXML_NOEMPTYTAG",	LIBXML_SAVE_NOEMPTYTAG,	CONST_CS | CONST_PERSISTENT);
 
 	/* Schema validation options */
@@ -843,11 +836,12 @@ static PHP_MINIT_FUNCTION(libxml)
 	REGISTER_LONG_CONSTANT("LIBXML_ERR_FATAL",		XML_ERR_FATAL,		CONST_CS | CONST_PERSISTENT);
 
 	INIT_CLASS_ENTRY(ce, "LibXMLError", NULL);
-	libxmlerror_class_entry = zend_register_internal_class(&ce);
+	libxmlerror_class_entry = zend_register_internal_class(&ce TSRMLS_CC);
 
 	if (sapi_module.name) {
 		static const char * const supported_sapis[] = {
 			"cgi-fcgi",
+			"fpm-fcgi",
 			"litespeed",
 			NULL
 		};
@@ -867,7 +861,7 @@ static PHP_MINIT_FUNCTION(libxml)
 		xmlParserInputBufferCreateFilenameDefault(php_libxml_input_buffer_create_filename);
 		xmlOutputBufferCreateFilenameDefault(php_libxml_output_buffer_create_filename);
 	}
-
+	
 	return SUCCESS;
 }
 
@@ -879,23 +873,16 @@ static PHP_RINIT_FUNCTION(libxml)
 		xmlSetGenericErrorFunc(NULL, php_libxml_error_handler);
 		xmlParserInputBufferCreateFilenameDefault(php_libxml_input_buffer_create_filename);
 		xmlOutputBufferCreateFilenameDefault(php_libxml_output_buffer_create_filename);
+
+		/* Enable the entity loader by default. This ensure that
+		 * other threads/requests that might have disable the loader
+		 * do not affect the current request.
+		 */
+		LIBXML(entity_loader_disabled) = 0;
 	}
-
-	/* Enable the entity loader by default. This ensures that
-	 * other threads/requests that might have disabled the loader
-	 * do not affect the current request.
-	 */
-	LIBXML(entity_loader_disabled) = 0;
-
 	return SUCCESS;
 }
 
-static PHP_RSHUTDOWN_FUNCTION(libxml)
-{
-	_php_libxml_destroy_fci(&LIBXML(entity_loader).fci, &LIBXML(entity_loader).object);
-
-	return SUCCESS;
-}
 
 static PHP_MSHUTDOWN_FUNCTION(libxml)
 {
@@ -912,6 +899,7 @@ static PHP_MSHUTDOWN_FUNCTION(libxml)
 
 static int php_libxml_post_deactivate(void)
 {
+	TSRMLS_FETCH();
 	/* reset libxml generic error handling */
 	if (_php_libxml_per_request_initialization) {
 		xmlSetGenericErrorFunc(NULL, NULL);
@@ -921,8 +909,11 @@ static int php_libxml_post_deactivate(void)
 	}
 	xmlSetStructuredErrorFunc(NULL, NULL);
 
-	/* the steam_context resource will be released by resource list destructor */
-	ZVAL_UNDEF(&LIBXML(stream_context));
+	if (LIBXML(stream_context)) {
+		/* the steam_context resource will be released by resource list destructor */
+		efree(LIBXML(stream_context));
+		LIBXML(stream_context) = NULL;
+	}
 	smart_str_free(&LIBXML(error_buffer));
 	if (LIBXML(error_list)) {
 		zend_llist_destroy(LIBXML(error_list));
@@ -930,6 +921,8 @@ static int php_libxml_post_deactivate(void)
 		LIBXML(error_list) = NULL;
 	}
 	xmlResetLastError();
+	
+	_php_libxml_destroy_fci(&LIBXML(entity_loader).fci);
 
 	return SUCCESS;
 }
@@ -946,35 +939,34 @@ static PHP_MINFO_FUNCTION(libxml)
 }
 /* }}} */
 
-/* {{{ proto void libxml_set_streams_context(resource streams_context)
+/* {{{ proto void libxml_set_streams_context(resource streams_context) 
    Set the streams context for the next libxml document load or write */
 static PHP_FUNCTION(libxml_set_streams_context)
 {
 	zval *arg;
 
-	ZEND_PARSE_PARAMETERS_START(1, 1)
-		Z_PARAM_RESOURCE(arg)
-	ZEND_PARSE_PARAMETERS_END();
-
-	if (!Z_ISUNDEF(LIBXML(stream_context))) {
-		zval_ptr_dtor(&LIBXML(stream_context));
-		ZVAL_UNDEF(&LIBXML(stream_context));
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &arg) == FAILURE) {
+		return;
 	}
-	ZVAL_COPY(&LIBXML(stream_context), arg);
+	if (LIBXML(stream_context)) {
+		zval_ptr_dtor(&LIBXML(stream_context));
+		LIBXML(stream_context) = NULL;
+	}
+	Z_ADDREF_P(arg);
+	LIBXML(stream_context) = arg;
 }
 /* }}} */
 
-/* {{{ proto bool libxml_use_internal_errors([boolean use_errors])
+/* {{{ proto bool libxml_use_internal_errors([boolean use_errors]) 
    Disable libxml errors and allow user to fetch error information as needed */
 static PHP_FUNCTION(libxml_use_internal_errors)
 {
 	xmlStructuredErrorFunc current_handler;
 	zend_bool use_errors=0, retval;
 
-	ZEND_PARSE_PARAMETERS_START(0, 1)
-		Z_PARAM_OPTIONAL
-		Z_PARAM_BOOL(use_errors)
-	ZEND_PARSE_PARAMETERS_END();
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|b", &use_errors) == FAILURE) {
+		return;
+	}
 
 	current_handler = xmlStructuredError;
 	if (current_handler && current_handler == php_libxml_structured_error_handler) {
@@ -1005,28 +997,28 @@ static PHP_FUNCTION(libxml_use_internal_errors)
 }
 /* }}} */
 
-/* {{{ proto object libxml_get_last_error()
+/* {{{ proto object libxml_get_last_error() 
    Retrieve last error from libxml */
 static PHP_FUNCTION(libxml_get_last_error)
 {
 	xmlErrorPtr error;
 
 	error = xmlGetLastError();
-
+	
 	if (error) {
 		object_init_ex(return_value, libxmlerror_class_entry);
 		add_property_long(return_value, "level", error->level);
 		add_property_long(return_value, "code", error->code);
 		add_property_long(return_value, "column", error->int2);
 		if (error->message) {
-			add_property_string(return_value, "message", error->message);
+			add_property_string(return_value, "message", error->message, 1);
 		} else {
-			add_property_stringl(return_value, "message", "", 0);
+			add_property_stringl(return_value, "message", "", 0, 1);
 		}
 		if (error->file) {
-			add_property_string(return_value, "file", error->file);
+			add_property_string(return_value, "file", error->file, 1);
 		} else {
-			add_property_stringl(return_value, "file", "", 0);
+			add_property_stringl(return_value, "file", "", 0, 1);
 		}
 		add_property_long(return_value, "line", error->line);
 	} else {
@@ -1039,7 +1031,7 @@ static PHP_FUNCTION(libxml_get_last_error)
    Retrieve array of errors */
 static PHP_FUNCTION(libxml_get_errors)
 {
-
+	
 	xmlErrorPtr error;
 
 	if (array_init(return_value) == FAILURE) {
@@ -1051,24 +1043,25 @@ static PHP_FUNCTION(libxml_get_errors)
 		error = zend_llist_get_first(LIBXML(error_list));
 
 		while (error != NULL) {
-			zval z_error;
+			zval *z_error;
+			MAKE_STD_ZVAL(z_error);
 
-			object_init_ex(&z_error, libxmlerror_class_entry);
-			add_property_long_ex(&z_error, "level", sizeof("level") - 1, error->level);
-			add_property_long_ex(&z_error, "code", sizeof("code") - 1, error->code);
-			add_property_long_ex(&z_error, "column", sizeof("column") - 1, error->int2 );
+			object_init_ex(z_error, libxmlerror_class_entry);
+			add_property_long(z_error, "level", error->level);
+			add_property_long(z_error, "code", error->code);
+			add_property_long(z_error, "column", error->int2);
 			if (error->message) {
-				add_property_string_ex(&z_error, "message", sizeof("message") - 1, error->message);
+				add_property_string(z_error, "message", error->message, 1);
 			} else {
-				add_property_stringl_ex(&z_error, "message", sizeof("message") - 1, "", 0);
+				add_property_stringl(z_error, "message", "", 0, 1);
 			}
 			if (error->file) {
-				add_property_string_ex(&z_error, "file", sizeof("file") - 1, error->file);
+				add_property_string(z_error, "file", error->file, 1);
 			} else {
-				add_property_stringl_ex(&z_error, "file", sizeof("file") - 1, "", 0);
+				add_property_stringl(z_error, "file", "", 0, 1);
 			}
-			add_property_long_ex(&z_error, "line", sizeof("line") - 1, error->line);
-			add_next_index_zval(return_value, &z_error);
+			add_property_long(z_error, "line", error->line);
+			add_next_index_zval(return_value, z_error);
 
 			error = zend_llist_get_next(LIBXML(error_list));
 		}
@@ -1076,7 +1069,7 @@ static PHP_FUNCTION(libxml_get_errors)
 }
 /* }}} */
 
-/* {{{ proto void libxml_clear_errors()
+/* {{{ proto void libxml_clear_errors() 
    Clear last error from libxml */
 static PHP_FUNCTION(libxml_clear_errors)
 {
@@ -1087,52 +1080,50 @@ static PHP_FUNCTION(libxml_clear_errors)
 }
 /* }}} */
 
-PHP_LIBXML_API zend_bool php_libxml_disable_entity_loader(zend_bool disable) /* {{{ */
+PHP_LIBXML_API zend_bool php_libxml_disable_entity_loader(zend_bool disable TSRMLS_DC)
 {
 	zend_bool old = LIBXML(entity_loader_disabled);
 
 	LIBXML(entity_loader_disabled) = disable;
 	return old;
-} /* }}} */
+}
 
-/* {{{ proto bool libxml_disable_entity_loader([boolean disable])
+/* {{{ proto bool libxml_disable_entity_loader([boolean disable]) 
    Disable/Enable ability to load external entities */
 static PHP_FUNCTION(libxml_disable_entity_loader)
 {
 	zend_bool disable = 1;
 
-	ZEND_PARSE_PARAMETERS_START(0, 1)
-		Z_PARAM_OPTIONAL
-		Z_PARAM_BOOL(disable)
-	ZEND_PARSE_PARAMETERS_END();
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|b", &disable) == FAILURE) {
+		return;
+	}
 
-	RETURN_BOOL(php_libxml_disable_entity_loader(disable));
+	RETURN_BOOL(php_libxml_disable_entity_loader(disable TSRMLS_CC));
 }
 /* }}} */
 
-/* {{{ proto void libxml_set_external_entity_loader(callback resolver_function)
+/* {{{ proto void libxml_set_external_entity_loader(callback resolver_function) 
    Changes the default external entity loader */
 static PHP_FUNCTION(libxml_set_external_entity_loader)
 {
 	zend_fcall_info			fci;
 	zend_fcall_info_cache	fcc;
-
-	ZEND_PARSE_PARAMETERS_START(1, 1)
-		Z_PARAM_FUNC_EX(fci, fcc, 1, 0)
-	ZEND_PARSE_PARAMETERS_END();
-
-	_php_libxml_destroy_fci(&LIBXML(entity_loader).fci, &LIBXML(entity_loader).object);
-
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "f!", &fci, &fcc)
+			== FAILURE) {
+		return;
+	}
+	
+	_php_libxml_destroy_fci(&LIBXML(entity_loader).fci);
+	
 	if (fci.size > 0) { /* argument not null */
 		LIBXML(entity_loader).fci = fci;
-		Z_ADDREF(fci.function_name);
-		if (fci.object != NULL) {
-			ZVAL_OBJ(&LIBXML(entity_loader).object, fci.object);
-			Z_ADDREF(LIBXML(entity_loader).object);
+		Z_ADDREF_P(fci.function_name);
+		if (fci.object_ptr != NULL) {
+			Z_ADDREF_P(fci.object_ptr);
 		}
 		LIBXML(entity_loader).fcc = fcc;
 	}
-
+	
 	RETURN_TRUE;
 }
 /* }}} */
@@ -1164,36 +1155,36 @@ int php_libxml_xmlCheckUTF8(const unsigned char *s)
 	return 1;
 }
 
-zval *php_libxml_register_export(zend_class_entry *ce, php_libxml_export_node export_function)
+int php_libxml_register_export(zend_class_entry *ce, php_libxml_export_node export_function)
 {
 	php_libxml_func_handler export_hnd;
-
+	
 	/* Initialize in case this module hasn't been loaded yet */
 	php_libxml_initialize();
 	export_hnd.export_func = export_function;
 
-	return zend_hash_add_mem(&php_libxml_exports, ce->name, &export_hnd, sizeof(export_hnd));
+	return zend_hash_add(&php_libxml_exports, ce->name, ce->name_length + 1, &export_hnd, sizeof(export_hnd), NULL);
 }
 
-PHP_LIBXML_API xmlNodePtr php_libxml_import_node(zval *object)
+PHP_LIBXML_API xmlNodePtr php_libxml_import_node(zval *object TSRMLS_DC)
 {
 	zend_class_entry *ce = NULL;
 	xmlNodePtr node = NULL;
 	php_libxml_func_handler *export_hnd;
 
-	if (Z_TYPE_P(object) == IS_OBJECT) {
+	if (object->type == IS_OBJECT) {
 		ce = Z_OBJCE_P(object);
 		while (ce->parent != NULL) {
 			ce = ce->parent;
 		}
-		if ((export_hnd = zend_hash_find_ptr(&php_libxml_exports, ce->name))) {
-			node = export_hnd->export_func(object);
+		if (zend_hash_find(&php_libxml_exports, ce->name, ce->name_length + 1, (void **) &export_hnd)  == SUCCESS) {
+			node = export_hnd->export_func(object TSRMLS_CC);
 		}
 	}
 	return node;
 }
 
-PHP_LIBXML_API int php_libxml_increment_node_ptr(php_libxml_node_object *object, xmlNodePtr node, void *private_data)
+PHP_LIBXML_API int php_libxml_increment_node_ptr(php_libxml_node_object *object, xmlNodePtr node, void *private_data TSRMLS_DC)
 {
 	int ret_refcount = -1;
 
@@ -1202,7 +1193,7 @@ PHP_LIBXML_API int php_libxml_increment_node_ptr(php_libxml_node_object *object,
 			if (object->node->node == node) {
 				return object->node->refcount;
 			} else {
-				php_libxml_decrement_node_ptr(object);
+				php_libxml_decrement_node_ptr(object TSRMLS_CC);
 			}
 		}
 		if (node->_private != NULL) {
@@ -1225,7 +1216,7 @@ PHP_LIBXML_API int php_libxml_increment_node_ptr(php_libxml_node_object *object,
 	return ret_refcount;
 }
 
-PHP_LIBXML_API int php_libxml_decrement_node_ptr(php_libxml_node_object *object)
+PHP_LIBXML_API int php_libxml_decrement_node_ptr(php_libxml_node_object *object TSRMLS_DC)
 {
 	int ret_refcount = -1;
 	php_libxml_node_ptr *obj_node;
@@ -1238,14 +1229,14 @@ PHP_LIBXML_API int php_libxml_decrement_node_ptr(php_libxml_node_object *object)
 				obj_node->node->_private = NULL;
 			}
 			efree(obj_node);
-		}
+		} 
 		object->node = NULL;
 	}
 
 	return ret_refcount;
 }
 
-PHP_LIBXML_API int php_libxml_increment_doc_ref(php_libxml_node_object *object, xmlDocPtr docp)
+PHP_LIBXML_API int php_libxml_increment_doc_ref(php_libxml_node_object *object, xmlDocPtr docp TSRMLS_DC)
 {
 	int ret_refcount = -1;
 
@@ -1263,7 +1254,7 @@ PHP_LIBXML_API int php_libxml_increment_doc_ref(php_libxml_node_object *object, 
 	return ret_refcount;
 }
 
-PHP_LIBXML_API int php_libxml_decrement_doc_ref(php_libxml_node_object *object)
+PHP_LIBXML_API int php_libxml_decrement_doc_ref(php_libxml_node_object *object TSRMLS_DC)
 {
 	int ret_refcount = -1;
 
@@ -1288,7 +1279,7 @@ PHP_LIBXML_API int php_libxml_decrement_doc_ref(php_libxml_node_object *object)
 	return ret_refcount;
 }
 
-PHP_LIBXML_API void php_libxml_node_free_resource(xmlNodePtr node)
+PHP_LIBXML_API void php_libxml_node_free_resource(xmlNodePtr node TSRMLS_DC)
 {
 	if (!node) {
 		return;
@@ -1300,7 +1291,7 @@ PHP_LIBXML_API void php_libxml_node_free_resource(xmlNodePtr node)
 			break;
 		default:
 			if (node->parent == NULL || node->type == XML_NAMESPACE_DECL) {
-				php_libxml_node_free_list((xmlNodePtr) node->children);
+				php_libxml_node_free_list((xmlNodePtr) node->children TSRMLS_CC);
 				switch (node->type) {
 					/* Skip property freeing for the following types */
 					case XML_ATTRIBUTE_DECL:
@@ -1312,19 +1303,19 @@ PHP_LIBXML_API void php_libxml_node_free_resource(xmlNodePtr node)
 					case XML_TEXT_NODE:
 						break;
 					default:
-						php_libxml_node_free_list((xmlNodePtr) node->properties);
+						php_libxml_node_free_list((xmlNodePtr) node->properties TSRMLS_CC);
 				}
-				if (php_libxml_unregister_node(node) == 0) {
+				if (php_libxml_unregister_node(node TSRMLS_CC) == 0) {
 					node->doc = NULL;
 				}
 				php_libxml_node_free(node);
 			} else {
-				php_libxml_unregister_node(node);
+				php_libxml_unregister_node(node TSRMLS_CC);
 			}
 	}
 }
 
-PHP_LIBXML_API void php_libxml_node_decrement_resource(php_libxml_node_object *object)
+PHP_LIBXML_API void php_libxml_node_decrement_resource(php_libxml_node_object *object TSRMLS_DC)
 {
 	int ret_refcount = -1;
 	xmlNodePtr nodep;
@@ -1333,9 +1324,9 @@ PHP_LIBXML_API void php_libxml_node_decrement_resource(php_libxml_node_object *o
 	if (object != NULL && object->node != NULL) {
 		obj_node = (php_libxml_node_ptr *) object->node;
 		nodep = object->node->node;
-		ret_refcount = php_libxml_decrement_node_ptr(object);
+		ret_refcount = php_libxml_decrement_node_ptr(object TSRMLS_CC);
 		if (ret_refcount == 0) {
-			php_libxml_node_free_resource(nodep);
+			php_libxml_node_free_resource(nodep TSRMLS_CC);
 		} else {
 			if (obj_node && object == obj_node->_private) {
 				obj_node->_private = NULL;
@@ -1344,12 +1335,12 @@ PHP_LIBXML_API void php_libxml_node_decrement_resource(php_libxml_node_object *o
 	}
 	if (object != NULL && object->document != NULL) {
 		/* Safe to call as if the resource were freed then doc pointer is NULL */
-		php_libxml_decrement_doc_ref(object);
+		php_libxml_decrement_doc_ref(object TSRMLS_CC);
 	}
 }
 /* }}} */
 
-#if defined(PHP_WIN32) && defined(COMPILE_DL_LIBXML)
+#ifdef PHP_WIN32
 PHP_LIBXML_API BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
 	return xmlDllMain(hinstDLL, fdwReason, lpvReserved);

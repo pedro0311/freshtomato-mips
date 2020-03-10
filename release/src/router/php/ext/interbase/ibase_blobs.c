@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2018 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -32,14 +32,14 @@
 
 static int le_blob;
 
-static void _php_ibase_free_blob(zend_resource *rsrc) /* {{{ */
+static void _php_ibase_free_blob(zend_rsrc_list_entry *rsrc TSRMLS_DC) /* {{{ */
 {
 	ibase_blob *ib_blob = (ibase_blob *)rsrc->ptr;
 
-	if (ib_blob->bl_handle != 0) { /* blob open*/
+	if (ib_blob->bl_handle != NULL) { /* blob open*/
 		if (isc_cancel_blob(IB_STATUS, &ib_blob->bl_handle)) {
 			_php_ibase_module_error("You can lose data. Close any blob after reading from or "
-				"writing to it. Use ibase_blob_close() before calling ibase_close()");
+				"writing to it. Use ibase_blob_close() before calling ibase_close()" TSRMLS_CC);
 		}
 	}
 	efree(ib_blob);
@@ -48,7 +48,7 @@ static void _php_ibase_free_blob(zend_resource *rsrc) /* {{{ */
 
 void php_ibase_blobs_minit(INIT_FUNC_ARGS) /* {{{ */
 {
-	le_blob = zend_register_list_destructors_ex(_php_ibase_free_blob, NULL,
+	le_blob = zend_register_list_destructors_ex(_php_ibase_free_blob, NULL, 
 	    "interbase blob", module_number);
 }
 /* }}} */
@@ -70,15 +70,18 @@ int _php_ibase_string_to_quad(char const *id, ISC_QUAD *qd) /* {{{ */
 }
 /* }}} */
 
-zend_string *_php_ibase_quad_to_string(ISC_QUAD const qd) /* {{{ */
+char *_php_ibase_quad_to_string(ISC_QUAD const qd) /* {{{ */
 {
+	char *result;
+
 	/* shortcut for most common case */
 	if (sizeof(ISC_QUAD) == sizeof(ISC_UINT64)) {
-		return strpprintf(BLOB_ID_LEN+1, "0x%0*" LL_MASK "x", 16, *(ISC_UINT64*)(void *) &qd);
+		spprintf(&result, BLOB_ID_LEN+1, "0x%0*" LL_MASK "x", 16, *(ISC_UINT64*)(void *) &qd);
 	} else {
 		ISC_UINT64 res = ((ISC_UINT64) qd.gds_quad_high << 0x20) | qd.gds_quad_low;
-		return strpprintf(BLOB_ID_LEN+1, "0x%0*" LL_MASK "x", 16, res);
+		spprintf(&result, BLOB_ID_LEN+1, "0x%0*" LL_MASK "x", 16, res);
 	}
+	return result;
 }
 /* }}} */
 
@@ -90,53 +93,52 @@ typedef struct { /* {{{ */
 /* }}} */
 } IBASE_BLOBINFO;
 
-int _php_ibase_blob_get(zval *return_value, ibase_blob *ib_blob, zend_ulong max_len) /* {{{ */
+int _php_ibase_blob_get(zval *return_value, ibase_blob *ib_blob, unsigned long max_len TSRMLS_DC) /* {{{ */
 {
 	if (ib_blob->bl_qd.gds_quad_high || ib_blob->bl_qd.gds_quad_low) { /*not null ?*/
 
 		ISC_STATUS stat;
-		zend_string *bl_data;
-		zend_ulong cur_len;
+		char *bl_data;
+		unsigned long cur_len;
 		unsigned short seg_len;
 
-		bl_data = zend_string_safe_alloc(1, max_len, 0, 0);
+		bl_data = safe_emalloc(1, max_len, 1);
 
 		for (cur_len = stat = 0; (stat == 0 || stat == isc_segment) && cur_len < max_len; cur_len += seg_len) {
 
 			unsigned short chunk_size = (max_len-cur_len) > USHRT_MAX ? USHRT_MAX
 				: (unsigned short)(max_len-cur_len);
 
-			stat = isc_get_segment(IB_STATUS, &ib_blob->bl_handle, &seg_len, chunk_size, &ZSTR_VAL(bl_data)[cur_len]);
+			stat = isc_get_segment(IB_STATUS, &ib_blob->bl_handle, &seg_len, chunk_size, &bl_data[cur_len]);
 		}
 
+		bl_data[cur_len] = '\0';
 		if (IB_STATUS[0] == 1 && (stat != 0 && stat != isc_segstr_eof && stat != isc_segment)) {
-			zend_string_free(bl_data);
-			_php_ibase_error();
+			efree(bl_data);
+			_php_ibase_error(TSRMLS_C);
 			return FAILURE;
 		}
-		ZSTR_VAL(bl_data)[cur_len] = '\0';
-		ZSTR_LEN(bl_data) = cur_len;
-		RETVAL_NEW_STR(bl_data);
+		RETVAL_STRINGL(bl_data, cur_len, 0);
 	} else { /* null blob */
-		RETVAL_EMPTY_STRING(); /* empty string */
+		RETVAL_STRING("", 1); /* empty string */
 	}
 	return SUCCESS;
 }
 /* }}} */
 
-int _php_ibase_blob_add(zval *string_arg, ibase_blob *ib_blob) /* {{{ */
+int _php_ibase_blob_add(zval **string_arg, ibase_blob *ib_blob TSRMLS_DC) /* {{{ */
 {
-	zend_ulong put_cnt = 0, rem_cnt;
+	unsigned long put_cnt = 0, rem_cnt;
 	unsigned short chunk_size;
 
 	convert_to_string_ex(string_arg);
 
-	for (rem_cnt = Z_STRLEN_P(string_arg); rem_cnt > 0; rem_cnt -= chunk_size)  {
+	for (rem_cnt = Z_STRLEN_PP(string_arg); rem_cnt > 0; rem_cnt -= chunk_size)  {
 
 		chunk_size = rem_cnt > USHRT_MAX ? USHRT_MAX : (unsigned short)rem_cnt;
 
-		if (isc_put_segment(IB_STATUS, &ib_blob->bl_handle, chunk_size, &Z_STRVAL_P(string_arg)[put_cnt] )) {
-			_php_ibase_error();
+		if (isc_put_segment(IB_STATUS, &ib_blob->bl_handle, chunk_size, &Z_STRVAL_PP(string_arg)[put_cnt] )) {
+			_php_ibase_error(TSRMLS_C);
 			return FAILURE;
 		}
 		put_cnt += chunk_size;
@@ -145,7 +147,7 @@ int _php_ibase_blob_add(zval *string_arg, ibase_blob *ib_blob) /* {{{ */
 }
 /* }}} */
 
-static int _php_ibase_blob_info(isc_blob_handle bl_handle, IBASE_BLOBINFO *bl_info) /* {{{ */
+static int _php_ibase_blob_info(isc_blob_handle bl_handle, IBASE_BLOBINFO *bl_info TSRMLS_DC) /* {{{ */
 {
 	static char bl_items[] = {
 		isc_info_blob_num_segments,
@@ -154,7 +156,7 @@ static int _php_ibase_blob_info(isc_blob_handle bl_handle, IBASE_BLOBINFO *bl_in
 		isc_info_blob_type
 	};
 
-	char bl_inf[sizeof(zend_long)*8], *p;
+	char bl_inf[sizeof(long)*8], *p;
 
 	bl_info->max_segment = 0;
 	bl_info->num_segments = 0;
@@ -162,7 +164,7 @@ static int _php_ibase_blob_info(isc_blob_handle bl_handle, IBASE_BLOBINFO *bl_in
 	bl_info->bl_stream = 0;
 
 	if (isc_blob_info(IB_STATUS, &bl_handle, sizeof(bl_items), bl_items, sizeof(bl_inf), bl_inf)) {
-		_php_ibase_error();
+		_php_ibase_error(TSRMLS_C);
 		return FAILURE;
 	}
 
@@ -189,7 +191,7 @@ static int _php_ibase_blob_info(isc_blob_handle bl_handle, IBASE_BLOBINFO *bl_in
 				break;
 			case isc_info_truncated:
 			case isc_info_error:  /* hmm. don't think so...*/
-				_php_ibase_module_error("PHP module internal error");
+				_php_ibase_module_error("PHP module internal error" TSRMLS_CC);
 				return FAILURE;
 		} /* switch */
 		p += item_len;
@@ -209,24 +211,23 @@ PHP_FUNCTION(ibase_blob_create)
 
 	RESET_ERRMSG;
 
-	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS(), "|r", &link)) {
+	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|r", &link)) {
 		RETURN_FALSE;
 	}
 
 	PHP_IBASE_LINK_TRANS(link, ib_link, trans);
 
 	ib_blob = (ibase_blob *) emalloc(sizeof(ibase_blob));
-	ib_blob->bl_handle = 0;
+	ib_blob->bl_handle = NULL;
 	ib_blob->type = BLOB_INPUT;
 
 	if (isc_create_blob(IB_STATUS, &ib_link->handle, &trans->handle, &ib_blob->bl_handle, &ib_blob->bl_qd)) {
-		_php_ibase_error();
+		_php_ibase_error(TSRMLS_C);
 		efree(ib_blob);
 		RETURN_FALSE;
 	}
 
-	RETVAL_RES(zend_register_resource(ib_blob, le_blob));
-	Z_TRY_ADDREF_P(return_value);
+	ZEND_REGISTER_RESOURCE(return_value, ib_blob, le_blob);
 }
 /* }}} */
 
@@ -235,7 +236,7 @@ PHP_FUNCTION(ibase_blob_create)
 PHP_FUNCTION(ibase_blob_open)
 {
 	char *blob_id;
-	size_t blob_id_len;
+	int blob_id_len;
 	zval *link = NULL;
 	ibase_db_link *ib_link;
 	ibase_trans *trans = NULL;
@@ -247,12 +248,12 @@ PHP_FUNCTION(ibase_blob_open)
 		default:
 			WRONG_PARAM_COUNT;
 		case 1:
-			if (FAILURE == zend_parse_parameters(1, "s", &blob_id, &blob_id_len)) {
+			if (FAILURE == zend_parse_parameters(1 TSRMLS_CC, "s", &blob_id, &blob_id_len)) {
 				RETURN_FALSE;
 			}
 			break;
 		case 2:
-			if (FAILURE == zend_parse_parameters(2, "rs", &link, &blob_id, &blob_id_len)) {
+			if (FAILURE == zend_parse_parameters(2 TSRMLS_CC, "rs", &link, &blob_id, &blob_id_len)) {
 				RETURN_FALSE;
 			}
 			break;
@@ -261,23 +262,22 @@ PHP_FUNCTION(ibase_blob_open)
 	PHP_IBASE_LINK_TRANS(link, ib_link, trans);
 
 	ib_blob = (ibase_blob *) emalloc(sizeof(ibase_blob));
-	ib_blob->bl_handle = 0;
+	ib_blob->bl_handle = NULL;
 	ib_blob->type = BLOB_OUTPUT;
 
 	do {
 		if (! _php_ibase_string_to_quad(blob_id, &ib_blob->bl_qd)) {
-			_php_ibase_module_error("String is not a BLOB ID");
+			_php_ibase_module_error("String is not a BLOB ID" TSRMLS_CC);
 			break;
 		}
 
 		if (isc_open_blob(IB_STATUS, &ib_link->handle, &trans->handle, &ib_blob->bl_handle,
 				&ib_blob->bl_qd)) {
-			_php_ibase_error();
+			_php_ibase_error(TSRMLS_C);
 			break;
 		}
 
-		RETVAL_RES(zend_register_resource(ib_blob, le_blob));
-		Z_TRY_ADDREF_P(return_value);
+		ZEND_REGISTER_RESOURCE(return_value, ib_blob, le_blob);
 		return;
 
 	} while (0);
@@ -291,23 +291,23 @@ PHP_FUNCTION(ibase_blob_open)
    Add data into created blob */
 PHP_FUNCTION(ibase_blob_add)
 {
-	zval *blob_arg, *string_arg;
+	zval **blob_arg, **string_arg;
 	ibase_blob *ib_blob;
 
 	RESET_ERRMSG;
 
-	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS(), "rz", &blob_arg, &string_arg)) {
-		return;
+	if (ZEND_NUM_ARGS() != 2 || zend_get_parameters_ex(2, &blob_arg, &string_arg) == FAILURE) {
+		WRONG_PARAM_COUNT;
 	}
 
-	ib_blob = (ibase_blob *)zend_fetch_resource_ex(blob_arg, "Interbase blob", le_blob);
+	ZEND_FETCH_RESOURCE(ib_blob, ibase_blob *, blob_arg, -1, "Interbase blob", le_blob);
 
 	if (ib_blob->type != BLOB_INPUT) {
-		_php_ibase_module_error("BLOB is not open for input");
+		_php_ibase_module_error("BLOB is not open for input" TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
-	if (_php_ibase_blob_add(string_arg, ib_blob) != SUCCESS) {
+	if (_php_ibase_blob_add(string_arg, ib_blob TSRMLS_CC) != SUCCESS) {
 		RETURN_FALSE;
 	}
 }
@@ -317,24 +317,25 @@ PHP_FUNCTION(ibase_blob_add)
    Get len bytes data from open blob */
 PHP_FUNCTION(ibase_blob_get)
 {
-	zval *blob_arg;
-	zend_ulong len_arg;
+	zval **blob_arg, **len_arg;
 	ibase_blob *ib_blob;
 
 	RESET_ERRMSG;
 
-	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS(), "rl", &blob_arg, &len_arg)) {
-		return;
+	if (ZEND_NUM_ARGS() != 2 || zend_get_parameters_ex(2, &blob_arg, &len_arg) == FAILURE) {
+		WRONG_PARAM_COUNT;
 	}
 
-	ib_blob = (ibase_blob *)zend_fetch_resource_ex(blob_arg, "Interbase blob", le_blob);
+	ZEND_FETCH_RESOURCE(ib_blob, ibase_blob *, blob_arg, -1, "Interbase blob", le_blob);
 
 	if (ib_blob->type != BLOB_OUTPUT) {
-		_php_ibase_module_error("BLOB is not open for output");
+		_php_ibase_module_error("BLOB is not open for output" TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
-	if (_php_ibase_blob_get(return_value, ib_blob, len_arg) != SUCCESS) {
+	convert_to_long_ex(len_arg);
+
+	if (_php_ibase_blob_get(return_value, ib_blob, Z_LVAL_PP(len_arg) TSRMLS_CC) != SUCCESS) {
 		RETURN_FALSE;
 	}
 }
@@ -342,37 +343,37 @@ PHP_FUNCTION(ibase_blob_get)
 
 static void _php_ibase_blob_end(INTERNAL_FUNCTION_PARAMETERS, int bl_end) /* {{{ */
 {
-	zval *blob_arg;
+	zval **blob_arg;
 	ibase_blob *ib_blob;
 
 	RESET_ERRMSG;
 
-	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS(), "r", &blob_arg)) {
-		return;
+	if (ZEND_NUM_ARGS() != 1 || zend_get_parameters_ex(1, &blob_arg) == FAILURE) {
+		WRONG_PARAM_COUNT;
 	}
 
-	ib_blob = (ibase_blob *)zend_fetch_resource_ex(blob_arg, "Interbase blob", le_blob);
+	ZEND_FETCH_RESOURCE(ib_blob, ibase_blob *, blob_arg, -1, "Interbase blob", le_blob);
 
 	if (bl_end == BLOB_CLOSE) { /* return id here */
 
 		if (ib_blob->bl_qd.gds_quad_high || ib_blob->bl_qd.gds_quad_low) { /*not null ?*/
 			if (isc_close_blob(IB_STATUS, &ib_blob->bl_handle)) {
-				_php_ibase_error();
+				_php_ibase_error(TSRMLS_C);
 				RETURN_FALSE;
 			}
 		}
-		ib_blob->bl_handle = 0;
+		ib_blob->bl_handle = NULL;
 
-		RETVAL_NEW_STR(_php_ibase_quad_to_string(ib_blob->bl_qd));
+		RETVAL_STRINGL(_php_ibase_quad_to_string(ib_blob->bl_qd), BLOB_ID_LEN, 0);
 	} else { /* discard created blob */
 		if (isc_cancel_blob(IB_STATUS, &ib_blob->bl_handle)) {
-			_php_ibase_error();
+			_php_ibase_error(TSRMLS_C);
 			RETURN_FALSE;
 		}
-		ib_blob->bl_handle = 0;
+		ib_blob->bl_handle = NULL;
 		RETVAL_TRUE;
 	}
-	zend_list_delete(Z_RES_P(blob_arg));
+	zend_list_delete(Z_LVAL_PP(blob_arg));
 }
 /* }}} */
 
@@ -397,11 +398,11 @@ PHP_FUNCTION(ibase_blob_cancel)
 PHP_FUNCTION(ibase_blob_info)
 {
 	char *blob_id;
-	size_t blob_id_len;
+	int blob_id_len;
 	zval *link = NULL;
 	ibase_db_link *ib_link;
 	ibase_trans *trans = NULL;
-	ibase_blob ib_blob = { 0, BLOB_INPUT };
+	ibase_blob ib_blob = { NULL, BLOB_INPUT };
 	IBASE_BLOBINFO bl_info;
 
 	RESET_ERRMSG;
@@ -410,12 +411,12 @@ PHP_FUNCTION(ibase_blob_info)
 		default:
 			WRONG_PARAM_COUNT;
 		case 1:
-			if (FAILURE == zend_parse_parameters(1, "s", &blob_id, &blob_id_len)) {
+			if (FAILURE == zend_parse_parameters(1 TSRMLS_CC, "s", &blob_id, &blob_id_len)) {
 				RETURN_FALSE;
 			}
 			break;
 		case 2:
-			if (FAILURE == zend_parse_parameters(2, "rs", &link, &blob_id, &blob_id_len)) {
+			if (FAILURE == zend_parse_parameters(2 TSRMLS_CC, "rs", &link, &blob_id, &blob_id_len)) {
 				RETURN_FALSE;
 			}
 			break;
@@ -424,22 +425,22 @@ PHP_FUNCTION(ibase_blob_info)
 	PHP_IBASE_LINK_TRANS(link, ib_link, trans);
 
 	if (! _php_ibase_string_to_quad(blob_id, &ib_blob.bl_qd)) {
-		_php_ibase_module_error("Unrecognized BLOB ID");
+		_php_ibase_module_error("Unrecognized BLOB ID" TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
 	if (ib_blob.bl_qd.gds_quad_high || ib_blob.bl_qd.gds_quad_low) { /* not null ? */
 		if (isc_open_blob(IB_STATUS, &ib_link->handle, &trans->handle, &ib_blob.bl_handle,
 				&ib_blob.bl_qd)) {
-			_php_ibase_error();
+			_php_ibase_error(TSRMLS_C);
 			RETURN_FALSE;
 		}
 
-		if (_php_ibase_blob_info(ib_blob.bl_handle, &bl_info)) {
+		if (_php_ibase_blob_info(ib_blob.bl_handle, &bl_info TSRMLS_CC)) {
 			RETURN_FALSE;
 		}
 		if (isc_close_blob(IB_STATUS, &ib_blob.bl_handle)) {
-			_php_ibase_error();
+			_php_ibase_error(TSRMLS_C);
 			RETURN_FALSE;
 		}
 	} else { /* null blob, all values to zero */
@@ -473,11 +474,11 @@ PHP_FUNCTION(ibase_blob_info)
 PHP_FUNCTION(ibase_blob_echo)
 {
 	char *blob_id;
-	size_t blob_id_len;
+	int blob_id_len;
 	zval *link = NULL;
 	ibase_db_link *ib_link;
 	ibase_trans *trans = NULL;
-	ibase_blob ib_blob_id = { 0, BLOB_OUTPUT  };
+	ibase_blob ib_blob_id = { NULL, BLOB_OUTPUT  };
 	char bl_data[IBASE_BLOB_SEG];
 	unsigned short seg_len;
 
@@ -487,12 +488,12 @@ PHP_FUNCTION(ibase_blob_echo)
 		default:
 			WRONG_PARAM_COUNT;
 		case 1:
-			if (FAILURE == zend_parse_parameters(1, "s", &blob_id, &blob_id_len)) {
+			if (FAILURE == zend_parse_parameters(1 TSRMLS_CC, "s", &blob_id, &blob_id_len)) {
 				RETURN_FALSE;
 			}
 			break;
 		case 2:
-			if (FAILURE == zend_parse_parameters(2, "rs", &link, &blob_id, &blob_id_len)) {
+			if (FAILURE == zend_parse_parameters(2 TSRMLS_CC, "rs", &link, &blob_id, &blob_id_len)) {
 				RETURN_FALSE;
 			}
 			break;
@@ -501,7 +502,7 @@ PHP_FUNCTION(ibase_blob_echo)
 	PHP_IBASE_LINK_TRANS(link, ib_link, trans);
 
 	if (! _php_ibase_string_to_quad(blob_id, &ib_blob_id.bl_qd)) {
-		_php_ibase_module_error("Unrecognized BLOB ID");
+		_php_ibase_module_error("Unrecognized BLOB ID" TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
@@ -526,7 +527,7 @@ PHP_FUNCTION(ibase_blob_echo)
 		RETURN_TRUE;
 	} while (0);
 
-	_php_ibase_error();
+	_php_ibase_error(TSRMLS_C);
 	RETURN_FALSE;
 }
 /* }}} */
@@ -538,7 +539,7 @@ PHP_FUNCTION(ibase_blob_import)
 	zval *link = NULL, *file;
 	int size;
 	unsigned short b;
-	ibase_blob ib_blob = { 0, 0 };
+	ibase_blob ib_blob = { NULL, 0 };
 	ibase_db_link *ib_link;
 	ibase_trans *trans = NULL;
 	char bl_data[IBASE_BLOB_SEG];
@@ -546,14 +547,14 @@ PHP_FUNCTION(ibase_blob_import)
 
 	RESET_ERRMSG;
 
-	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS(), "r|r",
+	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r|r",
 			(ZEND_NUM_ARGS()-1) ? &link : &file, &file)) {
 		RETURN_FALSE;
 	}
 
 	PHP_IBASE_LINK_TRANS(link, ib_link, trans);
 
-	php_stream_from_zval(stream, file);
+	php_stream_from_zval(stream, &file);
 
 	do {
 		if (isc_create_blob(IB_STATUS, &ib_link->handle, &trans->handle, &ib_blob.bl_handle,
@@ -570,10 +571,10 @@ PHP_FUNCTION(ibase_blob_import)
 		if (isc_close_blob(IB_STATUS, &ib_blob.bl_handle)) {
 			break;
 		}
-		RETURN_NEW_STR(_php_ibase_quad_to_string(ib_blob.bl_qd));
+		RETURN_STRINGL( _php_ibase_quad_to_string(ib_blob.bl_qd), BLOB_ID_LEN, 0);
 	} while (0);
 
-	_php_ibase_error();
+	_php_ibase_error(TSRMLS_C);
 	RETURN_FALSE;
 }
 /* }}} */

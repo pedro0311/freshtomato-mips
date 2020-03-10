@@ -15,3 +15,4 @@ echo ini_get('filter.default_flags') . "\n";
 ?>
 --EXPECT--
 unsafe_raw
+

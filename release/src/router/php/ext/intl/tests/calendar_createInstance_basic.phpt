@@ -27,6 +27,7 @@ var_dump(abs($timeMillis - $time * 1000) < 2000);
 
 ?>
 ==DONE==
+
 --EXPECTF--
 IntlTimeZone Object
 (

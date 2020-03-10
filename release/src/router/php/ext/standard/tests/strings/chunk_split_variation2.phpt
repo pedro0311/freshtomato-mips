@@ -1,7 +1,5 @@
 --TEST--
 Test chunk_split() function : usage variations - unexpected values for 'chunklen' argument(Bug#42796)
---SKIPIF--
-<?php if (PHP_INT_SIZE != 8) die("skip this test is for 64-bit only");
 --FILE--
 <?php
 /* Prototype  : string chunk_split(string $str [, int $chunklen [, string $ending]])
@@ -40,7 +38,7 @@ $values = array(
   (float) PHP_INT_MAX + 1,
   (float) -PHP_INT_MAX - 1,
   .5,
-
+ 
   // array data
   array(),
   array(0),
@@ -100,8 +98,8 @@ Warning: chunk_split(): Chunk length should be greater than zero in %schunk_spli
 bool(false)
 -- Iteration 3 --
 
-Warning: chunk_split() expects parameter 2 to be integer, float given in %s on line %d
-NULL
+Warning: chunk_split(): Chunk length should be greater than zero in %schunk_split_variation2.php on line %d
+bool(false)
 -- Iteration 4 --
 
 Warning: chunk_split(): Chunk length should be greater than zero in %schunk_split_variation2.php on line %d
@@ -112,23 +110,23 @@ Warning: chunk_split(): Chunk length should be greater than zero in %schunk_spli
 bool(false)
 -- Iteration 6 --
 
-Warning: chunk_split() expects parameter 2 to be integer, array given in %schunk_split_variation2.php on line %d
+Warning: chunk_split() expects parameter 2 to be long, array given in %schunk_split_variation2.php on line %d
 NULL
 -- Iteration 7 --
 
-Warning: chunk_split() expects parameter 2 to be integer, array given in %schunk_split_variation2.php on line %d
+Warning: chunk_split() expects parameter 2 to be long, array given in %schunk_split_variation2.php on line %d
 NULL
 -- Iteration 8 --
 
-Warning: chunk_split() expects parameter 2 to be integer, array given in %schunk_split_variation2.php on line %d
+Warning: chunk_split() expects parameter 2 to be long, array given in %schunk_split_variation2.php on line %d
 NULL
 -- Iteration 9 --
 
-Warning: chunk_split() expects parameter 2 to be integer, array given in %schunk_split_variation2.php on line %d
+Warning: chunk_split() expects parameter 2 to be long, array given in %schunk_split_variation2.php on line %d
 NULL
 -- Iteration 10 --
 
-Warning: chunk_split() expects parameter 2 to be integer, array given in %schunk_split_variation2.php on line %d
+Warning: chunk_split() expects parameter 2 to be long, array given in %schunk_split_variation2.php on line %d
 NULL
 -- Iteration 11 --
 
@@ -152,23 +150,23 @@ Warning: chunk_split(): Chunk length should be greater than zero in %schunk_spli
 bool(false)
 -- Iteration 17 --
 
-Warning: chunk_split() expects parameter 2 to be integer, string given in %schunk_split_variation2.php on line %d
+Warning: chunk_split() expects parameter 2 to be long, string given in %schunk_split_variation2.php on line %d
 NULL
 -- Iteration 18 --
 
-Warning: chunk_split() expects parameter 2 to be integer, string given in %schunk_split_variation2.php on line %d
+Warning: chunk_split() expects parameter 2 to be long, string given in %schunk_split_variation2.php on line %d
 NULL
 -- Iteration 19 --
 
-Warning: chunk_split() expects parameter 2 to be integer, string given in %schunk_split_variation2.php on line %d
+Warning: chunk_split() expects parameter 2 to be long, string given in %schunk_split_variation2.php on line %d
 NULL
 -- Iteration 20 --
 
-Warning: chunk_split() expects parameter 2 to be integer, string given in %schunk_split_variation2.php on line %d
+Warning: chunk_split() expects parameter 2 to be long, string given in %schunk_split_variation2.php on line %d
 NULL
 -- Iteration 21 --
 
-Warning: chunk_split() expects parameter 2 to be integer, object given in %schunk_split_variation2.php on line %d
+Warning: chunk_split() expects parameter 2 to be long, object given in %schunk_split_variation2.php on line %d
 NULL
 -- Iteration 22 --
 
@@ -180,6 +178,6 @@ Warning: chunk_split(): Chunk length should be greater than zero in %schunk_spli
 bool(false)
 -- Iteration 24 --
 
-Warning: chunk_split() expects parameter 2 to be integer, resource given in %schunk_split_variation2.php on line %d
+Warning: chunk_split() expects parameter 2 to be long, resource given in %schunk_split_variation2.php on line %d
 NULL
 ===DONE===

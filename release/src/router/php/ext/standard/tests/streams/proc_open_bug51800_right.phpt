@@ -4,7 +4,7 @@ Bug #51800 proc_open on Windows hangs forever, the right way to do it
 <?php
 $callee = dirname(__FILE__) . "/process_proc_open_bug51800_right.php";
 $php = PHP_BINARY;
-$cmd = "$php -n $callee";
+$cmd = "$php $callee";
 
 $status;
 $stdout = "";
@@ -75,3 +75,4 @@ array(3) {
 int(10000)
 int(10000)
 ===DONE===
+

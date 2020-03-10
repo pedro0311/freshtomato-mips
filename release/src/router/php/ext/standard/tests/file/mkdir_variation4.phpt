@@ -5,9 +5,9 @@ Dave Kelsey <d_kelsey@uk.ibm.com>
 --FILE--
 <?php
 /* Prototype  : bool mkdir(string pathname [, int mode [, bool recursive [, resource context]]])
- * Description: Create a directory
+ * Description: Create a directory 
  * Source code: ext/standard/file.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing mkdir() : usage variation ***\n";
@@ -104,7 +104,7 @@ $inputs = array(
 
       // unset data
       'unset var' => @$unset_var,
-
+      
       // non stream context resource
       'file resource' => $fileRes,
 );
@@ -140,19 +140,19 @@ Error: 2 - mkdir() expects parameter 4 to be resource, integer given, %s(%d)
 Error: 2 - mkdir() expects parameter 4 to be resource, integer given, %s(%d)
 
 --float 10.5--
-Error: 2 - mkdir() expects parameter 4 to be resource, float given, %s(%d)
+Error: 2 - mkdir() expects parameter 4 to be resource, double given, %s(%d)
 
 --float -10.5--
-Error: 2 - mkdir() expects parameter 4 to be resource, float given, %s(%d)
+Error: 2 - mkdir() expects parameter 4 to be resource, double given, %s(%d)
 
 --float 12.3456789000e10--
-Error: 2 - mkdir() expects parameter 4 to be resource, float given, %s(%d)
+Error: 2 - mkdir() expects parameter 4 to be resource, double given, %s(%d)
 
 --float -12.3456789000e10--
-Error: 2 - mkdir() expects parameter 4 to be resource, float given, %s(%d)
+Error: 2 - mkdir() expects parameter 4 to be resource, double given, %s(%d)
 
 --float .5--
-Error: 2 - mkdir() expects parameter 4 to be resource, float given, %s(%d)
+Error: 2 - mkdir() expects parameter 4 to be resource, double given, %s(%d)
 
 --empty array--
 Error: 2 - mkdir() expects parameter 4 to be resource, array given, %s(%d)

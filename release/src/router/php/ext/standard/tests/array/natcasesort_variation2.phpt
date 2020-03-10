@@ -67,13 +67,13 @@ $inputs = array(
        TRUE,
        FALSE,
        ),
-
+       
        // empty data
 /*5*/ 'empty string' => array(
        "",
        '',
        ),
-
+       
 /*6*/ 'empty array' => array(
        ),
 
@@ -83,7 +83,7 @@ $inputs = array(
        'string',
        $heredoc,
        ),
-
+       
        // object data
 /*8*/ 'object' => array(
        new classA(),
@@ -117,6 +117,7 @@ fclose($fp);
 
 echo "Done";
 ?>
+
 --EXPECTF--
 *** Testing natcasesort() : usage variation ***
 
@@ -151,18 +152,18 @@ array(5) {
 -- Iteration 3 --
 bool(true)
 array(2) {
-  [0]=>
-  NULL
   [1]=>
+  NULL
+  [0]=>
   NULL
 }
 
 -- Iteration 4 --
 bool(true)
 array(4) {
-  [1]=>
-  bool(false)
   [3]=>
+  bool(false)
+  [1]=>
   bool(false)
   [0]=>
   bool(true)
@@ -173,9 +174,9 @@ array(4) {
 -- Iteration 5 --
 bool(true)
 array(2) {
-  [0]=>
-  string(0) ""
   [1]=>
+  string(0) ""
+  [0]=>
   string(0) ""
 }
 
@@ -189,9 +190,9 @@ bool(true)
 array(3) {
   [2]=>
   string(11) "hello world"
-  [0]=>
-  string(6) "string"
   [1]=>
+  string(6) "string"
+  [0]=>
   string(6) "string"
 }
 

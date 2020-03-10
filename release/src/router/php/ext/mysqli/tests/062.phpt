@@ -25,6 +25,6 @@ require_once('skipifconnectfailure.inc');
 --EXPECTF--
 array(1) {
   [0]=>
-  string(3) "foo"
+  %unicode|string%(3) "foo"
 }
 done!

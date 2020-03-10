@@ -2,6 +2,7 @@
 Test usage of ReflectionProperty methods isDefault(), getModifiers(), getDeclaringClass() and getDocComment().
 --INI--
 opcache.save_comments=1
+opcache.load_comments=1
 --FILE--
 <?php
 
@@ -35,7 +36,7 @@ reflectProperty("TestClass", "stat");
 reflectProperty("TestClass", "prot");
 reflectProperty("TestClass", "priv");
 
-?>
+?> 
 --EXPECTF--
 **********************************
 Reflecting on property TestClass::pub

@@ -1,11 +1,7 @@
 --TEST--
 Bug #70219 Use after free vulnerability in session deserializer
 --SKIPIF--
-<?php
-if (!extension_loaded("session")) {
-    die("skip Session module not loaded");
-}
-?>
+<?php include __DIR__ . '/../../../session/tests/skipif.inc'; ?>
 --FILE--
 <?php
 ini_set('session.serialize_handler', 'php_serialize');
@@ -36,7 +32,7 @@ var_dump($_SESSION);
 --EXPECTF--
 array(2) {
   [0]=>
-  object(obj)#%d (1) {
+  &object(obj)#%d (1) {
     ["data"]=>
     NULL
   }

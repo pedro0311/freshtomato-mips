@@ -15,9 +15,10 @@ debug_zval_dump($GLOBALS["str"]);
 
 echo "\nDone";
 ?>
+
 --EXPECTF--
-string(4) "John" refcount(%d)
+string(4) "John" refcount(2)
 int(0)
-string(4) "John" refcount(%d)
+string(4) "John" refcount(2)
 
 Done

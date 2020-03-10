@@ -43,6 +43,6 @@ oci8_test_sql_execute($c, $stmtarray);
 echo "Done\n";
 
 ?>
---EXPECT--
+--EXPECTF--
 string(4) "some"
 Done

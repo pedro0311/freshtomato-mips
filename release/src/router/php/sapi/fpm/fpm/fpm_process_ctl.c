@@ -1,3 +1,4 @@
+
 	/* $Id: fpm_process_ctl.c,v 1.19.2.2 2008/12/13 03:21:18 anight Exp $ */
 	/* (c) 2007,2008 Andrei Nigmatulin */
 
@@ -424,7 +425,7 @@ static void fpm_pctl_perform_idle_server_maintenance(struct timeval *now) /* {{{
 				return;
 			}
 
-			zlog(ZLOG_DEBUG, "[pool %s] %d child(ren) have been created dynamically", wp->config->name, children_to_fork);
+			zlog(ZLOG_DEBUG, "[pool %s] %d child(ren) have been created dynamically", wp->config->name, children_to_fork);	
 
 			/* Double the spawn rate for the next iteration */
 			if (wp->idle_spawn_rate < FPM_MAX_SPAWN_RATE) {
@@ -535,3 +536,4 @@ void fpm_pctl_on_socket_accept(struct fpm_event_s *ev, short which, void *arg) /
 	zlog(ZLOG_DEBUG, "[pool %s] got accept without idle child available .... I forked", wp->config->name);
 }
 /* }}} */
+

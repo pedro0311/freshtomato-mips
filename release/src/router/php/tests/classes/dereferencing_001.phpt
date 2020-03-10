@@ -1,10 +1,12 @@
 --TEST--
 ZE2 dereferencing of objects from methods
+--SKIPIF--
+<?php if (version_compare(zend_version(), '2.0.0-dev', '<')) die('skip ZendEngine 2 needed'); ?>
 --FILE--
 <?php
 
 class Name {
-	function __construct($_name) {
+	function Name($_name) {
 		$this->name = $_name;
 	}
 
@@ -16,7 +18,7 @@ class Name {
 class Person {
 	private $name;
 
-	function __construct($_name, $_address) {
+	function person($_name, $_address) {
 		$this->name = new Name($_name);
 	}
 

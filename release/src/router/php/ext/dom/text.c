@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2018 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -46,10 +46,10 @@ ZEND_END_ARG_INFO();
 /* }}} */
 
 /*
-* class DOMText extends DOMCharacterData
+* class DOMText extends DOMCharacterData 
 *
 * URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#ID-1312295772
-* Since:
+* Since: 
 */
 
 const zend_function_entry php_dom_text_class_functions[] = {
@@ -65,40 +65,44 @@ const zend_function_entry php_dom_text_class_functions[] = {
 PHP_METHOD(domtext, __construct)
 {
 
-	zval *id = getThis();
+	zval *id;
 	xmlNodePtr nodep = NULL, oldnode = NULL;
 	dom_object *intern;
 	char *value = NULL;
-	size_t value_len;
+	int value_len;
+	zend_error_handling error_handling;
 
-	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "|s", &value, &value_len) == FAILURE) {
+	zend_replace_error_handling(EH_THROW, dom_domexception_class_entry, &error_handling TSRMLS_CC);
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "O|s", &id, dom_text_class_entry, &value, &value_len) == FAILURE) {
+		zend_restore_error_handling(&error_handling TSRMLS_CC);
 		return;
 	}
 
+	zend_restore_error_handling(&error_handling TSRMLS_CC);
 	nodep = xmlNewText((xmlChar *) value);
 
 	if (!nodep) {
-		php_dom_throw_error(INVALID_STATE_ERR, 1);
+		php_dom_throw_error(INVALID_STATE_ERR, 1 TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
-	intern = Z_DOMOBJ_P(id);
+	intern = (dom_object *)zend_object_store_get_object(id TSRMLS_CC);
 	if (intern != NULL) {
 		oldnode = dom_object_get_node(intern);
 		if (oldnode != NULL) {
-			php_libxml_node_free_resource(oldnode );
+			php_libxml_node_free_resource(oldnode  TSRMLS_CC);
 		}
-		php_libxml_increment_node_ptr((php_libxml_node_object *)intern, nodep, (void *)intern);
+		php_libxml_increment_node_ptr((php_libxml_node_object *)intern, nodep, (void *)intern TSRMLS_CC);
 	}
 }
 /* }}} end DOMText::__construct */
 
-/* {{{ wholeText	string
-readonly=yes
+/* {{{ wholeText	string	
+readonly=yes 
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-Text3-wholeText
 Since: DOM Level 3
 */
-int dom_text_whole_text_read(dom_object *obj, zval *retval)
+int dom_text_whole_text_read(dom_object *obj, zval **retval TSRMLS_DC)
 {
 	xmlNodePtr node;
 	xmlChar *wholetext = NULL;
@@ -106,7 +110,7 @@ int dom_text_whole_text_read(dom_object *obj, zval *retval)
 	node = dom_object_get_node(obj);
 
 	if (node == NULL) {
-		php_dom_throw_error(INVALID_STATE_ERR, 0);
+		php_dom_throw_error(INVALID_STATE_ERR, 0 TSRMLS_CC);
 		return FAILURE;
 	}
 
@@ -121,11 +125,12 @@ int dom_text_whole_text_read(dom_object *obj, zval *retval)
 		node = node->next;
 	}
 
+	ALLOC_ZVAL(*retval);
 	if (wholetext != NULL) {
-		ZVAL_STRING(retval, (char *) wholetext);
+		ZVAL_STRING(*retval, wholetext, 1);
 		xmlFree(wholetext);
 	} else {
-		ZVAL_EMPTY_STRING(retval);
+		ZVAL_EMPTY_STRING(*retval);
 	}
 
 	return SUCCESS;
@@ -133,9 +138,9 @@ int dom_text_whole_text_read(dom_object *obj, zval *retval)
 
 /* }}} */
 
-/* {{{ proto DOMText dom_text_split_text(int offset)
+/* {{{ proto DOMText dom_text_split_text(int offset);
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-38853C1D
-Since:
+Since: 
 */
 PHP_FUNCTION(dom_text_split_text)
 {
@@ -145,11 +150,12 @@ PHP_FUNCTION(dom_text_split_text)
 	xmlChar    *second;
 	xmlNodePtr  node;
 	xmlNodePtr  nnode;
-	zend_long        offset;
+	long        offset;
+	int         ret;
 	int         length;
 	dom_object	*intern;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Ol", &id, dom_text_class_entry, &offset) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Ol", &id, dom_text_class_entry, &offset) == FAILURE) {
 		return;
 	}
 	DOM_GET_OBJ(node, id, xmlNodePtr, intern);
@@ -164,19 +170,19 @@ PHP_FUNCTION(dom_text_split_text)
 	}
 	length = xmlUTF8Strlen(cur);
 
-	if (ZEND_LONG_INT_OVFL(offset) || (int)offset > length || offset < 0) {
+	if (offset > length || offset < 0) {
 		xmlFree(cur);
 		RETURN_FALSE;
 	}
 
-	first = xmlUTF8Strndup(cur, (int)offset);
-	second = xmlUTF8Strsub(cur, (int)offset, (int)(length - offset));
-
+	first = xmlUTF8Strndup(cur, offset);
+	second = xmlUTF8Strsub(cur, offset, length - offset);
+	
 	xmlFree(cur);
 
 	xmlNodeSetContent(node, first);
 	nnode = xmlNewDocText(node->doc, second);
-
+	
 	xmlFree(first);
 	xmlFree(second);
 
@@ -189,12 +195,12 @@ PHP_FUNCTION(dom_text_split_text)
 		xmlAddNextSibling(node, nnode);
 		nnode->type = XML_TEXT_NODE;
 	}
-
-	php_dom_create_object(nnode, return_value, intern);
+	
+	return_value = php_dom_create_object(nnode, &ret, return_value, intern TSRMLS_CC);
 }
 /* }}} end dom_text_split_text */
 
-/* {{{ proto boolean dom_text_is_whitespace_in_element_content()
+/* {{{ proto boolean dom_text_is_whitespace_in_element_content();
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-Text3-isWhitespaceInElementContent
 Since: DOM Level 3
 */
@@ -204,7 +210,7 @@ PHP_FUNCTION(dom_text_is_whitespace_in_element_content)
 	xmlNodePtr  node;
 	dom_object	*intern;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "O", &id, dom_text_class_entry) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "O", &id, dom_text_class_entry) == FAILURE) {
 		return;
 	}
 	DOM_GET_OBJ(node, id, xmlNodePtr, intern);
@@ -217,7 +223,7 @@ PHP_FUNCTION(dom_text_is_whitespace_in_element_content)
 }
 /* }}} end dom_text_is_whitespace_in_element_content */
 
-/* {{{ proto DOMText dom_text_replace_whole_text(string content)
+/* {{{ proto DOMText dom_text_replace_whole_text(string content);
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-Text3-replaceWholeText
 Since: DOM Level 3
 */

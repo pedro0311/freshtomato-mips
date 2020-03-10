@@ -10,7 +10,9 @@ echo "Test\n";
 var_dump(count(exif_read_data(__DIR__."/bug62523_1.jpg")));
 ?>
 Done
---EXPECT--
+--EXPECTF--
 Test
-int(84)
+
+Warning: exif_read_data(bug62523_1.jpg): File not supported in %sbug62523_1.php on line %d
+int(1)
 Done

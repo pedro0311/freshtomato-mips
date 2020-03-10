@@ -1,9 +1,7 @@
 
 #include <php_compat.h>
 
-#ifdef PHP_WIN32
-# include <config.w32.h>
-#else
+#ifndef PHP_WIN32
 # include <php_config.h>
 #endif
 
@@ -316,7 +314,7 @@ them both to 0; an emulation function will be used. */
 #define PACKAGE_NAME "PCRE"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "PCRE 8.41"
+#define PACKAGE_STRING "PCRE 8.38"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "pcre"
@@ -325,7 +323,7 @@ them both to 0; an emulation function will be used. */
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "8.41"
+#define PACKAGE_VERSION "8.38"
 
 /* to make a symbol visible */
 /* #undef PCRECPP_EXP_DECL */
@@ -399,9 +397,7 @@ them both to 0; an emulation function will be used. */
 #undef SUPPORT_GCOV
 
 /* Define to any value to enable support for Just-In-Time compiling. */
-#if HAVE_PCRE_JIT_SUPPORT
 #define SUPPORT_JIT
-#endif
 
 /* Define to any value to allow pcregrep to be linked with libbz2, so that it
    is able to handle .bz2 files. */
@@ -439,13 +435,11 @@ them both to 0; an emulation function will be used. */
 /* #undef SUPPORT_UTF8 */
 
 /* Valgrind support to find invalid memory reads. */
-#if HAVE_PCRE_VALGRIND_SUPPORT
-#define SUPPORT_VALGRIND 1
-#endif
+/* #undef SUPPORT_VALGRIND */
 
 /* Version number of package */
 #ifndef VERSION
-#define VERSION "8.41"
+#define VERSION "8.38"
 #endif
 
 /* Define to empty if `const' does not conform to ANSI C. */

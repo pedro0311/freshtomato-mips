@@ -11,7 +11,7 @@ if (!(isset($matches[0]) && $matches[1] < 12)) {
 }
 ?>
 --ENV--
-NLS_LANG=.AL32UTF8
+NLS_LANG=
 --FILE--
 <?php
 
@@ -28,7 +28,7 @@ $stmtarray = array(
 	"insert into bind_char_tab values (2, NULL, 'abc')",
 	"insert into bind_char_tab values (3, NULL, 'abc       ')"
 );
-
+						 
 oci8_test_sql_execute($c, $stmtarray);
 
 // Run Test
@@ -198,7 +198,7 @@ function do_e_q($s)
 $stmtarray = array(
 	"drop table bind_char_tab"
 );
-
+						 
 oci8_test_sql_execute($c, $stmtarray);
 
 echo "Done\n";
@@ -215,9 +215,7 @@ Test 1.2: Type: AFC.  Length: default
     ::
 Test 1.3: Type: AFC:  Length: 0
   Querying:
-    :1:
-    :abc       :
-    ::
+    Oci_execute error ORA-1460 Exiting Query
 Test 1.4: Type: AFC:  Length: strlen
   Querying:
     :1:
@@ -225,6 +223,7 @@ Test 1.4: Type: AFC:  Length: strlen
     ::
 Test 1.5: Type: AFC.  Length: strlen-1
   Querying:
+    Oci_execute error ORA-1460 Exiting Query
 Test 1.6: Type: AFC.  Length: strlen+1
   Querying:
     :1:
@@ -260,9 +259,7 @@ Test 3.2: Type: AFC.  Length: default
     :abc:
 Test 3.3: Type: AFC:  Length: 0
   Querying:
-    :2:
-    ::
-    :abc:
+    Oci_execute error ORA-1460 Exiting Query
 Test 3.4: Type: AFC:  Length: strlen
   Querying:
     :2:
@@ -270,6 +267,7 @@ Test 3.4: Type: AFC:  Length: strlen
     :abc:
 Test 3.5: Type: AFC.  Length: strlen-1
   Querying:
+    Oci_execute error ORA-1460 Exiting Query
 Test 3.6: Type: AFC.  Length: strlen+1
   Querying:
     :2:

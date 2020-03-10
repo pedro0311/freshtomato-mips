@@ -1,6 +1,6 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7														  |
+   | PHP Version 5														  |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,	  |
    | that is bundled with this package in the file LICENSE, and is		  |
@@ -34,29 +34,30 @@ PHP_FUNCTION( normalizer_normalize )
 {
 	char*			input = NULL;
 	/* form is optional, defaults to FORM_C */
-	zend_long	    form = NORMALIZER_DEFAULT;
-	size_t			input_len = 0;
-
+	long			form = NORMALIZER_DEFAULT;
+	int			input_len = 0;
+		
 	UChar*			uinput = NULL;
-	int32_t		    uinput_len = 0;
-	int			    expansion_factor = 1;
+	int			uinput_len = 0;
+	int			expansion_factor = 1;
 	UErrorCode		status = U_ZERO_ERROR;
-
+		
 	UChar*			uret_buf = NULL;
-	int32_t			uret_len = 0;
-
-	zend_string*    u8str;
+	int			uret_len = 0;
+		
+	char*			ret_buf = NULL;
+	int32_t			ret_len = 0;
 
 	int32_t			size_needed;
-
-	intl_error_reset( NULL );
+		
+	intl_error_reset( NULL TSRMLS_CC );
 
 	/* Parse parameters. */
-	if( zend_parse_method_parameters( ZEND_NUM_ARGS(), getThis(), "s|l",
+	if( zend_parse_method_parameters( ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "s|l",
 				&input, &input_len, &form ) == FAILURE )
 	{
 		intl_error_set( NULL, U_ILLEGAL_ARGUMENT_ERROR,
-						 "normalizer_normalize: unable to parse input params", 0 );
+						 "normalizer_normalize: unable to parse input params", 0 TSRMLS_CC );
 
 		RETURN_FALSE;
 	}
@@ -77,7 +78,7 @@ PHP_FUNCTION( normalizer_normalize )
 			break;
 		default:
 			intl_error_set( NULL, U_ILLEGAL_ARGUMENT_ERROR,
-						"normalizer_normalize: illegal normalization form", 0 );
+						"normalizer_normalize: illegal normalization form", 0 TSRMLS_CC );
 			RETURN_FALSE;
 	}
 
@@ -91,10 +92,10 @@ PHP_FUNCTION( normalizer_normalize )
 	if( U_FAILURE( status ) )
 	{
 		/* Set global error code. */
-		intl_error_set_code( NULL, status );
+		intl_error_set_code( NULL, status TSRMLS_CC );
 
 		/* Set error messages. */
-		intl_error_set_custom_msg( NULL, "Error converting input string to UTF-16", 0 );
+		intl_error_set_custom_msg( NULL, "Error converting input string to UTF-16", 0 TSRMLS_CC );
 		if (uinput) {
 			efree( uinput );
 		}
@@ -108,11 +109,11 @@ PHP_FUNCTION( normalizer_normalize )
 
 	/* normalize */
 	size_needed = unorm_normalize( uinput, uinput_len, form, (int32_t) 0 /* options */, uret_buf, uret_len, &status);
-
+	
 	/* Bail out if an unexpected error occurred.
 	 * (U_BUFFER_OVERFLOW_ERROR means that *target buffer is not large enough).
 	 * (U_STRING_NOT_TERMINATED_WARNING usually means that the input string is empty).
-	 */
+	 */	
 	if( U_FAILURE(status) && status != U_BUFFER_OVERFLOW_ERROR && status != U_STRING_NOT_TERMINATED_WARNING ) {
 		efree( uret_buf );
 		efree( uinput );
@@ -135,7 +136,7 @@ PHP_FUNCTION( normalizer_normalize )
 		/* Bail out if an unexpected error occurred. */
 		if( U_FAILURE(status)  ) {
 			/* Set error messages. */
-			intl_error_set_custom_msg( NULL,"Error normalizing string", 0 );
+			intl_error_set_custom_msg( NULL,"Error normalizing string", 0 TSRMLS_CC );
 			efree( uret_buf );
 			efree( uinput );
 			RETURN_FALSE;
@@ -148,17 +149,17 @@ PHP_FUNCTION( normalizer_normalize )
 	uret_len = size_needed;
 
 	/* Convert normalized string from UTF-16 to UTF-8. */
-	u8str = intl_convert_utf16_to_utf8(uret_buf, uret_len, &status );
+	intl_convert_utf16_to_utf8( &ret_buf, &ret_len, uret_buf, uret_len, &status );
 	efree( uret_buf );
-	if( !u8str )
+	if( U_FAILURE( status ) )
 	{
 		intl_error_set( NULL, status,
-				"normalizer_normalize: error converting normalized text UTF-8", 0 );
+				"normalizer_normalize: error converting normalized text UTF-8", 0 TSRMLS_CC );
 		RETURN_FALSE;
 	}
 
 	/* Return it. */
-	RETVAL_NEW_STR( u8str );
+	RETVAL_STRINGL( ret_buf, ret_len, FALSE );
 }
 /* }}} */
 
@@ -171,23 +172,23 @@ PHP_FUNCTION( normalizer_is_normalized )
 {
 	char*	 	input = NULL;
 	/* form is optional, defaults to FORM_C */
-	zend_long		form = NORMALIZER_DEFAULT;
-	size_t		input_len = 0;
+	long		form = NORMALIZER_DEFAULT;
+	int		input_len = 0;
 
 	UChar*	 	uinput = NULL;
 	int		uinput_len = 0;
 	UErrorCode	status = U_ZERO_ERROR;
-
+		
 	UBool		uret = FALSE;
-
-	intl_error_reset( NULL );
+		
+	intl_error_reset( NULL TSRMLS_CC );
 
 	/* Parse parameters. */
-	if( zend_parse_method_parameters( ZEND_NUM_ARGS(), getThis(), "s|l",
+	if( zend_parse_method_parameters( ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "s|l",
 				&input, &input_len, &form) == FAILURE )
 	{
 		intl_error_set( NULL, U_ILLEGAL_ARGUMENT_ERROR,
-				"normalizer_is_normalized: unable to parse input params", 0 );
+				"normalizer_is_normalized: unable to parse input params", 0 TSRMLS_CC );
 
 		RETURN_FALSE;
 	}
@@ -202,7 +203,7 @@ PHP_FUNCTION( normalizer_is_normalized )
 			break;
 		default:
 			intl_error_set( NULL, U_ILLEGAL_ARGUMENT_ERROR,
-						"normalizer_normalize: illegal normalization form", 0 );
+						"normalizer_normalize: illegal normalization form", 0 TSRMLS_CC );
 			RETURN_FALSE;
 	}
 
@@ -217,10 +218,10 @@ PHP_FUNCTION( normalizer_is_normalized )
 	if( U_FAILURE( status ) )
 	{
 		/* Set global error code. */
-		intl_error_set_code( NULL, status );
+		intl_error_set_code( NULL, status TSRMLS_CC );
 
 		/* Set error messages. */
-		intl_error_set_custom_msg( NULL, "Error converting string to UTF-16.", 0 );
+		intl_error_set_custom_msg( NULL, "Error converting string to UTF-16.", 0 TSRMLS_CC );
 		if (uinput) {
 			efree( uinput );
 		}
@@ -230,19 +231,19 @@ PHP_FUNCTION( normalizer_is_normalized )
 
 	/* test string */
 	uret = unorm_isNormalizedWithOptions( uinput, uinput_len, form, (int32_t) 0 /* options */, &status);
-
+	
 	efree( uinput );
 
 	/* Bail out if an unexpected error occurred. */
 	if( U_FAILURE(status)  ) {
 		/* Set error messages. */
-		intl_error_set_custom_msg( NULL,"Error testing if string is the given normalization form.", 0 );
+		intl_error_set_custom_msg( NULL,"Error testing if string is the given normalization form.", 0 TSRMLS_CC );
 		RETURN_FALSE;
 	}
 
 	if ( uret )
 		RETURN_TRUE;
-
+				
 	RETURN_FALSE;
 }
 /* }}} */

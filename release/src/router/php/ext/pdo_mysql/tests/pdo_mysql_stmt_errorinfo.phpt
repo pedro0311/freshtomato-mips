@@ -68,7 +68,7 @@ MySQLPDOTest::dropTestTable();
 Testing emulated PS...
 array(3) {
   [0]=>
-  string(0) ""
+  %unicode|string%(0) ""
   [1]=>
   NULL
   [2]=>
@@ -78,26 +78,26 @@ array(3) {
 Warning: PDOStatement::execute(): SQLSTATE[42S02]: Base table or view not found: 1146 Table '%s.ihopeitdoesnotexist' doesn't exist in %s on line %d
 array(3) {
   [0]=>
-  string(5) "42S02"
+  %unicode|string%(5) "42S02"
   [1]=>
   int(1146)
   [2]=>
-  string(%d) "Table '%s.ihopeitdoesnotexist' doesn't exist"
+  %unicode|string%(%d) "Table '%s.ihopeitdoesnotexist' doesn't exist"
 }
 
 Warning: PDOStatement::execute(): SQLSTATE[42S02]: Base table or view not found: 1146 Table '%s.test' doesn't exist in %s on line %d
 bool(false)
 array(3) {
   [0]=>
-  string(5) "42S02"
+  %unicode|string%(5) "42S02"
   [1]=>
   int(1146)
   [2]=>
-  string(%d) "Table '%s.test' doesn't exist"
+  %unicode|string%(%d) "Table '%s.test' doesn't exist"
 }
 array(3) {
   [0]=>
-  string(5) "00000"
+  %unicode|string%(5) "00000"
   [1]=>
   NULL
   [2]=>
@@ -109,7 +109,7 @@ Warning: PDO::prepare(): SQLSTATE[42S02]: Base table or view not found: 1146 Tab
 bool(false)
 array(3) {
   [0]=>
-  string(0) ""
+  %unicode|string%(0) ""
   [1]=>
   NULL
   [2]=>
@@ -119,15 +119,15 @@ array(3) {
 Warning: PDOStatement::execute(): SQLSTATE[42S02]: Base table or view not found: 1146 Table '%s.test' doesn't exist in %s on line %d
 array(3) {
   [0]=>
-  string(5) "42S02"
+  %unicode|string%(5) "42S02"
   [1]=>
   int(1146)
   [2]=>
-  string(%d) "Table '%s.test' doesn't exist"
+  %unicode|string%(%d) "Table '%s.test' doesn't exist"
 }
 array(3) {
   [0]=>
-  string(5) "00000"
+  %unicode|string%(5) "00000"
   [1]=>
   NULL
   [2]=>

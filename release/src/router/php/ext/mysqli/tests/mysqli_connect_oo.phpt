@@ -1,9 +1,9 @@
 --TEST--
 new mysqli()
 --SKIPIF--
-<?php
+<?php 
 require_once('skipif.inc');
-require_once('skipifemb.inc');
+require_once('skipifemb.inc'); 
 require_once('skipifconnectfailure.inc');
 ?>
 --FILE--
@@ -147,7 +147,7 @@ require_once('skipifconnectfailure.inc');
 	print "done!";
 ?>
 --EXPECTF--
-Warning: mysqli::__construct(): (%s/%d): Access denied for user '%sunknown%s'@'%s' (using password: %s) in %s on line %d
+Warning: mysqli::mysqli(): (%s/%d): Access denied for user '%sunknown%s'@'%s' (using password: %s) in %s on line %d
 ... and now Exceptions
 Access denied for user '%s'@'%s' (using password: %s)
 done!

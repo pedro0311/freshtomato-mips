@@ -40,7 +40,7 @@ if test "$PHP_PDO_DBLIB" != "no"; then
     else
       AC_MSG_ERROR(Directory $PHP_PDO_DBLIB is not a FreeTDS installation directory)
     fi
-  fi
+  fi  
 
   if test "x$PHP_LIBDIR" = "x" ; then
     PHP_LIBDIR=lib
@@ -62,8 +62,8 @@ if test "$PHP_PDO_DBLIB" != "no"; then
       pdo_cv_inc_path=$abs_srcdir/ext
     elif test -f $abs_srcdir/ext/pdo/php_pdo_driver.h; then
       pdo_cv_inc_path=$abs_srcdir/ext
-    elif test -f $phpincludedir/ext/pdo/php_pdo_driver.h; then
-      pdo_cv_inc_path=$phpincludedir/ext
+    elif test -f $prefix/include/php/ext/pdo/php_pdo_driver.h; then
+      pdo_cv_inc_path=$prefix/include/php/ext
     else
       AC_MSG_ERROR([Cannot find php_pdo_driver.h.])
     fi

@@ -14,6 +14,8 @@ echo stripcslashes('\065\x64')."\n";
 echo stripcslashes('')."\n";
 ?>
 --EXPECT--
+
+
 kaboemkara!
 foo\b\a\r\b\az
 \f\o\o\[ \]
@@ -21,3 +23,4 @@ foo\b\a\r\b\az
 \abcd\e\f\g\h\i\j\k\l\m\n\o\pqrstuvwxy\z
 1
 5d
+

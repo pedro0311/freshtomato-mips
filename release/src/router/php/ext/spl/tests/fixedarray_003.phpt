@@ -3,8 +3,6 @@ SPL: FixedArray: Iterators
 --FILE--
 <?php
 class A extends SplFixedArray {
-	public $prop1 = "dummy";
-	public $prop2 = "dummy";
 
     public function current() {
         echo "A::current\n";

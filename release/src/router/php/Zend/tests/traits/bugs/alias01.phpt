@@ -7,7 +7,7 @@ trait T1 {
   function m2() { echo "T:m2\n"; }
 }
 
-class C1 {
+class C1 { 
   use T1 { m1 as a1; }
 }
 
@@ -23,7 +23,4 @@ T:m1
 T:m1
 T:m2
 
-Fatal error: Uncaught Error: Call to undefined method C1::a2() in %s:%d
-Stack trace:
-#0 {main}
-  thrown in %s on line %d
+Fatal error: Call to undefined method C1::a2() in %s on line %d

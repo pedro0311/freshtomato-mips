@@ -4,7 +4,7 @@ Test open_basedir configuration
 open_basedir=.
 --SKIPIF--
 <?php
-if(PHP_OS_FAMILY !== "Windows") {
+if (substr(PHP_OS, 0, 3) != 'WIN') {
     die('skip Windows only variation');
 }
 ?>
@@ -72,3 +72,4 @@ Warning: parse_ini_file(): open_basedir restriction in effect. File(%stest) is n
 Warning: parse_ini_file(%stest): failed to open stream: Operation not permitted in %sopen_basedir_parse_ini_file.php on line 12
 bool(false)
 *** Finished testing open_basedir configuration [parse_ini_file] ***
+

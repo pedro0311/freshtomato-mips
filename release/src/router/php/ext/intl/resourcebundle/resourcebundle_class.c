@@ -1,6 +1,6 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -25,7 +25,6 @@
 
 #include "php_intl.h"
 #include "intl_data.h"
-#include "intl_common.h"
 
 #include "resourcebundle/resourcebundle.h"
 #include "resourcebundle/resourcebundle_iterator.h"
@@ -36,12 +35,12 @@ zend_class_entry *ResourceBundle_ce_ptr = NULL;
 static zend_object_handlers ResourceBundle_object_handlers;
 
 /* {{{ ResourceBundle_object_dtor */
-static void ResourceBundle_object_destroy( zend_object *object )
+static void ResourceBundle_object_destroy( void *object, zend_object_handle handle TSRMLS_DC )
 {
-	ResourceBundle_object *rb = php_intl_resourcebundle_fetch_object(object);
+	ResourceBundle_object *rb = (ResourceBundle_object *) object;
 
 	// only free local errors
-	intl_error_reset( INTL_DATA_ERROR_P(rb) );
+	intl_error_reset( INTL_DATA_ERROR_P(rb) TSRMLS_CC );
 
 	if (rb->me) {
 		ures_close( rb->me );
@@ -49,63 +48,68 @@ static void ResourceBundle_object_destroy( zend_object *object )
 	if (rb->child) {
 		ures_close( rb->child );
 	}
+
+	zend_object_std_dtor( object TSRMLS_CC );
+	efree(object);
 }
 /* }}} */
 
 /* {{{ ResourceBundle_object_create */
-static zend_object *ResourceBundle_object_create( zend_class_entry *ce )
+static zend_object_value ResourceBundle_object_create( zend_class_entry *ce TSRMLS_DC )
 {
+	zend_object_value     retval;
 	ResourceBundle_object *rb;
 
-	rb = ecalloc( 1, sizeof(ResourceBundle_object) + zend_object_properties_size(ce));
+	rb = ecalloc( 1, sizeof(ResourceBundle_object) );
 
-	zend_object_std_init( &rb->zend, ce );
-	object_properties_init( &rb->zend, ce);
+	zend_object_std_init( (zend_object *) rb, ce TSRMLS_CC );
+	object_properties_init((zend_object *) rb, ce);
 
-	intl_error_init( INTL_DATA_ERROR_P(rb) );
+	intl_error_init( INTL_DATA_ERROR_P(rb) TSRMLS_CC );
 	rb->me = NULL;
 	rb->child = NULL;
 
-	rb->zend.handlers = &ResourceBundle_object_handlers;
+	retval.handlers = &ResourceBundle_object_handlers;
+	retval.handle = zend_objects_store_put(	rb, ResourceBundle_object_destroy, NULL, NULL TSRMLS_CC );
 
-	return &rb->zend;
+	return retval;
 }
 /* }}} */
 
 /* {{{ ResourceBundle_ctor */
-static int resourcebundle_ctor(INTERNAL_FUNCTION_PARAMETERS, zend_bool is_constructor)
+static void resourcebundle_ctor(INTERNAL_FUNCTION_PARAMETERS)
 {
-	const char *bundlename;
-	size_t		bundlename_len = 0;
-	const char *locale;
-	size_t		locale_len = 0;
+	const char	*bundlename;
+	int			bundlename_len = 0;
+	const char	*locale;
+	int			locale_len = 0;
 	zend_bool	fallback = 1;
-	int         zpp_flags = is_constructor ? ZEND_PARSE_PARAMS_THROW : 0;
 
 	zval                  *object = return_value;
-	ResourceBundle_object *rb = Z_INTL_RESOURCEBUNDLE_P( object );
+	ResourceBundle_object *rb = (ResourceBundle_object *) zend_object_store_get_object( object TSRMLS_CC);
 
-	intl_error_reset( NULL );
+	intl_error_reset( NULL TSRMLS_CC );
 
-	if( zend_parse_parameters_ex( zpp_flags, ZEND_NUM_ARGS(), "s!s!|b",
+	if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "s!s!|b",
 		&locale, &locale_len, &bundlename, &bundlename_len, &fallback ) == FAILURE )
 	{
 		intl_error_set( NULL, U_ILLEGAL_ARGUMENT_ERROR,
-			"resourcebundle_ctor: unable to parse input parameters", 0 );
-		return FAILURE;
+			"resourcebundle_ctor: unable to parse input parameters", 0 TSRMLS_CC );
+		zval_dtor( return_value );
+		RETURN_NULL();
 	}
 
-	INTL_CHECK_LOCALE_LEN_OR_FAILURE(locale_len);
+	INTL_CHECK_LOCALE_LEN_OBJ(locale_len, return_value);
 
 	if (locale == NULL) {
-		locale = intl_locale_get_default();
+		locale = intl_locale_get_default(TSRMLS_C);
 	}
 
 	if (bundlename_len >= MAXPATHLEN) {
-		intl_error_set( NULL, U_ILLEGAL_ARGUMENT_ERROR,	"Bundle name too long", 0 );
+		intl_error_set( NULL, U_ILLEGAL_ARGUMENT_ERROR,	"Bundle name too long", 0 TSRMLS_CC );
 		zval_dtor(return_value);
 		ZVAL_NULL(return_value);
-		return FAILURE;
+		RETURN_NULL();
 	}
 
 	if (fallback) {
@@ -119,18 +123,17 @@ static int resourcebundle_ctor(INTERNAL_FUNCTION_PARAMETERS, zend_bool is_constr
 	if (!fallback && (INTL_DATA_ERROR_CODE(rb) == U_USING_FALLBACK_WARNING ||
 			INTL_DATA_ERROR_CODE(rb) == U_USING_DEFAULT_WARNING)) {
 		char *pbuf;
-		intl_errors_set_code(NULL, INTL_DATA_ERROR_CODE(rb));
+		intl_errors_set_code(NULL, INTL_DATA_ERROR_CODE(rb) TSRMLS_CC);
 		spprintf(&pbuf, 0, "resourcebundle_ctor: Cannot load libICU resource "
 				"'%s' without fallback from %s to %s",
 				bundlename ? bundlename : "(default data)", locale,
 				ures_getLocaleByType(
 					rb->me, ULOC_ACTUAL_LOCALE, &INTL_DATA_ERROR_CODE(rb)));
-		intl_errors_set_custom_msg(INTL_DATA_ERROR_P(rb), pbuf, 1);
+		intl_errors_set_custom_msg(INTL_DATA_ERROR_P(rb), pbuf, 1 TSRMLS_CC);
 		efree(pbuf);
-		return FAILURE;
+		zval_dtor(return_value);
+		RETURN_NULL();
 	}
-
-	return SUCCESS;
 }
 /* }}} */
 
@@ -147,16 +150,8 @@ ZEND_END_ARG_INFO()
  */
 PHP_METHOD( ResourceBundle, __construct )
 {
-	zend_error_handling error_handling;
-
-	zend_replace_error_handling(EH_THROW, IntlException_ce_ptr, &error_handling);
 	return_value = getThis();
-	if (resourcebundle_ctor(INTERNAL_FUNCTION_PARAM_PASSTHRU, 1) == FAILURE) {
-		if (!EG(exception)) {
-			zend_throw_exception(IntlException_ce_ptr, "Constructor failed", 0);
-		}
-	}
-	zend_restore_error_handling(&error_handling);
+	resourcebundle_ctor(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 /* }}} */
 
@@ -166,15 +161,12 @@ proto ResourceBundle resourcebundle_create( string $locale [, string $bundlename
 PHP_FUNCTION( resourcebundle_create )
 {
 	object_init_ex( return_value, ResourceBundle_ce_ptr );
-	if (resourcebundle_ctor(INTERNAL_FUNCTION_PARAM_PASSTHRU, 0) == FAILURE) {
-		zval_ptr_dtor(return_value);
-		RETURN_NULL();
-	}
+	resourcebundle_ctor(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 /* }}} */
 
 /* {{{ resourcebundle_array_fetch */
-static void resourcebundle_array_fetch(zval *object, zval *offset, zval *return_value, int fallback)
+static void resourcebundle_array_fetch(zval *object, zval *offset, zval *return_value, int fallback TSRMLS_DC)
 {
 	int32_t     meindex = 0;
 	char *      mekey = NULL;
@@ -182,30 +174,30 @@ static void resourcebundle_array_fetch(zval *object, zval *offset, zval *return_
 	char         *pbuf;
 	ResourceBundle_object *rb;
 
-	intl_error_reset( NULL );
+	intl_error_reset( NULL TSRMLS_CC );
 	RESOURCEBUNDLE_METHOD_FETCH_OBJECT;
 
 	if(Z_TYPE_P(offset) == IS_LONG) {
 		is_numeric = 1;
-		meindex = (int32_t)Z_LVAL_P(offset);
+		meindex = Z_LVAL_P(offset);
 		rb->child = ures_getByIndex( rb->me, meindex, rb->child, &INTL_DATA_ERROR_CODE(rb) );
 	} else if(Z_TYPE_P(offset) == IS_STRING) {
 		mekey = Z_STRVAL_P(offset);
 		rb->child = ures_getByKey(rb->me, mekey, rb->child, &INTL_DATA_ERROR_CODE(rb) );
 	} else {
 		intl_errors_set(INTL_DATA_ERROR_P(rb), U_ILLEGAL_ARGUMENT_ERROR,
-			"resourcebundle_get: index should be integer or string", 0);
+			"resourcebundle_get: index should be integer or string", 0 TSRMLS_CC);
 		RETURN_NULL();
 	}
 
-	intl_error_set_code( NULL, INTL_DATA_ERROR_CODE(rb) );
+	intl_error_set_code( NULL, INTL_DATA_ERROR_CODE(rb) TSRMLS_CC );
 	if (U_FAILURE(INTL_DATA_ERROR_CODE(rb))) {
 		if (is_numeric) {
 			spprintf( &pbuf, 0, "Cannot load resource element %d", meindex );
 		} else {
 			spprintf( &pbuf, 0, "Cannot load resource element '%s'", mekey );
 		}
-		intl_errors_set_custom_msg( INTL_DATA_ERROR_P(rb), pbuf, 1 );
+		intl_errors_set_custom_msg( INTL_DATA_ERROR_P(rb), pbuf, 1 TSRMLS_CC );
 		efree(pbuf);
 		RETURN_NULL();
 	}
@@ -218,24 +210,28 @@ static void resourcebundle_array_fetch(zval *object, zval *offset, zval *return_
 		} else {
 			spprintf( &pbuf, 0, "Cannot load element '%s' without fallback from to %s", mekey, locale );
 		}
-		intl_errors_set_custom_msg( INTL_DATA_ERROR_P(rb), pbuf, 1 );
+		intl_errors_set_custom_msg( INTL_DATA_ERROR_P(rb), pbuf, 1 TSRMLS_CC );
 		efree(pbuf);
 		RETURN_NULL();
 	}
 
-	resourcebundle_extract_value( return_value, rb );
+	resourcebundle_extract_value( return_value, rb TSRMLS_CC );
 }
 /* }}} */
 
 /* {{{ resourcebundle_array_get */
-zval *resourcebundle_array_get(zval *object, zval *offset, int type, zval *rv)
+zval *resourcebundle_array_get(zval *object, zval *offset, int type TSRMLS_DC)
 {
+	zval *retval;
+
 	if(offset == NULL) {
 		php_error( E_ERROR, "Cannot apply [] to ResourceBundle object" );
 	}
-	ZVAL_NULL(rv);
-	resourcebundle_array_fetch(object, offset, rv, 1);
-	return rv;
+	MAKE_STD_ZVAL(retval);
+
+	resourcebundle_array_fetch(object, offset, retval, 1 TSRMLS_CC);
+	Z_DELREF_P(retval);
+	return retval;
 }
 /* }}} */
 
@@ -256,25 +252,25 @@ PHP_FUNCTION( resourcebundle_get )
 	zval *		offset;
 	zval *      object;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Oz|b",	&object, ResourceBundle_ce_ptr, &offset, &fallback ) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Oz|b",	&object, ResourceBundle_ce_ptr, &offset, &fallback ) == FAILURE) {
 		intl_error_set(NULL, U_ILLEGAL_ARGUMENT_ERROR,
-			"resourcebundle_get: unable to parse input params", 0);
+			"resourcebundle_get: unable to parse input params", 0 TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
-	resourcebundle_array_fetch(object, offset, return_value, fallback);
+	resourcebundle_array_fetch(object, offset, return_value, fallback TSRMLS_CC);
 }
 /* }}} */
 
 /* {{{ resourcebundle_array_count */
-int resourcebundle_array_count(zval *object, zend_long *count)
+int resourcebundle_array_count(zval *object, long *count TSRMLS_DC)
 {
 	ResourceBundle_object *rb;
 	RESOURCEBUNDLE_METHOD_FETCH_OBJECT_NO_CHECK;
 
 	if (rb->me == NULL) {
 		intl_errors_set(&rb->error, U_ILLEGAL_ARGUMENT_ERROR,
-				"Found unconstructed ResourceBundle", 0);
+				"Found unconstructed ResourceBundle", 0 TSRMLS_CC);
 		return 0;
 	}
 
@@ -298,9 +294,9 @@ PHP_FUNCTION( resourcebundle_count )
 	int32_t                len;
 	RESOURCEBUNDLE_METHOD_INIT_VARS;
 
-	if( zend_parse_method_parameters( ZEND_NUM_ARGS(), getThis(), "O", &object, ResourceBundle_ce_ptr ) == FAILURE ) {
+	if( zend_parse_method_parameters( ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "O", &object, ResourceBundle_ce_ptr ) == FAILURE ) {
 		intl_error_set(NULL, U_ILLEGAL_ARGUMENT_ERROR,
-			"resourcebundle_count: unable to parse input params", 0);
+			"resourcebundle_count: unable to parse input params", 0 TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
@@ -323,23 +319,23 @@ ZEND_END_ARG_INFO()
 PHP_FUNCTION( resourcebundle_locales )
 {
 	char * bundlename;
-	size_t    bundlename_len = 0;
+	int    bundlename_len = 0;
 	const char * entry;
 	int entry_len;
 	UEnumeration *icuenum;
 	UErrorCode   icuerror = U_ZERO_ERROR;
 
-	intl_errors_reset( NULL );
+	intl_errors_reset( NULL TSRMLS_CC );
 
-	if( zend_parse_parameters(ZEND_NUM_ARGS(), "s", &bundlename, &bundlename_len ) == FAILURE )
+	if( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &bundlename, &bundlename_len ) == FAILURE )
 	{
 		intl_error_set(NULL, U_ILLEGAL_ARGUMENT_ERROR,
-			"resourcebundle_locales: unable to parse input params", 0);
+			"resourcebundle_locales: unable to parse input params", 0 TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
 	if (bundlename_len >= MAXPATHLEN) {
-		intl_error_set( NULL, U_ILLEGAL_ARGUMENT_ERROR,	"resourcebundle_locales: bundle name too long", 0 );
+		intl_error_set( NULL, U_ILLEGAL_ARGUMENT_ERROR,	"resourcebundle_locales: bundle name too long", 0 TSRMLS_CC );
 		RETURN_FALSE;
 	}
 
@@ -356,7 +352,7 @@ PHP_FUNCTION( resourcebundle_locales )
 
 	array_init( return_value );
 	while ((entry = uenum_next( icuenum, &entry_len, &icuerror ))) {
-		add_next_index_stringl( return_value, (char *) entry, entry_len);
+		add_next_index_stringl( return_value, (char *) entry, entry_len, 1 );
 	}
 	uenum_close( icuenum );
 }
@@ -375,15 +371,15 @@ PHP_FUNCTION( resourcebundle_get_error_code )
 {
 	RESOURCEBUNDLE_METHOD_INIT_VARS;
 
-	if( zend_parse_method_parameters( ZEND_NUM_ARGS(), getThis(), "O",
+	if( zend_parse_method_parameters( ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "O",
 		&object, ResourceBundle_ce_ptr ) == FAILURE )
 	{
 		intl_error_set( NULL, U_ILLEGAL_ARGUMENT_ERROR,
-			"resourcebundle_get_error_code: unable to parse input params", 0 );
+			"resourcebundle_get_error_code: unable to parse input params", 0 TSRMLS_CC );
 		RETURN_FALSE;
 	}
 
-	rb = Z_INTL_RESOURCEBUNDLE_P( object );
+	rb = (ResourceBundle_object *) zend_object_store_get_object( object TSRMLS_CC );
 
 	RETURN_LONG(INTL_DATA_ERROR_CODE(rb));
 }
@@ -400,20 +396,20 @@ ZEND_END_ARG_INFO()
  */
 PHP_FUNCTION( resourcebundle_get_error_message )
 {
-	zend_string* message = NULL;
+	char* message = NULL;
 	RESOURCEBUNDLE_METHOD_INIT_VARS;
 
-	if( zend_parse_method_parameters( ZEND_NUM_ARGS(), getThis(), "O",
+	if( zend_parse_method_parameters( ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "O",
 		&object, ResourceBundle_ce_ptr ) == FAILURE )
 	{
 		intl_error_set( NULL, U_ILLEGAL_ARGUMENT_ERROR,
-			"resourcebundle_get_error_message: unable to parse input params", 0 );
+			"resourcebundle_get_error_message: unable to parse input params", 0 TSRMLS_CC );
 		RETURN_FALSE;
 	}
 
-	rb = Z_INTL_RESOURCEBUNDLE_P( object );
-	message = intl_error_get_message(INTL_DATA_ERROR_P(rb));
-	RETURN_STR(message);
+	rb = (ResourceBundle_object *) zend_object_store_get_object( object TSRMLS_CC );
+	message = (char *)intl_error_get_message(INTL_DATA_ERROR_P(rb) TSRMLS_CC);
+	RETURN_STRING(message, 0);
 }
 /* }}} */
 
@@ -435,7 +431,7 @@ static zend_function_entry ResourceBundle_class_functions[] = {
 /* {{{ resourcebundle_register_class
  * Initialize 'ResourceBundle' class
  */
-void resourcebundle_register_class( void )
+void resourcebundle_register_class( TSRMLS_D )
 {
 	zend_class_entry ce;
 
@@ -444,7 +440,7 @@ void resourcebundle_register_class( void )
 	ce.create_object = ResourceBundle_object_create;
 	ce.get_iterator = resourcebundle_get_iterator;
 
-	ResourceBundle_ce_ptr = zend_register_internal_class( &ce );
+	ResourceBundle_ce_ptr = zend_register_internal_class( &ce TSRMLS_CC );
 
 	if( !ResourceBundle_ce_ptr )
 	{
@@ -453,13 +449,11 @@ void resourcebundle_register_class( void )
 	}
 
 	ResourceBundle_object_handlers = std_object_handlers;
-	ResourceBundle_object_handlers.offset = XtOffsetOf(ResourceBundle_object, zend);
 	ResourceBundle_object_handlers.clone_obj	  = NULL; /* ICU ResourceBundle has no clone implementation */
-	ResourceBundle_object_handlers.dtor_obj = ResourceBundle_object_destroy;
 	ResourceBundle_object_handlers.read_dimension = resourcebundle_array_get;
 	ResourceBundle_object_handlers.count_elements = resourcebundle_array_count;
 
-	zend_class_implements(ResourceBundle_ce_ptr, 1, zend_ce_traversable);
+	zend_class_implements(ResourceBundle_ce_ptr TSRMLS_CC, 1, zend_ce_traversable);
 }
 /* }}} */
 

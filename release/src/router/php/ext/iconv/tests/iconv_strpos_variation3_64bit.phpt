@@ -9,7 +9,7 @@ if (PHP_INT_SIZE != 8) die("skip this test is for 64bit platform only");
 --FILE--
 <?php
 /* Prototype  : int iconv_strpos(string haystack, string needle [, int offset [, string charset]])
- * Description: Find position of first occurrence of a string within another
+ * Description: Find position of first occurrence of a string within another 
  * Source code: ext/iconv/iconv.c
  */
 
@@ -20,8 +20,8 @@ if (PHP_INT_SIZE != 8) die("skip this test is for 64bit platform only");
 echo "*** Testing iconv_strpos() : usage variations ***\n";
 
 // Initialise function arguments not being substituted
-$needle = 'a';
-$haystack = 'string_val';
+$needle = b'a';
+$haystack = b'string_val';
 $encoding = 'utf-8';
 
 //get an unset variable
@@ -48,58 +48,56 @@ $fp = fopen(__FILE__, "r");
 $inputs = array(
 
        // int data
-       0,
+/*1*/  0,
        1,
        12345,
-	   -5,
        -2345,
 
        // float data
-       10.5,
-       -9.5,
-       -100.3,
+/*5*/  10.5,
+       -10.5,
        12.3456789000e10,
        12.3456789000E-10,
        .5,
 
        // null data
-       NULL,
+/*10*/ NULL,
        null,
 
        // boolean data
-       true,
+/*12*/ true,
        false,
        TRUE,
        FALSE,
-
+       
        // empty data
-       "",
+/*16*/ "",
        '',
 
        // string data
-       "string",
+/*18*/ "string",
        'string',
        $heredoc,
-
+       
        // object data
-       new classA(),
+/*21*/ new classA(),
 
        // undefined data
-       @$undefined_var,
+/*22*/ @$undefined_var,
 
        // unset data
-       @$unset_var,
+/*23*/ @$unset_var,
 
        // resource variable
-       $fp
+/*24*/ $fp
 );
 
 // loop through each element of $inputs to check the behavior of iconv_strpos()
-
+$iterator = 1;
 foreach($inputs as $input) {
-  echo "--\n";
-  var_dump($input);
+  echo "\n-- Iteration $iterator --\n";
   var_dump( iconv_strpos($haystack, $needle, $input, $encoding));
+  $iterator++;
 };
 
 fclose($fp);
@@ -108,101 +106,94 @@ echo "Done";
 ?>
 --EXPECTF--
 *** Testing iconv_strpos() : usage variations ***
---
-int(0)
+
+-- Iteration 1 --
 int(8)
---
-int(1)
+
+-- Iteration 2 --
 int(8)
---
-int(12345)
+
+-- Iteration 3 --
 bool(false)
---
-int(-5)
-int(8)
---
-int(-2345)
+
+-- Iteration 4 --
 
 Warning: iconv_strpos(): Offset not contained in string. in %s on line %d
 bool(false)
---
-float(10.5)
+
+-- Iteration 5 --
 bool(false)
---
-float(-9.5)
-int(8)
---
-float(-100.3)
+
+-- Iteration 6 --
 
 Warning: iconv_strpos(): Offset not contained in string. in %s on line %d
 bool(false)
---
-float(123456789000)
-bool(false)
---
-float(1.23456789E-9)
-int(8)
---
-float(0.5)
-int(8)
---
-NULL
-int(8)
---
-NULL
-int(8)
---
-bool(true)
-int(8)
---
-bool(false)
-int(8)
---
-bool(true)
-int(8)
---
-bool(false)
-int(8)
---
-string(0) ""
 
-Warning: iconv_strpos() expects parameter 3 to be integer, string given in %s on line %d
-bool(false)
---
-string(0) ""
-
-Warning: iconv_strpos() expects parameter 3 to be integer, string given in %s on line %d
-bool(false)
---
-string(6) "string"
-
-Warning: iconv_strpos() expects parameter 3 to be integer, string given in %s on line %d
-bool(false)
---
-string(6) "string"
-
-Warning: iconv_strpos() expects parameter 3 to be integer, string given in %s on line %d
-bool(false)
---
-string(11) "hello world"
-
-Warning: iconv_strpos() expects parameter 3 to be integer, string given in %s on line %d
-bool(false)
---
-object(classA)#%d (%d) {
-}
-
-Warning: iconv_strpos() expects parameter 3 to be integer, object given in %s on line %d
-bool(false)
---
-NULL
+-- Iteration 7 --
 int(8)
---
-NULL
-int(8)
---
-resource(%d) of type (stream)
 
-Warning: iconv_strpos() expects parameter 3 to be integer, resource given in %s on line %d
+-- Iteration 8 --
+int(8)
+
+-- Iteration 9 --
+int(8)
+
+-- Iteration 10 --
+int(8)
+
+-- Iteration 11 --
+int(8)
+
+-- Iteration 12 --
+int(8)
+
+-- Iteration 13 --
+int(8)
+
+-- Iteration 14 --
+int(8)
+
+-- Iteration 15 --
+int(8)
+
+-- Iteration 16 --
+
+Warning: iconv_strpos() expects parameter 3 to be long, string given in %s on line %d
+bool(false)
+
+-- Iteration 17 --
+
+Warning: iconv_strpos() expects parameter 3 to be long, string given in %s on line %d
+bool(false)
+
+-- Iteration 18 --
+
+Warning: iconv_strpos() expects parameter 3 to be long, string given in %s on line %d
+bool(false)
+
+-- Iteration 19 --
+
+Warning: iconv_strpos() expects parameter 3 to be long, string given in %s on line %d
+bool(false)
+
+-- Iteration 20 --
+
+Warning: iconv_strpos() expects parameter 3 to be long, string given in %s on line %d
+bool(false)
+
+-- Iteration 21 --
+
+Warning: iconv_strpos() expects parameter 3 to be long, object given in %s on line %d
+bool(false)
+
+-- Iteration 22 --
+int(8)
+
+-- Iteration 23 --
+int(8)
+
+-- Iteration 24 --
+
+Warning: iconv_strpos() expects parameter 3 to be long, resource given in %s on line %d
 bool(false)
 Done

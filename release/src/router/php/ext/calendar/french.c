@@ -93,12 +93,12 @@
 #define LAST_VALID         2380952
 
 void SdnToFrench(
-					zend_long sdn,
+					long int sdn,
 					int *pYear,
 					int *pMonth,
 					int *pDay)
 {
-	zend_long temp;
+	long int temp;
 	int dayOfYear;
 
 	if (sdn < FIRST_VALID || sdn > LAST_VALID) {
@@ -114,7 +114,7 @@ void SdnToFrench(
 	*pDay = dayOfYear % DAYS_PER_MONTH + 1;
 }
 
-zend_long FrenchToSdn(
+long int FrenchToSdn(
 						int year,
 						int month,
 						int day)

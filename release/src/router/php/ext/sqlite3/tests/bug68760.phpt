@@ -7,7 +7,7 @@ if (!extension_loaded('sqlite3')) die('skip');
 --FILE--
 <?php
 function oopsFunction($a, $b) {
-	echo "callback".PHP_EOL;
+	echo "callback";
 	throw new \Exception("oops");
 }
 
@@ -31,4 +31,6 @@ catch(\Exception $e) {
 ?>
 --EXPECTF--
 callback
+Warning: SQLite3::query(): An error occurred while invoking the compare callback in %a%ebug68760.php on line %i
 Exception: oops
+

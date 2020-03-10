@@ -3,10 +3,13 @@ ReflectionFunction::isDeprecated
 --CREDITS--
 Stefan Koopmanschap <stefan@phpgg.nl>
 TestFest PHP|Tek
---FILE--
+--SKIPIF--
 <?php
-// We currently don't have any deprecated functions :/
-$rc = new ReflectionFunction('var_dump');
+if (!extension_loaded('reflection') || !defined('PHP_VERSION_ID') || PHP_VERSION_ID < 50300) print 'skip';
+?>
+--FILE-- 
+<?php
+$rc = new ReflectionFunction('ereg');
 var_dump($rc->isDeprecated());
 --EXPECTF--
-bool(false)
+bool(true)

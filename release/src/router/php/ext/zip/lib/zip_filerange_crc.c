@@ -31,45 +31,40 @@
   IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+
 
 #include <stdio.h>
+#include <errno.h>
 
 #include "zipint.h"
 
 
+
 
 int
-_zip_filerange_crc(zip_source_t *src, zip_uint64_t start, zip_uint64_t len, uLong *crcp, zip_error_t *error)
+_zip_filerange_crc(FILE *fp, off_t start, off_t len, uLong *crcp,
+		   struct zip_error *errp)
 {
     Bytef buf[BUFSIZE];
-    zip_int64_t n;
+    size_t n;
 
     *crcp = crc32(0L, Z_NULL, 0);
 
-    if (start > ZIP_INT64_MAX) {
-	zip_error_set(error, ZIP_ER_SEEK, EFBIG);
-	return -1;
-    }
-
-    if (zip_source_seek(src, (zip_int64_t)start, SEEK_SET) != 0) {
-	_zip_error_set_from_source(error, src);
+    if (fseeko(fp, start, SEEK_SET) != 0) {
+	_zip_error_set(errp, ZIP_ER_SEEK, errno);
 	return -1;
     }
     
     while (len > 0) {
-	n = (zip_int64_t)(len > BUFSIZE ? BUFSIZE : len);
-	if ((n = zip_source_read(src, buf, (zip_uint64_t)n)) < 0) {
-	    _zip_error_set_from_source(error, src);
-	    return -1;
-	}
-	if (n == 0) {
-	    zip_error_set(error, ZIP_ER_EOF, 0);
+	n = len > BUFSIZE ? BUFSIZE : (size_t)len;
+	if ((n=fread(buf, 1, n, fp)) == 0) {
+	    _zip_error_set(errp, ZIP_ER_READ, errno);
 	    return -1;
 	}
 
 	*crcp = crc32(*crcp, buf, (uInt)n);
 
-	len -= (zip_uint64_t)n;
+	len-= n;
     }
 
     return 0;

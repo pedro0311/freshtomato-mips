@@ -3,7 +3,7 @@ Test closedir() function : usage variations - close directory handle twice
 --FILE--
 <?php
 /* Prototype  : void closedir([resource $dir_handle])
- * Description: Close directory connection identified by the dir_handle
+ * Description: Close directory connection identified by the dir_handle 
  * Source code: ext/standard/dir.c
  * Alias to functions: close
  */
@@ -45,7 +45,7 @@ Directory Handle: resource(%d) of type (Unknown)
 
 -- Close directory handle second time: --
 
-Warning: closedir(): supplied resource is not a valid Directory resource in %s on line %d
+Warning: closedir(): %d is not a valid Directory resource in %s on line %d
 bool(false)
 Directory Handle: resource(%d) of type (Unknown)
 ===DONE===

@@ -24,20 +24,16 @@ NULL
 Warning: password_hash(): Invalid bcrypt cost parameter specified: 32 in %s on line %d
 NULL
 
-Deprecated: password_hash(): Use of the 'salt' option to password_hash is deprecated in %s on line %d
-
 Warning: password_hash(): Provided salt is too short: 3 expecting 22 in %s on line %d
 NULL
 
-Deprecated: password_hash(): Use of the 'salt' option to password_hash is deprecated in %s on line %d
-
 Warning: password_hash(): Provided salt is too short: 21 expecting 22 in %s on line %d
 NULL
-
-Deprecated: password_hash(): Use of the 'salt' option to password_hash is deprecated in %s on line %d
 
 Warning: password_hash(): Provided salt is too short: 3 expecting 22 in %s on line %d
 NULL
 
 Warning: password_hash(): Invalid bcrypt cost parameter specified: 0 in %s on line %d
 NULL
+
+

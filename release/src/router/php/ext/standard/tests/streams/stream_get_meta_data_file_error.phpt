@@ -1,9 +1,9 @@
 --TEST--
-Test stream_get_meta_data() function : error conditions
+Test stream_get_meta_data() function : error conditions 
 --FILE--
 <?php
 /* Prototype  : proto array stream_get_meta_data(resource fp)
- * Description: Retrieves header/meta data from streams/file pointers
+ * Description: Retrieves header/meta data from streams/file pointers 
  * Source code: ext/standard/streamsfuncs.c
  * Alias to functions: socket_get_status
  */
@@ -52,6 +52,6 @@ NULL
 
 -- Testing stream_get_meta_data() function with closed stream resource --
 
-Warning: stream_get_meta_data(): supplied resource is not a valid stream resource in %s on line %i
+Warning: stream_get_meta_data(): %i is not a valid stream resource in %s on line %i
 bool(false)
 Done

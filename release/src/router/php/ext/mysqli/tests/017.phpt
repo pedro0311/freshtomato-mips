@@ -36,8 +36,8 @@ array(3) {
   [0]=>
   string(32) "37b51d194a7513e45b56f6524f2d51f2"
   [1]=>
-  string(%d) "%s"
+  %unicode|string%(%d) "%s"
   [2]=>
-  string(3) "foo"
+  %unicode|string%(3) "foo"
 }
 done!

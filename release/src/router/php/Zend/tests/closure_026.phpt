@@ -6,13 +6,13 @@ Closure 026: Assigning a closure object to an array in $this
 class foo {
 	public function __construct() {
 		$a =& $this;
-
+		
 		$a->a[] = function() {
-			return 1;
+			return 1;	
 		};
-
+		
 		var_dump($this);
-
+		
 		var_dump($this->a[0]());
 	}
 }
@@ -47,10 +47,7 @@ array(1) {
     ["this"]=>
     object(foo)#%d (1) {
       ["a"]=>
-      array(1) {
-        [0]=>
-        *RECURSION*
-      }
+      *RECURSION*
     }
   }
 }

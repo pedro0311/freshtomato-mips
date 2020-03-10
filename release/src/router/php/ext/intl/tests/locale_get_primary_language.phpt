@@ -83,9 +83,9 @@ include_once( 'ut_common.inc' );
 ut_run();
 
 ?>
---EXPECTF--
+--EXPECT--
 uk-ua_CALIFORNIA@currency=;currency=GRN:  primary_language='uk'
-root:  primary_language='%S'
+root:  primary_language='root'
 uk@currency=EURO:  primary_language='uk'
 Hindi:  primary_language='hindi'
 de:  primary_language='de'

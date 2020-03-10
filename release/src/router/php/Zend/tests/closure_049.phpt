@@ -1,5 +1,6 @@
 --TEST--
 Closure 049: static::class in static closure in non-static method.
+
 --FILE--
 <?php
 

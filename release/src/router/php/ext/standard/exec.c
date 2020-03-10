@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2018 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -55,23 +55,29 @@
 #endif
 
 #ifdef PHP_WIN32
-# include "win32/nice.h"
+# include "win32/php_stdint.h"
+#else
+# if HAVE_INTTYPES_H
+#  include <inttypes.h>
+# elif HAVE_STDINT_H
+#  include <stdint.h>
+# endif
 #endif
 
-static size_t cmd_max_len;
+static int cmd_max_len;
 
 /* {{{ PHP_MINIT_FUNCTION(exec) */
 PHP_MINIT_FUNCTION(exec)
 {
 #ifdef _SC_ARG_MAX
 	cmd_max_len = sysconf(_SC_ARG_MAX);
-	if ((size_t)-1 == cmd_max_len) {
+	if (-1 == cmd_max_len) {
 #ifdef _POSIX_ARG_MAX
-		cmd_max_len = _POSIX_ARG_MAX;
+               cmd_max_len = _POSIX_ARG_MAX;
 #else
-		cmd_max_len = 4096;
+               cmd_max_len = 4096;
 #endif
-	}
+       }
 #elif defined(ARG_MAX)
 	cmd_max_len = ARG_MAX;
 #elif defined(PHP_WIN32)
@@ -94,12 +100,11 @@ PHP_MINIT_FUNCTION(exec)
  * If type==3, output will be printed binary, no lines will be saved or returned (passthru)
  *
  */
-PHPAPI int php_exec(int type, char *cmd, zval *array, zval *return_value)
+PHPAPI int php_exec(int type, char *cmd, zval *array, zval *return_value TSRMLS_DC)
 {
 	FILE *fp;
 	char *buf;
-	size_t l = 0;
-	int pclose_return;
+	int l = 0, pclose_return;
 	char *b, *d=NULL;
 	php_stream *stream;
 	size_t buflen, bufl = 0;
@@ -117,7 +122,7 @@ PHPAPI int php_exec(int type, char *cmd, zval *array, zval *return_value)
 	fp = VCWD_POPEN(cmd, "r");
 #endif
 	if (!fp) {
-		php_error_docref(NULL, E_WARNING, "Unable to fork [%s]", cmd);
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unable to fork [%s]", cmd);
 		goto err;
 	}
 
@@ -147,18 +152,18 @@ PHPAPI int php_exec(int type, char *cmd, zval *array, zval *return_value)
 
 			if (type == 1) {
 				PHPWRITE(buf, bufl);
-				if (php_output_get_level() < 1) {
-					sapi_flush();
+				if (php_output_get_level(TSRMLS_C) < 1) {
+					sapi_flush(TSRMLS_C);
 				}
 			} else if (type == 2) {
 				/* strip trailing whitespaces */
 				l = bufl;
-				while (l-- > 0 && isspace(((unsigned char *)buf)[l]));
-				if (l != (bufl - 1)) {
+				while (l-- && isspace(((unsigned char *)buf)[l]));
+				if (l != (int)(bufl - 1)) {
 					bufl = l + 1;
 					buf[bufl] = '\0';
 				}
-				add_next_index_stringl(array, buf, bufl);
+				add_next_index_stringl(array, buf, bufl, 1);
 			}
 			b = buf;
 		}
@@ -166,18 +171,18 @@ PHPAPI int php_exec(int type, char *cmd, zval *array, zval *return_value)
 			/* strip trailing whitespaces if we have not done so already */
 			if ((type == 2 && buf != b) || type != 2) {
 				l = bufl;
-				while (l-- > 0 && isspace(((unsigned char *)buf)[l]));
-				if (l != (bufl - 1)) {
+				while (l-- && isspace(((unsigned char *)buf)[l]));
+				if (l != (int)(bufl - 1)) {
 					bufl = l + 1;
 					buf[bufl] = '\0';
 				}
 				if (type == 2) {
-					add_next_index_stringl(array, buf, bufl);
+					add_next_index_stringl(array, buf, bufl, 1);
 				}
 			}
 
 			/* Return last line from the shell command */
-			RETVAL_STRINGL(buf, bufl);
+			RETVAL_STRINGL(buf, bufl, 1);
 		} else { /* should return NULL, but for BC we return "" */
 			RETVAL_EMPTY_STRING();
 		}
@@ -209,42 +214,39 @@ err:
 static void php_exec_ex(INTERNAL_FUNCTION_PARAMETERS, int mode) /* {{{ */
 {
 	char *cmd;
-	size_t cmd_len;
+	int cmd_len;
 	zval *ret_code=NULL, *ret_array=NULL;
 	int ret;
 
-	ZEND_PARSE_PARAMETERS_START(1, (mode ? 2 : 3))
-		Z_PARAM_STRING(cmd, cmd_len)
-		Z_PARAM_OPTIONAL
-		if (!mode) {
-			Z_PARAM_ZVAL_DEREF(ret_array)
+	if (mode) {
+		if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|z/", &cmd, &cmd_len, &ret_code) == FAILURE) {
+			RETURN_FALSE;
 		}
-		Z_PARAM_ZVAL_DEREF(ret_code)
-	ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
-
+	} else {
+		if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|z/z/", &cmd, &cmd_len, &ret_array, &ret_code) == FAILURE) {
+			RETURN_FALSE;
+		}
+	}
 	if (!cmd_len) {
-		php_error_docref(NULL, E_WARNING, "Cannot execute a blank command");
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Cannot execute a blank command");
 		RETURN_FALSE;
 	}
 	if (strlen(cmd) != cmd_len) {
-		php_error_docref(NULL, E_WARNING, "NULL byte detected. Possible attack");
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "NULL byte detected. Possible attack");
 		RETURN_FALSE;
 	}
 
 	if (!ret_array) {
-		ret = php_exec(mode, cmd, NULL, return_value);
+		ret = php_exec(mode, cmd, NULL, return_value TSRMLS_CC);
 	} else {
 		if (Z_TYPE_P(ret_array) != IS_ARRAY) {
-			zval_ptr_dtor(ret_array);
+			zval_dtor(ret_array);
 			array_init(ret_array);
-		} else if (Z_REFCOUNT_P(ret_array) > 1) {
-			zval_ptr_dtor(ret_array);
-			ZVAL_ARR(ret_array, zend_array_dup(Z_ARR_P(ret_array)));
 		}
-		ret = php_exec(2, cmd, ret_array, return_value);
+		ret = php_exec(2, cmd, ret_array, return_value TSRMLS_CC);
 	}
 	if (ret_code) {
-		zval_ptr_dtor(ret_code);
+		zval_dtor(ret_code);
 		ZVAL_LONG(ret_code, ret);
 	}
 }
@@ -283,23 +285,23 @@ PHP_FUNCTION(passthru)
 
    *NOT* safe for binary strings
 */
-PHPAPI zend_string *php_escape_shell_cmd(char *str)
+PHPAPI char *php_escape_shell_cmd(char *str)
 {
-	register size_t x, y;
+	register int x, y;
 	size_t l = strlen(str);
 	uint64_t estimate = (2 * (uint64_t)l) + 1;
-	zend_string *cmd;
-#ifndef PHP_WIN32
+	char *cmd;
 	char *p = NULL;
-#endif
+
+	TSRMLS_FETCH();
 
 	/* max command line length - two single quotes - \0 byte length */
 	if (l > cmd_max_len - 2 - 1) {
-		php_error_docref(NULL, E_ERROR, "Command exceeds the allowed length of %zu bytes", cmd_max_len);
-		return ZSTR_EMPTY_ALLOC();
+		php_error_docref(NULL TSRMLS_CC, E_ERROR, "Command exceeds the allowed length of %d bytes", cmd_max_len);
+		return NULL;
 	}
 
-	cmd = zend_string_safe_alloc(2, l, 0, 0);
+	cmd = safe_emalloc(2, l, 1);
 
 	for (x = 0, y = 0; x < l; x++) {
 		int mb_len = php_mblen(str + x, (l - x));
@@ -308,7 +310,7 @@ PHPAPI zend_string *php_escape_shell_cmd(char *str)
 		if (mb_len < 0) {
 			continue;
 		} else if (mb_len > 1) {
-			memcpy(ZSTR_VAL(cmd) + y, str + x, mb_len);
+			memcpy(cmd + y, str + x, mb_len);
 			y += mb_len;
 			x += mb_len - 1;
 			continue;
@@ -323,13 +325,13 @@ PHPAPI zend_string *php_escape_shell_cmd(char *str)
 				} else if (p && *p == str[x]) {
 					p = NULL;
 				} else {
-					ZSTR_VAL(cmd)[y++] = '\\';
+					cmd[y++] = '\\';
 				}
-				ZSTR_VAL(cmd)[y++] = str[x];
+				cmd[y++] = str[x];
 				break;
 #else
-			/* % is Windows specific for environmental variables, ^%PATH% will
-				output PATH while ^%PATH^% will not. escapeshellcmd->val will escape all % and !.
+			/* % is Windows specific for enviromental variables, ^%PATH% will
+				output PATH while ^%PATH^% will not. escapeshellcmd will escape all % and !.
 			*/
 			case '%':
 			case '!':
@@ -358,31 +360,29 @@ PHPAPI zend_string *php_escape_shell_cmd(char *str)
 			case '\x0A': /* excluding these two */
 			case '\xFF':
 #ifdef PHP_WIN32
-				ZSTR_VAL(cmd)[y++] = '^';
+				cmd[y++] = '^';
 #else
-				ZSTR_VAL(cmd)[y++] = '\\';
+				cmd[y++] = '\\';
 #endif
 				/* fall-through */
 			default:
-				ZSTR_VAL(cmd)[y++] = str[x];
+				cmd[y++] = str[x];
 
 		}
 	}
-	ZSTR_VAL(cmd)[y] = '\0';
+	cmd[y] = '\0';
 
 	if (y > cmd_max_len + 1) {
-		php_error_docref(NULL, E_ERROR, "Escaped command exceeds the allowed length of %zu bytes", cmd_max_len);
-		zend_string_release(cmd);
-		return ZSTR_EMPTY_ALLOC();
+		php_error_docref(NULL TSRMLS_CC, E_ERROR, "Escaped command exceeds the allowed length of %d bytes", cmd_max_len);
+		efree(cmd);
+		return NULL;
 	}
 
 	if ((estimate - y) > 4096) {
 		/* realloc if the estimate was way overill
 		 * Arbitrary cutoff point of 4096 */
-		cmd = zend_string_truncate(cmd, y, 0);
+		cmd = erealloc(cmd, y + 1);
 	}
-
-	ZSTR_LEN(cmd) = y;
 
 	return cmd;
 }
@@ -390,25 +390,27 @@ PHPAPI zend_string *php_escape_shell_cmd(char *str)
 
 /* {{{ php_escape_shell_arg
  */
-PHPAPI zend_string *php_escape_shell_arg(char *str)
+PHPAPI char *php_escape_shell_arg(char *str)
 {
-	size_t x, y = 0;
+	int x, y = 0;
 	size_t l = strlen(str);
-	zend_string *cmd;
+	char *cmd;
 	uint64_t estimate = (4 * (uint64_t)l) + 3;
+
+	TSRMLS_FETCH();
 
 	/* max command line length - two single quotes - \0 byte length */
 	if (l > cmd_max_len - 2 - 1) {
-		php_error_docref(NULL, E_ERROR, "Argument exceeds the allowed length of %zu bytes", cmd_max_len);
-		return ZSTR_EMPTY_ALLOC();
+		php_error_docref(NULL TSRMLS_CC, E_ERROR, "Argument exceeds the allowed length of %d bytes", cmd_max_len);
+		return NULL;
 	}
 
-	cmd = zend_string_safe_alloc(4, l, 2, 0); /* worst case */
+	cmd = safe_emalloc(4, l, 3); /* worst case */
 
 #ifdef PHP_WIN32
-	ZSTR_VAL(cmd)[y++] = '"';
+	cmd[y++] = '"';
 #else
-	ZSTR_VAL(cmd)[y++] = '\'';
+	cmd[y++] = '\'';
 #endif
 
 	for (x = 0; x < l; x++) {
@@ -418,7 +420,7 @@ PHPAPI zend_string *php_escape_shell_arg(char *str)
 		if (mb_len < 0) {
 			continue;
 		} else if (mb_len > 1) {
-			memcpy(ZSTR_VAL(cmd) + y, str + x, mb_len);
+			memcpy(cmd + y, str + x, mb_len);
 			y += mb_len;
 			x += mb_len - 1;
 			continue;
@@ -429,46 +431,45 @@ PHPAPI zend_string *php_escape_shell_arg(char *str)
 		case '"':
 		case '%':
 		case '!':
-			ZSTR_VAL(cmd)[y++] = ' ';
+			cmd[y++] = ' ';
 			break;
 #else
 		case '\'':
-			ZSTR_VAL(cmd)[y++] = '\'';
-			ZSTR_VAL(cmd)[y++] = '\\';
-			ZSTR_VAL(cmd)[y++] = '\'';
+			cmd[y++] = '\'';
+			cmd[y++] = '\\';
+			cmd[y++] = '\'';
 #endif
 			/* fall-through */
 		default:
-			ZSTR_VAL(cmd)[y++] = str[x];
+			cmd[y++] = str[x];
 		}
 	}
 #ifdef PHP_WIN32
-	if (y > 0 && '\\' == ZSTR_VAL(cmd)[y - 1]) {
+	if (y > 0 && '\\' == cmd[y - 1]) {
 		int k = 0, n = y - 1;
-		for (; n >= 0 && '\\' == ZSTR_VAL(cmd)[n]; n--, k++);
+		for (; n >= 0 && '\\' == cmd[n]; n--, k++);
 		if (k % 2) {
-			ZSTR_VAL(cmd)[y++] = '\\';
+			cmd[y++] = '\\';
 		}
 	}
 
-	ZSTR_VAL(cmd)[y++] = '"';
+	cmd[y++] = '"';
 #else
-	ZSTR_VAL(cmd)[y++] = '\'';
+	cmd[y++] = '\'';
 #endif
-	ZSTR_VAL(cmd)[y] = '\0';
+	cmd[y] = '\0';
 
 	if (y > cmd_max_len + 1) {
-		php_error_docref(NULL, E_ERROR, "Escaped argument exceeds the allowed length of %zu bytes", cmd_max_len);
-		zend_string_release(cmd);
-		return ZSTR_EMPTY_ALLOC();
+		php_error_docref(NULL TSRMLS_CC, E_ERROR, "Escaped argument exceeds the allowed length of %d bytes", cmd_max_len);
+		efree(cmd);
+		return NULL;
 	}
 
 	if ((estimate - y) > 4096) {
 		/* realloc if the estimate was way overill
 		 * Arbitrary cutoff point of 4096 */
-		cmd = zend_string_truncate(cmd, y, 0);
+		cmd = erealloc(cmd, y + 1);
 	}
-	ZSTR_LEN(cmd) = y;
 	return cmd;
 }
 /* }}} */
@@ -478,18 +479,20 @@ PHPAPI zend_string *php_escape_shell_arg(char *str)
 PHP_FUNCTION(escapeshellcmd)
 {
 	char *command;
-	size_t command_len;
+	int command_len;
+	char *cmd = NULL;
 
-	ZEND_PARSE_PARAMETERS_START(1, 1)
-		Z_PARAM_STRING(command, command_len)
-	ZEND_PARSE_PARAMETERS_END();
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &command, &command_len) == FAILURE) {
+		return;
+	}
 
 	if (command_len) {
 		if (command_len != strlen(command)) {
-			php_error_docref(NULL, E_ERROR, "Input string contains NULL bytes");
+			php_error_docref(NULL TSRMLS_CC, E_ERROR, "Input string contains NULL bytes");
 			return;
 		}
-		RETVAL_STR(php_escape_shell_cmd(command));
+		cmd = php_escape_shell_cmd(command);
+		RETVAL_STRINGL_CHECK(cmd, strlen(cmd), 0);
 	} else {
 		RETVAL_EMPTY_STRING();
 	}
@@ -501,18 +504,20 @@ PHP_FUNCTION(escapeshellcmd)
 PHP_FUNCTION(escapeshellarg)
 {
 	char *argument;
-	size_t argument_len;
+	int argument_len;
+	char *cmd = NULL;
 
-	ZEND_PARSE_PARAMETERS_START(1, 1)
-		Z_PARAM_STRING(argument, argument_len)
-	ZEND_PARSE_PARAMETERS_END();
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &argument, &argument_len) == FAILURE) {
+		return;
+	}
 
 	if (argument) {
 		if (argument_len != strlen(argument)) {
-			php_error_docref(NULL, E_ERROR, "Input string contains NULL bytes");
+			php_error_docref(NULL TSRMLS_CC, E_ERROR, "Input string contains NULL bytes");
 			return;
 		}
-		RETVAL_STR(php_escape_shell_arg(argument));
+		cmd = php_escape_shell_arg(argument);
+		RETVAL_STRINGL_CHECK(cmd, strlen(cmd), 0);
 	}
 }
 /* }}} */
@@ -522,30 +527,31 @@ PHP_FUNCTION(escapeshellarg)
 PHP_FUNCTION(shell_exec)
 {
 	FILE *in;
+	size_t total_readbytes;
 	char *command;
-	size_t command_len;
-	zend_string *ret;
+	int command_len;
+	char *ret;
 	php_stream *stream;
 
-	ZEND_PARSE_PARAMETERS_START(1, 1)
-		Z_PARAM_STRING(command, command_len)
-	ZEND_PARSE_PARAMETERS_END();
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &command, &command_len) == FAILURE) {
+		return;
+	}
 
 #ifdef PHP_WIN32
 	if ((in=VCWD_POPEN(command, "rt"))==NULL) {
 #else
 	if ((in=VCWD_POPEN(command, "r"))==NULL) {
 #endif
-		php_error_docref(NULL, E_WARNING, "Unable to execute '%s'", command);
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unable to execute '%s'", command);
 		RETURN_FALSE;
 	}
 
 	stream = php_stream_fopen_from_pipe(in, "rb");
-	ret = php_stream_copy_to_mem(stream, PHP_STREAM_COPY_ALL, 0);
+	total_readbytes = php_stream_copy_to_mem(stream, &ret, PHP_STREAM_COPY_ALL, 0);
 	php_stream_close(stream);
 
-	if (ret && ZSTR_LEN(ret) > 0) {
-		RETVAL_STR(ret);
+	if (total_readbytes > 0) {
+		RETVAL_STRINGL_CHECK(ret, total_readbytes, 0);
 	}
 }
 /* }}} */
@@ -555,20 +561,16 @@ PHP_FUNCTION(shell_exec)
    Change the priority of the current process */
 PHP_FUNCTION(proc_nice)
 {
-	zend_long pri;
+	long pri;
 
-	ZEND_PARSE_PARAMETERS_START(1, 1)
-		Z_PARAM_LONG(pri)
-	ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &pri) == FAILURE) {
+		RETURN_FALSE;
+	}
 
 	errno = 0;
 	php_ignore_value(nice(pri));
 	if (errno) {
-#ifdef PHP_WIN32
-		php_error_docref(NULL, E_WARNING, "%s", php_win_err());
-#else
-		php_error_docref(NULL, E_WARNING, "Only a super user may attempt to increase the priority of a process");
-#endif
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Only a super user may attempt to increase the priority of a process");
 		RETURN_FALSE;
 	}
 

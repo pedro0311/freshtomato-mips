@@ -2,7 +2,7 @@
 Bug #72434: ZipArchive class Use After Free Vulnerability in PHP's GC algorithm and unserialize
 --SKIPIF--
 <?php
-if(!class_exists('zip')) die('skip ZipArchive');
+if(!class_exists('zip')) die('ZipArchive');
 ?>
 --FILE--
 <?php
@@ -26,8 +26,8 @@ $fill_freed_space_4 = "filler_zval_4";
 debug_zval_dump($unserialized_payload[1]);
 ?>
 --EXPECTF--
-array(1) refcount(3){
+array(1) refcount(1){
   [0]=>
-  object(stdClass)#%d (0) refcount(1){
+  object(stdClass)#%d (0) refcount(3){
   }
 }

@@ -11,8 +11,8 @@ Test fgetc() function : usage variations - closed handle
     - closed file handle
     - unset file handle
 */
-
-// include the header for common test function
+ 
+// include the header for common test function 
 include ("file.inc");
 
 echo "*** Testing fgetc() : usage variations ***\n";
@@ -41,7 +41,7 @@ echo "Done";
 *** Testing fgetc() : usage variations ***
 -- Testing fgetc() with closed handle --
 
-Warning: fgetc(): supplied resource is not a valid stream resource in %s on line %d
+Warning: fgetc(): %d is not a valid stream resource in %s on line %d
 bool(false)
 -- Testing fgetc() with unset handle --
 

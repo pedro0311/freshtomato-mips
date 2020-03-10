@@ -3,6 +3,7 @@ Phar object: basics
 --SKIPIF--
 <?php
 if (!extension_loaded("phar")) die("skip");
+if (version_compare(PHP_VERSION, "6.0", ">")) die("skip pre-unicode version of PHP required");
 if (!extension_loaded("spl")) die("skip SPL not available");
 ?>
 --INI--
@@ -44,7 +45,7 @@ try {
 ?>
 ===DONE===
 --CLEAN--
-<?php
+<?php 
 unlink(dirname(__FILE__) . '/files/phar_oo_001.phar.php');
 __halt_compiler();
 ?>

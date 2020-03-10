@@ -1,8 +1,8 @@
 /*
   +----------------------------------------------------------------------+
-  | PHP Version 7                                                        |
+  | PHP Version 5                                                        |
   +----------------------------------------------------------------------+
-  | Copyright (c) 1997-2018 The PHP Group                                |
+  | Copyright (c) 1997-2016 The PHP Group                                |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -36,34 +36,17 @@
 #endif
 
 /* from postgresql/src/include/catalog/pg_type.h */
-#define BOOLLABEL   "bool"
 #define BOOLOID     16
-#define BYTEALABEL  "bytea"
 #define BYTEAOID    17
-#define DATELABEL   "date"
-#define DATEOID     1082
-#define INT2LABEL   "int2"
-#define INT2OID     21
-#define INT4LABEL   "int4"
-#define INT4OID     23
-#define INT8LABEL   "int8"
 #define INT8OID     20
-#define OIDOID      26
-#define TEXTLABEL   "text"
+#define INT2OID     21
+#define INT4OID     23
 #define TEXTOID     25
-#define TIMESTAMPLABEL "timestamp"
-#define TIMESTAMPOID   1114
-#define VARCHARLABEL "varchar"
-#define VARCHAROID   1043
+#define OIDOID      26
 
-
-
-static int pgsql_stmt_dtor(pdo_stmt_t *stmt)
+static int pgsql_stmt_dtor(pdo_stmt_t *stmt TSRMLS_DC)
 {
 	pdo_pgsql_stmt *S = (pdo_pgsql_stmt*)stmt->driver_data;
-	zend_bool server_obj_usable = !Z_ISUNDEF(stmt->database_object_handle)
-		&& IS_OBJ_VALID(EG(objects_store).object_buckets[Z_OBJ_HANDLE(stmt->database_object_handle)])
-		&& !(GC_FLAGS(Z_OBJ(stmt->database_object_handle)) & IS_OBJ_FREE_CALLED);
 
 	if (S->result) {
 		/* free the resource */
@@ -72,11 +55,11 @@ static int pgsql_stmt_dtor(pdo_stmt_t *stmt)
 	}
 
 	if (S->stmt_name) {
-		if (S->is_prepared && server_obj_usable) {
-			pdo_pgsql_db_handle *H = S->H;
-			char *q = NULL;
-			PGresult *res;
+		pdo_pgsql_db_handle *H = S->H;
+		char *q = NULL;
+		PGresult *res;
 
+		if (S->is_prepared) {
 			spprintf(&q, 0, "DEALLOCATE %s", S->stmt_name);
 			res = PQexec(H->server, q);
 			efree(q);
@@ -109,16 +92,14 @@ static int pgsql_stmt_dtor(pdo_stmt_t *stmt)
 	}
 
 	if (S->cursor_name) {
-		if (server_obj_usable) {
-			pdo_pgsql_db_handle *H = S->H;
-			char *q = NULL;
-			PGresult *res;
+		pdo_pgsql_db_handle *H = S->H;
+		char *q = NULL;
+		PGresult *res;
 
-			spprintf(&q, 0, "CLOSE %s", S->cursor_name);
-			res = PQexec(H->server, q);
-			efree(q);
-			if (res) PQclear(res);
-		}
+		spprintf(&q, 0, "CLOSE %s", S->cursor_name);
+		res = PQexec(H->server, q);
+		efree(q);
+		if (res) PQclear(res);
 		efree(S->cursor_name);
 		S->cursor_name = NULL;
 	}
@@ -132,7 +113,7 @@ static int pgsql_stmt_dtor(pdo_stmt_t *stmt)
 	return 1;
 }
 
-static int pgsql_stmt_execute(pdo_stmt_t *stmt)
+static int pgsql_stmt_execute(pdo_stmt_t *stmt TSRMLS_DC)
 {
 	pdo_pgsql_stmt *S = (pdo_pgsql_stmt*)stmt->driver_data;
 	pdo_pgsql_db_handle *H = S->H;
@@ -165,7 +146,6 @@ static int pgsql_stmt_execute(pdo_stmt_t *stmt)
 			pdo_pgsql_error_stmt(stmt, status, pdo_pgsql_sqlstate(S->result));
 			return 0;
 		}
-		PQclear(S->result);
 
 		/* the cursor was declared correctly */
 		S->is_prepared = 1;
@@ -250,17 +230,17 @@ stmt_retry:
 	}
 
 	if (status == PGRES_COMMAND_OK) {
-		ZEND_ATOL(stmt->row_count, PQcmdTuples(S->result));
+		stmt->row_count = (long)atoi(PQcmdTuples(S->result));
 		H->pgoid = PQoidValue(S->result);
 	} else {
-		stmt->row_count = (zend_long)PQntuples(S->result);
+		stmt->row_count = (long)PQntuples(S->result);
 	}
 
 	return 1;
 }
 
 static int pgsql_stmt_param_hook(pdo_stmt_t *stmt, struct pdo_bound_param_data *param,
-		enum pdo_param_event event_type)
+		enum pdo_param_event event_type TSRMLS_DC)
 {
 	pdo_pgsql_stmt *S = (pdo_pgsql_stmt*)stmt->driver_data;
 
@@ -275,18 +255,16 @@ static int pgsql_stmt_param_hook(pdo_stmt_t *stmt, struct pdo_bound_param_data *
 			case PDO_PARAM_EVT_NORMALIZE:
 				/* decode name from $1, $2 into 0, 1 etc. */
 				if (param->name) {
-					if (ZSTR_VAL(param->name)[0] == '$') {
-						ZEND_ATOL(param->paramno, ZSTR_VAL(param->name) + 1);
+					if (param->name[0] == '$') {
+						param->paramno = atoi(param->name + 1);
 					} else {
 						/* resolve parameter name to rewritten name */
-						char *namevar;
-
-						if (stmt->bound_param_map && (namevar = zend_hash_find_ptr(stmt->bound_param_map,
-								param->name)) != NULL) {
-							ZEND_ATOL(param->paramno, namevar + 1);
-							param->paramno--;
+						char *nameptr;
+						if (stmt->bound_param_map && SUCCESS == zend_hash_find(stmt->bound_param_map,
+								param->name, param->namelen + 1, (void**)&nameptr)) {
+							param->paramno = atoi(nameptr + 1) - 1;
 						} else {
-							pdo_raise_impl_error(stmt->dbh, stmt, "HY093", ZSTR_VAL(param->name));
+							pdo_raise_impl_error(stmt->dbh, stmt, "HY093", param->name TSRMLS_CC);
 							return 0;
 						}
 					}
@@ -294,13 +272,6 @@ static int pgsql_stmt_param_hook(pdo_stmt_t *stmt, struct pdo_bound_param_data *
 				break;
 
 			case PDO_PARAM_EVT_ALLOC:
-				if (!stmt->bound_param_map) {
-					return 1;
-				}
-				if (!zend_hash_index_exists(stmt->bound_param_map, param->paramno)) {
-					pdo_raise_impl_error(stmt->dbh, stmt, "HY093", "parameter was not defined");
-					return 0;
-				}
 			case PDO_PARAM_EVT_EXEC_POST:
 			case PDO_PARAM_EVT_FETCH_PRE:
 			case PDO_PARAM_EVT_FETCH_POST:
@@ -326,25 +297,15 @@ static int pgsql_stmt_param_hook(pdo_stmt_t *stmt, struct pdo_bound_param_data *
 							sizeof(Oid));
 				}
 				if (param->paramno >= 0) {
-					zval *parameter;
-
-					/*
 					if (param->paramno >= zend_hash_num_elements(stmt->bound_params)) {
-						pdo_raise_impl_error(stmt->dbh, stmt, "HY093", "parameter was not defined");
+						pdo_raise_impl_error(stmt->dbh, stmt, "HY093", "parameter was not defined" TSRMLS_CC);
 						return 0;
-					}
-					*/
-
-					if (Z_ISREF(param->parameter)) {
-						parameter = Z_REFVAL(param->parameter);
-					} else {
-						parameter = &param->parameter;
 					}
 
 					if (PDO_PARAM_TYPE(param->param_type) == PDO_PARAM_LOB &&
-							Z_TYPE_P(parameter) == IS_RESOURCE) {
+							Z_TYPE_P(param->parameter) == IS_RESOURCE) {
 						php_stream *stm;
-						php_stream_from_zval_no_verify(stm, parameter);
+						php_stream_from_zval_no_verify(stm, &param->parameter);
 						if (stm) {
 							if (php_stream_is(stm, &pdo_pgsql_lob_stream_ops)) {
 								struct pdo_pgsql_lob_self *self = (struct pdo_pgsql_lob_self*)stm->abstract;
@@ -361,12 +322,15 @@ static int pgsql_stmt_param_hook(pdo_stmt_t *stmt, struct pdo_bound_param_data *
 								S->param_types[param->paramno] = OIDOID;
 								return 1;
 							} else {
-								zend_string *str = php_stream_copy_to_mem(stm, PHP_STREAM_COPY_ALL, 0);
-								if (str != NULL) {
-									//??SEPARATE_ZVAL_IF_NOT_REF(&param->parameter);
-									ZVAL_STR(parameter, str);
+								int len;
+
+								SEPARATE_ZVAL_IF_NOT_REF(&param->parameter);
+								Z_TYPE_P(param->parameter) = IS_STRING;
+
+								if ((len = php_stream_copy_to_mem(stm, &Z_STRVAL_P(param->parameter), PHP_STREAM_COPY_ALL, 0)) > 0) {
+									Z_STRLEN_P(param->parameter) = len;
 								} else {
-									ZVAL_EMPTY_STRING(parameter);
+									ZVAL_EMPTY_STRING(param->parameter);
 								}
 							}
 						} else {
@@ -377,18 +341,18 @@ static int pgsql_stmt_param_hook(pdo_stmt_t *stmt, struct pdo_bound_param_data *
 					}
 
 					if (PDO_PARAM_TYPE(param->param_type) == PDO_PARAM_NULL ||
-							Z_TYPE_P(parameter) == IS_NULL) {
+							Z_TYPE_P(param->parameter) == IS_NULL) {
 						S->param_values[param->paramno] = NULL;
 						S->param_lengths[param->paramno] = 0;
-					} else if (Z_TYPE_P(parameter) == IS_FALSE || Z_TYPE_P(parameter) == IS_TRUE) {
-						S->param_values[param->paramno] = Z_TYPE_P(parameter) == IS_TRUE ? "t" : "f";
+					} else if (Z_TYPE_P(param->parameter) == IS_BOOL) {
+						S->param_values[param->paramno] = Z_BVAL_P(param->parameter) ? "t" : "f";
 						S->param_lengths[param->paramno] = 1;
 						S->param_formats[param->paramno] = 0;
 					} else {
-						//SEPARATE_ZVAL_IF_NOT_REF(&param->parameter);
-						convert_to_string_ex(parameter);
-						S->param_values[param->paramno] = Z_STRVAL_P(parameter);
-						S->param_lengths[param->paramno] = Z_STRLEN_P(parameter);
+						SEPARATE_ZVAL_IF_NOT_REF(&param->parameter);
+						convert_to_string(param->parameter);
+						S->param_values[param->paramno] = Z_STRVAL_P(param->parameter);
+						S->param_lengths[param->paramno] = Z_STRLEN_P(param->parameter);
 						S->param_formats[param->paramno] = 0;
 					}
 
@@ -405,17 +369,17 @@ static int pgsql_stmt_param_hook(pdo_stmt_t *stmt, struct pdo_bound_param_data *
 		/* We need to manually convert to a pg native boolean value */
 		if (PDO_PARAM_TYPE(param->param_type) == PDO_PARAM_BOOL &&
 			((param->param_type & PDO_PARAM_INPUT_OUTPUT) != PDO_PARAM_INPUT_OUTPUT)) {
-			const char *s = zend_is_true(&param->parameter) ? "t" : "f";
+			SEPARATE_ZVAL(&param->parameter);
 			param->param_type = PDO_PARAM_STR;
-			zval_ptr_dtor(&param->parameter);
-			ZVAL_STRINGL(&param->parameter, s, 1);
+			convert_to_boolean(param->parameter);
+			ZVAL_STRINGL(param->parameter, Z_BVAL_P(param->parameter) ? "t" : "f", 1, 1);
 		}
 	}
 	return 1;
 }
 
 static int pgsql_stmt_fetch(pdo_stmt_t *stmt,
-	enum pdo_fetch_orientation ori, zend_long offset)
+	enum pdo_fetch_orientation ori, long offset TSRMLS_DC)
 {
 	pdo_pgsql_stmt *S = (pdo_pgsql_stmt*)stmt->driver_data;
 
@@ -429,15 +393,10 @@ static int pgsql_stmt_fetch(pdo_stmt_t *stmt,
 			case PDO_FETCH_ORI_PRIOR:	spprintf(&ori_str, 0, "BACKWARD"); break;
 			case PDO_FETCH_ORI_FIRST:	spprintf(&ori_str, 0, "FIRST"); break;
 			case PDO_FETCH_ORI_LAST:	spprintf(&ori_str, 0, "LAST"); break;
-			case PDO_FETCH_ORI_ABS:		spprintf(&ori_str, 0, "ABSOLUTE " ZEND_LONG_FMT, offset); break;
-			case PDO_FETCH_ORI_REL:		spprintf(&ori_str, 0, "RELATIVE " ZEND_LONG_FMT, offset); break;
+			case PDO_FETCH_ORI_ABS:		spprintf(&ori_str, 0, "ABSOLUTE %ld", offset); break;
+			case PDO_FETCH_ORI_REL:		spprintf(&ori_str, 0, "RELATIVE %ld", offset); break;
 			default:
 				return 0;
-		}
-
-		if(S->result) {
-			PQclear(S->result);
-			S->result = NULL;
 		}
 
 		spprintf(&q, 0, "FETCH %s FROM %s", ori_str, S->cursor_name);
@@ -467,24 +426,23 @@ static int pgsql_stmt_fetch(pdo_stmt_t *stmt,
 	}
 }
 
-static int pgsql_stmt_describe(pdo_stmt_t *stmt, int colno)
+static int pgsql_stmt_describe(pdo_stmt_t *stmt, int colno TSRMLS_DC)
 {
 	pdo_pgsql_stmt *S = (pdo_pgsql_stmt*)stmt->driver_data;
 	struct pdo_column_data *cols = stmt->columns;
 	struct pdo_bound_param_data *param;
-	char *str;
 
 	if (!S->result) {
 		return 0;
 	}
 
-	str = PQfname(S->result, colno);
-	cols[colno].name = zend_string_init(str, strlen(str), 0);
+	cols[colno].name = estrdup(PQfname(S->result, colno));
+	cols[colno].namelen = strlen(cols[colno].name);
 	cols[colno].maxlen = PQfsize(S->result, colno);
 	cols[colno].precision = PQfmod(S->result, colno);
 	S->cols[colno].pgsql_type = PQftype(S->result, colno);
 
-	switch (S->cols[colno].pgsql_type) {
+	switch(S->cols[colno].pgsql_type) {
 
 		case BOOLOID:
 			cols[colno].param_type = PDO_PARAM_BOOL;
@@ -493,9 +451,11 @@ static int pgsql_stmt_describe(pdo_stmt_t *stmt, int colno)
 		case OIDOID:
 			/* did the user bind the column as a LOB ? */
 			if (stmt->bound_columns && (
-					(param = zend_hash_index_find_ptr(stmt->bound_columns, colno)) != NULL ||
-					(param = zend_hash_find_ptr(stmt->bound_columns, cols[colno].name)) != NULL)) {
-
+					SUCCESS == zend_hash_index_find(stmt->bound_columns,
+						colno, (void**)&param) ||
+					SUCCESS == zend_hash_find(stmt->bound_columns,
+						cols[colno].name, cols[colno].namelen,
+						(void**)&param))) {
 				if (PDO_PARAM_TYPE(param->param_type) == PDO_PARAM_LOB) {
 					cols[colno].param_type = PDO_PARAM_LOB;
 					break;
@@ -510,7 +470,7 @@ static int pgsql_stmt_describe(pdo_stmt_t *stmt, int colno)
 			break;
 
 		case INT8OID:
-			if (sizeof(zend_long)>=8) {
+			if (sizeof(long)>=8) {
 				cols[colno].param_type = PDO_PARAM_INT;
 			} else {
 				cols[colno].param_type = PDO_PARAM_STR;
@@ -528,7 +488,7 @@ static int pgsql_stmt_describe(pdo_stmt_t *stmt, int colno)
 	return 1;
 }
 
-static int pgsql_stmt_get_col(pdo_stmt_t *stmt, int colno, char **ptr, zend_ulong *len, int *caller_frees )
+static int pgsql_stmt_get_col(pdo_stmt_t *stmt, int colno, char **ptr, unsigned long *len, int *caller_frees  TSRMLS_DC)
 {
 	pdo_pgsql_stmt *S = (pdo_pgsql_stmt*)stmt->driver_data;
 	struct pdo_column_data *cols = stmt->columns;
@@ -546,12 +506,12 @@ static int pgsql_stmt_get_col(pdo_stmt_t *stmt, int colno, char **ptr, zend_ulon
 		*ptr = PQgetvalue(S->result, S->current_row - 1, colno);
 		*len = PQgetlength(S->result, S->current_row - 1, colno);
 
-		switch (cols[colno].param_type) {
+		switch(cols[colno].param_type) {
 
 			case PDO_PARAM_INT:
-				ZEND_ATOL(S->cols[colno].intval, *ptr);
+				S->cols[colno].intval = atol(*ptr);
 				*ptr = (char *) &(S->cols[colno].intval);
-				*len = sizeof(zend_long);
+				*len = sizeof(long);
 				break;
 
 			case PDO_PARAM_BOOL:
@@ -567,7 +527,7 @@ static int pgsql_stmt_get_col(pdo_stmt_t *stmt, int colno, char **ptr, zend_ulon
 					Oid oid = (Oid)strtoul(*ptr, &end_ptr, 10);
 					int loid = lo_open(S->H->server, oid, INV_READ);
 					if (loid >= 0) {
-						*ptr = (char*)pdo_pgsql_create_lob_stream(&stmt->database_object_handle, loid, oid);
+						*ptr = (char*)pdo_pgsql_create_lob_stream(stmt->dbh, loid, oid TSRMLS_CC);
 						*len = 0;
 						return *ptr ? 1 : 0;
 					}
@@ -607,42 +567,12 @@ static int pgsql_stmt_get_col(pdo_stmt_t *stmt, int colno, char **ptr, zend_ulon
 	return 1;
 }
 
-static zend_always_inline char * pdo_pgsql_translate_oid_to_table(Oid oid, PGconn *conn)
-{
-	char *table_name = NULL;
-	PGresult *tmp_res;
-	char *querystr = NULL;
-
-	spprintf(&querystr, 0, "SELECT RELNAME FROM PG_CLASS WHERE OID=%d", oid);
-
-	if ((tmp_res = PQexec(conn, querystr)) == NULL || PQresultStatus(tmp_res) != PGRES_TUPLES_OK) {
-		if (tmp_res) {
-			PQclear(tmp_res);
-		}
-		efree(querystr);
-		return 0;
-	}
-	efree(querystr);
-
-	if (1 == PQgetisnull(tmp_res, 0, 0) || (table_name = PQgetvalue(tmp_res, 0, 0)) == NULL) {
-		PQclear(tmp_res);
-		return 0;
-	}
-
-	table_name = estrdup(table_name);
-
-	PQclear(tmp_res);
-	return table_name;
-}
-
-static int pgsql_stmt_get_column_meta(pdo_stmt_t *stmt, zend_long colno, zval *return_value)
+static int pgsql_stmt_get_column_meta(pdo_stmt_t *stmt, long colno, zval *return_value TSRMLS_DC)
 {
 	pdo_pgsql_stmt *S = (pdo_pgsql_stmt*)stmt->driver_data;
 	PGresult *res;
 	char *q=NULL;
 	ExecStatusType status;
-	Oid table_oid;
-	char *table_name=NULL;
 
 	if (!S->result) {
 		return FAILURE;
@@ -655,57 +585,32 @@ static int pgsql_stmt_get_column_meta(pdo_stmt_t *stmt, zend_long colno, zval *r
 	array_init(return_value);
 	add_assoc_long(return_value, "pgsql:oid", S->cols[colno].pgsql_type);
 
-	table_oid = PQftable(S->result, colno);
-	add_assoc_long(return_value, "pgsql:table_oid", table_oid);
-	table_name = pdo_pgsql_translate_oid_to_table(table_oid, S->H->server);
-	if (table_name) {
-		add_assoc_string(return_value, "table", table_name);
-		efree(table_name);
+	/* Fetch metadata from Postgres system catalogue */
+	spprintf(&q, 0, "SELECT TYPNAME FROM PG_TYPE WHERE OID=%u", S->cols[colno].pgsql_type);
+	res = PQexec(S->H->server, q);
+	efree(q);
+
+	status = PQresultStatus(res);
+
+	if (status != PGRES_TUPLES_OK) {
+		/* Failed to get system catalogue, but return success
+		 * with the data we have collected so far
+		 */
+		goto done;
 	}
 
-	switch (S->cols[colno].pgsql_type) {
-		case BOOLOID:
-			add_assoc_string(return_value, "native_type", BOOLLABEL);
-			break;
-		case BYTEAOID:
-			add_assoc_string(return_value, "native_type", BYTEALABEL);
-			break;
-		case INT8OID:
-			add_assoc_string(return_value, "native_type", INT8LABEL);
-			break;
-		case INT2OID:
-			add_assoc_string(return_value, "native_type", INT2LABEL);
-			break;
-		case INT4OID:
-			add_assoc_string(return_value, "native_type", INT4LABEL);
-			break;
-		case TEXTOID:
-			add_assoc_string(return_value, "native_type", TEXTLABEL);
-			break;
-		case VARCHAROID:
-			add_assoc_string(return_value, "native_type", VARCHARLABEL);
-			break;
-		case DATEOID:
-			add_assoc_string(return_value, "native_type", DATELABEL);
-			break;
-		case TIMESTAMPOID:
-			add_assoc_string(return_value, "native_type", TIMESTAMPLABEL);
-			break;
-		default:
-			/* Fetch metadata from Postgres system catalogue */
-			spprintf(&q, 0, "SELECT TYPNAME FROM PG_TYPE WHERE OID=%u", S->cols[colno].pgsql_type);
-			res = PQexec(S->H->server, q);
-			efree(q);
-			status = PQresultStatus(res);
-			if (status == PGRES_TUPLES_OK && 1 == PQntuples(res)) {
-				add_assoc_string(return_value, "native_type", PQgetvalue(res, 0, 0));
-			}
-			PQclear(res);
+	/* We want exactly one row returned */
+	if (1 != PQntuples(res)) {
+		goto done;
 	}
+
+	add_assoc_string(return_value, "native_type", PQgetvalue(res, 0, 0), 1);
+done:
+	PQclear(res);
 	return 1;
 }
 
-static int pdo_pgsql_stmt_cursor_closer(pdo_stmt_t *stmt)
+static int pdo_pgsql_stmt_cursor_closer(pdo_stmt_t *stmt TSRMLS_DC)
 {
 	pdo_pgsql_stmt *S = (pdo_pgsql_stmt*)stmt->driver_data;
 

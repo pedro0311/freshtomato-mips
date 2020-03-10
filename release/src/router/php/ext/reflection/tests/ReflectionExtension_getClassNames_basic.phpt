@@ -9,14 +9,12 @@ var_dump($standard->getClassNames());
 ?>
 ==DONE==
 --EXPECTF--
-array(4) {
+array(3) {
   [0]=>
   %s(22) "__PHP_Incomplete_Class"
   [1]=>
   %s(15) "php_user_filter"
   [2]=>
   %s(9) "Directory"
-  [3]=>
-  %s(14) "AssertionError"
 }
 ==DONE==

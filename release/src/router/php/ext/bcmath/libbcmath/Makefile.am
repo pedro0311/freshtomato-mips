@@ -9,3 +9,4 @@ dist-hook:
 	cp $(srcdir)/doc/bcmath.1 $(distdir)/doc
 	cp $(srcdir)/src/private.h $(distdir)/src
 	cp $(srcdir)/FAQ $(distdir)
+

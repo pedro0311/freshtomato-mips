@@ -1,5 +1,6 @@
 --TEST--
 zend multibyte (12)
+--SKIPIF--
 --INI--
 zend.multibyte=1
 --FILE--

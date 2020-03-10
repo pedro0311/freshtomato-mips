@@ -9,25 +9,38 @@ echo "===EMPTY===\n";
 
 var_dump(spl_autoload_extensions());
 
-spl_autoload("TestClass");
-if (!class_exists("TestClass")) {
-    echo "Class TestClass could not be loaded\n";
+try
+{
+	spl_autoload("TestClass");
+}
+catch(Exception $e)
+{
+	echo 'Exception: ' . $e->getMessage() . "\n";
 }
 
 $test_exts = array(NULL, "1", ".inc,,.php.inc", "");
 
-foreach($test_exts as $exts) {
+foreach($test_exts as $exts)
+{
 	echo "===($exts)===\n";
-    spl_autoload("TestClass", $exts);
-    if (!class_exists("TestClass")) {
-        echo "Class TestClass could not be loaded\n";
-    }
+	try
+	{
+		spl_autoload("TestClass", $exts);
+	}
+	catch(Exception $e)
+	{
+		echo 'Exception: ' . $e->getMessage() . "\n";
+	}
 }
 
-spl_autoload_extensions(".inc,.php.inc");
-spl_autoload("TestClass");
-if (!class_exists("TestClass")) {
-    echo "Class TestClass could not be loaded\n";
+try
+{
+	spl_autoload_extensions(".inc,.php.inc");
+	spl_autoload("TestClass");
+}
+catch(Exception $e)
+{
+	echo 'Exception: ' . $e->getMessage() . "\n";
 }
 
 function TestFunc1($classname)
@@ -44,8 +57,15 @@ echo "===SPL_AUTOLOAD()===\n";
 
 spl_autoload_register();
 
-var_dump(spl_autoload_extensions(".inc"));
-var_dump(class_exists("TestClass", true));
+try
+{
+	var_dump(spl_autoload_extensions(".inc"));
+	var_dump(class_exists("TestClass", true));
+}
+catch(Exception $e)
+{
+	echo 'Exception: ' . $e->getMessage() . "\n";
+}
 
 echo "===REGISTER===\n";
 
@@ -55,7 +75,14 @@ spl_autoload_register("TestFunc2");
 spl_autoload_register("TestFunc2"); /* 2nd call ignored */
 spl_autoload_extensions(".inc,.class.inc"); /* we do not have spl_autoload_registered yet */
 
-var_dump(class_exists("TestClass", true));
+try
+{
+	var_dump(class_exists("TestClass", true));
+}
+catch(Exception $e)
+{
+	echo 'Exception: ' . $e->getMessage() . "\n";
+}
 
 echo "===LOAD===\n";
 
@@ -80,21 +107,21 @@ catch(Exception $e)
 ===EMPTY===
 string(9) ".inc,.php"
 %stestclass.inc
-Class TestClass could not be loaded
+Exception: Class TestClass could not be loaded
 ===()===
-Class TestClass could not be loaded
+Exception: Class TestClass could not be loaded
 ===(1)===
-Class TestClass could not be loaded
+Exception: Class TestClass could not be loaded
 ===(.inc,,.php.inc)===
 %stestclass
 %stestclass.php.inc
-Class TestClass could not be loaded
+Exception: Class TestClass could not be loaded
 ===()===
-Class TestClass could not be loaded
-Class TestClass could not be loaded
+Exception: Class TestClass could not be loaded
+Exception: Class TestClass could not be loaded
 ===SPL_AUTOLOAD()===
 string(4) ".inc"
-bool(false)
+Exception: Class TestClass could not be loaded
 ===REGISTER===
 TestFunc1(TestClass)
 TestFunc2(TestClass)

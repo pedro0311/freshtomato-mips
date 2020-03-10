@@ -3,7 +3,6 @@ Bug #60634 (Segmentation fault when trying to die() in SessionHandler::write()) 
 --INI--
 session.save_path=
 session.name=PHPSESSID
-session.save_handler=files
 --SKIPIF--
 <?php include('skipif.inc'); ?>
 --FILE--
@@ -17,7 +16,6 @@ function open($save_path, $session_name) {
 
 function close() {
 	echo "close: goodbye cruel world\n";
-	return true;
 }
 
 function read($id) {
@@ -42,18 +40,9 @@ session_start();
 session_write_close();
 echo "um, hi\n";
 
-/*
-FIXME: Something wrong. It should try to close after error, otherwise session
-may keep "open" state.
-*/
-
 ?>
 --EXPECTF--
 write: goodbye cruel world
 
-Fatal error: Uncaught Error: Call to undefined function undefined_function() in %s:%d
-Stack trace:
-#0 [internal function]: write(%s, '')
-#1 %s(%d): session_write_close()
-#2 {main}
-  thrown in %s on line %d
+Fatal error: Call to undefined function undefined_function() in %s on line %d
+close: goodbye cruel world

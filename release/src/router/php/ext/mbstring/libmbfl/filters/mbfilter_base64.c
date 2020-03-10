@@ -5,7 +5,7 @@
  * LICENSE NOTICES
  *
  * This file is part of "streamable kanji code filter and converter",
- * which is distributed under the terms of GNU Lesser General Public
+ * which is distributed under the terms of GNU Lesser General Public 
  * License (version 2) as published by the Free Software Foundation.
  *
  * This software is distributed in the hope that it will be useful,
@@ -210,3 +210,5 @@ int mbfl_filt_conv_base64dec_flush(mbfl_convert_filter *filter)
 	}
 	return 0;
 }
+
+

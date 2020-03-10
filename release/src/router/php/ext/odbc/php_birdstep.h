@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2018 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -26,33 +26,30 @@
 #include <sql.h>
 #include <sqlext.h>
 
-#include "php_version.h"
-#define PHP_BIRDSTEP_VERSION PHP_VERSION
-
 typedef struct VConn {
 	HDBC    hdbc;
-	zend_long    index;
+	long    index;
 } VConn;
 
 typedef struct {
 	char name[32];
 	char *value;
-	zend_long vallen;
+	long vallen;
 	SDWORD valtype;
 } VResVal;
 
 typedef struct Vresult {
 	HSTMT   hstmt;
-	VConn   *conn;
-	zend_long    index;
+	VConn   *conn; 
+	long    index;
 	VResVal *values;
-	zend_long    numcols;
+	long    numcols;
 	int     fetched;
 } Vresult;
 
 typedef struct {
-	zend_long num_links;
-	zend_long max_links;
+	long num_links;
+	long max_links;
 	int le_link,le_result;
 } birdstep_module;
 

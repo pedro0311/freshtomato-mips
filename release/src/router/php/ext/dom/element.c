@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2018 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -120,10 +120,10 @@ ZEND_END_ARG_INFO();
 /* }}} */
 
 /*
-* class DOMElement extends DOMNode
+* class DOMElement extends DOMNode 
 *
 * URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-745549614
-* Since:
+* Since: 
 */
 
 const zend_function_entry php_dom_element_class_functions[] = { /* {{{ */
@@ -150,27 +150,30 @@ const zend_function_entry php_dom_element_class_functions[] = { /* {{{ */
 };
 /* }}} */
 
-/* {{{ proto void DOMElement::__construct(string name, [string value], [string uri]) */
+/* {{{ proto void DOMElement::__construct(string name, [string value], [string uri]); */
 PHP_METHOD(domelement, __construct)
 {
 
-	zval *id = getThis();
+	zval *id;
 	xmlNodePtr nodep = NULL, oldnode = NULL;
 	dom_object *intern;
 	char *name, *value = NULL, *uri = NULL;
 	char *localname = NULL, *prefix = NULL;
-	int errorcode = 0;
-	size_t name_len, value_len = 0, uri_len = 0;
-	int name_valid;
+	int errorcode = 0, uri_len = 0;
+	int name_len, value_len = 0, name_valid;
 	xmlNsPtr nsptr = NULL;
+	zend_error_handling error_handling;
 
-	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "s|s!s", &name, &name_len, &value, &value_len, &uri, &uri_len) == FAILURE) {
+	zend_replace_error_handling(EH_THROW, dom_domexception_class_entry, &error_handling TSRMLS_CC);
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Os|s!s", &id, dom_element_class_entry, &name, &name_len, &value, &value_len, &uri, &uri_len) == FAILURE) {
+		zend_restore_error_handling(&error_handling TSRMLS_CC);
 		return;
 	}
+	zend_restore_error_handling(&error_handling TSRMLS_CC);
 
 	name_valid = xmlValidateName((xmlChar *) name, 0);
 	if (name_valid != 0) {
-		php_dom_throw_error(INVALID_CHARACTER_ERR, 1);
+		php_dom_throw_error(INVALID_CHARACTER_ERR, 1 TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
@@ -192,23 +195,23 @@ PHP_METHOD(domelement, __construct)
 			if (nodep != NULL) {
 				xmlFreeNode(nodep);
 			}
-			php_dom_throw_error(errorcode, 1);
+			php_dom_throw_error(errorcode, 1 TSRMLS_CC);
 			RETURN_FALSE;
 		}
 	} else {
 	    /* If you don't pass a namespace uri, then you can't set a prefix */
-	    localname = (char *) xmlSplitQName2((xmlChar *) name, (xmlChar **) &prefix);
+	    localname = xmlSplitQName2((xmlChar *)name, (xmlChar **) &prefix);
 	    if (prefix != NULL) {
 			xmlFree(localname);
 			xmlFree(prefix);
-	        php_dom_throw_error(NAMESPACE_ERR, 1);
+	        php_dom_throw_error(NAMESPACE_ERR, 1 TSRMLS_CC);
 	        RETURN_FALSE;
 	    }
 		nodep = xmlNewNode(NULL, (xmlChar *) name);
 	}
 
 	if (!nodep) {
-		php_dom_throw_error(INVALID_STATE_ERR, 1);
+		php_dom_throw_error(INVALID_STATE_ERR, 1 TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
@@ -216,21 +219,23 @@ PHP_METHOD(domelement, __construct)
 		xmlNodeSetContentLen(nodep, (xmlChar *) value, value_len);
 	}
 
-	intern = Z_DOMOBJ_P(id);
-	oldnode = dom_object_get_node(intern);
-	if (oldnode != NULL) {
-		php_libxml_node_free_resource(oldnode );
+	intern = (dom_object *)zend_object_store_get_object(id TSRMLS_CC);
+	if (intern != NULL) {
+		oldnode = dom_object_get_node(intern);
+		if (oldnode != NULL) {
+			php_libxml_node_free_resource(oldnode  TSRMLS_CC);
+		}
+		php_libxml_increment_node_ptr((php_libxml_node_object *)intern, nodep, (void *)intern TSRMLS_CC);
 	}
-	php_libxml_increment_node_ptr((php_libxml_node_object *)intern, nodep, (void *)intern);
 }
 /* }}} end DOMElement::__construct */
 
-/* {{{ tagName	string
-readonly=yes
+/* {{{ tagName	string	
+readonly=yes 
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-104682815
-Since:
+Since: 
 */
-int dom_element_tag_name_read(dom_object *obj, zval *retval)
+int dom_element_tag_name_read(dom_object *obj, zval **retval TSRMLS_DC)
 {
 	xmlNodePtr nodep;
 	xmlNsPtr ns;
@@ -239,19 +244,20 @@ int dom_element_tag_name_read(dom_object *obj, zval *retval)
 	nodep = dom_object_get_node(obj);
 
 	if (nodep == NULL) {
-		php_dom_throw_error(INVALID_STATE_ERR, 0);
+		php_dom_throw_error(INVALID_STATE_ERR, 0 TSRMLS_CC);
 		return FAILURE;
 	}
 
+	ALLOC_ZVAL(*retval);
 	ns = nodep->ns;
 	if (ns != NULL && ns->prefix) {
 		qname = xmlStrdup(ns->prefix);
 		qname = xmlStrcat(qname, (xmlChar *)":");
 		qname = xmlStrcat(qname, nodep->name);
-		ZVAL_STRING(retval, (char *)qname);
+		ZVAL_STRING(*retval, (char *)qname, 1);
 		xmlFree(qname);
 	} else {
-		ZVAL_STRING(retval, (char *) nodep->name);
+		ZVAL_STRING(*retval, (char *) nodep->name, 1);
 	}
 
 	return SUCCESS;
@@ -259,14 +265,15 @@ int dom_element_tag_name_read(dom_object *obj, zval *retval)
 
 /* }}} */
 
-/* {{{ schemaTypeInfo	typeinfo
-readonly=yes
+/* {{{ schemaTypeInfo	typeinfo	
+readonly=yes 
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#Element-schemaTypeInfo
 Since: DOM Level 3
 */
-int dom_element_schema_type_info_read(dom_object *obj, zval *retval)
+int dom_element_schema_type_info_read(dom_object *obj, zval **retval TSRMLS_DC)
 {
-	ZVAL_NULL(retval);
+	ALLOC_ZVAL(*retval);
+	ZVAL_NULL(*retval);
 	return SUCCESS;
 }
 
@@ -327,9 +334,9 @@ PHP_FUNCTION(dom_element_get_attribute)
 	xmlChar *value = NULL;
 	dom_object *intern;
 	xmlNodePtr attr;
-	size_t name_len;
+	int name_len;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Os", &id, dom_element_class_entry, &name, &name_len) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Os", &id, dom_element_class_entry, &name, &name_len) == FAILURE) {
 		return;
 	}
 
@@ -348,11 +355,11 @@ PHP_FUNCTION(dom_element_get_attribute)
 				value = xmlStrdup(((xmlAttributePtr)attr)->defaultValue);
 		}
 	}
-
+	
 	if (value == NULL) {
 		RETURN_EMPTY_STRING();
 	} else {
-		RETVAL_STRING((char *)value);
+		RETVAL_STRING((char *)value, 1);
 		xmlFree(value);
 	}
 }
@@ -360,37 +367,36 @@ PHP_FUNCTION(dom_element_get_attribute)
 
 /* {{{ proto void dom_element_set_attribute(string name, string value);
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-F68F082
-Since:
+Since: 
 */
 PHP_FUNCTION(dom_element_set_attribute)
 {
 	zval *id;
 	xmlNode *nodep;
 	xmlNodePtr attr = NULL;
-	int ret, name_valid;
-	size_t name_len, value_len;
+	int ret, name_len, value_len, name_valid;
 	dom_object *intern;
 	char *name, *value;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Oss", &id, dom_element_class_entry, &name, &name_len, &value, &value_len) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Oss", &id, dom_element_class_entry, &name, &name_len, &value, &value_len) == FAILURE) {
 		return;
 	}
 
 	if (name_len == 0) {
-		php_error_docref(NULL, E_WARNING, "Attribute Name is required");
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Attribute Name is required");
 		RETURN_FALSE;
 	}
 
 	name_valid = xmlValidateName((xmlChar *) name, 0);
 	if (name_valid != 0) {
-		php_dom_throw_error(INVALID_CHARACTER_ERR, 1);
+		php_dom_throw_error(INVALID_CHARACTER_ERR, 1 TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
 	DOM_GET_OBJ(nodep, id, xmlNodePtr, intern);
 
 	if (dom_node_is_read_only(nodep) == SUCCESS) {
-		php_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, dom_get_strict_error(intern->document));
+		php_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, dom_get_strict_error(intern->document) TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
@@ -398,7 +404,7 @@ PHP_FUNCTION(dom_element_set_attribute)
 	if (attr != NULL) {
 		switch (attr->type) {
 			case XML_ATTRIBUTE_NODE:
-				node_list_unlink(attr->children);
+				node_list_unlink(attr->children TSRMLS_CC);
 				break;
 			case XML_NAMESPACE_DECL:
 				RETURN_FALSE;
@@ -416,7 +422,7 @@ PHP_FUNCTION(dom_element_set_attribute)
 		attr = (xmlNodePtr)xmlSetProp(nodep, (xmlChar *) name, (xmlChar *)value);
 	}
 	if (!attr) {
-		php_error_docref(NULL, E_WARNING, "No such attribute '%s'", name);
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "No such attribute '%s'", name);
 		RETURN_FALSE;
 	}
 
@@ -434,17 +440,17 @@ PHP_FUNCTION(dom_element_remove_attribute)
 	zval *id;
 	xmlNodePtr nodep, attrp;
 	dom_object *intern;
-	size_t name_len;
+	int name_len;
 	char *name;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Os", &id, dom_element_class_entry, &name, &name_len) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Os", &id, dom_element_class_entry, &name, &name_len) == FAILURE) {
 		return;
 	}
 
 	DOM_GET_OBJ(nodep, id, xmlNodePtr, intern);
 
 	if (dom_node_is_read_only(nodep) == SUCCESS) {
-		php_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, dom_get_strict_error(intern->document));
+		php_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, dom_get_strict_error(intern->document) TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
@@ -456,7 +462,7 @@ PHP_FUNCTION(dom_element_remove_attribute)
 	switch (attrp->type) {
 		case XML_ATTRIBUTE_NODE:
 			if (php_dom_object_get_data(attrp) == NULL) {
-			node_list_unlink(attrp->children);
+			node_list_unlink(attrp->children TSRMLS_CC);
 				xmlUnlinkNode(attrp);
 				xmlFreeProp((xmlAttrPtr)attrp);
 		} else {
@@ -475,18 +481,17 @@ PHP_FUNCTION(dom_element_remove_attribute)
 
 /* {{{ proto DOMAttr dom_element_get_attribute_node(string name);
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-217A91B8
-Since:
+Since: 
 */
 PHP_FUNCTION(dom_element_get_attribute_node)
 {
 	zval *id;
 	xmlNodePtr nodep, attrp;
-	size_t name_len;
-	int ret;
+	int name_len, ret;
 	dom_object *intern;
 	char *name;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Os", &id, dom_element_class_entry, &name, &name_len) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Os", &id, dom_element_class_entry, &name, &name_len) == FAILURE) {
 		return;
 	}
 
@@ -522,7 +527,7 @@ PHP_FUNCTION(dom_element_get_attribute_node)
 
 /* {{{ proto DOMAttr dom_element_set_attribute_node(DOMAttr newAttr);
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-887236154
-Since:
+Since: 
 */
 PHP_FUNCTION(dom_element_set_attribute_node)
 {
@@ -532,32 +537,32 @@ PHP_FUNCTION(dom_element_set_attribute_node)
 	dom_object *intern, *attrobj, *oldobj;
 	int ret;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "OO", &id, dom_element_class_entry, &node, dom_attr_class_entry) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "OO", &id, dom_element_class_entry, &node, dom_attr_class_entry) == FAILURE) {
 		return;
 	}
 
 	DOM_GET_OBJ(nodep, id, xmlNodePtr, intern);
 
 	if (dom_node_is_read_only(nodep) == SUCCESS) {
-		php_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, dom_get_strict_error(intern->document));
+		php_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, dom_get_strict_error(intern->document) TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
 	DOM_GET_OBJ(attrp, node, xmlAttrPtr, attrobj);
 
 	if (attrp->type != XML_ATTRIBUTE_NODE) {
-		php_error_docref(NULL, E_WARNING, "Attribute node is required");
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Attribute node is required");
 		RETURN_FALSE;
 	}
 
 	if (!(attrp->doc == NULL || attrp->doc == nodep->doc)) {
-		php_dom_throw_error(WRONG_DOCUMENT_ERR, dom_get_strict_error(intern->document));
+		php_dom_throw_error(WRONG_DOCUMENT_ERR, dom_get_strict_error(intern->document) TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
 	existattrp = xmlHasProp(nodep, attrp->name);
 	if (existattrp != NULL && existattrp->type != XML_ATTRIBUTE_DECL) {
-		if ((oldobj = php_dom_object_get_data((xmlNodePtr) existattrp)) != NULL &&
+		if ((oldobj = php_dom_object_get_data((xmlNodePtr) existattrp)) != NULL && 
 			((php_libxml_node_ptr *)oldobj->ptr)->node == (xmlNodePtr) attrp)
 		{
 			RETURN_NULL();
@@ -571,7 +576,7 @@ PHP_FUNCTION(dom_element_set_attribute_node)
 
 	if (attrp->doc == NULL && nodep->doc != NULL) {
 		attrobj->document = intern->document;
-		php_libxml_increment_doc_ref((php_libxml_node_object *)attrobj, NULL);
+		php_libxml_increment_doc_ref((php_libxml_node_object *)attrobj, NULL TSRMLS_CC);
 	}
 
 	xmlAddChild(nodep, (xmlNodePtr) attrp);
@@ -588,7 +593,7 @@ PHP_FUNCTION(dom_element_set_attribute_node)
 
 /* {{{ proto DOMAttr dom_element_remove_attribute_node(DOMAttr oldAttr);
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-D589198
-Since:
+Since: 
 */
 PHP_FUNCTION(dom_element_remove_attribute_node)
 {
@@ -598,21 +603,21 @@ PHP_FUNCTION(dom_element_remove_attribute_node)
 	dom_object *intern, *attrobj;
 	int ret;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "OO", &id, dom_element_class_entry, &node, dom_attr_class_entry) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "OO", &id, dom_element_class_entry, &node, dom_attr_class_entry) == FAILURE) {
 		return;
 	}
 
 	DOM_GET_OBJ(nodep, id, xmlNodePtr, intern);
 
 	if (dom_node_is_read_only(nodep) == SUCCESS) {
-		php_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, dom_get_strict_error(intern->document));
+		php_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, dom_get_strict_error(intern->document) TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
 	DOM_GET_OBJ(attrp, node, xmlAttrPtr, attrobj);
 
 	if (attrp->type != XML_ATTRIBUTE_NODE || attrp->parent != nodep) {
-		php_dom_throw_error(NOT_FOUND_ERR, dom_get_strict_error(intern->document));
+		php_dom_throw_error(NOT_FOUND_ERR, dom_get_strict_error(intern->document) TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
@@ -625,27 +630,27 @@ PHP_FUNCTION(dom_element_remove_attribute_node)
 
 /* {{{ proto DOMNodeList dom_element_get_elements_by_tag_name(string name);
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-1938918D
-Since:
+Since: 
 */
 PHP_FUNCTION(dom_element_get_elements_by_tag_name)
 {
 	zval *id;
 	xmlNodePtr elemp;
-	size_t name_len;
+	int name_len;
 	dom_object *intern, *namednode;
 	char *name;
 	xmlChar *local;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Os", &id, dom_element_class_entry, &name, &name_len) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Os", &id, dom_element_class_entry, &name, &name_len) == FAILURE) {
 		return;
 	}
 
 	DOM_GET_OBJ(elemp, id, xmlNodePtr, intern);
 
-	php_dom_create_interator(return_value, DOM_NODELIST);
-	namednode = Z_DOMOBJ_P(return_value);
+	php_dom_create_interator(return_value, DOM_NODELIST TSRMLS_CC);
+	namednode = (dom_object *)zend_objects_get_address(return_value TSRMLS_CC);
 	local = xmlCharStrndup(name, name_len);
-	dom_namednode_iter(intern, 0, namednode, NULL, local, NULL);
+	dom_namednode_iter(intern, 0, namednode, NULL, local, NULL TSRMLS_CC);
 }
 /* }}} end dom_element_get_elements_by_tag_name */
 
@@ -659,11 +664,11 @@ PHP_FUNCTION(dom_element_get_attribute_ns)
 	xmlNodePtr elemp;
 	xmlNsPtr nsptr;
 	dom_object *intern;
-	size_t uri_len = 0, name_len = 0;
+	int uri_len = 0, name_len = 0;
 	char *uri, *name;
 	xmlChar *strattr;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Os!s", &id, dom_element_class_entry, &uri, &uri_len, &name, &name_len) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Os!s", &id, dom_element_class_entry, &uri, &uri_len, &name, &name_len) == FAILURE) {
 		return;
 	}
 
@@ -672,13 +677,13 @@ PHP_FUNCTION(dom_element_get_attribute_ns)
 	strattr = xmlGetNsProp(elemp, (xmlChar *) name, (xmlChar *) uri);
 
 	if (strattr != NULL) {
-		RETVAL_STRING((char *)strattr);
+		RETVAL_STRING((char *)strattr, 1);
 		xmlFree(strattr);
 	} else {
 		if (xmlStrEqual((xmlChar *) uri, (xmlChar *)DOM_XMLNS_NAMESPACE)) {
 			nsptr = dom_get_nsdecl(elemp, (xmlChar *)name);
 			if (nsptr != NULL) {
-				RETVAL_STRING((char *) nsptr->href);
+				RETVAL_STRING((char *) nsptr->href, 1);
 			} else {
 				RETVAL_EMPTY_STRING();
 			}
@@ -716,7 +721,7 @@ static xmlNsPtr _dom_new_reconNs(xmlDocPtr doc, xmlNodePtr tree, xmlNsPtr ns) /*
 		if (ns->prefix == NULL)
 			snprintf((char *) prefix, sizeof(prefix), "default%d", counter++);
 		else
-			snprintf((char *) prefix, sizeof(prefix), "%.20s%d",
+			snprintf((char *) prefix, sizeof(prefix), "%.20s%d", 
 			(char *)ns->prefix, counter++);
 		def = xmlSearchNs(doc, tree, prefix);
 	}
@@ -739,18 +744,18 @@ PHP_FUNCTION(dom_element_set_attribute_ns)
 	xmlNodePtr elemp, nodep = NULL;
 	xmlNsPtr nsptr;
 	xmlAttr *attr;
-	size_t uri_len = 0, name_len = 0, value_len = 0;
+	int uri_len = 0, name_len = 0, value_len = 0;
 	char *uri, *name, *value;
 	char *localname = NULL, *prefix = NULL;
 	dom_object *intern;
 	int errorcode = 0, stricterror, is_xmlns = 0, name_valid;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Os!ss", &id, dom_element_class_entry, &uri, &uri_len, &name, &name_len, &value, &value_len) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Os!ss", &id, dom_element_class_entry, &uri, &uri_len, &name, &name_len, &value, &value_len) == FAILURE) {
 		return;
 	}
 
 	if (name_len == 0) {
-		php_error_docref(NULL, E_WARNING, "Attribute Name is required");
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Attribute Name is required");
 		RETURN_FALSE;
 	}
 
@@ -759,7 +764,7 @@ PHP_FUNCTION(dom_element_set_attribute_ns)
 	stricterror = dom_get_strict_error(intern->document);
 
 	if (dom_node_is_read_only(elemp) == SUCCESS) {
-		php_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, stricterror);
+		php_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, stricterror TSRMLS_CC);
 		RETURN_NULL();
 	}
 
@@ -769,11 +774,11 @@ PHP_FUNCTION(dom_element_set_attribute_ns)
 		if (uri_len > 0) {
 			nodep = (xmlNodePtr) xmlHasNsProp(elemp, (xmlChar *) localname, (xmlChar *) uri);
 			if (nodep != NULL && nodep->type != XML_ATTRIBUTE_DECL) {
-				node_list_unlink(nodep->children);
+				node_list_unlink(nodep->children TSRMLS_CC);
 			}
 
-			if ((xmlStrEqual((xmlChar *) prefix, (xmlChar *)"xmlns") ||
-				(prefix == NULL && xmlStrEqual((xmlChar *) localname, (xmlChar *)"xmlns"))) &&
+			if ((xmlStrEqual((xmlChar *) prefix, (xmlChar *)"xmlns") || 
+				(prefix == NULL && xmlStrEqual((xmlChar *) localname, (xmlChar *)"xmlns"))) && 
 				xmlStrEqual((xmlChar *) uri, (xmlChar *)DOM_XMLNS_NAMESPACE)) {
 				is_xmlns = 1;
 				if (prefix == NULL) {
@@ -788,7 +793,7 @@ PHP_FUNCTION(dom_element_set_attribute_ns)
 
 					tmpnsptr = nsptr->next;
 					while (tmpnsptr) {
-						if ((tmpnsptr->prefix != NULL) && (tmpnsptr->href != NULL) &&
+						if ((tmpnsptr->prefix != NULL) && (tmpnsptr->href != NULL) && 
 							(xmlStrEqual(tmpnsptr->href, (xmlChar *) uri))) {
 							nsptr = tmpnsptr;
 							break;
@@ -837,7 +842,7 @@ PHP_FUNCTION(dom_element_set_attribute_ns)
 			} else {
 				attr = xmlHasProp(elemp, (xmlChar *)localname);
 				if (attr != NULL && attr->type != XML_ATTRIBUTE_DECL) {
-					node_list_unlink(attr->children);
+					node_list_unlink(attr->children TSRMLS_CC);
 				}
 				xmlSetProp(elemp, (xmlChar *)localname, (xmlChar *)value);
 			}
@@ -850,7 +855,7 @@ PHP_FUNCTION(dom_element_set_attribute_ns)
 	}
 
 	if (errorcode != 0) {
-		php_dom_throw_error(errorcode, stricterror);
+		php_dom_throw_error(errorcode, stricterror TSRMLS_CC);
 	}
 
 	RETURN_NULL();
@@ -868,17 +873,17 @@ PHP_FUNCTION(dom_element_remove_attribute_ns)
 	xmlAttr *attrp;
 	xmlNsPtr nsptr;
 	dom_object *intern;
-	size_t name_len, uri_len;
+	int name_len, uri_len;
 	char *name, *uri;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Os!s", &id, dom_element_class_entry, &uri, &uri_len, &name, &name_len) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Os!s", &id, dom_element_class_entry, &uri, &uri_len, &name, &name_len) == FAILURE) {
 		return;
 	}
 
 	DOM_GET_OBJ(nodep, id, xmlNodePtr, intern);
 
 	if (dom_node_is_read_only(nodep) == SUCCESS) {
-		php_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, dom_get_strict_error(intern->document));
+		php_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, dom_get_strict_error(intern->document) TSRMLS_CC);
 		RETURN_NULL();
 	}
 
@@ -902,7 +907,7 @@ PHP_FUNCTION(dom_element_remove_attribute_ns)
 
 	if (attrp && attrp->type != XML_ATTRIBUTE_DECL) {
 		if (php_dom_object_get_data((xmlNodePtr) attrp) == NULL) {
-			node_list_unlink(attrp->children);
+			node_list_unlink(attrp->children TSRMLS_CC);
 			xmlUnlinkNode((xmlNodePtr) attrp);
 			xmlFreeProp(attrp);
 		} else {
@@ -921,14 +926,13 @@ Since: DOM Level 2
 PHP_FUNCTION(dom_element_get_attribute_node_ns)
 {
 	zval *id;
-	xmlNodePtr elemp, fakeAttrp;
+	xmlNodePtr elemp;
 	xmlAttrPtr attrp;
 	dom_object *intern;
-	size_t uri_len, name_len;
-	int ret;
+	int uri_len, name_len, ret;
 	char *uri, *name;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Os!s", &id, dom_element_class_entry, &uri, &uri_len, &name, &name_len) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Os!s", &id, dom_element_class_entry, &uri, &uri_len, &name, &name_len) == FAILURE) {
 		return;
 	}
 
@@ -937,34 +941,10 @@ PHP_FUNCTION(dom_element_get_attribute_node_ns)
 	attrp = xmlHasNsProp(elemp, (xmlChar *)name, (xmlChar *)uri);
 
 	if (attrp == NULL) {
-		if (xmlStrEqual((xmlChar *) uri, (xmlChar *)DOM_XMLNS_NAMESPACE)) {
-			xmlNsPtr nsptr;
-			nsptr = dom_get_nsdecl(elemp, (xmlChar *)name);
-			if (nsptr != NULL) {
-				xmlNsPtr curns;
-				curns = xmlNewNs(NULL, nsptr->href, NULL);
-				if (nsptr->prefix) {
-					curns->prefix = xmlStrdup((xmlChar *) nsptr->prefix);
-				}
-				if (nsptr->prefix) {
-					fakeAttrp = xmlNewDocNode(elemp->doc, NULL, (xmlChar *) nsptr->prefix, nsptr->href);
-				} else {
-					fakeAttrp = xmlNewDocNode(elemp->doc, NULL, (xmlChar *)"xmlns", nsptr->href);
-				}
-				fakeAttrp->type = XML_NAMESPACE_DECL;
-				fakeAttrp->parent = elemp;
-				fakeAttrp->ns = curns;
-
-				DOM_RET_OBJ(fakeAttrp, &ret, intern);
-			} else {
-				RETURN_NULL();
-			}
-		} else {
-		   RETURN_NULL();
-		}
-	} else {
-		DOM_RET_OBJ((xmlNodePtr) attrp, &ret, intern);
+		RETURN_NULL();
 	}
+
+	DOM_RET_OBJ((xmlNodePtr) attrp, &ret, intern);
 
 }
 /* }}} end dom_element_get_attribute_node_ns */
@@ -982,26 +962,26 @@ PHP_FUNCTION(dom_element_set_attribute_node_ns)
 	dom_object *intern, *attrobj, *oldobj;
 	int ret;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "OO", &id, dom_element_class_entry, &node, dom_attr_class_entry) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "OO", &id, dom_element_class_entry, &node, dom_attr_class_entry) == FAILURE) {
 		return;
 	}
 
 	DOM_GET_OBJ(nodep, id, xmlNodePtr, intern);
 
 	if (dom_node_is_read_only(nodep) == SUCCESS) {
-		php_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, dom_get_strict_error(intern->document));
+		php_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, dom_get_strict_error(intern->document) TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
 	DOM_GET_OBJ(attrp, node, xmlAttrPtr, attrobj);
 
 	if (attrp->type != XML_ATTRIBUTE_NODE) {
-		php_error_docref(NULL, E_WARNING, "Attribute node is required");
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Attribute node is required");
 		RETURN_FALSE;
 	}
 
 	if (!(attrp->doc == NULL || attrp->doc == nodep->doc)) {
-		php_dom_throw_error(WRONG_DOCUMENT_ERR, dom_get_strict_error(intern->document));
+		php_dom_throw_error(WRONG_DOCUMENT_ERR, dom_get_strict_error(intern->document) TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
@@ -1013,7 +993,7 @@ PHP_FUNCTION(dom_element_set_attribute_node_ns)
     }
 
 	if (existattrp != NULL && existattrp->type != XML_ATTRIBUTE_DECL) {
-		if ((oldobj = php_dom_object_get_data((xmlNodePtr) existattrp)) != NULL &&
+		if ((oldobj = php_dom_object_get_data((xmlNodePtr) existattrp)) != NULL && 
 			((php_libxml_node_ptr *)oldobj->ptr)->node == (xmlNodePtr) attrp)
 		{
 			RETURN_NULL();
@@ -1027,7 +1007,7 @@ PHP_FUNCTION(dom_element_set_attribute_node_ns)
 
 	if (attrp->doc == NULL && nodep->doc != NULL) {
 		attrobj->document = intern->document;
-		php_libxml_increment_doc_ref((php_libxml_node_object *)attrobj, NULL);
+		php_libxml_increment_doc_ref((php_libxml_node_object *)attrobj, NULL TSRMLS_CC);
 	}
 
 	xmlAddChild(nodep, (xmlNodePtr) attrp);
@@ -1050,22 +1030,22 @@ PHP_FUNCTION(dom_element_get_elements_by_tag_name_ns)
 {
 	zval *id;
 	xmlNodePtr elemp;
-	size_t uri_len, name_len;
+	int uri_len, name_len;
 	dom_object *intern, *namednode;
 	char *uri, *name;
 	xmlChar *local, *nsuri;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Oss", &id, dom_element_class_entry, &uri, &uri_len, &name, &name_len) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Oss", &id, dom_element_class_entry, &uri, &uri_len, &name, &name_len) == FAILURE) {
 		return;
 	}
 
 	DOM_GET_OBJ(elemp, id, xmlNodePtr, intern);
 
-	php_dom_create_interator(return_value, DOM_NODELIST);
-	namednode = Z_DOMOBJ_P(return_value);
+	php_dom_create_interator(return_value, DOM_NODELIST TSRMLS_CC);
+	namednode = (dom_object *)zend_objects_get_address(return_value TSRMLS_CC);
 	local = xmlCharStrndup(name, name_len);
 	nsuri = xmlCharStrndup(uri, uri_len);
-	dom_namednode_iter(intern, 0, namednode, NULL, local, nsuri);
+	dom_namednode_iter(intern, 0, namednode, NULL, local, nsuri TSRMLS_CC);
 
 }
 /* }}} end dom_element_get_elements_by_tag_name_ns */
@@ -1080,10 +1060,10 @@ PHP_FUNCTION(dom_element_has_attribute)
 	xmlNode *nodep;
 	dom_object *intern;
 	char *name;
-	size_t name_len;
+	int name_len;
 	xmlNodePtr attr;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Os", &id, dom_element_class_entry, &name, &name_len) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Os", &id, dom_element_class_entry, &name, &name_len) == FAILURE) {
 		return;
 	}
 
@@ -1108,11 +1088,11 @@ PHP_FUNCTION(dom_element_has_attribute_ns)
 	xmlNodePtr elemp;
 	xmlNs *nsp;
 	dom_object *intern;
-	size_t uri_len, name_len;
+	int uri_len, name_len;
 	char *uri, *name;
 	xmlChar *value;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Os!s", &id, dom_element_class_entry, &uri, &uri_len, &name, &name_len) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Os!s", &id, dom_element_class_entry, &uri, &uri_len, &name, &name_len) == FAILURE) {
 		return;
 	}
 
@@ -1166,23 +1146,23 @@ PHP_FUNCTION(dom_element_set_id_attribute)
 	xmlAttrPtr attrp;
 	dom_object *intern;
 	char *name;
-	size_t name_len;
+	int name_len;
 	zend_bool is_id;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Osb", &id, dom_element_class_entry, &name, &name_len, &is_id) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Osb", &id, dom_element_class_entry, &name, &name_len, &is_id) == FAILURE) {
 		return;
 	}
 
 	DOM_GET_OBJ(nodep, id, xmlNodePtr, intern);
 
 	if (dom_node_is_read_only(nodep) == SUCCESS) {
-		php_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, dom_get_strict_error(intern->document));
+		php_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, dom_get_strict_error(intern->document) TSRMLS_CC);
 		RETURN_NULL();
 	}
 
 	attrp = xmlHasNsProp(nodep, (xmlChar *)name, NULL);
 	if (attrp == NULL || attrp->type == XML_ATTRIBUTE_DECL) {
-		php_dom_throw_error(NOT_FOUND_ERR, dom_get_strict_error(intern->document));
+		php_dom_throw_error(NOT_FOUND_ERR, dom_get_strict_error(intern->document) TSRMLS_CC);
 	} else {
 		php_set_attribute_id(attrp, is_id);
 	}
@@ -1201,24 +1181,24 @@ PHP_FUNCTION(dom_element_set_id_attribute_ns)
 	xmlNodePtr elemp;
 	xmlAttrPtr attrp;
 	dom_object *intern;
-	size_t uri_len, name_len;
+	int uri_len, name_len;
 	char *uri, *name;
 	zend_bool is_id;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Ossb", &id, dom_element_class_entry, &uri, &uri_len, &name, &name_len, &is_id) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Ossb", &id, dom_element_class_entry, &uri, &uri_len, &name, &name_len, &is_id) == FAILURE) {
 		return;
 	}
 
 	DOM_GET_OBJ(elemp, id, xmlNodePtr, intern);
 
 	if (dom_node_is_read_only(elemp) == SUCCESS) {
-		php_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, dom_get_strict_error(intern->document));
+		php_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, dom_get_strict_error(intern->document) TSRMLS_CC);
 		RETURN_NULL();
 	}
 
 	attrp = xmlHasNsProp(elemp, (xmlChar *)name, (xmlChar *)uri);
 	if (attrp == NULL || attrp->type == XML_ATTRIBUTE_DECL) {
-		php_dom_throw_error(NOT_FOUND_ERR, dom_get_strict_error(intern->document));
+		php_dom_throw_error(NOT_FOUND_ERR, dom_get_strict_error(intern->document) TSRMLS_CC);
 	} else {
 		php_set_attribute_id(attrp, is_id);
 	}
@@ -1239,21 +1219,21 @@ PHP_FUNCTION(dom_element_set_id_attribute_node)
 	dom_object *intern, *attrobj;
 	zend_bool is_id;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "OOb", &id, dom_element_class_entry, &node, dom_attr_class_entry, &is_id) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "OOb", &id, dom_element_class_entry, &node, dom_attr_class_entry, &is_id) == FAILURE) {
 		return;
 	}
 
 	DOM_GET_OBJ(nodep, id, xmlNodePtr, intern);
 
 	if (dom_node_is_read_only(nodep) == SUCCESS) {
-		php_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, dom_get_strict_error(intern->document));
+		php_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, dom_get_strict_error(intern->document) TSRMLS_CC);
 		RETURN_NULL();
 	}
 
 	DOM_GET_OBJ(attrp, node, xmlAttrPtr, attrobj);
 
 	if (attrp->parent != nodep) {
-		php_dom_throw_error(NOT_FOUND_ERR, dom_get_strict_error(intern->document));
+		php_dom_throw_error(NOT_FOUND_ERR, dom_get_strict_error(intern->document) TSRMLS_CC);
 	} else {
 		php_set_attribute_id(attrp, is_id);
 	}

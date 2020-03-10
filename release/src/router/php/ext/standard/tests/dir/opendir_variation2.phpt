@@ -3,7 +3,7 @@ Test opendir() function : usage variations - different data types as $context ar
 --FILE--
 <?php
 /* Prototype  : mixed opendir(string $path[, resource $context])
- * Description: Open a directory and return a dir_handle
+ * Description: Open a directory and return a dir_handle 
  * Source code: ext/standard/dir.c
  */
 
@@ -27,7 +27,7 @@ unset ($unset_var);
 // get a class
 class classA
 {
-	public function __toString()
+	public function __toString() 
 	{
 		return "Class A object";
 	}
@@ -66,7 +66,7 @@ $inputs = array(
        false,
        TRUE,
        FALSE,
-
+       
        // empty data
 /*16*/ "",
        '',
@@ -76,7 +76,7 @@ $inputs = array(
 /*19*/ "string",
        'string',
        $heredoc,
-
+       
        // object data
 /*22*/ new classA(),
 
@@ -134,27 +134,27 @@ NULL
 
 -- Iteration 5 --
 
-Warning: opendir() expects parameter 2 to be resource, float given in %s on line %d
+Warning: opendir() expects parameter 2 to be resource, double given in %s on line %d
 NULL
 
 -- Iteration 6 --
 
-Warning: opendir() expects parameter 2 to be resource, float given in %s on line %d
+Warning: opendir() expects parameter 2 to be resource, double given in %s on line %d
 NULL
 
 -- Iteration 7 --
 
-Warning: opendir() expects parameter 2 to be resource, float given in %s on line %d
+Warning: opendir() expects parameter 2 to be resource, double given in %s on line %d
 NULL
 
 -- Iteration 8 --
 
-Warning: opendir() expects parameter 2 to be resource, float given in %s on line %d
+Warning: opendir() expects parameter 2 to be resource, double given in %s on line %d
 NULL
 
 -- Iteration 9 --
 
-Warning: opendir() expects parameter 2 to be resource, float given in %s on line %d
+Warning: opendir() expects parameter 2 to be resource, double given in %s on line %d
 NULL
 
 -- Iteration 10 --

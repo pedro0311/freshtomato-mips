@@ -3,7 +3,7 @@ Test array_change_key_case() function : usage variations - Pass different data t
 --FILE--
 <?php
 /* Prototype  : array array_change_key_case(array $input [, int $case])
- * Description: Retuns an array with all string keys lowercased [or uppercased]
+ * Description: Retuns an array with all string keys lowercased [or uppercased] 
  * Source code: ext/standard/array.c
  */
 
@@ -58,7 +58,7 @@ $inputs = array(
        false,
        TRUE,
        FALSE,
-
+       
        // empty data
 /*16*/ "",
        '',
@@ -68,7 +68,7 @@ $inputs = array(
 /*19*/ "string",
        'string',
        $heredoc,
-
+       
        // object data
 /*22*/ new classA(),
 
@@ -94,6 +94,7 @@ fclose($fp);
 
 echo "Done";
 ?>
+
 --EXPECTF--
 *** Testing array_change_key_case() : usage variations ***
 
@@ -119,27 +120,27 @@ NULL
 
 -- Iteration 5 --
 
-Warning: array_change_key_case() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_change_key_case() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 6 --
 
-Warning: array_change_key_case() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_change_key_case() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 7 --
 
-Warning: array_change_key_case() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_change_key_case() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 8 --
 
-Warning: array_change_key_case() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_change_key_case() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 9 --
 
-Warning: array_change_key_case() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_change_key_case() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 10 --

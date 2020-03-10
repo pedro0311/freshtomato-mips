@@ -20,7 +20,9 @@ var_dump($c->getWeekendTransition(0));
 
 var_dump(intlcal_get_weekend_transition($c));
 var_dump(intlcal_get_weekend_transition(1, 1));
+
 --EXPECTF--
+
 Warning: IntlCalendar::getWeekendTransition() expects exactly 1 parameter, 0 given in %s on line %d
 
 Warning: IntlCalendar::getWeekendTransition(): intlcal_get_weekend_transition: bad arguments in %s on line %d
@@ -39,8 +41,4 @@ Warning: intlcal_get_weekend_transition() expects exactly 2 parameters, 1 given 
 Warning: intlcal_get_weekend_transition(): intlcal_get_weekend_transition: bad arguments in %s on line %d
 bool(false)
 
-Fatal error: Uncaught TypeError: Argument 1 passed to intlcal_get_weekend_transition() must be an instance of IntlCalendar, integer given in %s:%d
-Stack trace:
-#0 %s(%d): intlcal_get_weekend_transition(1, 1)
-#1 {main}
-  thrown in %s on line %d
+Catchable fatal error: Argument 1 passed to intlcal_get_weekend_transition() must be an instance of IntlCalendar, integer given in %s on line %d

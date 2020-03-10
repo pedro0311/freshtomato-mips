@@ -1,8 +1,8 @@
 --TEST--
 execute a file with -f
 --SKIPIF--
-<?php
-include "skipif.inc";
+<?php 
+include "skipif.inc"; 
 if (substr(PHP_OS, 0, 3) == 'WIN') {
 	die ("skip not for Windows");
 }
@@ -33,13 +33,10 @@ var_dump(`$php -n -f "wrong"`);
 
 echo "Done\n";
 ?>
---EXPECTF--
+--EXPECTF--	
 string(%d) "
 
-Fatal error: Uncaught Error: Cannot access private property test::$pri in %s:%d
-Stack trace:
-#0 {main}
-  thrown in %s on line %d
+Fatal error: Cannot access private property test::$pri in %s on line %d
 "
 string(33) "Could not open input file: wrong
 "

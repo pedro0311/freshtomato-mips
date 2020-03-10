@@ -11,6 +11,7 @@ precision=14
 	var_dump(array_fill_keys(array('test', TRUE, 10, 100), ''));
 ?>
 --EXPECTF--
+
 Warning: array_fill_keys() expects parameter 1 to be array, string given in %s on line %d
 NULL
 array(0) {

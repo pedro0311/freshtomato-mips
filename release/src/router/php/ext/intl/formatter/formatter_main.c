@@ -1,6 +1,6 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -25,27 +25,27 @@
 #include "intl_convert.h"
 
 /* {{{ */
-static int numfmt_ctor(INTERNAL_FUNCTION_PARAMETERS, zend_bool is_constructor)
+static void numfmt_ctor(INTERNAL_FUNCTION_PARAMETERS)
 {
 	const char* locale;
 	char*       pattern = NULL;
-	size_t      locale_len = 0, pattern_len = 0;
-	zend_long   style;
+	int         locale_len = 0, pattern_len = 0;
+	long        style;
 	UChar*      spattern     = NULL;
-	int32_t     spattern_len = 0;
-	int         zpp_flags = is_constructor ? ZEND_PARSE_PARAMS_THROW : 0;
+	int         spattern_len = 0;
 	FORMATTER_METHOD_INIT_VARS;
 
 	/* Parse parameters. */
-	if( zend_parse_parameters_ex( zpp_flags, ZEND_NUM_ARGS(), "sl|s",
+	if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "sl|s",
 		&locale, &locale_len, &style, &pattern, &pattern_len ) == FAILURE )
 	{
 		intl_error_set( NULL, U_ILLEGAL_ARGUMENT_ERROR,
-			"numfmt_create: unable to parse input parameters", 0 );
-		return FAILURE;
+			"numfmt_create: unable to parse input parameters", 0 TSRMLS_CC );
+		zval_dtor(return_value);
+		RETURN_NULL();
 	}
 
-	INTL_CHECK_LOCALE_LEN_OR_FAILURE(locale_len);
+	INTL_CHECK_LOCALE_LEN_OBJ(locale_len, return_value);
 	object = return_value;
 	FORMATTER_METHOD_FETCH_OBJECT_NO_CHECK;
 
@@ -56,7 +56,7 @@ static int numfmt_ctor(INTERNAL_FUNCTION_PARAMETERS, zend_bool is_constructor)
 	}
 
 	if(locale_len == 0) {
-		locale = intl_locale_get_default();
+		locale = intl_locale_get_default(TSRMLS_C);
 	}
 
 	/* Create an ICU number formatter. */
@@ -67,7 +67,6 @@ static int numfmt_ctor(INTERNAL_FUNCTION_PARAMETERS, zend_bool is_constructor)
 	}
 
 	INTL_CTOR_CHECK_STATUS(nfo, "numfmt_create: number formatter creation failed");
-	return SUCCESS;
 }
 /* }}} */
 
@@ -79,10 +78,7 @@ static int numfmt_ctor(INTERNAL_FUNCTION_PARAMETERS, zend_bool is_constructor)
 PHP_FUNCTION( numfmt_create )
 {
 	object_init_ex( return_value, NumberFormatter_ce_ptr );
-	if (numfmt_ctor(INTERNAL_FUNCTION_PARAM_PASSTHRU, 0) == FAILURE) {
-		zval_ptr_dtor(return_value);
-		RETURN_NULL();
-	}
+	numfmt_ctor(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 /* }}} */
 
@@ -91,16 +87,8 @@ PHP_FUNCTION( numfmt_create )
  */
 PHP_METHOD( NumberFormatter, __construct )
 {
-	zend_error_handling error_handling;
-
-	zend_replace_error_handling(EH_THROW, IntlException_ce_ptr, &error_handling);
 	return_value = getThis();
-	if (numfmt_ctor(INTERNAL_FUNCTION_PARAM_PASSTHRU, 1) == FAILURE) {
-		if (!EG(exception)) {
-			zend_throw_exception(IntlException_ce_ptr, "Constructor failed", 0);
-		}
-	}
-	zend_restore_error_handling(&error_handling);
+	numfmt_ctor(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 /* }}} */
 
@@ -114,16 +102,16 @@ PHP_FUNCTION( numfmt_get_error_code )
 	FORMATTER_METHOD_INIT_VARS
 
 	/* Parse parameters. */
-	if( zend_parse_method_parameters( ZEND_NUM_ARGS(), getThis(), "O",
+	if( zend_parse_method_parameters( ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "O",
 		&object, NumberFormatter_ce_ptr ) == FAILURE )
 	{
 		intl_error_set( NULL, U_ILLEGAL_ARGUMENT_ERROR,
-			"numfmt_get_error_code: unable to parse input params", 0 );
+			"numfmt_get_error_code: unable to parse input params", 0 TSRMLS_CC );
 
 		RETURN_FALSE;
 	}
 
-	nfo = Z_INTL_NUMBERFORMATTER_P(object);
+	nfo = (NumberFormatter_object *) zend_object_store_get_object( object TSRMLS_CC );
 
 	/* Return formatter's last error code. */
 	RETURN_LONG( INTL_DATA_ERROR_CODE(nfo) );
@@ -137,24 +125,24 @@ PHP_FUNCTION( numfmt_get_error_code )
  */
 PHP_FUNCTION( numfmt_get_error_message )
 {
-	zend_string *message = NULL;
+	char*                    message = NULL;
 	FORMATTER_METHOD_INIT_VARS
 
 	/* Parse parameters. */
-	if( zend_parse_method_parameters( ZEND_NUM_ARGS(), getThis(), "O",
+	if( zend_parse_method_parameters( ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "O",
 		&object, NumberFormatter_ce_ptr ) == FAILURE )
 	{
 		intl_error_set( NULL, U_ILLEGAL_ARGUMENT_ERROR,
-			"numfmt_get_error_message: unable to parse input params", 0 );
+			"numfmt_get_error_message: unable to parse input params", 0 TSRMLS_CC );
 
 		RETURN_FALSE;
 	}
 
-	nfo = Z_INTL_NUMBERFORMATTER_P(object);
+	nfo = (NumberFormatter_object *) zend_object_store_get_object( object TSRMLS_CC );
 
 	/* Return last error message. */
-	message = intl_error_get_message( INTL_DATA_ERROR_P(nfo) );
-	RETURN_STR(message);
+	message = intl_error_get_message( INTL_DATA_ERROR_P(nfo) TSRMLS_CC );
+	RETURN_STRING( message, 0);
 }
 /* }}} */
 

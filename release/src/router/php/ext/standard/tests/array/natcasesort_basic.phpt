@@ -1,5 +1,5 @@
 --TEST--
-Test natcasesort() function : basic functionality
+Test natcasesort() function : basic functionality 
 --FILE--
 <?php
 /* Prototype  : bool natcasesort(array &$array_arg)
@@ -43,10 +43,10 @@ array(5) {
 -- After Sorting: --
 bool(true)
 array(5) {
-  [0]=>
-  string(3) "A01"
   [3]=>
   string(3) "a01"
+  [0]=>
+  string(3) "A01"
   [1]=>
   string(2) "a1"
   [4]=>

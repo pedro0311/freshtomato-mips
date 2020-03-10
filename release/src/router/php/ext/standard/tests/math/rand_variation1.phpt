@@ -1,7 +1,5 @@
 --TEST--
 Test rand() function : usage variations - different data types as $min argument
---SKIPIF--
-<?php if (PHP_INT_SIZE !== 4) die("skip this test is for 32-bit only");
 --FILE--
 <?php
 /* Prototype  : int rand  ([ int $min  , int $max ] )
@@ -34,7 +32,7 @@ $inputs = array(
 /*1*/  0,
        1,
        12345,
-       -2345,
+       -2345,       
        2147483647,
 
        // float data
@@ -53,7 +51,7 @@ $inputs = array(
        false,
        TRUE,
        FALSE,
-
+       
        // empty data
 /*17*/ "",
        '',
@@ -63,10 +61,10 @@ $inputs = array(
 /*20*/ "abcxyz",
        'abcxyz',
        $heredoc,
-
+       
        // object data
-/*23*/ new classA(),
-
+/*23*/ new classA(),       
+       
        // undefined data
 /*24*/ @$undefined_var,
 
@@ -112,9 +110,7 @@ int(%i)
 int(%i)
 
 -- Iteration 8 --
-
-Warning: rand() expects parameter 1 to be integer, float given in %s on line %d
-NULL
+int(%i)
 
 -- Iteration 9 --
 int(%i)
@@ -142,37 +138,37 @@ int(%i)
 
 -- Iteration 17 --
 
-Warning: rand() expects parameter 1 to be integer, string given in %s on line %d
+Warning: rand() expects parameter 1 to be long, string given in %s on line %d
 NULL
 
 -- Iteration 18 --
 
-Warning: rand() expects parameter 1 to be integer, string given in %s on line %d
+Warning: rand() expects parameter 1 to be long, string given in %s on line %d
 NULL
 
 -- Iteration 19 --
 
-Warning: rand() expects parameter 1 to be integer, array given in %s on line %d
+Warning: rand() expects parameter 1 to be long, array given in %s on line %d
 NULL
 
 -- Iteration 20 --
 
-Warning: rand() expects parameter 1 to be integer, string given in %s on line %d
+Warning: rand() expects parameter 1 to be long, string given in %s on line %d
 NULL
 
 -- Iteration 21 --
 
-Warning: rand() expects parameter 1 to be integer, string given in %s on line %d
+Warning: rand() expects parameter 1 to be long, string given in %s on line %d
 NULL
 
 -- Iteration 22 --
 
-Warning: rand() expects parameter 1 to be integer, string given in %s on line %d
+Warning: rand() expects parameter 1 to be long, string given in %s on line %d
 NULL
 
 -- Iteration 23 --
 
-Warning: rand() expects parameter 1 to be integer, object given in %s on line %d
+Warning: rand() expects parameter 1 to be long, object given in %s on line %d
 NULL
 
 -- Iteration 24 --
@@ -183,6 +179,6 @@ int(%i)
 
 -- Iteration 26 --
 
-Warning: rand() expects parameter 1 to be integer, resource given in %s on line %d
+Warning: rand() expects parameter 1 to be long, resource given in %s on line %d
 NULL
 ===Done===

@@ -12,6 +12,7 @@ if (substr(PHP_OS, 0, 3) != 'WIN')
  * WSARecvMsg (though only the top 6 bits seem to reported), but WSASendMsg
  * does not accept IPV6_TCLASS messages. We still  test that sendmsg() works
  * corectly by sending an IPV6_PKTINFO message that will have no effect */
+
 --FILE--
 <?php
 include __DIR__."/mcast_helpers.php.inc";
@@ -56,12 +57,13 @@ $data = [
 ];
 if (!socket_recvmsg($s, $data, 0)) die("recvmsg");
 print_r($data);
+
 --EXPECTF--
 creating send socket
-resource(%d) of type (Socket)
+resource(5) of type (Socket)
 bool(true)
 creating receive socket
-resource(%d) of type (Socket)
+resource(6) of type (Socket)
 bool(true)
 int(11)
 Array

@@ -4,10 +4,10 @@ proc_open() regression test 1 (proc_open() leak)
 <?php
 $pipes = array(1, 2, 3);
 $orig_pipes = $pipes;
-$php = getenv('TEST_PHP_EXECUTABLE');
+$php = getenv('TEST_PHP_EXECUTABLE'); 
 if ($php === false) {
 	die("no php executable defined");
-}
+} 
 $proc = proc_open(
 	"$php -n",
 	array(0 => array('pipe', 'r'), 1 => array('pipe', 'w')),
@@ -18,13 +18,13 @@ if ($proc === false) {
 }
 var_dump($pipes);
 stream_set_blocking($pipes[1], FALSE);
-$test_string = "yay!\n";
+$test_string = b"yay!\n";
 fwrite($pipes[0], $test_string);
 fflush($pipes[0]);
 fclose($pipes[0]);
 $cnt = '';
 $n=0;
-for ($left = strlen($test_string); $left > 0;) {
+for ($left = strlen($test_string); $left > 0;) { 
 	if (++$n >1000) {
 	  print "terminated after 1000 iterations\n";
 	  break;
@@ -57,7 +57,7 @@ array(2) {
   [1]=>
   resource(%d) of type (stream)
 }
-string(5) "yay!
+%unicode|string%(5) "yay!
 "
 array(3) {
   [0]=>

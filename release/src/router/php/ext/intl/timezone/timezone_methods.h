@@ -1,6 +1,6 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -64,10 +64,5 @@ PHP_FUNCTION(intltz_to_date_time_zone);
 PHP_FUNCTION(intltz_get_error_code);
 
 PHP_FUNCTION(intltz_get_error_message);
-
-#if U_ICU_VERSION_MAJOR_NUM >= 52
-PHP_FUNCTION(intltz_get_windows_id);
-PHP_FUNCTION(intltz_get_id_for_windows_id);
-#endif
 
 #endif /* #ifndef TIMEZONE_METHODS_H */

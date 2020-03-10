@@ -1,11 +1,5 @@
 --TEST--
 Bug #72663: Create an Unexpected Object and Don't Invoke __wakeup() in Deserialization
---SKIPIF--
-<?php
-if (!extension_loaded("session")) {
-	die("skip");
-}
-?>
 --FILE--
 <?php
 

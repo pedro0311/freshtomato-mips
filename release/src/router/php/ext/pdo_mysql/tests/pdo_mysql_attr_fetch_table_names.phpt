@@ -28,15 +28,15 @@ MySQLPDOTest::skip();
 array(1) {
   [0]=>
   array(1) {
-    ["test.label"]=>
-    string(1) "a"
+    [%u|b%"test.label"]=>
+    %unicode|string%(1) "a"
   }
 }
 array(1) {
   [0]=>
   array(1) {
-    ["label"]=>
-    string(1) "a"
+    [%u|b%"label"]=>
+    %unicode|string%(1) "a"
   }
 }
 done!

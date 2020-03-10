@@ -1,5 +1,7 @@
 --TEST--
 ZE2 A private method cannot be called in another class
+--SKIPIF--
+<?php if (version_compare(zend_version(), '2.0.0-dev', '<')) die('skip ZendEngine 2 needed'); ?>
 --FILE--
 <?php
 
@@ -30,8 +32,4 @@ echo "Done\n"; // shouldn't be displayed
 Call pass::show()
 Call fail::show()
 
-Fatal error: Uncaught Error: Call to private method pass::show() from context 'fail' in %s:%d
-Stack trace:
-#0 %s(%d): fail::show()
-#1 {main}
-  thrown in %s on line %d
+Fatal error: Call to private method pass::show() from context 'fail' in %s on line %d

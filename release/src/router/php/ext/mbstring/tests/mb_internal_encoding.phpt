@@ -4,7 +4,7 @@ mb_internal_encoding()
 <?php extension_loaded('mbstring') or die('skip mbstring not available'); ?>
 --FILE--
 <?php
-// TODO:
+// TODO: 
 //$debug = true;
 ini_set('include_path', dirname(__FILE__));
 include_once('common.inc');
@@ -32,21 +32,22 @@ print "== INVALID PARAMETER ==\n";
 
 // Note: Other than string type, PHP raises Warning
 $r = mb_internal_encoding('BAD');
-($r === false) ? print "OK_BAD_SET\n" : print "NG_BAD_SET\n";
+($r === FALSE) ? print "OK_BAD_SET\n" : print "NG_BAD_SET\n";
 $enc = mb_internal_encoding();
 print "$enc\n";
 
 $r = mb_internal_encoding($t_ary);
-($r === NULL) ? print "OK_BAD_ARY_SET\n" : print "NG_BAD_ARY_SET\n";
+($r === FALSE) ? print "OK_BAD_ARY_SET\n" : print "NG_BAD_ARY_SET\n";
 $enc = mb_internal_encoding();
 print "$enc\n";
 
 $r = mb_internal_encoding($t_obj);
-($r === NULL) ? print "OK_BAD_OBJ_SET\n" : print "NG_BAD_OBJ_SET\n";
+($r === FALSE) ? print "OK_BAD_OBJ_SET\n" : print "NG_BAD_OBJ_SET\n";
 $enc = mb_internal_encoding();
 print "$enc\n";
 
 ?>
+
 --EXPECT--
 OK_EUC-JP_SET
 EUC-JP
@@ -64,3 +65,4 @@ ASCII
 ERR: Warning
 OK_BAD_OBJ_SET
 ASCII
+

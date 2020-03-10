@@ -32,6 +32,7 @@ session_unset();
 
 session_start();
 var_dump($_SESSION);
+
 --EXPECTF--
 array(1) {
   ["foo"]=>

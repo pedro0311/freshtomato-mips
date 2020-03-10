@@ -5,7 +5,6 @@ Test session_reset() function : basic functionality
 --INI--
 session.save_path=
 session.name=PHPSESSID
-session.save_handler=files
 --FILE--
 <?php
 

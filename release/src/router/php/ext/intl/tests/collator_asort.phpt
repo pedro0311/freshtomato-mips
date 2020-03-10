@@ -35,7 +35,7 @@ function sort_arrays( $locale, $test_arrays, $sort_flag = Collator::SORT_REGULAR
         $md5 = md5( $res_dump );
 
         global $test_num;
-
+        
         $res_str .= "\n\n".
                     "Test $test_num.$md5:" .
                     $res_dump;
@@ -152,18 +152,18 @@ array (
 )
  Result: true
 
-Test 3.d5a9747a8bd4c32cb2a705f7e6d8a56f:
+Test 3.9f25de4482bc7b58de508e278113317c:
 array (
-  'a' => 'a',
-  'aaa' => 'a',
   'aa' => 'a',
+  'aaa' => 'a',
+  'a' => 'a',
 )
  Result: true
 
-Test 4.dcc371022fa1eac76e73b0455d70790a:
+Test 4.a85a41ea78e45b651080cfd98c0b431d:
 array (
-  2 => NULL,
   7 => '',
+  2 => NULL,
   5 => '!',
   1 => 'abc',
 )

@@ -3,12 +3,12 @@ Test array_unique() function : usage variations - unexpected values for 'input' 
 --FILE--
 <?php
 /* Prototype  : array array_unique(array $input)
- * Description: Removes duplicate values from array
+ * Description: Removes duplicate values from array 
  * Source code: ext/standard/array.c
 */
 
 /*
- * Passing non array values to 'input' argument of array_unique() and see
+ * Passing non array values to 'input' argument of array_unique() and see 
  * that the function outputs proper warning messages wherever expected.
 */
 
@@ -114,23 +114,23 @@ Warning: array_unique() expects parameter 1 to be array, integer given in %s on 
 NULL
 -- Iteration 5 --
 
-Warning: array_unique() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_unique() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 6 --
 
-Warning: array_unique() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_unique() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 7 --
 
-Warning: array_unique() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_unique() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 8 --
 
-Warning: array_unique() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_unique() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 9 --
 
-Warning: array_unique() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_unique() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 10 --
 

@@ -2,7 +2,7 @@
 Test open_basedir configuration
 --SKIPIF--
 <?php
-if(PHP_OS_FAMILY === "Windows") {
+if (substr(PHP_OS, 0, 3) == 'WIN') {
     die('skip no links on Windows');
 }
 ?>
@@ -75,3 +75,4 @@ bool(false)
 bool(true)
 bool(true)
 *** Finished testing open_basedir configuration [link] ***
+

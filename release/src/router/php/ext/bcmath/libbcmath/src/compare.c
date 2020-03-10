@@ -26,7 +26,7 @@
                 Computer Science Department, 9062
                 Western Washington University
                 Bellingham, WA 98226-9062
-
+       
 *************************************************************************/
 
 #include <config.h>
@@ -158,3 +158,4 @@ bc_compare (n1, n2)
 {
   return _bc_do_compare (n1, n2, TRUE, FALSE);
 }
+

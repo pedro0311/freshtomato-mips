@@ -1,9 +1,9 @@
 <?php
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2018 The PHP Group                                |
+   | Copyright (c) 1997-2010 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -23,7 +23,7 @@
 $t = <<<CODE
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
    | Copyright (c) 1997-%s The PHP Group                                |
    +----------------------------------------------------------------------+
@@ -62,42 +62,42 @@ enum entity_charset { cs_utf_8, cs_8859_1, cs_cp1252, cs_8859_15, cs_cp1251,
 
 static const struct {
 	const char *codeset;
-	uint32_t codeset_len;
 	enum entity_charset charset;
 } charset_map[] = {
-	{ "ISO-8859-1",		sizeof("ISO-8859-1")-1,		cs_8859_1 },
-	{ "ISO8859-1",		sizeof("ISO8859-1")-1,		cs_8859_1 },
-	{ "ISO-8859-15",	sizeof("ISO-8859-15")-1,	cs_8859_15 },
-	{ "ISO8859-15",		sizeof("ISO8859-15")-1,		cs_8859_15 },
-	{ "utf-8",			sizeof("utf-8")-1,			cs_utf_8 },
-	{ "cp1252", 		sizeof("cp1252")-1, 		cs_cp1252 },
-	{ "Windows-1252",	sizeof("Windows-1252")-1,	cs_cp1252 },
-	{ "1252",			sizeof("1252")-1,			cs_cp1252 },
-	{ "BIG5",			sizeof("BIG5")-1,			cs_big5 },
-	{ "950",			sizeof("950")-1,			cs_big5 },
-	{ "GB2312",			sizeof("GB2312")-1,			cs_gb2312 },
-	{ "936",			sizeof("936")-1,			cs_gb2312 },
-	{ "BIG5-HKSCS",		sizeof("BIG5-HKSCS")-1,		cs_big5hkscs },
-	{ "Shift_JIS",		sizeof("Shift_JIS")-1,		cs_sjis },
-	{ "SJIS",			sizeof("SJIS")-1,			cs_sjis },
-	{ "932",			sizeof("932")-1,			cs_sjis },
-	{ "SJIS-win",		sizeof("SJIS-win")-1,		cs_sjis },
-	{ "CP932",			sizeof("CP932")-1,			cs_sjis },
-	{ "EUCJP",			sizeof("EUCJP")-1,			cs_eucjp },
-	{ "EUC-JP",			sizeof("EUC-JP")-1,			cs_eucjp },
-	{ "eucJP-win",		sizeof("eucJP-win")-1,		cs_eucjp },
-	{ "KOI8-R",			sizeof("KOI8-R")-1,			cs_koi8r },
-	{ "koi8-ru",		sizeof("koi8-ru")-1,		cs_koi8r },
-	{ "koi8r",			sizeof("koi8r")-1,			cs_koi8r },
-	{ "cp1251",			sizeof("cp1251")-1,			cs_cp1251 },
-	{ "Windows-1251",	sizeof("Windows-1251")-1,	cs_cp1251 },
-	{ "win-1251",		sizeof("win-1251")-1,		cs_cp1251 },
-	{ "iso8859-5",		sizeof("iso8859-5")-1,		cs_8859_5 },
-	{ "iso-8859-5",		sizeof("iso-8859-5")-1,		cs_8859_5 },
-	{ "cp866",			sizeof("cp866")-1,			cs_cp866 },
-	{ "866",			sizeof("866")-1,			cs_cp866 },
-	{ "ibm866",			sizeof("ibm866")-1,			cs_cp866 },
-	{ "MacRoman",		sizeof("MacRoman")-1,		cs_macroman }
+	{ "ISO-8859-1",		cs_8859_1 },
+	{ "ISO8859-1",		cs_8859_1 },
+	{ "ISO-8859-15",	cs_8859_15 },
+	{ "ISO8859-15",		cs_8859_15 },
+	{ "utf-8",			cs_utf_8 },
+	{ "cp1252", 		cs_cp1252 },
+	{ "Windows-1252",	cs_cp1252 },
+	{ "1252",			cs_cp1252 }, 
+	{ "BIG5",			cs_big5 },
+	{ "950",			cs_big5 },
+	{ "GB2312",			cs_gb2312 },
+	{ "936",			cs_gb2312 },
+	{ "BIG5-HKSCS",		cs_big5hkscs },
+	{ "Shift_JIS",		cs_sjis },
+	{ "SJIS",			cs_sjis },
+	{ "932",			cs_sjis },
+	{ "SJIS-win",		cs_sjis },
+	{ "CP932",			cs_sjis },
+	{ "EUCJP",			cs_eucjp },
+	{ "EUC-JP",			cs_eucjp },
+	{ "eucJP-win",		cs_eucjp },
+	{ "KOI8-R",			cs_koi8r },
+	{ "koi8-ru",		cs_koi8r },
+	{ "koi8r",			cs_koi8r },
+	{ "cp1251",			cs_cp1251 },
+	{ "Windows-1251",	cs_cp1251 },
+	{ "win-1251",		cs_cp1251 },
+	{ "iso8859-5",		cs_8859_5 },
+	{ "iso-8859-5",		cs_8859_5 },
+	{ "cp866",			cs_cp866 },
+	{ "866",			cs_cp866 },    
+	{ "ibm866",			cs_cp866 },
+	{ "MacRoman",		cs_macroman },
+	{ NULL }
 };
 
 /* longest entity name length excluding & and ; */
@@ -190,10 +190,10 @@ foreach ($encodings as $e) {
         if (preg_match("/^0x([0-9A-Z]{2})\t0x([0-9A-Z]{2,})/i", $l, $matches))
             $map[] = array($matches[1], $matches[2]);
     }
-
+    
     $mappy = array();
     foreach ($map as $v) { $mappy[hexdec($v[0])] = hexdec($v[1]); }
-
+    
     $mstable = array("ident" => $e['ident']);
     /* calculate two-stage tables */
     for ($i = 0; $i < 4; $i++) {
@@ -202,7 +202,7 @@ foreach ($encodings as $e) {
             $mstable[$i][$j] = isset($mappy[$cp]) ? $mappy[$cp] : NULL;
         }
     }
-
+    
     echo
 "/* {{{ Stage 2 tables for {$e['name']} */\n\n";
 
@@ -212,9 +212,9 @@ foreach ($encodings as $e) {
             $s2tables_idents[$i] = $encodings[$t[0]/5]["ident"];
             continue;
         }
-
+        
         $s2tables_idents[$i] = $e["ident"];
-
+        
         echo "static const enc_to_uni_stage2 enc_to_uni_s2_{$e['ident']}_".
             sprintf("%02X", $i << 6)." = { {\n";
         for ($j = 0; $j < 64; $j++) {
@@ -227,10 +227,10 @@ foreach ($encodings as $e) {
                 echo "0xFFFF,"; /* special value; indicates no mapping */
         }
         echo "\n} };\n\n";
-
+        
         $prevStage2[] = $mstable[$i];
     }
-
+    
     echo
 "/* end of stage 2 tables for {$e['name']} }}} */\n\n";
 
@@ -333,23 +333,23 @@ foreach ($encodings as $e) {
         if (preg_match("/^0x([0-9A-Z]{2})\t0x([0-9A-Z]{2,})\s+#\s*(.*)$/i", $l, $matches))
             $map[] = array($matches[1], $matches[2], rtrim($matches[3]));
     }
-
+    
     $mappy = array();
     foreach ($map as $v) {
         if (hexdec($v[0]) >= $e['range'][0] && hexdec($v[0]) <= $e['range'][1])
             $mappy[hexdec($v[1])] = array(hexdec($v[0]), strtolower($v[2]));
     }
     ksort($mappy);
-
+    
     echo
 "static const uni_to_enc unimap_{$e['ident']}[] = {\n";
-
+    
     foreach ($mappy as $k => $v) {
         echo "\t{ ", sprintf("0x%04X", $k), ", ", sprintf("0x%02X", $v[0]), " },\t/* ",
             $v[1], " */\n";
     }
     echo "};\n";
-
+    
     echo
 "/* {{{ end of mappings *from* Unicode for {$e['name']} */\n\n";
 }
@@ -371,17 +371,18 @@ $t = <<<'CODE'
 #define ENT_STAGE3_INDEX(k) ((k) & 0x3F)
 #define ENT_CODE_POINT_FROM_STAGES(i,j,k) (((i) << 12) | ((j) << 6) | (k))
 
-/* The default entity may be NULL. Binary search is still possible while
-   is senseless as there are just two rows (see also find_entity_for_char()). */
+/* Table should be organized with a leading row telling the size of
+ * the table and the default entity (maybe NULL) and the rest being
+ * normal rows ordered by code point so that we can do a binary search */
 typedef union {
 	struct {
-		const char *default_entity;
 		unsigned size; /* number of remaining entries in the table */
+		const char *default_entity;
 		unsigned short default_entity_len;
 	} leading_entry;
 	struct {
-		const char *entity;
 		unsigned second_cp; /* second code point */
+		const char *entity;
 		unsigned short entity_len;
 	} normal_entry;
 } entity_multicodepoint_row;
@@ -406,7 +407,7 @@ typedef const entity_stage3_row *const *entity_stage1_row; /* 64 elements */
 
 /* For stage 1, Calculate k & 0xFFF000 >> 3*4.
  * If larger than 1D, we have no mapping. Otherwise lookup that index */
-
+ 
 typedef struct {
 	const entity_stage1_row *ms_table;
 	/* for tables with only basic entities, this member is to be accessed
@@ -474,17 +475,17 @@ foreach ($multicp_rows as $k => $v) {
 	if (key_exists("default", $v)) {
         if ($v['default'] == 'GT') /* hack to make > translate to &gt; not GT; */
             $v['default'] = "gt";
-		echo "\t{ {", sprintf("\"%-21s", $v["default"].'",'),
-			"\t", sprintf("%02d", (count($v) - 1)), ",\t\t",
-            sprintf("% 2d", strlen($v["default"])), '} },', "\n";
+		echo "\t{ {", sprintf("%02d", count($v) - 1),
+			",\t\t", sprintf("\"%-21s", $v["default"].'",'), "\t",
+            sprintf("% 2d", strlen($v["default"])), '} },', "\n"; 
 	} else {
-		echo "\t{ {", sprintf("%-22s", 'NULL,'),
-			"\t", sprintf("%02d", count($v)), ",\t\t0} },\n";
+		echo "\t{ {", sprintf("%02d", count($v)),
+			",\t\t", sprintf("%-22s", 'NULL'), ",\t0} },\n"; 
 	}
 	unset($v["default"]);
 	foreach ($v as $l => $w) {
-		echo "\t{ {", sprintf("\"%-21s", $w.'",'), "\t", sprintf("0x%05s", $l), ",\t",
-            sprintf("% 2d", strlen($w)), '} },', "\n";
+		echo "\t{ {", sprintf("0x%05s", $l), ",\t", sprintf("\"%-21s", $w.'",'), "\t",
+            sprintf("% 2d", strlen($w)), '} },', "\n"; 
 	}
 	echo "};\n";
 }
@@ -560,8 +561,8 @@ for ($i = 0; $i < 0x1E; $i++) {
 					echo "{0, { {\"$z\", ", strlen($z), "} } },";
 				else
 					echo "{1, { {(void *)", sprintf("multi_cp_{$ident}_%05X",
-						($i << 12) | ($k << 6) | $y ), ", 0} } },";
-
+						($i << 12) | ($k << 6) | $y ), "} } },";
+				
 			}
 			echo "\n};\n\n";
 		}
@@ -685,7 +686,7 @@ echo
 //			die("violated assumption for traverse_for_entities");
 //		}
 //	}
-//
+//	
 //	$k++;
 //}
 //echo "\n};\n\n";

@@ -110,21 +110,21 @@ mysqli.max_persistent=1
 ?>
 --EXPECTF--
 array(2) {
-  ["id"]=>
-  string(2) "97"
-  ["label"]=>
-  string(1) "x"
+  [%u|b%"id"]=>
+  %unicode|string%(2) "97"
+  [%u|b%"label"]=>
+  %unicode|string%(1) "x"
 }
 array(2) {
-  ["id"]=>
-  string(2) "98"
-  ["label"]=>
-  string(1) "y"
+  [%u|b%"id"]=>
+  %unicode|string%(2) "98"
+  [%u|b%"label"]=>
+  %unicode|string%(1) "y"
 }
 array(2) {
-  ["id"]=>
-  string(2) "99"
-  ["label"]=>
-  string(1) "z"
+  [%u|b%"id"]=>
+  %unicode|string%(2) "99"
+  [%u|b%"label"]=>
+  %unicode|string%(1) "z"
 }
 done!

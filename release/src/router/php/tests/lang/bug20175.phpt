@@ -1,7 +1,9 @@
 --TEST--
 Bug #20175 (Static vars can't store ref to new instance)
+--SKIPIF--
+<?php if (version_compare(zend_version(),'2.0.0-dev','<')) die('skip ZE1 does not have static class members'); ?>
 --INI--
-error_reporting=E_ALL
+error_reporting=E_ALL | E_STRICT | E_DEPRECATED
 --FILE--
 <?php
 print zend_version()."\n";
@@ -33,7 +35,7 @@ function foo_static() {
 /* Part 2:
  * Storing a reference to the result of a function in a static variable.
  * Same as Part 1 but:
- * The return statement transports a copy of the value to return. In other
+ * The return statment transports a copy of the value to return. In other 
  * words the return value of bar_global() is a temporary variable only valid
  * after the function call bar_global() is done in current local scope.
  */
@@ -83,8 +85,8 @@ function wow_static() {
 
 /* Part 4:
  * Storing a reference to a new instance (that's where the name of the  test
- * comes from). First there is the global counter $oop_global again which
- * counts the calls to the constructor of oop_class and hence counts the
+ * comes from). First there is the global counter $oop_global again which 
+ * counts the calls to the constructor of oop_class and hence counts the 
  * creation of oop_class instances.
  * The class oop_test uses a static reference to a oop_class instance.
  * When another oop_test instance is created it must reuse the statically
@@ -94,8 +96,8 @@ function wow_static() {
 $oop_global = 0;
 class oop_class {
 	var $oop_name;
-
-	function __construct() {
+	
+	function oop_class() {
 		global $oop_global;
 		echo "oop_class()\n";
 		$this->oop_name = 'oop:' . ++$oop_global;
@@ -104,15 +106,15 @@ class oop_class {
 
 class oop_test {
 	static $oop_value;
-
-	function __construct() {
+	
+	function oop_test() {
 		echo "oop_test()\n";
 	}
-
+	
 	function oop_static() {
 		echo "oop_static()\n";
 		if (!isset(self::$oop_value)) {
-			self::$oop_value = new oop_class;
+			self::$oop_value = & new oop_class;
 		}
 		echo self::$oop_value->oop_name;
 	}
@@ -137,6 +139,7 @@ $oop_tester = new oop_test; // repeated.
 print $oop_tester->oop_static()."\n";
 ?>
 --EXPECTF--
+Deprecated: Assigning the return value of new by reference is deprecated in %s.php on line %d
 %s
 foo_static()
 foo_global()
@@ -146,7 +149,7 @@ foo:1
 bar_static()
 bar_global()
 
-Notice: Only variables should be assigned by reference in %sbug20175.php on line 47
+Strict Standards: Only variables should be assigned by reference in %sbug20175.php on line 47
 bar:1
 bar_static()
 bar:1

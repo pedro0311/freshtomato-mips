@@ -4,6 +4,8 @@ Phar and RecursiveDirectoryIterator
 <?php
 if (!extension_loaded("phar")) die("skip");
 if (!extension_loaded("spl")) die("skip SPL not available");
+if (version_compare(PHP_VERSION, "5.3", "<") or version_compare(PHP_VERSION, "5.4", ">="))
+    die("skip requires 5.3");
 ?>
 --INI--
 phar.require_hash=0
@@ -29,7 +31,7 @@ foreach($it as $name => $ent)
 ?>
 ===DONE===
 --CLEAN--
-<?php
+<?php 
 unlink(dirname(__FILE__) . '/files/phar_oo_005.phar.php');
 __halt_compiler();
 ?>
@@ -38,7 +40,7 @@ string(14) "phar://*/a.php"
 string(14) "phar://*/a.php"
 string(0) ""
 string(5) "a.php"
-string(20) "phar_oo_005.phar.php"
+string(21) "phar_oo_test.phar.php"
 string(16) "phar://*/b/c.php"
 string(16) "phar://*/b/c.php"
 string(1) "b"
@@ -53,10 +55,10 @@ string(14) "phar://*/b.php"
 string(14) "phar://*/b.php"
 string(0) ""
 string(5) "b.php"
-string(20) "phar_oo_005.phar.php"
+string(21) "phar_oo_test.phar.php"
 string(14) "phar://*/e.php"
 string(14) "phar://*/e.php"
 string(0) ""
 string(5) "e.php"
-string(20) "phar_oo_005.phar.php"
+string(21) "phar_oo_test.phar.php"
 ===DONE===

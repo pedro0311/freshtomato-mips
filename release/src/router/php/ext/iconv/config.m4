@@ -166,9 +166,6 @@ int main() {
 
 int main() {
   iconv_t cd = iconv_open( "UTF-8//IGNORE", "UTF-8" );
-  if(cd == (iconv_t)-1) {
-    return 1;
-  }
   char *in_p = "\xC3\xC3\xC3\xB8";
   size_t in_left = 4, out_left = 4096;
   char *out = malloc(out_left);
@@ -205,7 +202,7 @@ int main() {
       AC_MSG_RESULT([no])
     ])
 
-    PHP_NEW_EXTENSION(iconv, iconv.c, $ext_shared,, [-I\"$PHP_ICONV_PREFIX/include\" -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1])
+    PHP_NEW_EXTENSION(iconv, iconv.c, $ext_shared,, [-I\"$PHP_ICONV_PREFIX/include\"])
     PHP_SUBST(ICONV_SHARED_LIBADD)
     PHP_INSTALL_HEADERS([ext/iconv/])
   else

@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2018 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -38,16 +38,17 @@
 
 static void php_dba_db4_errcall_fcn(
 #if (DB_VERSION_MAJOR > 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 3))
-	const DB_ENV *dbenv,
+	const DB_ENV *dbenv, 
 #endif
 	const char *errpfx, const char *msg)
 {
+	TSRMLS_FETCH();
 
 #if (DB_VERSION_MAJOR == 5 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR == 8))
 /* Bug 51086, Berkeley DB 4.8.26 */
 /* This code suppresses a BDB 4.8+ error message, thus keeping PHP test compatibility */
 	{
-		const char *function = get_active_function_name();
+		const char *function = get_active_function_name(TSRMLS_C);
 		if (function && (!strcmp(function,"dba_popen") || !strcmp(function,"dba_open"))
 			&& (!strncmp(msg, "fop_read_meta", sizeof("fop_read_meta")-1)
 				|| !strncmp(msg, "BDB0004 fop_read_meta", sizeof("BDB0004 fop_read_meta")-1))) {
@@ -56,7 +57,7 @@ static void php_dba_db4_errcall_fcn(
 	}
 #endif
 
-	php_error_docref(NULL, E_NOTICE, "%s%s", errpfx?errpfx:"", msg);
+	php_error_docref(NULL TSRMLS_CC, E_NOTICE, "%s%s", errpfx?errpfx:"", msg);
 }
 
 #define DB4_DATA dba_db4_data *dba = info->dbf
@@ -87,11 +88,11 @@ DBA_OPEN_FUNC(db4)
 	type = info->mode == DBA_READER ? DB_UNKNOWN :
 		info->mode == DBA_TRUNC ? DB_BTREE :
 		s ? DB_BTREE : DB_UNKNOWN;
-
+	  
 	gmode = info->mode == DBA_READER ? DB_RDONLY :
-		(info->mode == DBA_CREAT && s) ? DB_CREATE :
+		(info->mode == DBA_CREAT && s) ? DB_CREATE : 
 		(info->mode == DBA_CREAT && !s) ? 0 :
-		info->mode == DBA_WRITER ? 0         :
+		info->mode == DBA_WRITER ? 0         : 
 		info->mode == DBA_TRUNC ? DB_CREATE | DB_TRUNCATE : -1;
 #else
 	if (!s && !check_stat.st_size) {
@@ -101,10 +102,10 @@ DBA_OPEN_FUNC(db4)
 	type = info->mode == DBA_READER ? DB_UNKNOWN :
 		(info->mode == DBA_TRUNC || info->mode == DBA_CREAT) ? DB_BTREE :
 		s ? DB_BTREE : DB_UNKNOWN;
-
+	  
 	gmode = info->mode == DBA_READER ? DB_RDONLY :
-		info->mode == DBA_CREAT ? DB_CREATE :
-		info->mode == DBA_WRITER ? 0         :
+		info->mode == DBA_CREAT ? DB_CREATE : 
+		info->mode == DBA_WRITER ? 0         : 
 		info->mode == DBA_TRUNC ? DB_CREATE | DB_TRUNCATE : -1;
 #endif
 
@@ -117,8 +118,8 @@ DBA_OPEN_FUNC(db4)
 	}
 
 	if (info->argc > 0) {
-		convert_to_long_ex(&info->argv[0]);
-		filemode = Z_LVAL(info->argv[0]);
+		convert_to_long_ex(info->argv[0]);
+		filemode = Z_LVAL_PP(info->argv[0]);
 	}
 
 	if ((err=db_create(&dbp, NULL, 0)) == 0) {
@@ -135,7 +136,7 @@ DBA_OPEN_FUNC(db4)
 			data->dbp = dbp;
 			data->cursor = NULL;
 			info->dbf = data;
-
+		
 			return SUCCESS;
 		} else {
 			dbp->close(dbp, 0);
@@ -151,7 +152,7 @@ DBA_OPEN_FUNC(db4)
 DBA_CLOSE_FUNC(db4)
 {
 	DB4_DATA;
-
+	
 	if (dba->cursor) dba->cursor->c_close(dba->cursor);
 	dba->dbp->close(dba->dbp, 0);
 	pefree(dba, info->flags&DBA_PERSISTENT);
@@ -163,7 +164,7 @@ DBA_FETCH_FUNC(db4)
 	char *new = NULL;
 	DB4_DATA;
 	DB4_GKEY;
-
+	
 	memset(&gval, 0, sizeof(gval));
 	if (info->flags & DBA_PERSISTENT) {
 		gval.flags |= DB_DBT_MALLOC;
@@ -183,12 +184,12 @@ DBA_UPDATE_FUNC(db4)
 	DBT gval;
 	DB4_DATA;
 	DB4_GKEY;
-
+	
 	memset(&gval, 0, sizeof(gval));
 	gval.data = (char *) val;
 	gval.size = vallen;
 
-	if (!dba->dbp->put(dba->dbp, NULL, &gkey, &gval,
+	if (!dba->dbp->put(dba->dbp, NULL, &gkey, &gval, 
 				mode == 1 ? DB_NOOVERWRITE : 0)) {
 		return SUCCESS;
 	}
@@ -200,9 +201,9 @@ DBA_EXISTS_FUNC(db4)
 	DBT gval;
 	DB4_DATA;
 	DB4_GKEY;
-
+	
 	memset(&gval, 0, sizeof(gval));
-
+	
 	if (info->flags & DBA_PERSISTENT) {
 		gval.flags |= DB_DBT_MALLOC;
 	}
@@ -238,7 +239,7 @@ DBA_FIRSTKEY_FUNC(db4)
 	}
 
 	/* we should introduce something like PARAM_PASSTHRU... */
-	return dba_nextkey_db4(info, newlen);
+	return dba_nextkey_db4(info, newlen TSRMLS_CC);
 }
 
 DBA_NEXTKEY_FUNC(db4)
@@ -246,7 +247,7 @@ DBA_NEXTKEY_FUNC(db4)
 	DB4_DATA;
 	DBT gkey, gval;
 	char *nkey = NULL;
-
+	
 	memset(&gkey, 0, sizeof(gkey));
 	memset(&gval, 0, sizeof(gval));
 

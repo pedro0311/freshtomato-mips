@@ -27,5 +27,4 @@ call_user_func(array($o, 'test_base::func'));
 --EXPECTF--
 test::func()
 
-Warning: call_user_func() expects parameter 1 to be a valid callback, cannot call abstract method test_base::func() in %s on line %d
-===DONE===
+Fatal error: Cannot call abstract method test_base::func() in %s on line %d

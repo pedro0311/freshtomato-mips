@@ -1,9 +1,9 @@
 --TEST--
-Test arsort() function : usage variations - sort bool values
+Test arsort() function : usage variations - sort bool values 
 --FILE--
 <?php
 /* Prototype  : bool arsort ( array &$array [, int $sort_flags] )
- * Description: This function arsorts an array.
+ * Description: This function arsorts an array. 
                 Elements will be arranged from highest to lowest when this function has completed.
  * Source code: ext/standard/array.c
 */
@@ -47,52 +47,52 @@ echo "Done\n";
 -- Testing arsort() by supplying bool value array, 'flag' value is defualt --
 bool(true)
 array(4) {
-  [1]=>
-  bool(true)
   [3]=>
   bool(true)
-  [2]=>
-  bool(false)
+  [1]=>
+  bool(true)
   [4]=>
+  bool(false)
+  [2]=>
   bool(false)
 }
 
 -- Testing arsort() by supplying bool value array, 'flag' value is SORT_REGULAR --
 bool(true)
 array(4) {
-  [1]=>
-  bool(true)
   [3]=>
   bool(true)
-  [2]=>
-  bool(false)
+  [1]=>
+  bool(true)
   [4]=>
+  bool(false)
+  [2]=>
   bool(false)
 }
 
 -- Testing arsort() by supplying bool value array, 'flag' value is SORT_NUMERIC  --
 bool(true)
 array(4) {
-  [1]=>
-  bool(true)
   [3]=>
   bool(true)
-  [2]=>
-  bool(false)
+  [1]=>
+  bool(true)
   [4]=>
+  bool(false)
+  [2]=>
   bool(false)
 }
 
 -- Testing arsort() by supplying bool value array, 'flag' value is SORT_STRING --
 bool(true)
 array(4) {
-  [1]=>
-  bool(true)
   [3]=>
   bool(true)
-  [2]=>
-  bool(false)
+  [1]=>
+  bool(true)
   [4]=>
+  bool(false)
+  [2]=>
   bool(false)
 }
 Done

@@ -1,6 +1,6 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -18,11 +18,10 @@
 #include "config.h"
 #endif
 
-#include "php_intl.h"
-
 #include <unicode/ustring.h>
 #include <locale.h>
 
+#include "php_intl.h"
 #include "formatter_class.h"
 #include "formatter_format.h"
 #include "formatter_parse.h"
@@ -37,11 +36,11 @@
  */
 PHP_FUNCTION( numfmt_parse )
 {
-	zend_long type = FORMAT_TYPE_DOUBLE;
+	long type = FORMAT_TYPE_DOUBLE;
 	UChar* sstr = NULL;
-	int32_t sstr_len = 0;
+	int sstr_len = 0;
 	char* str = NULL;
-	size_t str_len;
+	int str_len;
 	int32_t val32, position = 0;
 	int64_t val64;
 	double val_double;
@@ -51,11 +50,11 @@ PHP_FUNCTION( numfmt_parse )
 	FORMATTER_METHOD_INIT_VARS;
 
 	/* Parse parameters. */
-	if( zend_parse_method_parameters( ZEND_NUM_ARGS(), getThis(), "Os|lz/!",
+	if( zend_parse_method_parameters( ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Os|lz!",
 		&object, NumberFormatter_ce_ptr,  &str, &str_len, &type, &zposition ) == FAILURE )
 	{
 		intl_error_set( NULL, U_ILLEGAL_ARGUMENT_ERROR,
-			"number_parse: unable to parse input params", 0 );
+			"number_parse: unable to parse input params", 0 TSRMLS_CC );
 
 		RETURN_FALSE;
 	}
@@ -68,7 +67,6 @@ PHP_FUNCTION( numfmt_parse )
 	INTL_METHOD_CHECK_STATUS( nfo, "String conversion to UTF-16 failed" );
 
 	if(zposition) {
-		ZVAL_DEREF(zposition);
 		convert_to_long(zposition);
 		position = (int32_t)Z_LVAL_P( zposition );
 		position_p = &position;
@@ -87,10 +85,10 @@ PHP_FUNCTION( numfmt_parse )
 			break;
 		case FORMAT_TYPE_INT64:
 			val64 = unum_parseInt64(FORMATTER_OBJECT(nfo), sstr, sstr_len, position_p, &INTL_DATA_ERROR_CODE(nfo));
-			if(val64 > ZEND_LONG_MAX || val64 < ZEND_LONG_MIN) {
+			if(val64 > LONG_MAX || val64 < LONG_MIN) {
 				RETVAL_DOUBLE(val64);
 			} else {
-				RETVAL_LONG((zend_long)val64);
+				RETVAL_LONG((long)val64);
 			}
 			break;
 		case FORMAT_TYPE_DOUBLE:
@@ -98,7 +96,7 @@ PHP_FUNCTION( numfmt_parse )
 			RETVAL_DOUBLE(val_double);
 			break;
 		default:
-			php_error_docref(NULL, E_WARNING, "Unsupported format type " ZEND_LONG_FMT, type);
+			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unsupported format type %ld", type);
 			RETVAL_FALSE;
 			break;
 	}
@@ -129,21 +127,22 @@ PHP_FUNCTION( numfmt_parse_currency )
 	double number;
 	UChar currency[5] = {0};
 	UChar* sstr = NULL;
-	int32_t sstr_len = 0;
-	zend_string *u8str;
+	int sstr_len = 0;
+	char *currency_str = NULL;
+	int currency_len = 0;
 	char *str;
-	size_t str_len;
+	int str_len;
 	int32_t* position_p = NULL;
 	int32_t position = 0;
 	zval *zcurrency, *zposition = NULL;
 	FORMATTER_METHOD_INIT_VARS;
 
 	/* Parse parameters. */
-	if( zend_parse_method_parameters( ZEND_NUM_ARGS(), getThis(), "Osz/|z/!",
+	if( zend_parse_method_parameters( ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Osz|z!",
 		&object, NumberFormatter_ce_ptr,  &str, &str_len, &zcurrency, &zposition ) == FAILURE )
 	{
 		intl_error_set( NULL, U_ILLEGAL_ARGUMENT_ERROR,
-			"number_parse_currency: unable to parse input params", 0 );
+			"number_parse_currency: unable to parse input params", 0 TSRMLS_CC );
 
 		RETURN_FALSE;
 	}
@@ -156,7 +155,6 @@ PHP_FUNCTION( numfmt_parse_currency )
 	INTL_METHOD_CHECK_STATUS( nfo, "String conversion to UTF-16 failed" );
 
 	if(zposition) {
-		ZVAL_DEREF(zposition);
 		convert_to_long(zposition);
 		position = (int32_t)Z_LVAL_P( zposition );
 		position_p = &position;
@@ -173,10 +171,10 @@ PHP_FUNCTION( numfmt_parse_currency )
 	INTL_METHOD_CHECK_STATUS( nfo, "Number parsing failed" );
 
 	/* Convert parsed currency to UTF-8 and pass it back to caller. */
-	u8str = intl_convert_utf16_to_utf8(currency, u_strlen(currency), &INTL_DATA_ERROR_CODE(nfo));
+	intl_convert_utf16_to_utf8(&currency_str, &currency_len, currency, u_strlen(currency), &INTL_DATA_ERROR_CODE(nfo));
 	INTL_METHOD_CHECK_STATUS( nfo, "Currency conversion to UTF-8 failed" );
 	zval_dtor( zcurrency );
-	ZVAL_NEW_STR(zcurrency, u8str);
+	ZVAL_STRINGL(zcurrency, currency_str, currency_len, 0);
 
 	RETVAL_DOUBLE( number );
 }

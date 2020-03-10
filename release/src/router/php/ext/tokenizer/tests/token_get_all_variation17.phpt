@@ -11,7 +11,7 @@ Test token_get_all() function : usage variations - with exception keywords
 
 /*
  * Testing token_get_all() with different exception keywords
- *   try - T_TRY(336),
+ *   try - T_TRY(336), 
  *   catch - T_CATCH(337),
  *   throw - T_THROW(338)
 */
@@ -22,7 +22,7 @@ $source = '<?php
 function inverse($x)
 {
   if($x == 0) {
-    throw new Exception("Division by zero");
+    throw new Exception("Divison by zero");
   else
     return 1/$x;
 }
@@ -244,7 +244,7 @@ array(81) {
     [0]=>
     int(%d)
     [1]=>
-    string(18) ""Division by zero""
+    string(17) ""Divison by zero""
     [2]=>
     int(5)
   }

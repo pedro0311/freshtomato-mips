@@ -11,7 +11,7 @@ PHP_ARG_WITH(mm,for mm support,
 if test "$PHP_SESSION" != "no"; then
   PHP_PWRITE_TEST
   PHP_PREAD_TEST
-  PHP_NEW_EXTENSION(session, mod_user_class.c session.c mod_files.c mod_mm.c mod_user.c, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
+  PHP_NEW_EXTENSION(session, mod_user_class.c session.c mod_files.c mod_mm.c mod_user.c, $ext_shared)
   PHP_ADD_EXTENSION_DEP(session, hash, true)
   PHP_ADD_EXTENSION_DEP(session, spl)
   PHP_SUBST(SESSION_SHARED_LIBADD)
@@ -27,12 +27,7 @@ if test "$PHP_MM" != "no"; then
   if test -z "$MM_DIR" ; then
     AC_MSG_ERROR(cannot find mm library)
   fi
-
-  if test "$enable_maintainer_zts" = "yes"; then
-    dnl The mm library is not thread-safe, and mod_mm.c refuses to compile.
-    AC_MSG_ERROR(--with-mm cannot be combined with --enable-maintainer-zts)
-  fi
-
+  
   PHP_ADD_LIBRARY_WITH_PATH(mm, $MM_DIR/$PHP_LIBDIR, SESSION_SHARED_LIBADD)
   PHP_ADD_INCLUDE($MM_DIR/include)
   PHP_INSTALL_HEADERS([ext/session/mod_mm.h])

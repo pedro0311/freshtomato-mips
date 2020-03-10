@@ -1,6 +1,6 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -28,7 +28,7 @@
  */
 PHP_FUNCTION( intl_get_error_code )
 {
-	RETURN_LONG( intl_error_get_code( NULL ) );
+	RETURN_LONG( intl_error_get_code( NULL TSRMLS_CC ) );
 }
 /* }}} */
 
@@ -37,7 +37,8 @@ PHP_FUNCTION( intl_get_error_code )
  */
 PHP_FUNCTION( intl_get_error_message )
 {
-	RETURN_STR(intl_error_get_message( NULL ));
+	char* message = intl_error_get_message( NULL TSRMLS_CC );
+	RETURN_STRING( message, FALSE );
 }
 /* }}} */
 
@@ -48,21 +49,20 @@ PHP_FUNCTION( intl_get_error_message )
  */
 PHP_FUNCTION( intl_is_failure )
 {
-	zend_long err_code;
+	long err_code;
 
 	/* Parse parameters. */
-	if( zend_parse_parameters( ZEND_NUM_ARGS(), "l",
+	if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "l",
 		&err_code ) == FAILURE )
 	{
 		intl_error_set( NULL, U_ILLEGAL_ARGUMENT_ERROR,
-			"intl_is_failure: unable to parse input params", 0 );
+			"intl_is_failure: unable to parse input params", 0 TSRMLS_CC );
 
 		RETURN_FALSE;
 	}
 
 	RETURN_BOOL( U_FAILURE( err_code ) );
 }
-/* }}} */
 
 /* {{{ proto string intl_error_name()
  * Return a string for a given error code.
@@ -70,19 +70,19 @@ PHP_FUNCTION( intl_is_failure )
  */
 PHP_FUNCTION( intl_error_name )
 {
-	zend_long err_code;
+	long err_code;
 
 	/* Parse parameters. */
-	if( zend_parse_parameters( ZEND_NUM_ARGS(), "l",
+	if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "l",
 		&err_code ) == FAILURE )
 	{
 		intl_error_set( NULL, U_ILLEGAL_ARGUMENT_ERROR,
-			"intl_error_name: unable to parse input params", 0 );
+			"intl_error_name: unable to parse input params", 0 TSRMLS_CC );
 
 		RETURN_FALSE;
 	}
 
-	RETURN_STRING( (char*)u_errorName( err_code ) );
+	RETURN_STRING( (char*)u_errorName( err_code ), 1 );
 }
 /* }}} */
 
@@ -91,7 +91,7 @@ PHP_FUNCTION( intl_error_name )
  */
 void intl_expose_icu_error_codes( INIT_FUNC_ARGS )
 {
-	#define INTL_EXPOSE_CONST(x) REGISTER_LONG_CONSTANT(#x, x, CONST_PERSISTENT | CONST_CS)
+	#define INTL_EXPOSE_CONST(x) REGISTER_LONG_CONSTANT(#x, x, CONST_CS)
 
 	/* Warnings */
 	INTL_EXPOSE_CONST( U_USING_FALLBACK_WARNING );

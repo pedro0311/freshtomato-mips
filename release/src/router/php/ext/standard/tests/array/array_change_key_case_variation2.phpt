@@ -1,11 +1,9 @@
 --TEST--
 Test array_change_key_case() function : usage variations - Pass different data types as $case arg
---SKIPIF--
-<?php if (PHP_INT_SIZE != 8) die("skip this test is for 64-bit only");
 --FILE--
 <?php
 /* Prototype  : array array_change_key_case(array $input [, int $case])
- * Description: Retuns an array with all string keys lowercased [or uppercased]
+ * Description: Retuns an array with all string keys lowercased [or uppercased] 
  * Source code: ext/standard/array.c
  */
 
@@ -56,7 +54,7 @@ $inputs = array(
        false,
        TRUE,
        FALSE,
-
+       
        // empty data
 /*16*/ "",
        '',
@@ -84,6 +82,7 @@ foreach($inputs as $input) {
 
 echo "Done";
 ?>
+
 --EXPECTF--
 *** Testing array_change_key_case() : usage variations ***
 
@@ -239,32 +238,32 @@ array(3) {
 
 -- Iteration 16 --
 
-Warning: array_change_key_case() expects parameter 2 to be integer, string given in %s on line %d
+Warning: array_change_key_case() expects parameter 2 to be long, string given in %s on line %d
 NULL
 
 -- Iteration 17 --
 
-Warning: array_change_key_case() expects parameter 2 to be integer, string given in %s on line %d
+Warning: array_change_key_case() expects parameter 2 to be long, string given in %s on line %d
 NULL
 
 -- Iteration 18 --
 
-Warning: array_change_key_case() expects parameter 2 to be integer, array given in %s on line %d
+Warning: array_change_key_case() expects parameter 2 to be long, array given in %s on line %d
 NULL
 
 -- Iteration 19 --
 
-Warning: array_change_key_case() expects parameter 2 to be integer, string given in %s on line %d
+Warning: array_change_key_case() expects parameter 2 to be long, string given in %s on line %d
 NULL
 
 -- Iteration 20 --
 
-Warning: array_change_key_case() expects parameter 2 to be integer, string given in %s on line %d
+Warning: array_change_key_case() expects parameter 2 to be long, string given in %s on line %d
 NULL
 
 -- Iteration 21 --
 
-Warning: array_change_key_case() expects parameter 2 to be integer, string given in %s on line %d
+Warning: array_change_key_case() expects parameter 2 to be long, string given in %s on line %d
 NULL
 
 -- Iteration 22 --

@@ -13,7 +13,4 @@ new $a;
 
 ?>
 --EXPECTF--
-Fatal error: Uncaught Error: Cannot instantiate abstract class foo in %s:%d
-Stack trace:
-#0 {main}
-  thrown in %s on line %d
+Fatal error: Cannot instantiate abstract class foo in %s on line %d

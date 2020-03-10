@@ -1,11 +1,11 @@
 --TEST--
-Test file() function : third parameter variation
+Test file() function : third parameter variation 
 --FILE--
 <?php
 /* Prototype  : array file(string filename [, int flags[, resource context]])
- * Description: Read entire file into an array
+ * Description: Read entire file into an array 
  * Source code: ext/standard/file.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing file() : usage variation ***\n";
@@ -107,7 +107,7 @@ $inputs = array(
 
       // unset data
       'unset var' => @$unset_var,
-
+      
       // file stream resource
       'file stream resource' => $file_stream_resource,
 );
@@ -145,23 +145,23 @@ Error: 2 - file() expects parameter 3 to be resource, integer given, %s(%d)
 NULL
 
 --float 10.5--
-Error: 2 - file() expects parameter 3 to be resource, float given, %s(%d)
+Error: 2 - file() expects parameter 3 to be resource, double given, %s(%d)
 NULL
 
 --float -10.5--
-Error: 2 - file() expects parameter 3 to be resource, float given, %s(%d)
+Error: 2 - file() expects parameter 3 to be resource, double given, %s(%d)
 NULL
 
 --float 12.3456789000e10--
-Error: 2 - file() expects parameter 3 to be resource, float given, %s(%d)
+Error: 2 - file() expects parameter 3 to be resource, double given, %s(%d)
 NULL
 
 --float -12.3456789000e10--
-Error: 2 - file() expects parameter 3 to be resource, float given, %s(%d)
+Error: 2 - file() expects parameter 3 to be resource, double given, %s(%d)
 NULL
 
 --float .5--
-Error: 2 - file() expects parameter 3 to be resource, float given, %s(%d)
+Error: 2 - file() expects parameter 3 to be resource, double given, %s(%d)
 NULL
 
 --empty array--

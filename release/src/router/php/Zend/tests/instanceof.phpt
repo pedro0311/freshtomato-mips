@@ -2,10 +2,10 @@
 instanceof shouldn't call __autoload
 --FILE--
 <?php
-spl_autoload_register(function ($name) {
+function __autoload($name) {
 	echo("AUTOLOAD '$name'\n");
 	eval("class $name {}");
-});
+}
 
 class A {
 }

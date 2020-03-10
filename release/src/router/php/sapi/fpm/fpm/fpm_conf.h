@@ -1,3 +1,4 @@
+
 	/* $Id: fpm_conf.h,v 1.12.2.2 2008/12/13 03:46:49 anight Exp $ */
 	/* (c) 2007,2008 Andrei Nigmatulin */
 
@@ -78,7 +79,6 @@ struct fpm_worker_pool_config_s {
 	char *access_format;
 	char *slowlog;
 	int request_slowlog_timeout;
-	int request_slowlog_trace_depth;
 	int request_terminate_timeout;
 	int rlimit_files;
 	int rlimit_core;
@@ -118,3 +118,4 @@ int fpm_conf_write_pid();
 int fpm_conf_unlink_pid();
 
 #endif
+

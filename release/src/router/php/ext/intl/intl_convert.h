@@ -1,6 +1,6 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -21,12 +21,13 @@
 #include <unicode/ustring.h>
 
 void intl_convert_utf8_to_utf16(
-	UChar**     target, int32_t* target_len,
-	const char* src,    size_t  src_len,
+	UChar**     target, int* target_len,
+	const char* src,    int  src_len,
 	UErrorCode* status );
 
-zend_string* intl_convert_utf16_to_utf8(
-	const UChar* src,    int32_t  src_len,
+void intl_convert_utf16_to_utf8(
+	char**       target, int* target_len,
+	const UChar* src,    int  src_len,
 	UErrorCode*  status );
 
 #endif // INTL_CONVERT_H

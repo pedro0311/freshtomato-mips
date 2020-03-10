@@ -11,10 +11,10 @@ session.gc_maxlifetime=0
 
 ob_start();
 
-/*
+/* 
  * Prototype : string session_module_name([string $module])
  * Description : Get and/or set the current session module
- * Source code : ext/session/session.c
+ * Source code : ext/session/session.c 
  */
 
 echo "*** Testing session_module_name() : variation ***\n";
@@ -42,6 +42,7 @@ ob_end_flush();
 ?>
 --EXPECTF--
 *** Testing session_module_name() : variation ***
+
 array(3) {
   ["Blah"]=>
   string(12) "Hello World!"
@@ -50,7 +51,7 @@ array(3) {
   ["Guff"]=>
   int(1234567890)
 }
-bool(true)
+NULL
 array(3) {
   ["Blah"]=>
   string(12) "Hello World!"
@@ -63,3 +64,4 @@ bool(true)
 array(0) {
 }
 bool(true)
+

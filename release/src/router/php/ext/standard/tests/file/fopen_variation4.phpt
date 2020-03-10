@@ -5,9 +5,9 @@ Dave Kelsey <d_kelsey@uk.ibm.com>
 --FILE--
 <?php
 /* Prototype  : resource fopen(string filename, string mode [, bool use_include_path [, resource context]])
- * Description: Open a file or a URL and return a file pointer
+ * Description: Open a file or a URL and return a file pointer 
  * Source code: ext/standard/file.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing fopen() : usage variation ***\n";
@@ -103,7 +103,7 @@ $inputs = array(
 
       // unset data
       'unset var' => @$unset_var,
-
+      
       //file resource
       'file resource' => $fileresource
 );
@@ -146,23 +146,23 @@ Error: 2 - fopen() expects parameter 4 to be resource, integer given, %s(%d)
 bool(false)
 
 --float 10.5--
-Error: 2 - fopen() expects parameter 4 to be resource, float given, %s(%d)
+Error: 2 - fopen() expects parameter 4 to be resource, double given, %s(%d)
 bool(false)
 
 --float -10.5--
-Error: 2 - fopen() expects parameter 4 to be resource, float given, %s(%d)
+Error: 2 - fopen() expects parameter 4 to be resource, double given, %s(%d)
 bool(false)
 
 --float 12.3456789000e10--
-Error: 2 - fopen() expects parameter 4 to be resource, float given, %s(%d)
+Error: 2 - fopen() expects parameter 4 to be resource, double given, %s(%d)
 bool(false)
 
 --float -12.3456789000e10--
-Error: 2 - fopen() expects parameter 4 to be resource, float given, %s(%d)
+Error: 2 - fopen() expects parameter 4 to be resource, double given, %s(%d)
 bool(false)
 
 --float .5--
-Error: 2 - fopen() expects parameter 4 to be resource, float given, %s(%d)
+Error: 2 - fopen() expects parameter 4 to be resource, double given, %s(%d)
 bool(false)
 
 --empty array--

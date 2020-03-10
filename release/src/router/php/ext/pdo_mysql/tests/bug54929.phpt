@@ -18,7 +18,7 @@ $pdodb = PDOTest::test_factory(dirname(__FILE__) . '/common.phpt');
 function testQuery($query) {
 	global $pdodb;
 	$stmt = $pdodb->prepare($query);
-
+	
 	if (!$stmt->execute(array("foo"))) {
 		var_dump($stmt->errorInfo());
 	} else{
@@ -54,7 +54,7 @@ array(3) {
   [1]=>
   int(1064)
   [2]=>
-  string(%d) "You have an error in your SQL syntax; check the manual that corresponds to your %s server version for the right syntax to use near '--'' at line 1"
+  string(149) "You have an error in your SQL syntax; check the manual that corresponds to your %s server version for the right syntax to use near '--'' at line 1"
 }
 array(1) {
   ["f1"]=>

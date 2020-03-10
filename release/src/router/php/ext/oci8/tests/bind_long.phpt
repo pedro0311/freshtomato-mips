@@ -4,7 +4,7 @@ bind LONG field
 <?php
 $target_dbs = array('oracledb' => true, 'timesten' => false);  // test runs on these DBs
 require(dirname(__FILE__).'/skipif.inc');
-?>
+?> 
 --FILE--
 <?php
 
@@ -20,8 +20,8 @@ echo "Test 1\n";
 
 $stmt = oci_parse ($c, "insert into phptestlng (id, filetxt) values (:id, :filetxt)");
 $i=1;
-$filetxt1 = file_get_contents( dirname(__FILE__)."/test.txt");
-$filetxt = str_replace("\r", "", $filetxt1);
+$filetxt = file_get_contents( dirname(__FILE__)."/test.txt");
+
 
 oci_bind_by_name( $stmt, ":id", $i, -1);
 oci_bind_by_name( $stmt, ":filetxt", $filetxt, -1, SQLT_LNG);

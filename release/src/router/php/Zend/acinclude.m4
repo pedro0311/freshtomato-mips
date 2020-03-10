@@ -7,9 +7,9 @@ AC_DEFUN([LIBZEND_BISON_CHECK],[
   # min: 2.4 (i.e. 204, major * 100 + minor for easier comparison)
   bison_version_min="204"
   # non-working versions, e.g. "3.0 3.2";
-  # remove "none" when introducing the first incompatible bison version an
+  # remove "none" when introducing the first incompatible bison version an 
   # separate any following additions by spaces
-  bison_version_exclude=""
+  bison_version_exclude="3.0"
 
   # for standalone build of Zend Engine
   test -z "$SED" && SED=sed
@@ -107,7 +107,7 @@ int main(void)
   ], [ac_cv_c_bigendian_php=yes], [ac_cv_c_bigendian_php=no], [ac_cv_c_bigendian_php=unknown])
  ])
  if test $ac_cv_c_bigendian_php = yes; then
-   AC_DEFINE(WORDS_BIGENDIAN, 1, [Define if processor uses big-endian word])
+   AC_DEFINE(WORDS_BIGENDIAN, [], [Define if processor uses big-endian word])
  fi
 ])
 
@@ -139,7 +139,7 @@ AC_DEFUN([ZEND_CHECK_FLOAT_PRECISION],[
   else
     AC_MSG_RESULT(no)
   fi
-
+  
   AC_MSG_CHECKING([for usable fpsetprec])
   AC_TRY_LINK([
     #include <machine/ieeefp.h>

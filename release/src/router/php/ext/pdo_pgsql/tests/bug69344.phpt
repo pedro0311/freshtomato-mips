@@ -41,3 +41,4 @@ $test();
 --EXPECT--
 SQLSTATE[HY093]: Invalid parameter number: parameter was not defined
 SQLSTATE[HY093]: Invalid parameter number: parameter was not defined
+

@@ -9,7 +9,7 @@ if (PHP_INT_SIZE != 4) {
 --FILE--
 <?php
 /* Prototype  : string sprintf(string $format [, mixed $arg1 [, mixed ...]])
- * Description: Return a formatted string
+ * Description: Return a formatted string 
  * Source code: ext/standard/formatted_print.c
  */
 
@@ -22,7 +22,7 @@ $format2 = "%o %o";
 $format3 = "%o %o %o";
 $arg1 = 021;
 $arg2 = -0347;
-$arg3 = 0567;
+$arg3 = 05678;
 
 // Calling sprintf() with default arguments
 var_dump( sprintf($format) );

@@ -21,8 +21,11 @@ array_map(array('Element', 'CallBack'), $arr);
 
 echo "Done\n";
 ?>
---EXPECTF--
-Fatal error: Uncaught Exception in %s:%d
+--EXPECTF--	
+
+Warning: array_map(): An error occurred while invoking the map callback in %s on line %d
+
+Fatal error: Uncaught exception 'Exception' in %s:%d
 Stack trace:
 #0 %s(%d): Element->ThrowException()
 #1 [internal function]: Element::CallBack(Object(Element))

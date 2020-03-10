@@ -1,11 +1,11 @@
---TEST--
+--TEST--                                 
 Function snmp_set_enum_print
 --CREDITS--
 Olivier Doucet
 --SKIPIF--
 <?php
 require_once(dirname(__FILE__).'/skipif.inc');
-if (!function_exists('snmp_set_enum_print')) die('skip This function is only available if using NET_SNMP');
+if (!function_exists('snmp_set_enum_print')) die('This function is only available if using NET_SNMP');
 ?>
 --FILE--
 <?php

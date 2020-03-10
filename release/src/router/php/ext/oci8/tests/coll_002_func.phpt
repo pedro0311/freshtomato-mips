@@ -4,7 +4,7 @@ oci_new_collection() + free()
 <?php
 $target_dbs = array('oracledb' => true, 'timesten' => false);  // test runs on these DBs
 require(dirname(__FILE__).'/skipif.inc');
-?>
+?> 
 --FILE--
 <?php
 
@@ -28,6 +28,6 @@ object(OCI-Collection)#%d (1) {
 }
 bool(true)
 
-Warning: oci_collection_size(): supplied resource is not a valid oci8 collection resource in %s on line %d
+Warning: oci_collection_size(): %d is not a valid oci8 collection resource in %s on line %d
 bool(false)
 Done

@@ -23,21 +23,21 @@ array(3) {
   [0]=>
   array(2) {
     ["My Field"]=>
-    int(1)
+    string(1) "1"
     ["Another Field"]=>
     string(11) "test_string"
   }
   [1]=>
   array(2) {
     ["My Field"]=>
-    int(2)
+    string(1) "2"
     ["Another Field"]=>
     string(11) "test_string"
   }
   [2]=>
   array(2) {
     ["My Field"]=>
-    int(3)
+    string(1) "3"
     ["Another Field"]=>
     string(11) "test_string"
   }

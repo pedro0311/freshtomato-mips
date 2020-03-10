@@ -4,12 +4,12 @@ Test mb_internal_encoding() function : error conditions - pass incorrect number 
 <?php
 extension_loaded('mbstring') or die('skip');
 function_exists('mb_internal_encoding') or die("skip mb_internal_encoding() is not available in this build");
-?>
+?> 
 --FILE--
 <?php
 /* Prototype  : string mb_internal_encoding([string $encoding])
- * Description: Sets the current internal encoding or
- * Returns the current internal encoding as a string
+ * Description: Sets the current internal encoding or 
+ * Returns the current internal encoding as a string 
  * Source code: ext/mbstring/mbstring.c
  */
 
@@ -32,5 +32,5 @@ echo "Done";
 -- Testing mb_internal_encoding() function with more than expected no. of arguments --
 
 Warning: mb_internal_encoding() expects at most 1 parameter, 2 given in %s on line %d
-NULL
+bool(false)
 Done

@@ -26,7 +26,7 @@
                 Computer Science Department, 9062
                 Western Washington University
                 Bellingham, WA 98226-9062
-
+       
 *************************************************************************/
 
 #include <config.h>
@@ -54,19 +54,12 @@ bc_num2long (num)
   /* Extract the int value, ignore the fraction. */
   val = 0;
   nptr = num->n_value;
-  for (index = num->n_len; index > 0; index--) {
-    char n = *nptr++;
+  for (index=num->n_len; (index>0) && (val<=(LONG_MAX/BASE)); index--)
+    val = val*BASE + *nptr++;
 
-    if (val > LONG_MAX/BASE) {
-      return 0;
-    }
-    val *= BASE;
-
-    if (val > LONG_MAX - n) {
-      return 0;
-    }
-    val += n;
-  }
+  /* Check for overflow.  If overflow, return zero. */
+  if (index>0) val = 0;
+  if (val < 0) val = 0;
 
   /* Return the value. */
   if (num->n_sign == PLUS)
@@ -74,3 +67,4 @@ bc_num2long (num)
   else
     return (-val);
 }
+

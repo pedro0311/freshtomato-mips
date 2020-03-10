@@ -45,7 +45,7 @@ typedef long int          count_int;
 #define maxmaxcode ((code_int)1 << GIFBITS)
 
 #define HSIZE  5003            /* 80% occupancy */
-#define hsize HSIZE            /* Apparently invariant, left over from
+#define hsize HSIZE            /* Apparently invariant, left over from 
 					compress */
 
 typedef struct {
@@ -127,12 +127,12 @@ void gdImageGifCtx(gdImagePtr im, gdIOCtxPtr out)
 		if (!pim) {
 			return;
 		}
-		tim = pim;
+		tim = pim; 
 	}
 	BitsPerPixel = colorstobpp(tim->colorsTotal);
 	/* All set, let's do it. */
 	GIFEncode(
-		out, tim->sx, tim->sy, interlace, 0, tim->transparent, BitsPerPixel,
+		out, tim->sx, tim->sy, tim->interlace, 0, tim->transparent, BitsPerPixel,
 		tim->red, tim->green, tim->blue, tim);
 	if (pim) {
 		/* Destroy palette based temporary image. */
@@ -534,7 +534,7 @@ compress(int init_bits, gdIOCtxPtr outfile, gdImagePtr im, GifCtx *ctx)
     output( (code_int)ctx->ClearCode, ctx );
 
 #ifdef SIGNED_COMPARE_SLOW
-    while ( (c = GIFNextPixel( im, ctx )) != (unsigned) EOF ) {
+    while ( (c = GIFNextPixel( im )) != (unsigned) EOF ) {
 #else /*SIGNED_COMPARE_SLOW*/
     while ( (c = GIFNextPixel( im, ctx )) != EOF ) {  /* } */
 #endif /*SIGNED_COMPARE_SLOW*/
@@ -690,7 +690,7 @@ cl_block (GifCtx *ctx)             /* table clear for block compress */
 
 static void
 cl_hash(register count_int chsize, GifCtx *ctx)          /* reset code table */
-
+                         
 {
 
         register count_int *htab_p = ctx->htab+chsize;

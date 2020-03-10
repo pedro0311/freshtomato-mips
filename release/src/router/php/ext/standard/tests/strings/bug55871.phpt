@@ -1,5 +1,5 @@
 --TEST--
-Bug #55871 (Interruption in substr_replace()) (PHP7)
+Bug #55871 (Interruption in substr_replace())
 --FILE--
 <?php
 class test1 {
@@ -17,7 +17,7 @@ class test2 {
 }
 
 class test3 {
-        public function __toString() {
+        public function __toString() {                
                 $GLOBALS['my_var'] .= "AAAAAAAA";
                 return '';
         }
@@ -25,31 +25,23 @@ class test3 {
 
 $my_var = str_repeat('A', 40);
 $out = substr_replace(array(&$my_var), array(new test1), 40, 0);
-var_dump($out, $my_var);
+var_dump($out);
 $my_var = str_repeat('A', 40);
 $out = substr_replace(array(&$my_var), array(new test2), 40, 0);
-var_dump($out, $my_var);
+var_dump($out);
 $my_var = str_repeat('A', 40);
 $out = substr_replace(array(&$my_var), array(new test3), 40, 0);
-var_dump($out, $my_var);
+var_dump($out);
 --EXPECTF--
-array(1) {
-  [0]=>
-  string(40) "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-}
-array(1) {
-  [0]=>
-  string(0) ""
+
+Warning: substr_replace(): Argument was modified while replacing in %s on line %d
+array(0) {
 }
 
-Warning: A non-numeric value encountered in %s on line %d
-array(1) {
-  [0]=>
-  string(40) "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+Warning: substr_replace(): Argument was modified while replacing in %s on line %d
+array(0) {
 }
-int(134512640)
-array(1) {
-  [0]=>
-  string(40) "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+
+Warning: substr_replace(): Argument was modified while replacing in %s on line %d
+array(0) {
 }
-string(48) "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"

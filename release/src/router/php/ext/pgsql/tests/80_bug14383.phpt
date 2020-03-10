@@ -1,14 +1,14 @@
 --TEST--
 Bug #14383 (8.0+) (using postgres with DBA causes DBA not to be able to find any keys)
 --SKIPIF--
-<?php
+<?php 
 require_once(dirname(__FILE__).'/../../dba/tests/skipif.inc');
 require_once('skipif.inc');
 ?>
 --FILE--
 <?php
 require_once('config.inc');
-
+	
 $dbh = @pg_connect($conn_str);
 if (!$dbh) {
 	die ("Could not connect to the server");
@@ -25,8 +25,6 @@ database handler: %s
 Content String 2
 Content 2 replaced
 Read during write:%sallowed
-"key number 6" written
-Failed to write "key number 6" 2nd time
 Content 2 replaced 2nd time
 The 6th value
 array(3) {
@@ -42,8 +40,6 @@ array(3) {
 Content String 2
 Content 2 replaced
 Read during write: not allowed
-"key number 6" written
-Failed to write "key number 6" 2nd time
 Content 2 replaced 2nd time
 The 6th value
 array(3) {

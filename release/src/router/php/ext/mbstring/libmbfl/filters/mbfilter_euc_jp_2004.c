@@ -5,7 +5,7 @@
  * LICENSE NOTICES
  *
  * This file is part of "streamable kanji code filter and converter",
- * which is distributed under the terms of GNU Lesser General Public
+ * which is distributed under the terms of GNU Lesser General Public 
  * License (version 2) as published by the Free Software Foundation.
  *
  * This software is distributed in the hope that it will be useful,
@@ -24,7 +24,7 @@
 /*
  * The source code included in this files was separated from mbfilter_ja.c
  * by rui hirokawa <hirokawa@php.net> on 16 aug 2011.
- *
+ * 
  */
 
 #ifdef HAVE_CONFIG_H
@@ -75,3 +75,4 @@ const struct mbfl_convert_vtbl vtbl_wchar_eucjp2004 = {
 	mbfl_filt_conv_wchar_jis2004,
 	mbfl_filt_conv_jis2004_flush
 };
+

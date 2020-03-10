@@ -30,13 +30,11 @@ echo get_class($attr), "\n";
 print $attr->testit()."\n";
 ?>
 --EXPECTF--
+
 myElement
 HELLO Element
 myAttribute
 HELLO Attribute
 DOMAttr
 
-Fatal error: Uncaught Error: Call to undefined method DOMAttr::testit() in %s:25
-Stack trace:
-#0 {main}
-  thrown in %s on line 25
+Fatal error: Call to undefined method DOMAttr::testit() in %s on line 25

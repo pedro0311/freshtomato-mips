@@ -49,3 +49,4 @@ array(1) {
   string(%d) "%s/test/ok/../ok/ok.txt"
 }
 *** Finished testing open_basedir configuration [glob] ***
+

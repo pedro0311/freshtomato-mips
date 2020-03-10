@@ -1,7 +1,5 @@
 --TEST--
 strrpos() offset integer overflow
---SKIPIF--
-<?php if (PHP_INT_SIZE !== 4) die("skip this test is for 32-bit only");
 --FILE--
 <?php
 
@@ -16,17 +14,17 @@ var_dump(strrpos(1024, "te", -PHP_INT_MAX-1));
 
 echo "Done\n";
 ?>
---EXPECTF--
-Warning: strrpos() expects parameter 3 to be integer, float given in %s on line %d
+--EXPECTF--	
+Warning: strrpos(): Offset is greater than the length of haystack string in %s on line %d
 bool(false)
 
-Warning: strrpos() expects parameter 3 to be integer, float given in %s on line %d
+Warning: strrpos(): Offset is greater than the length of haystack string in %s on line %d
 bool(false)
 
-Warning: strrpos() expects parameter 3 to be integer, float given in %s on line %d
+Warning: strrpos(): Offset is greater than the length of haystack string in %s on line %d
 bool(false)
 
-Warning: strrpos() expects parameter 3 to be integer, float given in %s on line %d
+Warning: strrpos(): Offset is greater than the length of haystack string in %s on line %d
 bool(false)
 
 Warning: strrpos(): Offset is greater than the length of haystack string in %s on line %d

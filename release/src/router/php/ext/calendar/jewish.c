@@ -260,7 +260,7 @@
  *
  **************************************************************************/
 
-#if defined(PHP_WIN32)
+#if defined(PHP_WIN32) && _MSC_VER >= 1200
 #pragma setlocale("english")
 #endif
 
@@ -301,7 +301,7 @@ static int yearOffset[19] =
 /* names for leap (13-month) year */
 char *JewishMonthNameLeap[14] =
 {
-	"",
+	"", 
 	"Tishri",
 	"Heshvan",
 	"Kislev",
@@ -320,7 +320,7 @@ char *JewishMonthNameLeap[14] =
 /* names for regular year */
 char *JewishMonthName[14] =
 {
-	"",
+	"", 
 	"Tishri",
 	"Heshvan",
 	"Kislev",
@@ -339,39 +339,39 @@ char *JewishMonthName[14] =
 /* names for leap (13-month) year */
 char *JewishMonthHebNameLeap[14] =
 {
-	"",
-	"\xFA\xF9\xF8\xE9",
-	"\xE7\xF9\xE5\xEF",
-	"\xEB\xF1\xEC\xE5",
-	"\xE8\xE1\xFA",
-	"\xF9\xE1\xE8",
-	"\xE0\xE3\xF8 \xE0'",
-	"\xE0\xE3\xF8 \xE1'",
-	"\xF0\xE9\xF1\xEF",
-	"\xE0\xE9\xE9\xF8",
-	"\xF1\xE9\xe5\xEF",
-	"\xFA\xEE\xE5\xE6",
-	"\xE0\xE1",
-	"\xE0\xEC\xE5\xEC"
+	"", 
+	"תשרי",
+	"חשון",
+	"כסלו",
+	"טבת",
+	"שבט",
+	"אדר א'",
+	"אדר ב'",
+	"ניסן",
+	"אייר",
+	"סיון",
+	"תמוז",
+	"אב",
+	"אלול"
 };
 
 /* names for regular year */
 char *JewishMonthHebName[14] =
 {
+	"", 
+	"תשרי",
+	"חשון",
+	"כסלו",
+	"טבת",
+	"שבט",
 	"",
-	"\xFA\xF9\xF8\xE9",
-	"\xE7\xF9\xE5\xEF",
-	"\xEB\xF1\xEC\xE5",
-	"\xE8\xE1\xFA",
-	"\xF9\xE1\xE8",
-	"",
-	"\xE0\xE3\xF8",
-	"\xF0\xE9\xF1\xEF",
-	"\xE0\xE9\xE9\xF8",
-	"\xF1\xE9\xE5\xEF",
-	"\xFA\xEE\xE5\xE6",
-	"\xE0\xE1",
-	"\xE0\xEC\xE5\xEC"
+	"אדר",
+	"ניסן",
+	"אייר",
+	"סיון",
+	"תמוז",
+	"אב",
+	"אלול"
 };
 
 /************************************************************************
@@ -382,12 +382,12 @@ char *JewishMonthHebName[14] =
  * (called dehiyyot) delays it.  These 4 rules can delay the start of the
  * year by as much as 2 days.
  */
-static zend_long Tishri1(
+static long int Tishri1(
 						   int metonicYear,
-						   zend_long moladDay,
-						   zend_long moladHalakim)
+						   long int moladDay,
+						   long int moladHalakim)
 {
-	zend_long tishri1;
+	long int tishri1;
 	int dow;
 	int leapYear;
 	int lastWasLeapYear;
@@ -429,10 +429,10 @@ static zend_long Tishri1(
  */
 static void MoladOfMetonicCycle(
 								   int metonicCycle,
-								   zend_long *pMoladDay,
-								   zend_long *pMoladHalakim)
+								   long int *pMoladDay,
+								   long int *pMoladHalakim)
 {
-	register zend_ulong r1, r2, d1, d2;
+	register unsigned long int r1, r2, d1, d2;
 
 	/* Start with the time of the first molad after creation. */
 	r1 = NEW_MOON_OF_CREATION;
@@ -468,14 +468,14 @@ static void MoladOfMetonicCycle(
  * us to avoid calculating the length of the year in most cases.
  */
 static void FindTishriMolad(
-							   zend_long inputDay,
+							   long int inputDay,
 							   int *pMetonicCycle,
 							   int *pMetonicYear,
-							   zend_long *pMoladDay,
-							   zend_long *pMoladHalakim)
+							   long int *pMoladDay,
+							   long int *pMoladHalakim)
 {
-	zend_long moladDay;
-	zend_long moladHalakim;
+	long int moladDay;
+	long int moladHalakim;
 	int metonicCycle;
 	int metonicYear;
 
@@ -523,8 +523,8 @@ static void FindStartOfYear(
 							   int year,
 							   int *pMetonicCycle,
 							   int *pMetonicYear,
-							   zend_long *pMoladDay,
-							   zend_long *pMoladHalakim,
+							   long int *pMoladDay,
+							   long int *pMoladHalakim,
 							   int *pTishri1)
 {
 	*pMetonicCycle = (year - 1) / 19;
@@ -546,14 +546,14 @@ static void FindStartOfYear(
  * range 1 to 13 inclusive; *pDay will be in the range 1 to 30 inclusive.
  */
 void SdnToJewish(
-					zend_long sdn,
+					long int sdn,
 					int *pYear,
 					int *pMonth,
 					int *pDay)
 {
-	zend_long inputDay;
-	zend_long day;
-	zend_long halakim;
+	long int inputDay;
+	long int day;
+	long int halakim;
 	int metonicCycle;
 	int metonicYear;
 	int tishri1;
@@ -684,18 +684,18 @@ void SdnToJewish(
  * value.  To verify that a date is valid, convert it to SDN and then back
  * and compare with the original.
  */
-zend_long JewishToSdn(
+long int JewishToSdn(
 						int year,
 						int month,
 						int day)
 {
-	zend_long sdn;
+	long int sdn;
 	int metonicCycle;
 	int metonicYear;
 	int tishri1;
 	int tishri1After;
-	zend_long moladDay;
-	zend_long moladHalakim;
+	long int moladDay;
+	long int moladHalakim;
 	int yearLength;
 	int lengthOfAdarIAndII;
 

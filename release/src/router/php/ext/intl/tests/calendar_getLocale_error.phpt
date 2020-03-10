@@ -18,7 +18,9 @@ var_dump($c->getLocale(2, 3));
 
 var_dump(intlcal_get_locale($c));
 var_dump(intlcal_get_locale(1));
+
 --EXPECTF--
+
 Warning: IntlCalendar::getLocale() expects exactly 1 parameter, 0 given in %s on line %d
 
 Warning: IntlCalendar::getLocale(): intlcal_get_locale: bad arguments in %s on line %d
@@ -37,8 +39,4 @@ Warning: intlcal_get_locale() expects exactly 2 parameters, 1 given in %s on lin
 Warning: intlcal_get_locale(): intlcal_get_locale: bad arguments in %s on line %d
 bool(false)
 
-Fatal error: Uncaught TypeError: Argument 1 passed to intlcal_get_locale() must be an instance of IntlCalendar, integer given in %s:%d
-Stack trace:
-#0 %s(%d): intlcal_get_locale(1)
-#1 {main}
-  thrown in %s on line %d
+Catchable fatal error: Argument 1 passed to intlcal_get_locale() must be an instance of IntlCalendar, integer given in %s on line %d

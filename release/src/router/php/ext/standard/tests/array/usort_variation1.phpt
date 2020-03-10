@@ -3,7 +3,7 @@ Test usort() function : usage variations - Pass different data types as $array_a
 --FILE--
 <?php
 /* Prototype  : bool usort(array $array_arg, string $cmp_function)
- * Description: Sort an array by values using a user-defined comparison function
+ * Description: Sort an array by values using a user-defined comparison function 
  * Source code: ext/standard/array.c
  */
 
@@ -72,7 +72,7 @@ $inputs = array(
        false,
        TRUE,
        FALSE,
-
+       
        // empty data
 /*16*/ "",
        '',
@@ -82,7 +82,7 @@ $inputs = array(
 /*19*/ "string",
        'string',
        $heredoc,
-
+       
        // object data
 /*22*/ new classA(),
 
@@ -133,27 +133,27 @@ NULL
 
 -- Iteration 5 --
 
-Warning: usort() expects parameter 1 to be array, float given in %s on line %d
+Warning: usort() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 6 --
 
-Warning: usort() expects parameter 1 to be array, float given in %s on line %d
+Warning: usort() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 7 --
 
-Warning: usort() expects parameter 1 to be array, float given in %s on line %d
+Warning: usort() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 8 --
 
-Warning: usort() expects parameter 1 to be array, float given in %s on line %d
+Warning: usort() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 9 --
 
-Warning: usort() expects parameter 1 to be array, float given in %s on line %d
+Warning: usort() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 10 --

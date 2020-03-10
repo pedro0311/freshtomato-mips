@@ -13,10 +13,10 @@ session.cookie_httponly=0
 
 ob_start();
 
-/*
+/* 
  * Prototype : array session_get_cookie_params(void)
  * Description : Get the session cookie parameters
- * Source code : ext/session/session.c
+ * Source code : ext/session/session.c 
  */
 
 echo "*** Testing session_get_cookie_params() : basic functionality ***\n";
@@ -44,7 +44,7 @@ array(5) {
   ["httponly"]=>
   bool(false)
 }
-bool(true)
+NULL
 array(5) {
   ["lifetime"]=>
   int(3600)
@@ -57,7 +57,7 @@ array(5) {
   ["httponly"]=>
   bool(false)
 }
-bool(true)
+NULL
 array(5) {
   ["lifetime"]=>
   int(1234567890)

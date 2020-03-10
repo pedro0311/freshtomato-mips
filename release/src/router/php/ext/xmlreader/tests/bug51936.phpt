@@ -19,7 +19,4 @@ Done
 --EXPECTF--
 Test
 
-Fatal error: Uncaught Error: Trying to clone an uncloneable object of class XMLReader in %s:%d
-Stack trace:
-#0 {main}
-  thrown in %s on line %d
+Fatal error: Trying to clone an uncloneable object of class XMLReader in %s on line %d

@@ -2,7 +2,7 @@
 Bug #55755 (SegFault when outputting header WWW-Authenticate)
 --SKIPIF--
 <?php
-include "skipif.inc";
+include "skipif.inc"; 
 ?>
 --FILE--
 <?php
@@ -31,10 +31,9 @@ HEADER
 }
 
 ?>
---EXPECTF--
+--EXPECTF--	
 HTTP/1.1 200 OK
 Host: %s
-Date: %s
 Connection: close
 X-Powered-By: PHP/%s
 Content-type: text/html; charset=UTF-8

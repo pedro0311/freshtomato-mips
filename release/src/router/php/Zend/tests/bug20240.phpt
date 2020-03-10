@@ -1,5 +1,7 @@
 --TEST--
 Bug #20240 (order of destructor calls)
+--SKIPIF--
+<?php if (version_compare(zend_version(), '2.0.0-dev', '<')) die('skip ZendEngine 2 is needed'); ?>
 --FILE--
 <?php
 
@@ -7,7 +9,7 @@ class test
 {
     public $member;
 
-    function __construct() {
+    function test() {
         $this->member = 1;
         register_shutdown_function(array($this, 'destructor'));
     }

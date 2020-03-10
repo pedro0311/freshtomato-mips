@@ -12,11 +12,10 @@ var_dump(hash_copy($r, $r));
 
 echo "Done\n";
 ?>
---EXPECTF--
+--EXPECTF--	
 Warning: hash_copy() expects exactly 1 parameter, 0 given in %s on line %d
 NULL
-object(HashContext)#%d (0) {
-}
+resource(%d) of type (Hash Context)
 
 Warning: hash_copy() expects exactly 1 parameter, 2 given in %s on line %d
 NULL

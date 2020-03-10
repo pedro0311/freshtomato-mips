@@ -1,6 +1,6 @@
 /*
   zip_source_close.c -- close zip_source (stop reading)
-  Copyright (C) 2009-2014 Dieter Baron and Thomas Klausner
+  Copyright (C) 2009 Dieter Baron and Thomas Klausner
 
   This file is part of libzip, a library to manipulate ZIP archives.
   The authors can be contacted at <libzip@nih.at>
@@ -31,28 +31,24 @@
   IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+
 
 #include "zipint.h"
 
+
 
-int
-zip_source_close(zip_source_t *src)
+void
+zip_source_close(struct zip_source *src)
 {
-    if (!ZIP_SOURCE_IS_OPEN_READING(src)) {
-        zip_error_set(&src->error, ZIP_ER_INVAL, 0);
-        return -1;
+    if (!src->is_open)
+	return;
+
+    if (src->src == NULL)
+	(void)src->cb.f(src->ud, NULL, 0, ZIP_SOURCE_CLOSE);
+    else {
+	(void)src->cb.l(src->src, src->ud, NULL, 0, ZIP_SOURCE_CLOSE);
+	zip_source_close(src->src);
     }
     
-    src->open_count--;
-    if (src->open_count == 0) {
-	_zip_source_call(src, NULL, 0, ZIP_SOURCE_CLOSE);
-
-	if (ZIP_SOURCE_IS_LAYERED(src)) {
-	    if (zip_source_close(src->src) < 0) {
-		zip_error_set(&src->error, ZIP_ER_INTERNAL, 0);
-	    }
-	}
-    }
-
-    return 0;
+    src->is_open = 0;
 }

@@ -1,9 +1,9 @@
 --TEST--
 Test function gzgets() by calling it more than or less than its expected arguments
 --SKIPIF--
-<?php
+<?php 
 if (!extension_loaded("zlib")) {
-	print "skip - ZLIB extension not loaded";
+	print "skip - ZLIB extension not loaded"; 
 }
 ?>
 --FILE--
@@ -21,6 +21,7 @@ var_dump(gzgets());
 ?>
 ===DONE===
 --EXPECTF--
+
 Warning: gzgets() expects at most 2 parameters, 3 given in %s on line %d
 bool(false)
 

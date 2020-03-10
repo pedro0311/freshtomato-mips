@@ -15,5 +15,5 @@ if ($r !== 1)
 echo "Done\n";
 
 ?>
---EXPECT--
+--EXPECTF--
 Done

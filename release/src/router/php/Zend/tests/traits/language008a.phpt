@@ -19,8 +19,5 @@ $o = new MyClass;
 $o->sayHello();
 
 ?>
---EXPECTF--
-Fatal error: Uncaught Error: Call to protected method MyClass::sayHello() from context '' in %s:%d
-Stack trace:
-#0 {main}
-  thrown in %s on line %d
+--EXPECTF--	
+Fatal error: Call to protected method MyClass::sayHello() from context '' in %s on line %d

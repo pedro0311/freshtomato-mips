@@ -118,98 +118,98 @@ Emulated PS...
 array(1) {
   [0]=>
   array(1) {
-    ["_version"]=>
-    string(%d) "%s"
+    [%u|b%"_version"]=>
+    %unicode|string%(%d) "%s"
   }
 }
 bool(false)
 array(3) {
   [0]=>
   array(1) {
-    ["id"]=>
-    string(1) "1"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "1"
   }
   [1]=>
   array(1) {
-    ["id"]=>
-    string(1) "2"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "2"
   }
   [2]=>
   array(1) {
-    ["id"]=>
-    string(1) "3"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "3"
   }
 }
 array(3) {
   [0]=>
   array(2) {
-    ["id"]=>
-    string(1) "3"
-    ["label"]=>
-    string(1) "c"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "3"
+    [%u|b%"label"]=>
+    %unicode|string%(1) "c"
   }
   [1]=>
   array(2) {
-    ["id"]=>
-    string(1) "2"
-    ["label"]=>
-    string(1) "b"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "2"
+    [%u|b%"label"]=>
+    %unicode|string%(1) "b"
   }
   [2]=>
   array(2) {
-    ["id"]=>
-    string(1) "1"
-    ["label"]=>
-    string(1) "a"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "1"
+    [%u|b%"label"]=>
+    %unicode|string%(1) "a"
   }
 }
 bool(false)
 array(1) {
   [0]=>
   array(1) {
-    ["_version"]=>
-    string(%d) "%s"
+    [%u|b%"_version"]=>
+    %unicode|string%(%d) "%s"
   }
 }
 bool(false)
 array(3) {
   [0]=>
   array(1) {
-    ["id"]=>
-    string(1) "1"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "1"
   }
   [1]=>
   array(1) {
-    ["id"]=>
-    string(1) "2"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "2"
   }
   [2]=>
   array(1) {
-    ["id"]=>
-    string(1) "3"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "3"
   }
 }
 array(3) {
   [0]=>
   array(2) {
-    ["id"]=>
-    string(1) "3"
-    ["label"]=>
-    string(1) "c"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "3"
+    [%u|b%"label"]=>
+    %unicode|string%(1) "c"
   }
   [1]=>
   array(2) {
-    ["id"]=>
-    string(1) "2"
-    ["label"]=>
-    string(1) "b"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "2"
+    [%u|b%"label"]=>
+    %unicode|string%(1) "b"
   }
   [2]=>
   array(2) {
-    ["id"]=>
-    string(1) "1"
-    ["label"]=>
-    string(1) "a"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "1"
+    [%u|b%"label"]=>
+    %unicode|string%(1) "a"
   }
 }
 bool(false)
@@ -217,98 +217,98 @@ Native PS...
 array(1) {
   [0]=>
   array(1) {
-    ["_version"]=>
-    string(%d) "%s"
+    [%u|b%"_version"]=>
+    %unicode|string%(%d) "%s"
   }
 }
 bool(false)
 array(3) {
   [0]=>
   array(1) {
-    ["id"]=>
-    string(1) "1"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "1"
   }
   [1]=>
   array(1) {
-    ["id"]=>
-    string(1) "2"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "2"
   }
   [2]=>
   array(1) {
-    ["id"]=>
-    string(1) "3"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "3"
   }
 }
 array(3) {
   [0]=>
   array(2) {
-    ["id"]=>
-    string(1) "3"
-    ["label"]=>
-    string(1) "c"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "3"
+    [%u|b%"label"]=>
+    %unicode|string%(1) "c"
   }
   [1]=>
   array(2) {
-    ["id"]=>
-    string(1) "2"
-    ["label"]=>
-    string(1) "b"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "2"
+    [%u|b%"label"]=>
+    %unicode|string%(1) "b"
   }
   [2]=>
   array(2) {
-    ["id"]=>
-    string(1) "1"
-    ["label"]=>
-    string(1) "a"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "1"
+    [%u|b%"label"]=>
+    %unicode|string%(1) "a"
   }
 }
 bool(false)
 array(1) {
   [0]=>
   array(1) {
-    ["_version"]=>
-    string(%d) "%s"
+    [%u|b%"_version"]=>
+    %unicode|string%(%d) "%s"
   }
 }
 bool(false)
 array(3) {
   [0]=>
   array(1) {
-    ["id"]=>
-    string(1) "1"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "1"
   }
   [1]=>
   array(1) {
-    ["id"]=>
-    string(1) "2"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "2"
   }
   [2]=>
   array(1) {
-    ["id"]=>
-    string(1) "3"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "3"
   }
 }
 array(3) {
   [0]=>
   array(2) {
-    ["id"]=>
-    string(1) "3"
-    ["label"]=>
-    string(1) "c"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "3"
+    [%u|b%"label"]=>
+    %unicode|string%(1) "c"
   }
   [1]=>
   array(2) {
-    ["id"]=>
-    string(1) "2"
-    ["label"]=>
-    string(1) "b"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "2"
+    [%u|b%"label"]=>
+    %unicode|string%(1) "b"
   }
   [2]=>
   array(2) {
-    ["id"]=>
-    string(1) "1"
-    ["label"]=>
-    string(1) "a"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "1"
+    [%u|b%"label"]=>
+    %unicode|string%(1) "a"
   }
 }
 bool(false)

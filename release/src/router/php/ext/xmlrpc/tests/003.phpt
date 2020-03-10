@@ -31,6 +31,7 @@ $params = array(
 
 $response = xmlrpc_encode($params);
 echo $response;
+
 --EXPECT--
 <?xml version="1.0" encoding="utf-8"?>
 <params>

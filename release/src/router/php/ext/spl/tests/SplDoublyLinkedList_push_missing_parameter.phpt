@@ -10,3 +10,4 @@ var_dump($dll->push());
 --EXPECTF--
 Warning: SplDoublyLinkedList::push() expects exactly 1 parameter, 0 given in %s on line %d
 NULL
+

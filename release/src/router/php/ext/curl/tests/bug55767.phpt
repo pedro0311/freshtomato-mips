@@ -1,8 +1,8 @@
 --TEST--
 Test curl_opt() function with POST params from array with a numeric key
 --SKIPIF--
-<?php
-include 'skipif.inc';
+<?php 
+include 'skipinf.inc';
 ?>
 --FILE--
 <?php
@@ -26,7 +26,7 @@ include 'skipif.inc';
   curl_setopt($ch, CURLOPT_POST, 1);
   curl_setopt($ch, CURLOPT_POSTFIELDS, array('Hello'=>'World','Foo'=>'Bar',100=>'John Doe'));
   curl_setopt($ch, CURLOPT_URL, $url); //set the url we want to use
-
+  
   $curl_content = curl_exec($ch);
   curl_close($ch);
 

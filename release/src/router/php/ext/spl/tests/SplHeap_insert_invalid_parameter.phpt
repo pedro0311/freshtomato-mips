@@ -13,3 +13,4 @@ var_dump($h->insert());
 --EXPECTF--
 Warning: SplHeap::insert() expects exactly 1 parameter, 0 given in %s on line %d
 NULL
+

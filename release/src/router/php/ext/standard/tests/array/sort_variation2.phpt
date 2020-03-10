@@ -3,7 +3,7 @@ Test sort() function : usage variations - unexpected values for 'sort_flags' arg
 --FILE--
 <?php
 /* Prototype  : bool sort(array &array_arg [, int $sort_flags])
- * Description: Sort an array
+ * Description: Sort an array 
  * Source code: ext/standard/array.c
 */
 
@@ -79,8 +79,8 @@ for($index = 0; $index < count($unexpected_values); $index ++) {
   // sort the array, retain a temp. copy of input array for next iteration
   $value = $unexpected_values [$index];
   $temp_array = $unsorted_values;
-  var_dump( sort($temp_array, $value) );
-
+  var_dump( sort($temp_array, $value) ); 
+  
   //dump the sorted array
   var_dump($temp_array);
   $counter++;
@@ -214,7 +214,7 @@ array(3) {
 }
 -- Iteration 13 --
 
-Warning: sort() expects parameter 2 to be integer, string given in %s on line %d
+Warning: sort() expects parameter 2 to be long, string given in %s on line %d
 bool(false)
 array(3) {
   [0]=>
@@ -226,7 +226,7 @@ array(3) {
 }
 -- Iteration 14 --
 
-Warning: sort() expects parameter 2 to be integer, string given in %s on line %d
+Warning: sort() expects parameter 2 to be long, string given in %s on line %d
 bool(false)
 array(3) {
   [0]=>
@@ -238,7 +238,7 @@ array(3) {
 }
 -- Iteration 15 --
 
-Warning: sort() expects parameter 2 to be integer, string given in %s on line %d
+Warning: sort() expects parameter 2 to be long, string given in %s on line %d
 bool(false)
 array(3) {
   [0]=>
@@ -250,7 +250,7 @@ array(3) {
 }
 -- Iteration 16 --
 
-Warning: sort() expects parameter 2 to be integer, string given in %s on line %d
+Warning: sort() expects parameter 2 to be long, string given in %s on line %d
 bool(false)
 array(3) {
   [0]=>
@@ -262,7 +262,7 @@ array(3) {
 }
 -- Iteration 17 --
 
-Warning: sort() expects parameter 2 to be integer, object given in %s on line %d
+Warning: sort() expects parameter 2 to be long, object given in %s on line %d
 bool(false)
 array(3) {
   [0]=>
@@ -274,7 +274,7 @@ array(3) {
 }
 -- Iteration 18 --
 
-Warning: sort() expects parameter 2 to be integer, string given in %s on line %d
+Warning: sort() expects parameter 2 to be long, string given in %s on line %d
 bool(false)
 array(3) {
   [0]=>
@@ -286,7 +286,7 @@ array(3) {
 }
 -- Iteration 19 --
 
-Warning: sort() expects parameter 2 to be integer, string given in %s on line %d
+Warning: sort() expects parameter 2 to be long, string given in %s on line %d
 bool(false)
 array(3) {
   [0]=>
@@ -298,7 +298,7 @@ array(3) {
 }
 -- Iteration 20 --
 
-Warning: sort() expects parameter 2 to be integer, resource given in %s on line %d
+Warning: sort() expects parameter 2 to be long, resource given in %s on line %d
 bool(false)
 array(3) {
   [0]=>

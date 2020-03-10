@@ -3,7 +3,7 @@ Test scandir() function : usage variations - diff data types as $context arg
 --FILE--
 <?php
 /* Prototype  : array scandir(string $dir [, int $sorting_order [, resource $context]])
- * Description: List files & directories inside the specified path
+ * Description: List files & directories inside the specified path 
  * Source code: ext/standard/dir.c
  */
 
@@ -63,7 +63,7 @@ $inputs = array(
        false,
        TRUE,
        FALSE,
-
+       
        // empty data
 /*16*/ "",
        '',
@@ -73,7 +73,7 @@ $inputs = array(
 /*19*/ "string",
        'string',
        $heredoc,
-
+       
        // object data
 /*22*/ new classA(),
 
@@ -128,27 +128,27 @@ NULL
 
 -- Iteration 5 --
 
-Warning: scandir() expects parameter 3 to be resource, float given in %s on line %d
+Warning: scandir() expects parameter 3 to be resource, double given in %s on line %d
 NULL
 
 -- Iteration 6 --
 
-Warning: scandir() expects parameter 3 to be resource, float given in %s on line %d
+Warning: scandir() expects parameter 3 to be resource, double given in %s on line %d
 NULL
 
 -- Iteration 7 --
 
-Warning: scandir() expects parameter 3 to be resource, float given in %s on line %d
+Warning: scandir() expects parameter 3 to be resource, double given in %s on line %d
 NULL
 
 -- Iteration 8 --
 
-Warning: scandir() expects parameter 3 to be resource, float given in %s on line %d
+Warning: scandir() expects parameter 3 to be resource, double given in %s on line %d
 NULL
 
 -- Iteration 9 --
 
-Warning: scandir() expects parameter 3 to be resource, float given in %s on line %d
+Warning: scandir() expects parameter 3 to be resource, double given in %s on line %d
 NULL
 
 -- Iteration 10 --

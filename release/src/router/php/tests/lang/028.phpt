@@ -19,7 +19,7 @@ function still_working()
 function dafna()
 {
 	static $foo = 0;
-
+	
 	print "Dafna!\n";
 	print call_user_func("still_working")."\n";
 	$foo++;
@@ -28,7 +28,7 @@ function dafna()
 
 
 class dafna_class {
-	function __construct() {
+	function dafna_class() {
 		$this->myname = "Dafna";
 	}
 	function GetMyName() {
@@ -1055,3 +1055,4 @@ I'm still alive
 Hey there!!
 199
 Dafna
+

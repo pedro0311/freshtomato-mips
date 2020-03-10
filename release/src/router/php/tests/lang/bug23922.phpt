@@ -17,5 +17,4 @@ Bug #23922 (scope doesn't properly propagate into internal functions)
   $foo->as_expr();
   $foo->as_string();
 ?>
---EXPECTF--
-Deprecated: assert(): Calling assert() with a string argument is deprecated in %s on line %d
+--EXPECT--

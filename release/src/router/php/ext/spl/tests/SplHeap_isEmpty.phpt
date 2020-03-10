@@ -12,3 +12,4 @@ var_dump($h->isEmpty());
 ?>
 --EXPECTF--
 bool(true)
+

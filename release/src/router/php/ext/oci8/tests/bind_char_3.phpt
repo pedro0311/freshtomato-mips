@@ -11,7 +11,7 @@ if (!(isset($matches[0]) && $matches[1] >= 12)) {
 }
 ?>
 --ENV--
-NLS_LANG=.AL32UTF8
+NLS_LANG=
 --FILE--
 <?php
 
@@ -243,12 +243,11 @@ oci8_test_sql_execute($c, $stmtarray);
 echo "Done\n";
 
 ?>
---EXPECT--
+--EXPECTF--
 Test 1.1 In Length: default.  In Type: default.  Out Length: default.          Out Type: default
   Executing:
-    Oci_execute error ORA-6502
 string(3) "abc"
-NULL
+string(3) "abc"
 Test 1.2 In Length: default.  In Type: default.  Out Length: 10.               Out Type: default
   Executing:
 string(3) "abc"
@@ -260,20 +259,19 @@ string(3) "abc"
 Test 1.4 In Length: -1.       In Type: AFC.      Out Length: 10.               Out Type: AFC
   Executing:
 string(3) "abc"
-string(10) "abc       "
+string(30) "abc                           "
 Test 1.5 In Length: strlen.   In Type: AFC.      Out Length: strlen(input).    Out Type: AFC
   Executing:
 string(3) "abc"
-string(3) "abc"
+string(9) "abc      "
 Test 1.6 In Length: strlen.   In Type: AFC.      Out Length: strlen(input)-1.  Out Type: AFC
   Executing:
-    Oci_execute error ORA-6502
 string(3) "abc"
-string(3) "abc"
+string(6) "abc   "
 Test 1.7 In Length: strlen.   In Type: AFC.      Out Length: strlen(input)+1.  Out Type: AFC
   Executing:
 string(3) "abc"
-string(4) "abc "
+string(12) "abc         "
 
 
 Tests with ''

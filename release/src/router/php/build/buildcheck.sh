@@ -1,8 +1,8 @@
 #! /bin/sh
 #  +----------------------------------------------------------------------+
-#  | PHP Version 7                                                        |
+#  | PHP Version 5                                                        |
 #  +----------------------------------------------------------------------+
-#  | Copyright (c) 1997-2018 The PHP Group                                |
+#  | Copyright (c) 1997-2016 The PHP Group                                |
 #  +----------------------------------------------------------------------+
 #  | This source file is subject to version 3.01 of the PHP license,      |
 #  | that is bundled with this package in the file LICENSE, and is        |
@@ -16,7 +16,7 @@
 #  |          Sascha Schumann <sascha@schumann.cx>                        |
 #  +----------------------------------------------------------------------+
 #
-# $Id: buildcheck.sh,v 1.37.2.2.2.1 2007-01-01 19:32:10 iliaa Exp $
+# $Id: buildcheck.sh,v 1.37.2.2.2.1 2007-01-01 19:32:10 iliaa Exp $ 
 #
 
 echo "buildconf: checking installation..."
@@ -28,19 +28,19 @@ if test -z "$PHP_AUTOCONF"; then
   PHP_AUTOCONF='autoconf'
 fi
 
-# autoconf 2.64 or newer
+# autoconf 2.59 or newer
 ac_version=`$PHP_AUTOCONF --version 2>/dev/null|head -n 1|sed -e 's/^[^0-9]*//' -e 's/[a-z]* *$//'`
 if test -z "$ac_version"; then
-echo "buildconf: autoconf not found." >&2
-echo "           You need autoconf version 2.64 or newer installed" >&2
-echo "           to build PHP from Git." >&2
+echo "buildconf: autoconf not found."
+echo "           You need autoconf version 2.59 or newer installed"
+echo "           to build PHP from Git."
 exit 1
 fi
 IFS=.; set $ac_version; IFS=' '
-if test "$1" = "2" -a "$2" -lt "64" || test "$1" -lt "2"; then
-echo "buildconf: autoconf version $ac_version found." >&2
-echo "           You need autoconf version 2.64 or newer installed" >&2
-echo "           to build PHP from Git." >&2
+if test "$1" = "2" -a "$2" -lt "59" || test "$1" -lt "2"; then
+echo "buildconf: autoconf version $ac_version found."
+echo "           You need autoconf version 2.59 or newer installed"
+echo "           to build PHP from Git."
 exit 1
 else
 echo "buildconf: autoconf version $ac_version (ok)"

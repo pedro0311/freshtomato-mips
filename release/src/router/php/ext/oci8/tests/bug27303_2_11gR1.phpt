@@ -10,13 +10,11 @@ if (!(isset($matches[0]) && $matches[1] < 12)) {
     die("skip expected output only valid when using pre-Oracle 12c database");
 }
 ?>
---ENV--
-NLS_LANG=
 --FILE--
 <?php
 
 require dirname(__FILE__).'/connect.inc';
-
+	
 $stmtarray = array(
     "drop sequence myseq",
     "drop table mytab",
@@ -55,7 +53,7 @@ oci8_test_sql_execute($c, $stmtarray);
 
 echo "Done\n";
 ?>
---EXPECT--
+--EXPECT--	
 string(1) "1"
 string(1) "2"
 string(1) "3"

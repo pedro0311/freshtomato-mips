@@ -1,5 +1,5 @@
 --TEST--
-func_get_arg test (PHP7)
+func_get_arg test
 --FILE--
 <?php
 
@@ -12,4 +12,4 @@ foo(2);
 echo "\n";
 ?>
 --EXPECT--
-5
+2

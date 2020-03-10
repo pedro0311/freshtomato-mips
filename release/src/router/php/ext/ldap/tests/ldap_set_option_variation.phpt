@@ -76,43 +76,9 @@ bool(true)
 bool(true)
 bool(false)
 bool(true)
-array(2) {
-  [0]=>
-  array(2) {
-    ["oid"]=>
-    string(15) "1.2.752.58.10.1"
-    ["iscritical"]=>
-    bool(true)
-  }
-  [1]=>
-  array(3) {
-    ["oid"]=>
-    string(15) "1.2.752.58.1.10"
-    ["iscritical"]=>
-    bool(false)
-    ["value"]=>
-    string(5) "magic"
-  }
-}
+int(0)
 bool(true)
-array(2) {
-  [0]=>
-  array(2) {
-    ["oid"]=>
-    string(15) "1.2.752.58.10.1"
-    ["iscritical"]=>
-    bool(true)
-  }
-  [1]=>
-  array(3) {
-    ["oid"]=>
-    string(15) "1.2.752.58.1.10"
-    ["iscritical"]=>
-    bool(false)
-    ["value"]=>
-    string(5) "magic"
-  }
-}
+int(0)
 bool(true)
 string(14) "dc=test,dc=com"
 ===DONE===

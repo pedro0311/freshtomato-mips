@@ -1,3 +1,4 @@
+
 	/* $Id: fpm_unix.c,v 1.25.2.1 2008/12/13 03:18:23 anight Exp $ */
 	/* (c) 2007,2008 Andrei Nigmatulin */
 
@@ -476,7 +477,7 @@ int fpm_unix_init_main() /* {{{ */
 		 * The parent process has then to wait for the master
 		 * process to initialize to return a consistent exit
 		 * value. For this pupose, the master process will
-		 * send \"1\" into the pipe if everything went well
+		 * send \"1\" into the pipe if everything went well 
 		 * and \"0\" otherwise.
 		 */
 
@@ -578,3 +579,4 @@ int fpm_unix_init_main() /* {{{ */
 	return 0;
 }
 /* }}} */
+

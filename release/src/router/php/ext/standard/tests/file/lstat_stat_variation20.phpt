@@ -1,5 +1,5 @@
 --TEST--
-Test lstat() and stat() functions: usage variations - link names stored in array/object
+Test lstat() and stat() functions: usage variations - link names stored in array/object 
 --SKIPIF--
 <?php
 if (substr(PHP_OS, 0, 3) == 'WIN') {
@@ -29,7 +29,7 @@ symlink("$file_path/lstat_stat_variation20.tmp", "$file_path/lstat_stat_variatio
 echo "*** Testing lstat() with linkname stored inside an object/array ***\n";
 class names {
   public $var_name;
-  public function __construct($name) {
+  public function names($name) {
     $this->var_name = $name;
   }
 }
@@ -37,8 +37,8 @@ class names {
 // link name stored in an object
 $link_object = new names("$file_path/lstat_stat_variation20_link.tmp");
 
-// link name stored in side an array
-// with default numeric key
+// link name stored in side an array 
+// with default numeric key 
 $link_array = array("$file_path/lstat_stat_variation20_link.tmp");
 
 // with string key index
@@ -54,6 +54,7 @@ var_dump( stat($link_array_with_key['linkname']) );
 
 echo "\n--- Done ---";
 ?>
+
 --CLEAN--
 <?php
 $file_path = dirname(__FILE__);

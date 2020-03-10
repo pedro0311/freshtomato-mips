@@ -1,11 +1,9 @@
 --TEST--
 Test image_type_to_mime_type() function : usage variations  - Pass different data types as imagetype
---SKIPIF--
-<?php if (PHP_INT_SIZE != 8) die("skip this test is for 64-bit only");
 --FILE--
 <?php
 /* Prototype  : string image_type_to_mime_type(int imagetype)
- * Description: Get Mime-Type for image-type returned by getimagesize, exif_read_data, exif_thumbnail, exif_imagetype
+ * Description: Get Mime-Type for image-type returned by getimagesize, exif_read_data, exif_thumbnail, exif_imagetype 
  * Source code: ext/standard/image.c
  */
 
@@ -95,12 +93,12 @@ string(24) "application/octet-stream"
 
 -- Iteration 6 --
 
-Warning: image_type_to_mime_type() expects parameter 1 to be integer, array given in %s on line %d
+Warning: image_type_to_mime_type() expects parameter 1 to be long, array given in %s on line %d
 NULL
 
 -- Iteration 7 --
 
-Warning: image_type_to_mime_type() expects parameter 1 to be integer, array given in %s on line %d
+Warning: image_type_to_mime_type() expects parameter 1 to be long, array given in %s on line %d
 NULL
 
 -- Iteration 8 --
@@ -123,27 +121,27 @@ string(24) "application/octet-stream"
 
 -- Iteration 14 --
 
-Warning: image_type_to_mime_type() expects parameter 1 to be integer, string given in %s on line %d
+Warning: image_type_to_mime_type() expects parameter 1 to be long, string given in %s on line %d
 NULL
 
 -- Iteration 15 --
 
-Warning: image_type_to_mime_type() expects parameter 1 to be integer, string given in %s on line %d
+Warning: image_type_to_mime_type() expects parameter 1 to be long, string given in %s on line %d
 NULL
 
 -- Iteration 16 --
 
-Warning: image_type_to_mime_type() expects parameter 1 to be integer, string given in %s on line %d
+Warning: image_type_to_mime_type() expects parameter 1 to be long, string given in %s on line %d
 NULL
 
 -- Iteration 17 --
 
-Warning: image_type_to_mime_type() expects parameter 1 to be integer, string given in %s on line %d
+Warning: image_type_to_mime_type() expects parameter 1 to be long, string given in %s on line %d
 NULL
 
 -- Iteration 18 --
 
-Warning: image_type_to_mime_type() expects parameter 1 to be integer, object given in %s on line %d
+Warning: image_type_to_mime_type() expects parameter 1 to be long, object given in %s on line %d
 NULL
 
 -- Iteration 19 --

@@ -12,10 +12,10 @@
   </maintainer>
  </maintainers>
  <description>
-The tokenizer functions provide an interface to the PHP tokenizer
-embedded in the Zend Engine. Using these functions you may write
-your own PHP source analyzing or modification tools without having
-to deal with the language specification at the lexical level.
+The tokenizer functions provide an interface to the PHP tokenizer 
+embedded in the Zend Engine. Using these functions you may write 
+your own PHP source analyzing or modification tools without having 
+to deal with the language specification at the lexical level. 
  </description>
  <license>PHP</license>
  <release>
@@ -30,6 +30,7 @@ package.xml added to support installation using pear installer
    <file role="src" name="config.m4"/>
    <file role="src" name="Makefile.frag"/>
    <file role="src" name="config.w32"/>
+   <file role="src" name="tokenizer.dsp"/>
    <file role="src" name="tokenizer.c"/>
    <file role="src" name="php_tokenizer.h"/>
    <file role="doc" name="tokenizer.php"/>

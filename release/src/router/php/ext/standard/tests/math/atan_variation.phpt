@@ -4,10 +4,10 @@ Test variations in usage of atan()
 precision = 10
 --FILE--
 <?php
-/*
+/* 
  * proto float atan(float number)
  * Function is implemented in ext/standard/math.c
-*/
+*/ 
 
 
 //Test atan with a different input values
@@ -21,12 +21,12 @@ $values = array(23,
 		"23",
 		"23.45",
 		"2.345e1",
-		"nonsense",
+		"nonsense",				
 		"1000",
 		"1000ABC",
 		null,
 		true,
-		false);
+		false);	
 
 for ($i = 0; $i < count($values); $i++) {
 	$res = atan($values[$i]);
@@ -45,7 +45,7 @@ float(1.527345431)
 float(1.528178225)
 float(1.528178225)
 
-Warning: atan() expects parameter 1 to be float, string given in %s on line %d
+Warning: atan() expects parameter 1 to be double, string given in %s on line %d
 NULL
 float(1.569796327)
 

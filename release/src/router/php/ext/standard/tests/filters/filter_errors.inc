@@ -17,7 +17,7 @@ function filter_errors_test($filter, $data) {
 
 	$stream = fopen('php://memory', 'wb+');
 
-	fwrite($stream, ".\r\n$data");
+	fwrite($stream, b".\r\n$data");
 	fseek($stream, 0, SEEK_SET);
 	stream_get_line($stream, 8192, "\r\n");
 
@@ -27,10 +27,11 @@ function filter_errors_test($filter, $data) {
 
 	$stream = fopen('php://memory', 'wb+');
 
-	fwrite($stream, "$data");
+	fwrite($stream, b"$data");
 	fseek($stream, 0, SEEK_SET);
 
 	stream_filter_append($stream, $filter);
 	stream_get_contents($stream);
 
 }
+

@@ -6,8 +6,6 @@ require_once('skipif.inc');
 require_once('skipifemb.inc');
 require_once('skipifconnectfailure.inc');
 ?>
---INI--
-mysqli.allow_local_infile=1
 --FILE--
 <?php
 	include("connect.inc");
@@ -179,43 +177,43 @@ mysqli.allow_local_infile=1
 --EXPECTF--
 Warning: mysqli_real_connect(): (%s/%d): Access denied for user '%s'@'%s' (using password: YES) in %s on line %d
 object(mysqli)#%d (%d) {
-  ["affected_rows"]=>
+  [%u|b%"affected_rows"]=>
   NULL
-  ["client_info"]=>
+  [%u|b%"client_info"]=>
   %s
-  ["client_version"]=>
+  [%u|b%"client_version"]=>
   int(%d)
-  ["connect_errno"]=>
+  [%u|b%"connect_errno"]=>
   int(%d)
-  ["connect_error"]=>
+  [%u|b%"connect_error"]=>
   NULL
-  ["errno"]=>
+  [%u|b%"errno"]=>
   %s
-  ["error"]=>
+  [%u|b%"error"]=>
   %s
-  ["error_list"]=>
+  [%u|b%"error_list"]=>
   NULL
-  ["field_count"]=>
+  [%u|b%"field_count"]=>
   NULL
-  ["host_info"]=>
+  [%u|b%"host_info"]=>
   NULL
-  ["info"]=>
+  [%u|b%"info"]=>
   NULL
-  ["insert_id"]=>
+  [%u|b%"insert_id"]=>
   NULL
-  ["server_info"]=>
+  [%u|b%"server_info"]=>
   NULL
-  ["server_version"]=>
+  [%u|b%"server_version"]=>
   NULL
-  ["stat"]=>
+  [%u|b%"stat"]=>
   NULL
-  ["sqlstate"]=>
+  [%u|b%"sqlstate"]=>
   NULL
-  ["protocol_version"]=>
+  [%u|b%"protocol_version"]=>
   NULL
-  ["thread_id"]=>
+  [%u|b%"thread_id"]=>
   NULL
-  ["warning_count"]=>
+  [%u|b%"warning_count"]=>
   NULL
 }
 

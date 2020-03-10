@@ -10,10 +10,10 @@ session.name=PHPSESSID
 
 ob_start();
 
-/*
+/* 
  * Prototype : bool session_set_save_handler(SessionHandlerInterface $handler [, bool $register_shutdown_function = true])
  * Description : Sets user-level session storage functions
- * Source code : ext/session/session.c
+ * Source code : ext/session/session.c 
  */
 
 echo "*** Testing session_set_save_handler() function: id interface ***\n";
@@ -38,8 +38,7 @@ class MySession2 implements SessionHandlerInterface, SessionIdInterface {
 	}
 
 	public function write($id, $data) {
-		// Empty $data = 0 = false
-		return (bool)file_put_contents($this->path . $id, $data);
+		return file_put_contents($this->path . $id, $data);
 	}
 
 	public function destroy($id) {
@@ -76,6 +75,7 @@ var_dump($_SESSION);
 
 session_write_close();
 session_unset();
+
 --EXPECTF--
 *** Testing session_set_save_handler() function: id interface ***
 string(%d) "my_sid"

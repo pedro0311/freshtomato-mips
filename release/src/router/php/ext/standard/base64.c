@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2018 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -53,14 +53,27 @@ static const short base64_reverse_table[256] = {
 };
 /* }}} */
 
-PHPAPI zend_string *php_base64_encode(const unsigned char *str, size_t length) /* {{{ */
+PHPAPI unsigned char *php_base64_encode(const unsigned char *str, int length, int *ret_length) /* {{{ */
 {
 	const unsigned char *current = str;
 	unsigned char *p;
-	zend_string *result;
+	unsigned char *result;
 
-	result = zend_string_safe_alloc(((length + 2) / 3), 4 * sizeof(char), 0, 0);
-	p = (unsigned char *)ZSTR_VAL(result);
+	if (length < 0) {
+		if (ret_length != NULL) {
+			*ret_length = 0;
+		}
+		return NULL;
+	}
+
+	if (((size_t)length + 2) / 3 > INT_MAX/4 ) {
+		TSRMLS_FETCH();
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "String too long, maximum is %d", INT_MAX/4);
+		return NULL;
+	}
+
+	result = (unsigned char *) safe_emalloc((length + 2) / 3, 4 * sizeof(char), 1);
+	p = result;
 
 	while (length > 2) { /* keep going until we have less than 24 bits */
 		*p++ = base64_table[current[0] >> 2];
@@ -85,10 +98,10 @@ PHPAPI zend_string *php_base64_encode(const unsigned char *str, size_t length) /
 			*p++ = base64_pad;
 		}
 	}
+	if (ret_length != NULL) {
+		*ret_length = (int)(p - result);
+	}
 	*p = '\0';
-
-	ZSTR_LEN(result) = (p - (unsigned char *)ZSTR_VAL(result));
-
 	return result;
 }
 /* }}} */
@@ -121,81 +134,90 @@ void php_base64_init(void)
 		ch += 16;
 	}
 	sprintf(sp, "};");
-	php_error_docref(NULL, E_NOTICE, "Reverse_table:\n%s", s);
+	php_error_docref(NULL TSRMLS_CC, E_NOTICE, "Reverse_table:\n%s", s);
 	efree(s);
 }
 */
 /* }}} */
 
-PHPAPI zend_string *php_base64_decode_ex(const unsigned char *str, size_t length, zend_bool strict) /* {{{ */
+PHPAPI unsigned char *php_base64_decode(const unsigned char *str, int length, int *ret_length) /* {{{ */
+{
+	return php_base64_decode_ex(str, length, ret_length, 0);
+}
+/* }}} */
+
+PHPAPI unsigned char *php_base64_decode_ex(const unsigned char *str, int length, int *ret_length, zend_bool strict) /* {{{ */
 {
 	const unsigned char *current = str;
-	int ch, i = 0, j = 0, padding = 0;
-	zend_string *result;
+	int ch, i = 0, j = 0, k;
+	/* this sucks for threaded environments */
+	unsigned char *result;
 
-	result = zend_string_alloc(length, 0);
+	result = (unsigned char *)safe_emalloc(length, 1, 1);
 
 	/* run through the whole string, converting as we go */
-	while (length-- > 0) {
-		ch = *current++;
+	while ((ch = *current++) != '\0' && length-- > 0) {
 		if (ch == base64_pad) {
-			padding++;
+			if (*current != '=' && ((i % 4) == 1 || (strict && length > 0))) {
+				if ((i % 4) != 1) {
+					while (isspace(*(++current))) {
+						continue;
+					}
+					if (*current == '\0') {
+						continue;
+					}
+				}
+				efree(result);
+				return NULL;
+			}
 			continue;
 		}
 
 		ch = base64_reverse_table[ch];
-		if (!strict) {
-			/* skip unknown characters and whitespace */
-			if (ch < 0) {
-				continue;
-			}
-		} else {
-			/* skip whitespace */
-			if (ch == -1) {
-				continue;
-			}
-			/* fail on bad characters or if any data follows padding */
-			if (ch == -2 || padding) {
-				goto fail;
-			}
+		if ((!strict && ch < 0) || ch == -1) { /* a space or some other separator character, we simply skip over */
+			continue;
+		} else if (ch == -2) {
+			efree(result);
+			return NULL;
 		}
 
 		switch(i % 4) {
 		case 0:
-			ZSTR_VAL(result)[j] = ch << 2;
+			result[j] = ch << 2;
 			break;
 		case 1:
-			ZSTR_VAL(result)[j++] |= ch >> 4;
-			ZSTR_VAL(result)[j] = (ch & 0x0f) << 4;
+			result[j++] |= ch >> 4;
+			result[j] = (ch & 0x0f) << 4;
 			break;
 		case 2:
-			ZSTR_VAL(result)[j++] |= ch >>2;
-			ZSTR_VAL(result)[j] = (ch & 0x03) << 6;
+			result[j++] |= ch >>2;
+			result[j] = (ch & 0x03) << 6;
 			break;
 		case 3:
-			ZSTR_VAL(result)[j++] |= ch;
+			result[j++] |= ch;
 			break;
 		}
 		i++;
 	}
-	/* fail if the input is truncated (only one char in last group) */
-	if (strict && i % 4 == 1) {
-		goto fail;
-	}
-	/* fail if the padding length is wrong (not VV==, VVV=), but accept zero padding
-	 * RFC 4648: "In some circumstances, the use of padding [--] is not required" */
-	if (strict && padding && (padding > 2 || (i + padding) % 4 != 0)) {
-		goto fail;
-	}
 
-	ZSTR_LEN(result) = j;
-	ZSTR_VAL(result)[ZSTR_LEN(result)] = '\0';
-
+	k = j;
+	/* mop things up if we ended on a boundary */
+	if (ch == base64_pad) {
+		switch(i % 4) {
+		case 1:
+			efree(result);
+			return NULL;
+		case 2:
+			k++;
+		case 3:
+			result[k] = 0;
+		}
+	}
+	if(ret_length) {
+		*ret_length = j;
+	}
+	result[j] = '\0';
 	return result;
-
-fail:
-	zend_string_free(result);
-	return NULL;
 }
 /* }}} */
 
@@ -204,16 +226,15 @@ fail:
 PHP_FUNCTION(base64_encode)
 {
 	char *str;
-	size_t str_len;
-	zend_string *result;
+	unsigned char *result;
+	int str_len, ret_length;
 
-	ZEND_PARSE_PARAMETERS_START(1, 1)
-		Z_PARAM_STRING(str, str_len)
-	ZEND_PARSE_PARAMETERS_END();
-
-	result = php_base64_encode((unsigned char*)str, str_len);
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &str, &str_len) == FAILURE) {
+		return;
+	}
+	result = php_base64_encode((unsigned char*)str, str_len, &ret_length);
 	if (result != NULL) {
-		RETURN_STR(result);
+		RETVAL_STRINGL((char*)result, ret_length, 0);
 	} else {
 		RETURN_FALSE;
 	}
@@ -225,19 +246,16 @@ PHP_FUNCTION(base64_encode)
 PHP_FUNCTION(base64_decode)
 {
 	char *str;
+	unsigned char *result;
 	zend_bool strict = 0;
-	size_t str_len;
-	zend_string *result;
+	int str_len, ret_length;
 
-	ZEND_PARSE_PARAMETERS_START(1, 2)
-		Z_PARAM_STRING(str, str_len)
-		Z_PARAM_OPTIONAL
-		Z_PARAM_BOOL(strict)
-	ZEND_PARSE_PARAMETERS_END();
-
-	result = php_base64_decode_ex((unsigned char*)str, str_len, strict);
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|b", &str, &str_len, &strict) == FAILURE) {
+		return;
+	}
+	result = php_base64_decode_ex((unsigned char*)str, str_len, &ret_length, strict);
 	if (result != NULL) {
-		RETURN_STR(result);
+		RETVAL_STRINGL((char*)result, ret_length, 0);
 	} else {
 		RETURN_FALSE;
 	}

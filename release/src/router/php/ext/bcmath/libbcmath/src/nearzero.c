@@ -26,7 +26,7 @@
                 Computer Science Department, 9062
                 Western Washington University
                 Bellingham, WA 98226-9062
-
+       
 *************************************************************************/
 
 #include <config.h>
@@ -66,3 +66,4 @@ bc_is_near_zero (num, scale)
   else
     return TRUE;
 }
+

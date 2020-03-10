@@ -8,9 +8,9 @@ function_exists('mb_strripos') or die("skip mb_strripos() is not available in th
 --FILE--
 <?php
 /* Prototype  : int mb_strripos(string haystack, string needle [, int offset [, string encoding]])
- * Description: Finds position of last occurrence of a string within another, case insensitive
+ * Description: Finds position of last occurrence of a string within another, case insensitive 
  * Source code: ext/mbstring/mbstring.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 /*
@@ -21,8 +21,8 @@ function_exists('mb_strripos') or die("skip mb_strripos() is not available in th
 echo "*** Testing mb_strripos() : usage variations ***\n";
 
 // Initialise function arguments not being substituted
-$haystack = 'string_val';
-$needle = 'VaL';
+$haystack = b'string_val';
+$needle = b'VaL';
 $offset = 0;
 
 //get an unset variable
@@ -70,7 +70,7 @@ $inputs = array(
        false,
        TRUE,
        FALSE,
-
+       
        // empty data
 /*16*/ "",
        '',
@@ -79,7 +79,7 @@ $inputs = array(
 /*18*/ "UTF-8",
        'UTF-8',
        $heredoc,
-
+       
        // object data
 /*21*/ new classA(),
 
@@ -105,6 +105,7 @@ fclose($fp);
 
 echo "Done";
 ?>
+
 --EXPECTF--
 *** Testing mb_strripos() : usage variations ***
 
@@ -218,5 +219,5 @@ bool(false)
 -- Iteration 24 --
 
 Warning: mb_strripos() expects parameter 4 to be string, resource given in %s on line %d
-NULL
+bool(false)
 Done

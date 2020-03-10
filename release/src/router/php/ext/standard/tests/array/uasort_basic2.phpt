@@ -3,7 +3,7 @@ Test uasort() function : basic functionality - duplicate values
 --FILE--
 <?php
 /* Prototype  : bool uasort(array $array_arg, string $cmp_function)
- * Description: Sort an array with a user-defined comparison function and maintain index association
+ * Description: Sort an array with a user-defined comparison function and maintain index association 
  * Source code: ext/standard/array.c
 */
 
@@ -58,13 +58,13 @@ array(6) {
   int(1)
   [1]=>
   int(1)
-  [2]=>
-  int(2)
   [3]=>
   int(2)
-  [4]=>
-  int(3)
+  [2]=>
+  int(2)
   [5]=>
+  int(3)
+  [4]=>
   int(3)
 }
 -- Numeric array with decreasing values --
@@ -74,21 +74,21 @@ array(6) {
   int(1)
   [5]=>
   int(1)
-  [2]=>
-  int(2)
   [3]=>
   int(2)
-  [0]=>
-  int(3)
+  [2]=>
+  int(2)
   [1]=>
+  int(3)
+  [0]=>
   int(3)
 }
 -- Numeric array with increasing and decreasing values --
 bool(true)
 array(6) {
-  [0]=>
-  int(1)
   [5]=>
+  int(1)
+  [0]=>
   int(1)
   [1]=>
   int(2)

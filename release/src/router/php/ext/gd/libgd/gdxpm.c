@@ -17,7 +17,7 @@
 
 gdImagePtr gdImageCreateFromXpm (char *filename)
 {
-	XpmInfo info = {0};
+	XpmInfo info;
 	XpmImage image;
 	int i, j, k, number;
 	char buf[5];

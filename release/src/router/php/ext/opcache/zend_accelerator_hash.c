@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | Zend OPcache                                                         |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1998-2018 The PHP Group                                |
+   | Copyright (c) 1998-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -25,9 +25,9 @@
 #include "zend_shared_alloc.h"
 
 /* Generated on an Octa-ALPHA 300MHz CPU & 2.5GB RAM monster */
-static uint32_t prime_numbers[] =
+static uint prime_numbers[] =
 	{5, 11, 19, 53, 107, 223, 463, 983, 1979, 3907, 7963, 16229, 32531, 65407, 130987, 262237, 524521, 1048793 };
-static uint32_t num_prime_numbers = sizeof(prime_numbers) / sizeof(uint32_t);
+static uint num_prime_numbers = sizeof(prime_numbers) / sizeof(uint);
 
 void zend_accel_hash_clean(zend_accel_hash *accel_hash)
 {
@@ -36,9 +36,9 @@ void zend_accel_hash_clean(zend_accel_hash *accel_hash)
 	memset(accel_hash->hash_table, 0, sizeof(zend_accel_hash_entry *)*accel_hash->max_num_entries);
 }
 
-void zend_accel_hash_init(zend_accel_hash *accel_hash, uint32_t hash_size)
+void zend_accel_hash_init(zend_accel_hash *accel_hash, zend_uint hash_size)
 {
-	uint32_t i;
+	uint i;
 
 	for (i=0; i<num_prime_numbers; i++) {
 		if (hash_size <= prime_numbers[i]) {
@@ -71,12 +71,15 @@ void zend_accel_hash_init(zend_accel_hash *accel_hash, uint32_t hash_size)
  * Returns pointer the actual hash entry on success
  * key needs to be already allocated as it is not copied
  */
-zend_accel_hash_entry* zend_accel_hash_update(zend_accel_hash *accel_hash, char *key, uint32_t key_length, zend_bool indirect, void *data)
+zend_accel_hash_entry* zend_accel_hash_update(zend_accel_hash *accel_hash, char *key, zend_uint key_length, zend_bool indirect, void *data)
 {
 	zend_ulong hash_value;
 	zend_ulong index;
 	zend_accel_hash_entry *entry;
 	zend_accel_hash_entry *indirect_bucket = NULL;
+#ifndef ZEND_WIN32
+	TSRMLS_FETCH();
+#endif
 
 	if (indirect) {
 		indirect_bucket = (zend_accel_hash_entry*)data;
@@ -140,11 +143,19 @@ zend_accel_hash_entry* zend_accel_hash_update(zend_accel_hash *accel_hash, char 
 	return entry;
 }
 
-static zend_always_inline void* zend_accel_hash_find_ex(zend_accel_hash *accel_hash, char *key, uint32_t key_length, zend_ulong hash_value, int data)
+/* Returns the data associated with key on success
+ * Returns NULL if data doesn't exist
+ */
+void* zend_accel_hash_find(zend_accel_hash *accel_hash, char *key, zend_uint key_length)
 {
+	zend_ulong hash_value;
 	zend_ulong index;
 	zend_accel_hash_entry *entry;
+#ifndef ZEND_WIN32
+	TSRMLS_FETCH();
+#endif
 
+	hash_value = zend_inline_hash_func(key, key_length);
 #ifndef ZEND_WIN32
 	hash_value ^= ZCG(root_hash);
 #endif
@@ -156,17 +167,9 @@ static zend_always_inline void* zend_accel_hash_find_ex(zend_accel_hash *accel_h
 			&& entry->key_length == key_length
 			&& !memcmp(entry->key, key, key_length)) {
 			if (entry->indirect) {
-				if (data) {
-					return ((zend_accel_hash_entry*)entry->data)->data;
-				} else {
-					return entry->data;
-				}
+				return ((zend_accel_hash_entry *) entry->data)->data;
 			} else {
-				if (data) {
-					return entry->data;
-				} else {
-					return entry;
-				}
+				return entry->data;
 			}
 		}
 		entry = entry->next;
@@ -174,63 +177,48 @@ static zend_always_inline void* zend_accel_hash_find_ex(zend_accel_hash *accel_h
 	return NULL;
 }
 
-/* Returns the data associated with key on success
- * Returns NULL if data doesn't exist
- */
-void* zend_accel_hash_find(zend_accel_hash *accel_hash, zend_string *key)
-{
-	return zend_accel_hash_find_ex(
-		accel_hash,
-		ZSTR_VAL(key),
-		ZSTR_LEN(key),
-		zend_string_hash_val(key),
-		1);
-}
-
 /* Returns the hash entry associated with key on success
  * Returns NULL if it doesn't exist
  */
-zend_accel_hash_entry* zend_accel_hash_find_entry(zend_accel_hash *accel_hash, zend_string *key)
+zend_accel_hash_entry* zend_accel_hash_find_entry(zend_accel_hash *accel_hash, char *key, zend_uint key_length)
 {
-	return (zend_accel_hash_entry *)zend_accel_hash_find_ex(
-		accel_hash,
-		ZSTR_VAL(key),
-		ZSTR_LEN(key),
-		zend_string_hash_val(key),
-		0);
+	zend_ulong hash_value;
+	zend_ulong index;
+	zend_accel_hash_entry *entry;
+#ifndef ZEND_WIN32
+	TSRMLS_FETCH();
+#endif
+
+	hash_value = zend_inline_hash_func(key, key_length);
+#ifndef ZEND_WIN32
+	hash_value ^= ZCG(root_hash);
+#endif
+	index = hash_value % accel_hash->max_num_entries;
+
+	entry = accel_hash->hash_table[index];
+	while (entry) {
+		if (entry->hash_value == hash_value
+			&& entry->key_length == key_length
+			&& !memcmp(entry->key, key, key_length)) {
+			if (entry->indirect) {
+				return (zend_accel_hash_entry *) entry->data;
+			} else {
+				return entry;
+			}
+		}
+		entry = entry->next;
+	}
+	return NULL;
 }
 
-/* Returns the data associated with key on success
- * Returns NULL if data doesn't exist
- */
-void* zend_accel_hash_str_find(zend_accel_hash *accel_hash, char *key, uint32_t key_length)
+int zend_accel_hash_unlink(zend_accel_hash *accel_hash, char *key, zend_uint key_length)
 {
-	return zend_accel_hash_find_ex(
-		accel_hash,
-		key,
-		key_length,
-		zend_inline_hash_func(key, key_length),
-		1);
-}
-
-/* Returns the hash entry associated with key on success
- * Returns NULL if it doesn't exist
- */
-zend_accel_hash_entry* zend_accel_hash_str_find_entry(zend_accel_hash *accel_hash, char *key, uint32_t key_length)
-{
-	return (zend_accel_hash_entry *)zend_accel_hash_find_ex(
-		accel_hash,
-		key,
-		key_length,
-		zend_inline_hash_func(key, key_length),
-		0);
-}
-
-int zend_accel_hash_unlink(zend_accel_hash *accel_hash, char *key, uint32_t key_length)
-{
-    zend_ulong hash_value;
+	zend_ulong hash_value;
     zend_ulong index;
     zend_accel_hash_entry *entry, *last_entry=NULL;
+#ifndef ZEND_WIN32
+	TSRMLS_FETCH();
+#endif
 
 	hash_value = zend_inline_hash_func(key, key_length);
 #ifndef ZEND_WIN32

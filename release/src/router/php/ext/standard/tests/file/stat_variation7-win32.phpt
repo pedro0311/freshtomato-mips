@@ -33,7 +33,7 @@ echo "\n*** Testing stat(): with filename
 // creating object with members as numeric and non-numeric filename and directory name
 class object_temp {
 public $var_name;
-public function __construct($name) {
+public function object_temp($name) {
 $this->var_name = $name;
   }
 }
@@ -61,6 +61,7 @@ var_dump( stat($obj2->var_name) );
 
 echo "\n*** Done ***";
 ?>
+
 --CLEAN--
 <?php
 $file_path = dirname(__FILE__);
@@ -294,3 +295,4 @@ array(26) {
 }
 
 *** Done ***
+

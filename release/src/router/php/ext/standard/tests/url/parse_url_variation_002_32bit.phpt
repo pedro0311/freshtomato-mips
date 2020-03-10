@@ -5,9 +5,9 @@ Test parse_url() function : usage variations  - unexpected type for arg 2.
 --FILE--
 <?php
 /* Prototype  : proto mixed parse_url(string url, [int url_component])
- * Description: Parse a URL and return its components
+ * Description: Parse a URL and return its components 
  * Source code: ext/standard/url.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 function test_error_handler($err_no, $err_msg, $filename, $linenum, $vars) {
@@ -80,11 +80,11 @@ echo "Done";
 ?>
 --EXPECTF--
 *** Testing parse_url() : usage variations ***
-Error: 8 - Undefined variable: undefined_var, %s(%d)
-Error: 8 - Undefined variable: unset_var, %s(%d)
+Error: 8 - Undefined variable: undefined_var, %s(61)
+Error: 8 - Undefined variable: unset_var, %s(64)
 
 Arg value 10.5 
-Error: 2 - parse_url(): Invalid URL component identifier 10, %s(%d)
+Error: 2 - parse_url(): Invalid URL component identifier 10, %s(71)
 bool(false)
 
 Arg value -10.5 
@@ -108,38 +108,54 @@ array(8) {
 }
 
 Arg value 101234567000 
-Error: 2 - parse_url() expects parameter 2 to be integer, float given, %s(%d)
-NULL
+array(8) {
+  ["scheme"]=>
+  string(4) "http"
+  ["host"]=>
+  string(11) "www.php.net"
+  ["port"]=>
+  int(80)
+  ["user"]=>
+  string(6) "secret"
+  ["pass"]=>
+  string(7) "hideout"
+  ["path"]=>
+  string(10) "/index.php"
+  ["query"]=>
+  string(31) "test=1&test2=char&test3=mixesCI"
+  ["fragment"]=>
+  string(16) "some_page_ref123"
+}
 
 Arg value 1.07654321E-9 
 string(4) "http"
 
 Arg value 0.5 
 string(4) "http"
-Error: 8 - Array to string conversion, %s(%d)
+Error: 8 - Array to string conversion, %sparse_url_variation_002_32bit.php(%d)
 
 Arg value Array 
-Error: 2 - parse_url() expects parameter 2 to be integer, array given, %s(%d)
+Error: 2 - parse_url() expects parameter 2 to be long, array given, %s(71)
 NULL
-Error: 8 - Array to string conversion, %s(%d)
+Error: 8 - Array to string conversion, %sparse_url_variation_002_32bit.php(%d)
 
 Arg value Array 
-Error: 2 - parse_url() expects parameter 2 to be integer, array given, %s(%d)
+Error: 2 - parse_url() expects parameter 2 to be long, array given, %s(71)
 NULL
-Error: 8 - Array to string conversion, %s(%d)
+Error: 8 - Array to string conversion, %sparse_url_variation_002_32bit.php(%d)
 
 Arg value Array 
-Error: 2 - parse_url() expects parameter 2 to be integer, array given, %s(%d)
+Error: 2 - parse_url() expects parameter 2 to be long, array given, %s(71)
 NULL
-Error: 8 - Array to string conversion, %s(%d)
+Error: 8 - Array to string conversion, %sparse_url_variation_002_32bit.php(%d)
 
 Arg value Array 
-Error: 2 - parse_url() expects parameter 2 to be integer, array given, %s(%d)
+Error: 2 - parse_url() expects parameter 2 to be long, array given, %s(71)
 NULL
-Error: 8 - Array to string conversion, %s(%d)
+Error: 8 - Array to string conversion, %sparse_url_variation_002_32bit.php(%d)
 
 Arg value Array 
-Error: 2 - parse_url() expects parameter 2 to be integer, array given, %s(%d)
+Error: 2 - parse_url() expects parameter 2 to be long, array given, %s(71)
 NULL
 
 Arg value  
@@ -149,36 +165,36 @@ Arg value
 string(4) "http"
 
 Arg value 1 
-string(%d) "www.php.net"
+string(11) "www.php.net"
 
 Arg value  
 string(4) "http"
 
 Arg value 1 
-string(%d) "www.php.net"
+string(11) "www.php.net"
 
 Arg value  
 string(4) "http"
 
 Arg value  
-Error: 2 - parse_url() expects parameter 2 to be integer, string given, %s(%d)
+Error: 2 - parse_url() expects parameter 2 to be long, string given, %s(71)
 NULL
 
 Arg value  
-Error: 2 - parse_url() expects parameter 2 to be integer, string given, %s(%d)
+Error: 2 - parse_url() expects parameter 2 to be long, string given, %s(71)
 NULL
 
 Arg value string 
-Error: 2 - parse_url() expects parameter 2 to be integer, string given, %s(%d)
+Error: 2 - parse_url() expects parameter 2 to be long, string given, %s(71)
 NULL
 
 Arg value string 
-Error: 2 - parse_url() expects parameter 2 to be integer, string given, %s(%d)
+Error: 2 - parse_url() expects parameter 2 to be long, string given, %s(71)
 NULL
-Error: 4096 - Object of class stdClass could not be converted to string, %s(%d)
+Error: 4096 - Object of class stdClass could not be converted to string, %s(70)
 
 Arg value  
-Error: 2 - parse_url() expects parameter 2 to be integer, object given, %s(%d)
+Error: 2 - parse_url() expects parameter 2 to be long, object given, %s(71)
 NULL
 
 Arg value  

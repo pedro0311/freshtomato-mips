@@ -7,10 +7,10 @@ Test session_encode() function : error functionality
 
 ob_start();
 
-/*
+/* 
  * Prototype : string session_encode(void)
  * Description : Encodes the current session data as a string
- * Source code : ext/session/session.c
+ * Source code : ext/session/session.c 
  */
 
 echo "*** Testing session_encode() : error functionality ***\n";
@@ -57,7 +57,7 @@ $inputs = array(
        false,
        TRUE,
        FALSE,
-
+       
        // Empty strings
 /*16*/ "",
        '',
@@ -66,7 +66,7 @@ $inputs = array(
 /*18*/ "Nothing",
        'Nothing',
        $heredoc,
-
+       
        // Object data
 /*21*/ new classA(),
 
@@ -220,7 +220,7 @@ bool(true)
 
 -- Iteration 20 --
 bool(true)
-string(33) "Hello World!|s:12:"Hello World!";"
+bool(false)
 bool(true)
 
 -- Iteration 21 --
@@ -243,7 +243,7 @@ bool(true)
 -- Iteration 24 --
 bool(true)
 
-Notice: Resource ID#%d used as offset, casting to integer (%d) in %s on line %d
+Strict Standards: Resource ID#%d used as offset, casting to integer (%d) in %s on line %d
 
 Notice: session_encode(): Skipping numeric key %d in %s on line %d
 bool(false)

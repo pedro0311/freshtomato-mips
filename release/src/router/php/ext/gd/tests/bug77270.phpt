@@ -1,7 +1,5 @@
 --TEST--
 Bug #77270 (imagecolormatch Out Of Bounds Write on Heap)
---INI--
-memory_limit=-1
 --SKIPIF--
 <?php
 if (!extension_loaded('gd')) die('skip gd extension not available');

@@ -26,7 +26,7 @@ Class ExtendsIteratorAggregateImpl extends IterarorAggregateImpl {
 Class A {
 }
 
-$classes = array('Traversable', 'Iterator', 'IteratorAggregate', 'ExtendsIterator', 'ExtendsIteratorAggregate',
+$classes = array('Traversable', 'Iterator', 'IteratorAggregate', 'ExtendsIterator', 'ExtendsIteratorAggregate', 
 	  'IteratorImpl', 'IterarorAggregateImpl', 'ExtendsIteratorImpl', 'ExtendsIteratorAggregateImpl', 'A');
 
 foreach($classes as $class) {
@@ -86,7 +86,4 @@ NULL
 
 Test static invocation:
 
-Fatal error: Uncaught Error: Non-static method ReflectionClass::isIterateable() cannot be called statically in %s:43
-Stack trace:
-#0 {main}
-  thrown in %s on line 43
+Fatal error: Non-static method ReflectionClass::isIterateable() cannot be called statically in %s on line 43

@@ -22,7 +22,7 @@ var_dump(constant("test const"));
 
 echo "Done\n";
 ?>
---EXPECTF--
+--EXPECTF--	
 Warning: define() expects at least 2 parameters, 0 given in %s on line %d
 NULL
 
@@ -41,9 +41,11 @@ bool(true)
 
 Notice: Constant test const already defined in %s on line %d
 bool(false)
-bool(true)
 
-Warning: Constants may only evaluate to scalar values or arrays in %s on line %d
+Warning: Constants may only evaluate to scalar values in %s on line %d
+bool(false)
+
+Warning: Constants may only evaluate to scalar values in %s on line %d
 bool(false)
 int(1)
 int(2)

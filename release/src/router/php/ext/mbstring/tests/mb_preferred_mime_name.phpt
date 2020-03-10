@@ -44,6 +44,7 @@ $r = mb_preferred_mime_name('BAD_NAME');
 ($r === FALSE) ? print("OK_BAD_NAME\n") : print("NG_BAD_NAME\n");
 
 ?>
+
 --EXPECT--
 Shift_JIS
 Shift_JIS
@@ -57,3 +58,4 @@ UCS-4
 == INVALID PARAMETER ==
 ERR: Warning
 OK_BAD_NAME
+

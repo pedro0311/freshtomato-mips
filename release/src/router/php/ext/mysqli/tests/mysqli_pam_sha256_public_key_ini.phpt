@@ -123,6 +123,7 @@ mysqlnd.sha256_server_public_key="test_sha256_ini"
 	@unlink($file);
 ?>
 --EXPECTF--
-Warning: mysqli::__construct(): (HY000/1045): %s in %s on line %d
+
+Warning: mysqli::mysqli(): (HY000/1045): %s in %s on line %d
 [001] [1045] %s
 done!

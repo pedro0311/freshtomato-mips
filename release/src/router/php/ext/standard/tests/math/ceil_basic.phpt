@@ -25,16 +25,17 @@ $values = array(0,
 				2.6,
 				-2.6,
 				037,
-				0x5F,
+				0x5F,	
 				"10.5",
 				"-10.5",
 				"3.95E3",
 				"-3.95E3",
 				"039",
+				"0x5F",
 				true,
 				false,
-				null,
-				);
+				null, 
+				);	
 
 for ($i = 0; $i < count($values); $i++) {
 	$res = ceil($values[$i]);
@@ -62,6 +63,7 @@ float(-10)
 float(3950)
 float(-3950)
 float(39)
+float(95)
 float(1)
 float(0)
 float(0)

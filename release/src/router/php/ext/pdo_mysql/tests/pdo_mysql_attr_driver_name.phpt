@@ -27,5 +27,5 @@ $db = MySQLPDOTest::factory();
 	print "done!";
 ?>
 --EXPECTF--
-string(5) "mysql"
+%unicode|string%(5) "mysql"
 done!

@@ -14,4 +14,5 @@ $im = imagecreatefromgd2part($file, 0,0, -25,10);
 unlink($file);
 ?>
 --EXPECTF--
+
 Warning: imagecreatefromgd2part(): Zero width or height not allowed in %s on line %d

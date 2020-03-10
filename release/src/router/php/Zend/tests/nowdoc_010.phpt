@@ -30,3 +30,4 @@ ENDOFNOWDOC{$fooledYou}
 {$fooledYou}ENDOFNOWDOC{$fooledYou}
 ENDOFNOWDOC{$fooledYou}
 {$fooledYou}ENDOFNOWDOC
+

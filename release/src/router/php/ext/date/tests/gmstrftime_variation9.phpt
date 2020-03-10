@@ -1,5 +1,5 @@
 --TEST--
-Test gmstrftime() function : usage variation - Checking week related formats which was not supported on Windows before vc14.
+Test gmstrftime() function : usage variation - Checking week related formats which are not supported on Windows. 
 --SKIPIF--
 <?php
 if (strtoupper(substr(PHP_OS, 0, 3)) != 'WIN') {
@@ -9,16 +9,16 @@ if (strtoupper(substr(PHP_OS, 0, 3)) != 'WIN') {
 --FILE--
 <?php
 /* Prototype  : string gmstrftime(string format [, int timestamp])
- * Description: Format a GMT/UCT time/date according to locale settings
+ * Description: Format a GMT/UCT time/date according to locale settings 
  * Source code: ext/date/php_date.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing gmstrftime() : usage variation ***\n";
 
 // Initialise function arguments not being substituted (if any)
 $timestamp = gmmktime(8, 8, 8, 8, 8, 2008);
-setlocale(LC_ALL, "C");
+setlocale(LC_ALL, "en_US");
 date_default_timezone_set("Asia/Calcutta");
 
 //array of values to iterate over
@@ -41,10 +41,10 @@ foreach($inputs as $key =>$value) {
 *** Testing gmstrftime() : usage variation ***
 
 --The ISO 8601:1988 week number--
-string(%d) "%d"
-string(2) "32"
+bool(false)
+bool(false)
 
 --Weekday as decimal--
-string(1) "%d"
-string(1) "5"
+bool(false)
+bool(false)
 ===DONE===

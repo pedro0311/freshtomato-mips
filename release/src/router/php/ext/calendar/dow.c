@@ -1,3 +1,4 @@
+
 /* $selId: dow.c,v 2.0 1995/10/24 01:13:06 lees Exp $
  * Copyright 1993-1995, Scott E. Lee, all rights reserved.
  * Permission granted to use, copy, modify, distribute and sell so long as
@@ -31,7 +32,7 @@
 #include "sdncal.h"
 
 int DayOfWeek(
-				 zend_long sdn)
+				 long int sdn)
 {
 	int dow;
 

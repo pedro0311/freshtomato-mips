@@ -17,3 +17,4 @@ Content-type: text/html; charset=UTF-8
 <span style="color: #0000BB">&lt;?php&nbsp;</span><span style="color: #007700">function&nbsp;</span><span style="color: #0000BB">hio</span><span style="color: #007700">(){}</span>
 </span>
 </code>
+

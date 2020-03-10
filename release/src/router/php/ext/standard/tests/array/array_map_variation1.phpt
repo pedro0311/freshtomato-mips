@@ -21,6 +21,7 @@ var_dump( array_map(null,  $arr));
 var_dump( array_map(null, $arr, $arr));
 echo "Done";
 ?>
+
 --EXPECT--
 *** Testing array_map() : string keys ***
 array(1) {

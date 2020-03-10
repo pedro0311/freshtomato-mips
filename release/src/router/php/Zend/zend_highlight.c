@@ -2,10 +2,10 @@
    +----------------------------------------------------------------------+
    | Zend Engine                                                          |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1998-2018 Zend Technologies Ltd. (http://www.zend.com) |
+   | Copyright (c) 1998-2016 Zend Technologies Ltd. (http://www.zend.com) |
    +----------------------------------------------------------------------+
    | This source file is subject to version 2.00 of the Zend license,     |
-   | that is bundled with this package in the file LICENSE, and is        |
+   | that is bundled with this package in the file LICENSE, and is        | 
    | available through the world-wide-web at the following url:           |
    | http://www.zend.com/license/2_00.txt.                                |
    | If you did not receive a copy of the Zend license and are unable to  |
@@ -25,7 +25,6 @@
 #include "zend_highlight.h"
 #include "zend_ptr_stack.h"
 #include "zend_globals.h"
-#include "zend_exceptions.h"
 
 ZEND_API void zend_html_putc(char c)
 {
@@ -55,14 +54,14 @@ ZEND_API void zend_html_putc(char c)
 }
 
 
-ZEND_API void zend_html_puts(const char *s, size_t len)
+ZEND_API void zend_html_puts(const char *s, uint len TSRMLS_DC)
 {
 	const unsigned char *ptr = (const unsigned char*)s, *end = ptr + len;
 	unsigned char *filtered = NULL;
 	size_t filtered_len;
 
 	if (LANG_SCNG(output_filter)) {
-		LANG_SCNG(output_filter)(&filtered, &filtered_len, ptr, len);
+		LANG_SCNG(output_filter)(&filtered, &filtered_len, ptr, len TSRMLS_CC);
 		ptr = filtered;
 		end = filtered + filtered_len;
 	}
@@ -83,7 +82,7 @@ ZEND_API void zend_html_puts(const char *s, size_t len)
 }
 
 
-ZEND_API void zend_highlight(zend_syntax_highlighter_ini *syntax_highlighter_ini)
+ZEND_API void zend_highlight(zend_syntax_highlighter_ini *syntax_highlighter_ini TSRMLS_DC)
 {
 	zval token;
 	int token_type;
@@ -93,8 +92,8 @@ ZEND_API void zend_highlight(zend_syntax_highlighter_ini *syntax_highlighter_ini
 	zend_printf("<code>");
 	zend_printf("<span style=\"color: %s\">\n", last_color);
 	/* highlight stuff coming back from zendlex() */
-	ZVAL_UNDEF(&token);
-	while ((token_type=lex_scan(&token))) {
+	token.type = 0;
+	while ((token_type=lex_scan(&token TSRMLS_CC))) {
 		switch (token_type) {
 			case T_INLINE_HTML:
 				next_color = syntax_highlighter_ini->highlight_html;
@@ -105,15 +104,9 @@ ZEND_API void zend_highlight(zend_syntax_highlighter_ini *syntax_highlighter_ini
 				break;
 			case T_OPEN_TAG:
 			case T_OPEN_TAG_WITH_ECHO:
+				next_color = syntax_highlighter_ini->highlight_default;
+				break;
 			case T_CLOSE_TAG:
-			case T_LINE:
-			case T_FILE:
-			case T_DIR:
-			case T_TRAIT_C:
-			case T_METHOD_C:
-			case T_FUNC_C:
-			case T_NS_C:
-			case T_CLASS_C:
 				next_color = syntax_highlighter_ini->highlight_default;
 				break;
 			case '"':
@@ -122,12 +115,12 @@ ZEND_API void zend_highlight(zend_syntax_highlighter_ini *syntax_highlighter_ini
 				next_color = syntax_highlighter_ini->highlight_string;
 				break;
 			case T_WHITESPACE:
-				zend_html_puts((char*)LANG_SCNG(yy_text), LANG_SCNG(yy_leng));  /* no color needed */
-				ZVAL_UNDEF(&token);
+				zend_html_puts((char*)LANG_SCNG(yy_text), LANG_SCNG(yy_leng) TSRMLS_CC);  /* no color needed */
+				token.type = 0;
 				continue;
 				break;
 			default:
-				if (Z_TYPE(token) == IS_UNDEF) {
+				if (token.type == 0) {
 					next_color = syntax_highlighter_ini->highlight_keyword;
 				} else {
 					next_color = syntax_highlighter_ini->highlight_default;
@@ -145,9 +138,9 @@ ZEND_API void zend_highlight(zend_syntax_highlighter_ini *syntax_highlighter_ini
 			}
 		}
 
-		zend_html_puts((char*)LANG_SCNG(yy_text), LANG_SCNG(yy_leng));
+		zend_html_puts((char*)LANG_SCNG(yy_text), LANG_SCNG(yy_leng) TSRMLS_CC);
 
-		if (Z_TYPE(token) == IS_STRING) {
+		if (token.type == IS_STRING) {
 			switch (token_type) {
 				case T_OPEN_TAG:
 				case T_OPEN_TAG_WITH_ECHO:
@@ -157,11 +150,11 @@ ZEND_API void zend_highlight(zend_syntax_highlighter_ini *syntax_highlighter_ini
 				case T_DOC_COMMENT:
 					break;
 				default:
-					zend_string_release(Z_STR(token));
+					str_efree(token.value.str.val);
 					break;
 			}
 		}
-		ZVAL_UNDEF(&token);
+		token.type = 0;
 	}
 
 	if (last_color != syntax_highlighter_ini->highlight_html) {
@@ -169,19 +162,16 @@ ZEND_API void zend_highlight(zend_syntax_highlighter_ini *syntax_highlighter_ini
 	}
 	zend_printf("</span>\n");
 	zend_printf("</code>");
-
-	/* Discard parse errors thrown during tokenization */
-	zend_clear_exception();
 }
 
-ZEND_API void zend_strip(void)
+ZEND_API void zend_strip(TSRMLS_D)
 {
 	zval token;
 	int token_type;
 	int prev_space = 0;
 
-	ZVAL_UNDEF(&token);
-	while ((token_type=lex_scan(&token))) {
+	token.type = 0;
+	while ((token_type=lex_scan(&token TSRMLS_CC))) {
 		switch (token_type) {
 			case T_WHITESPACE:
 				if (!prev_space) {
@@ -191,18 +181,18 @@ ZEND_API void zend_strip(void)
 						/* lack of break; is intentional */
 			case T_COMMENT:
 			case T_DOC_COMMENT:
-				ZVAL_UNDEF(&token);
+				token.type = 0;
 				continue;
-
+			
 			case T_END_HEREDOC:
 				zend_write((char*)LANG_SCNG(yy_text), LANG_SCNG(yy_leng));
 				/* read the following character, either newline or ; */
-				if (lex_scan(&token) != T_WHITESPACE) {
+				if (lex_scan(&token TSRMLS_CC) != T_WHITESPACE) {
 					zend_write((char*)LANG_SCNG(yy_text), LANG_SCNG(yy_leng));
 				}
 				zend_write("\n", sizeof("\n") - 1);
 				prev_space = 1;
-				ZVAL_UNDEF(&token);
+				token.type = 0;
 				continue;
 
 			default:
@@ -210,7 +200,7 @@ ZEND_API void zend_strip(void)
 				break;
 		}
 
-		if (Z_TYPE(token) == IS_STRING) {
+		if (token.type == IS_STRING) {
 			switch (token_type) {
 				case T_OPEN_TAG:
 				case T_OPEN_TAG_WITH_ECHO:
@@ -221,16 +211,12 @@ ZEND_API void zend_strip(void)
 					break;
 
 				default:
-					zend_string_release(Z_STR(token));
+					STR_FREE(token.value.str.val);
 					break;
 			}
 		}
-		prev_space = 0;
-		ZVAL_UNDEF(&token);
+		prev_space = token.type = 0;
 	}
-
-	/* Discard parse errors thrown during tokenization */
-	zend_clear_exception();
 }
 
 /*
@@ -239,6 +225,5 @@ ZEND_API void zend_strip(void)
  * c-basic-offset: 4
  * indent-tabs-mode: t
  * End:
- * vim600: sw=4 ts=4 fdm=marker
- * vim<600: sw=4 ts=4
  */
+

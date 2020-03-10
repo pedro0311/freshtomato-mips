@@ -48,3 +48,4 @@ unset($dbh);
 --EXPECT--
 bool(true)
 bool(true)
+

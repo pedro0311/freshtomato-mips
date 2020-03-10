@@ -3,17 +3,13 @@ Streams Based IPv4 UDP Loopback test
 --FILE--
 <?php
 	/* Setup socket server */
-	for ($port = 31338; $port < 31500; ++$port) {
-	  $uri = "udp://127.0.0.1:$port";
-	  $server = @stream_socket_server($uri, $errno, $errstr, STREAM_SERVER_BIND);
-	  if ($server) break;
-	}
+	$server = stream_socket_server('udp://127.0.0.1:31338', $errno, $errstr, STREAM_SERVER_BIND);
 	if (!$server) {
-		die('Unable to create AF_INET socket [server]: ' . $errstr);
+		die('Unable to create AF_INET socket [server]');
 	}
 
 	/* Connect to it */
-	$client = stream_socket_client($uri);
+	$client = stream_socket_client('udp://127.0.0.1:31338');
 	if (!$client) {
 		die('Unable to create AF_INET socket [client]');
 	}

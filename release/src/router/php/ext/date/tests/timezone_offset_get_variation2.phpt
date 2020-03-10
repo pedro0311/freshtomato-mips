@@ -7,19 +7,11 @@ Test timezone_offset_get() function : usage variation - Passing unexpected value
  * Source code: ext/date/php_date.c
  * Alias to functions: DateTimeZone::getOffset()
  */
-
+ 
 echo "*** Testing timezone_offset_get() : usage variation -  unexpected values to second argument \$datetime***\n";
 
-//Set the default time zone
+//Set the default time zone 
 date_default_timezone_set("Europe/London");
-
-set_error_handler('handler');
-
-function handler($errno, $errstr) {
-	if ($errno === E_RECOVERABLE_ERROR) {
-		echo $errstr . "\n";
-	}
-}
 
 //get an unset variable
 $unset_var = 10;
@@ -98,8 +90,8 @@ $inputs = array(
 
       // unset data
       'unset var' => @$unset_var,
-
-      // resource
+      
+      // resource 
       'resource' => $file_handle
 );
 
@@ -107,11 +99,7 @@ $object = new DateTimezone("Europe/London");
 
 foreach($inputs as $variation =>$datetime) {
     echo "\n-- $variation --\n";
-    try {
-		var_dump( timezone_offset_get($object, $datetime) );
-	} catch (Error $ex) {
-		echo $ex->getMessage()."\n";
-	}
+   	var_dump( timezone_offset_get($object, $datetime) );
 };
 
 // closing the resource
@@ -123,86 +111,142 @@ fclose( $file_handle );
 *** Testing timezone_offset_get() : usage variation -  unexpected values to second argument $datetime***
 
 -- int 0 --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, integer given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, integer given in %s on line %d
+bool(false)
 
 -- int 1 --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, integer given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, integer given in %s on line %d
+bool(false)
 
 -- int 12345 --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, integer given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, integer given in %s on line %d
+bool(false)
 
 -- int -12345 --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, integer given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, integer given in %s on line %d
+bool(false)
 
 -- float 10.5 --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, float given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, double given in %s on line %d
+bool(false)
 
 -- float -10.5 --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, float given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, double given in %s on line %d
+bool(false)
 
 -- float .5 --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, float given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, double given in %s on line %d
+bool(false)
 
 -- empty array --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, array given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, array given in %s on line %d
+bool(false)
 
 -- int indexed array --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, array given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, array given in %s on line %d
+bool(false)
 
 -- associative array --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, array given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, array given in %s on line %d
+bool(false)
 
 -- nested arrays --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, array given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, array given in %s on line %d
+bool(false)
 
 -- uppercase NULL --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, null given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, null given in %s on line %d
+bool(false)
 
 -- lowercase null --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, null given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, null given in %s on line %d
+bool(false)
 
 -- lowercase true --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, boolean given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, boolean given in %s on line %d
+bool(false)
 
 -- lowercase false --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, boolean given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, boolean given in %s on line %d
+bool(false)
 
 -- uppercase TRUE --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, boolean given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, boolean given in %s on line %d
+bool(false)
 
 -- uppercase FALSE --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, boolean given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, boolean given in %s on line %d
+bool(false)
 
 -- empty string DQ --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, string given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, string given in %s on line %d
+bool(false)
 
 -- empty string SQ --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, string given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, string given in %s on line %d
+bool(false)
 
 -- string DQ --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, string given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, string given in %s on line %d
+bool(false)
 
 -- string SQ --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, string given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, string given in %s on line %d
+bool(false)
 
 -- mixed case string --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, string given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, string given in %s on line %d
+bool(false)
 
 -- heredoc --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, string given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, string given in %s on line %d
+bool(false)
 
 -- instance of classWithToString --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, instance of classWithToString given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, object given in %s on line %d
+bool(false)
 
 -- instance of classWithoutToString --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, instance of classWithoutToString given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, object given in %s on line %d
+bool(false)
 
 -- undefined var --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, null given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, null given in %s on line %d
+bool(false)
 
 -- unset var --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, null given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, null given in %s on line %d
+bool(false)
 
 -- resource --
-Argument 2 passed to timezone_offset_get() must implement interface DateTimeInterface, resource given
+
+Warning: timezone_offset_get() expects parameter 2 to be DateTimeInterface, resource given in %s on line %d
+bool(false)
 ===DONE===

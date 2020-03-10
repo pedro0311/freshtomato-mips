@@ -1,6 +1,6 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -18,11 +18,9 @@
 #include <unicode/uchriter.h>
 #include <typeinfo>
 
-#include "php.h"
-
 //copied from cmemory.h, which is not public
 typedef union {
-    zend_long    t1;
+    long    t1;
     double  t2;
     void   *t3;
 } UAlignedMemory;

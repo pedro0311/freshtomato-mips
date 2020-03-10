@@ -3,13 +3,13 @@ Test array_intersect() function : usage variations - two dimensional arrays for 
 --FILE--
 <?php
 /* Prototype  : array array_intersect(array $arr1, array $arr2 [, array $...])
- * Description: Returns the entries of arr1 that have values which are present in all the other arguments
+ * Description: Returns the entries of arr1 that have values which are present in all the other arguments 
  * Source code: ext/standard/array.c
 */
 
 /*
 * Testing the behavior of array_intersect() by passing 2-D arrays
-* to both $arr1 and $arr2 argument.
+* to both $arr1 and $arr2 argument. 
 * Optional argument takes the same value as that of $arr1
 */
 
@@ -17,7 +17,7 @@ echo "*** Testing array_intersect() : passing two dimensional array to both \$ar
 
 // two dimensional arrays for $arr1 and $arr2 argument
 $arr1 = array (
-
+  
   // arrays with default keys
   array(1, 2, "hello", 'world'),
   array(1, 2, 3, 4),
@@ -25,7 +25,7 @@ $arr1 = array (
   // arrays with explicit keys
   array(1 => "one", 2 => "two", 3 => "three"),
   array("ten" => 10, "twenty" => 20.00, "thirty" => 30)
-);
+);  
 
 $arr2 = array (
   array(1, 2, 3, 4),
@@ -60,6 +60,10 @@ echo "Done";
 *** Testing array_intersect() : passing two dimensional array to both $arr1 and $arr2 arguments ***
 -- Passing the entire 2-D array to $arr1 and $arr2 --
 - With default arguments -
+
+Notice: Array to string conversion in %sarray_intersect_variation9.php on line %d
+
+Notice: Array to string conversion in %sarray_intersect_variation9.php on line %d
 
 Notice: Array to string conversion in %sarray_intersect_variation9.php on line %d
 
@@ -135,6 +139,14 @@ array(4) {
   }
 }
 - With more arguments -
+
+Notice: Array to string conversion in %sarray_intersect_variation9.php on line %d
+
+Notice: Array to string conversion in %sarray_intersect_variation9.php on line %d
+
+Notice: Array to string conversion in %sarray_intersect_variation9.php on line %d
+
+Notice: Array to string conversion in %sarray_intersect_variation9.php on line %d
 
 Notice: Array to string conversion in %sarray_intersect_variation9.php on line %d
 

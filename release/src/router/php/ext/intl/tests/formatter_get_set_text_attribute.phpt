@@ -1,5 +1,5 @@
 --TEST--
-numfmt_get/set_text_attribute() ICU < 56.1
+numfmt_get/set_text_attribute()
 --SKIPIF--
 <?php if( !extension_loaded( 'intl' ) ) print 'skip'; ?>
 <?php if (version_compare(INTL_ICU_VERSION, '56.1') >=  0) die('skip for ICU < 56.1'); ?>
@@ -118,3 +118,5 @@ New value: [blahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblah
 Formatting number with new value: blahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblahblah12,345.123
 
 Currency ISO-code for locale 'uk_UA' is: UAH
+
+

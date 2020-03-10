@@ -5,9 +5,6 @@ DRCP: privileged connect
 if (!extension_loaded('oci8')) die("skip no oci8 extension");
 require(dirname(__FILE__)."/connect.inc");
 if (!$test_drcp) die("skip requires DRCP connection");
-// Looked for :pooled in EZ connect string
-if (strpos($dbase, "/") !== false && stripos($dbase, ":pooled") === false)
-    die('skip DRCP test requires a DRCP pooled server connection');
 if (strcasecmp($user, "system") && strcasecmp($user, "sys")) die("skip needs to be run as a DBA user");
 ob_start();
 phpinfo(INFO_MODULES);
@@ -66,3 +63,4 @@ bool(false)
 Warning: oci_pconnect(): ORA-01031: %s in %s on line %d
 bool(false)
 Done
+

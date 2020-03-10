@@ -1,5 +1,5 @@
---TEST--
-Changing from an interable type to a non iterable type during the iteration
+--TEST-- 
+Changing from an interable type to a non iterable type during the iteration 
 --FILE--
 <?php
 echo "\nChange from array to non iterable:\n";
@@ -17,16 +17,18 @@ $a->b=2;
 $b=&$a;
 foreach ($a as $v) {
 	var_dump($v);
-	$b='x';
+	$b='x';	
 }
 
 ?>
 --EXPECTF--
+
 Change from array to non iterable:
 int(1)
-int(2)
-int(3)
+
+Warning: Invalid argument supplied for foreach() in %s on line 5
 
 Change from object to non iterable:
 int(1)
-int(2)
+
+Warning: Invalid argument supplied for foreach() in %s on line 15

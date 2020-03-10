@@ -1,19 +1,18 @@
 --TEST--
 openssl_x509_parse() tests
 --SKIPIF--
-<?php if (!extension_loaded("openssl")) print "skip"; ?>
+<?php if (!extension_loaded("openssl")) print "skip"; 
+if (OPENSSL_VERSION_NUMBER < 0x10000000) die("skip Output requires OpenSSL 1.0");
+?>
 --FILE--
 <?php
 $cert = "file://" . dirname(__FILE__) . "/cert.crt";
 
-$parsedCert = openssl_x509_parse($cert);
-var_dump($parsedCert === openssl_x509_parse(openssl_x509_read($cert)));
-var_dump($parsedCert);
+var_dump(openssl_x509_parse($cert));
 var_dump(openssl_x509_parse($cert, false));
 ?>
 --EXPECTF--
-bool(true)
-array(16) {
+array(15) {
   ["name"]=>
   string(96) "/C=BR/ST=Rio Grande do Sul/L=Porto Alegre/CN=Henrique do N. Angelo/emailAddress=hnangelo@php.net"
   ["subject"]=>
@@ -48,8 +47,6 @@ array(16) {
   int(2)
   ["serialNumber"]=>
   string(20) "12593567369101004962"
-  ["serialNumberHex"]=>
-  string(16) "AEC556CC723750A2"
   ["validFrom"]=>
   string(13) "080630102843Z"
   ["validTo"]=>
@@ -161,7 +158,7 @@ serial:AE:C5:56:CC:72:37:50:A2
     string(7) "CA:TRUE"
   }
 }
-array(16) {
+array(15) {
   ["name"]=>
   string(96) "/C=BR/ST=Rio Grande do Sul/L=Porto Alegre/CN=Henrique do N. Angelo/emailAddress=hnangelo@php.net"
   ["subject"]=>
@@ -196,8 +193,6 @@ array(16) {
   int(2)
   ["serialNumber"]=>
   string(20) "12593567369101004962"
-  ["serialNumberHex"]=>
-  string(16) "AEC556CC723750A2"
   ["validFrom"]=>
   string(13) "080630102843Z"
   ["validTo"]=>

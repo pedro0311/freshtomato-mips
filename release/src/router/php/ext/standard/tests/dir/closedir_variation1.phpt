@@ -3,7 +3,7 @@ Test closedir() function : usage variations - different data types as $dir_handl
 --FILE--
 <?php
 /* Prototype  : void closedir([resource $dir_handle])
- * Description: Close directory connection identified by the dir_handle
+ * Description: Close directory connection identified by the dir_handle 
  * Source code: ext/standard/dir.c
  * Alias to functions: close
  */
@@ -56,7 +56,7 @@ $inputs = array(
        false,
        TRUE,
        FALSE,
-
+       
        // empty data
 /*16*/ "",
        '',
@@ -66,7 +66,7 @@ $inputs = array(
 /*19*/ "string",
        'string',
        $heredoc,
-
+       
        // object data
 /*22*/ new classA(),
 
@@ -112,27 +112,27 @@ NULL
 
 -- Iteration 5 --
 
-Warning: closedir() expects parameter 1 to be resource, float given in %s on line %d
+Warning: closedir() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 -- Iteration 6 --
 
-Warning: closedir() expects parameter 1 to be resource, float given in %s on line %d
+Warning: closedir() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 -- Iteration 7 --
 
-Warning: closedir() expects parameter 1 to be resource, float given in %s on line %d
+Warning: closedir() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 -- Iteration 8 --
 
-Warning: closedir() expects parameter 1 to be resource, float given in %s on line %d
+Warning: closedir() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 -- Iteration 9 --
 
-Warning: closedir() expects parameter 1 to be resource, float given in %s on line %d
+Warning: closedir() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 -- Iteration 10 --

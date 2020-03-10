@@ -10,10 +10,10 @@ var_dump(unserialize(serialize(new Datetime)));
 ?>
 --EXPECTF--
 object(DateTime)#%d (3) {
-  ["date"]=>
+  [%u|b%"date"]=>
   %string|unicode%(%d) "%s"
-  ["timezone_type"]=>
+  [%u|b%"timezone_type"]=>
   int(%d)
-  ["timezone"]=>
+  [%u|b%"timezone"]=>
   %string|unicode%(%d) "America/Sao_Paulo"
 }

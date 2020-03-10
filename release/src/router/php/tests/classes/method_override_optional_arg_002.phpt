@@ -1,5 +1,5 @@
 --TEST--
-Omitting optional arg in method inherited from abstract class
+Omitting optional arg in method inherited from abstract class 
 --FILE--
 <?php
 
@@ -18,5 +18,5 @@ $b->foo();
 
 ?>
 --EXPECTF--
-Warning: Declaration of B::foo() should be compatible with A::foo($arg = 1) in %s on line %d
+Strict Standards: Declaration of B::foo() should be compatible with A::foo($arg = 1) in %s on line %d
 foo

@@ -8,3 +8,4 @@ class d { public function __construct() { $this->d = 4; } };
 $d = new d;
 
 ?>
+

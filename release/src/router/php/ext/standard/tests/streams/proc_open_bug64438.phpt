@@ -38,7 +38,7 @@ while ($pipes || $writePipes) {
 
     }
     if ($w) {
-        $written = fwrite($writePipes[0], substr($stdin, $stdinOffset), 8192);
+        $written = fwrite($writePipes[0], (binary)substr($stdin, $stdinOffset), 8192);
         if (false !== $written) {
             $stdinOffset += $written;
         }
@@ -67,3 +67,4 @@ string(4097) "%s"
 string(0) ""
 string(0) ""
 ===DONE===
+

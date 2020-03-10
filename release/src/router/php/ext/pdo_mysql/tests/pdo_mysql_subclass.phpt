@@ -5,6 +5,8 @@ MySQL PDOStatement->execute()/fetch(), Non-SELECT
 require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'skipif.inc');
 require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'mysql_pdo_test.inc');
 MySQLPDOTest::skip();
+if (version_compare(PHP_VERSION, '5.0.0', '<'))
+	die("skip Requires PHP 5.0+");
 ?>
 --FILE--
 <?php
@@ -87,13 +89,13 @@ query('SELECT * FROM test ORDER BY id ASC')
 array(2) {
   [0]=>
   array(1) {
-    ["id"]=>
-    string(1) "1"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "1"
   }
   [1]=>
   array(1) {
-    ["id"]=>
-    string(1) "2"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "2"
   }
 }
 bool(false)

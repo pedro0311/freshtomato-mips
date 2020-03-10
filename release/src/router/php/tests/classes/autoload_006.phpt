@@ -1,16 +1,18 @@
 --TEST--
 ZE2 Autoload from destructor
 --SKIPIF--
-<?php
+<?php 
+	if (version_compare(zend_version(), '2.0.0-dev', '<')) die('skip ZendEngine 2 needed'); 
 	if (class_exists('autoload_root', false)) die('skip Autoload test classes exist already');
 ?>
 --FILE--
 <?php
 
-spl_autoload_register(function ($class_name) {
+function __autoload($class_name)
+{
 	require_once(dirname(__FILE__) . '/' . strtolower($class_name) . '.p5c');
-	echo 'autoload(' . $class_name . ")\n";
-});
+	echo __FUNCTION__ . '(' . $class_name . ")\n";
+}
 
 var_dump(interface_exists('autoload_interface', false));
 var_dump(class_exists('autoload_implements', false));
@@ -28,8 +30,8 @@ var_dump(class_exists('autoload_implements', false));
 --EXPECTF--
 bool(false)
 bool(false)
-autoload(autoload_interface)
-autoload(Autoload_Implements)
+__autoload(autoload_interface)
+__autoload(Autoload_Implements)
 object(autoload_implements)#%d (0) {
 }
 bool(true)

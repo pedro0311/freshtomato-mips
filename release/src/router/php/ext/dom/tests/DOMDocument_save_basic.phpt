@@ -30,3 +30,4 @@ echo 'Wrote: ' . $doc->save($temp_filename) . ' bytes'; // Wrote: 72 bytes
 ?>
 --EXPECTF--
 Wrote: 72 bytes
+

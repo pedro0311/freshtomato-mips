@@ -3,9 +3,9 @@ Test array_multisort() function : usage variation - test sort order of all types
 --FILE--
 <?php
 /* Prototype  : bool array_multisort(array ar1 [, SORT_ASC|SORT_DESC [, SORT_REGULAR|SORT_NUMERIC|SORT_STRING|SORT_NATURAL|SORT_FLAG_CASE]] [, array ar2 [, SORT_ASC|SORT_DESC [, SORT_REGULAR|SORT_NUMERIC|SORT_STRING|SORT_NATURAL|SORT_FLAG_CASE]], ...])
- * Description: Sort multiple arrays at once similar to how ORDER BY clause works in SQL
+ * Description: Sort multiple arrays at once similar to how ORDER BY clause works in SQL 
  * Source code: ext/standard/array.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing array_multisort() : usage variation  - test sort order of all types***\n";
@@ -41,28 +41,28 @@ var_dump($inputs);
 *** Testing array_multisort() : usage variation  - test sort order of all types***
 bool(true)
 array(10) {
-  ["float -10.5"]=>
-  float(-10.5)
+  ["empty string DQ"]=>
+  string(0) ""
   ["int 0"]=>
   int(0)
+  ["uppercase NULL"]=>
+  NULL
+  ["undefined var"]=>
+  NULL
   [0]=>
   array(0) {
   }
-  ["uppercase NULL"]=>
-  NULL
-  ["empty string DQ"]=>
-  string(0) ""
-  ["undefined var"]=>
-  NULL
-  ["lowercase true"]=>
-  bool(true)
   ["instance of classWithToString"]=>
   object(classWithToString)#1 (0) {
   }
-  ["string DQ"]=>
-  string(6) "string"
   ["instance of classWithoutToString"]=>
   object(classWithoutToString)#2 (0) {
   }
+  ["lowercase true"]=>
+  bool(true)
+  ["float -10.5"]=>
+  float(-10.5)
+  ["string DQ"]=>
+  string(6) "string"
 }
 ===DONE===
