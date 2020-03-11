@@ -11,7 +11,7 @@
 -          srp.c ts.c verify.c version.c x509.c rehash.c storeutl.c);
 +          cms.c
 +          enc.c engine.c
-+          genpkey.c ocsp.c
++          genpkey.c
 +          req.c rsa.c
 +          s_client.c
 +          srp.c ts.c version.c x509.c);

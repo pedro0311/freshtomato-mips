@@ -737,7 +737,7 @@ cyassl-clean:
 
 ifeq ($(TCONFIG_KEYGEN),)
 ifeq ($(TCONFIG_OPENSSL11),y)
-OPENSSL_CIPHERS := no-camellia no-idea no-rc2 no-cast no-seed no-gost no-md4 no-mdc2 no-rmd160 no-cms no-engine no-ocsp no-srp no-ts no-afalgeng no-ocb no-ocsp \
+OPENSSL_CIPHERS := no-camellia no-idea no-rc2 no-cast no-seed no-gost no-md4 no-mdc2 no-rmd160 no-cms no-engine no-ocsp no-srp no-ts no-afalgeng no-ocb \
                    no-tests no-unit-test no-ui-console no-whirlpool no-blake2 no-cmac no-multiblock no-nextprotoneg no-comp no-ct no-scrypt no-sctp no-siphash no-ubsan \
                    no-rc5 no-rdrand no-capieng no-rfc3779 no-hw no-zlib no-sse2 no-ssl-trace no-dtls1 no-psk no-md2 no-devcryptoeng no-dgram no-dtls
 else
