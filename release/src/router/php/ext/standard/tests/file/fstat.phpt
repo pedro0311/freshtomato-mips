@@ -13,7 +13,7 @@ var_dump(fstat($fp));
 @unlink($filename);
 echo "Done\n";
 ?>
---EXPECTF--
+--EXPECTF--	
 array(26) {
   [0]=>
   int(%i)
@@ -69,6 +69,6 @@ array(26) {
   int(%i)
 }
 
-Warning: fstat(): supplied resource is not a valid stream resource in %s on line %d
+Warning: fstat(): %d is not a valid stream resource in %s on line %d
 bool(false)
 Done

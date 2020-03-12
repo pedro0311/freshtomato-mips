@@ -30,7 +30,7 @@ class C {
 	  $ref5 = "Ref5 changed";
 	}
 
-}
+} 
 
 echo "\n ---- Pass uninitialised array & object by ref: function call ---\n";
 unset($u1, $u2, $u3, $u4, $u5);
@@ -54,6 +54,7 @@ var_dump($u1, $u2, $u3, $u4, $u5);
 
 ?>
 --EXPECTF--
+
  ---- Pass uninitialised array & object by ref: function call ---
 array(1) {
   [0]=>
@@ -90,7 +91,7 @@ object(stdClass)#%d (1) {
 
  ---- Pass uninitialised arrays & objects by ref: static method call ---
 
-Deprecated: Non-static method C::refs() should not be called statically in %s on line 39
+Strict Standards: Non-static method C::refs() should not be called statically in %s on line 39
 array(1) {
   [0]=>
   string(12) "Ref1 changed"

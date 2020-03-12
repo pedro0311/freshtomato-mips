@@ -1,7 +1,7 @@
 --TEST--
 DBA with persistent connections
 --SKIPIF--
-<?php
+<?php 
 $handler = "flatfile";
 require_once(dirname(__FILE__) .'/skipif.inc');
 die("info $HND handler used");
@@ -50,9 +50,11 @@ echo dba_fetch("key2", $db_file1), "\n";
 ?>
 ===DONE===
 --CLEAN--
-<?php
-	require(dirname(__FILE__) .'/clean.inc');
+<?php 
+	require(dirname(__FILE__) .'/clean.inc'); 
 ?>
+--XFAIL--
+Test 6 crashes in flatfile_findkey with dba pointer of NULL, bug http://bugs.php.net/bug.php?id=51278
 --EXPECTF--
 database handler: flatfile
 Test 1

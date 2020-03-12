@@ -20,14 +20,15 @@ var_dump($gen->throw(new RuntimeException('throw')));
 ?>
 --EXPECTF--
 before yield
-Caught: RuntimeException: throw in %s:%d
+Caught: exception 'RuntimeException' with message 'throw' in %s:%d
 Stack trace:
 #0 {main}
 
 
-Fatal error: Uncaught LogicException: new throw in %s:%d
+Fatal error: Uncaught exception 'LogicException' with message 'new throw' in %s:%d
 Stack trace:
 #0 [internal function]: gen()
 #1 %s(%d): Generator->throw(Object(RuntimeException))
 #2 {main}
   thrown in %s on line %d
+

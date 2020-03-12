@@ -10,5 +10,6 @@ var_dump(json_decode('[]', false, 0x100000000));
 
 ?>
 --EXPECTF--
+
 Warning: json_decode(): Depth must be lower than %d in %s on line %d
 NULL

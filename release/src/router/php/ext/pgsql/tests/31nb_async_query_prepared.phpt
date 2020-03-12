@@ -109,3 +109,4 @@ echo "OK";
 ?>
 --EXPECT--
 OK
+

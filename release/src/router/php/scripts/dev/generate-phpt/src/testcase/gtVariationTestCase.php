@@ -1,3 +1,4 @@
+
 <?php
 
 /**
@@ -14,7 +15,7 @@ abstract class gtVariationTestCase extends gtTestCase {
    * @return test case object
    */
   public static function getInstance($optionalSections, $type = 'function') {
-
+     
     if($type == 'function') {
       return new gtVariationTestCaseFunction($optionalSections);
     }

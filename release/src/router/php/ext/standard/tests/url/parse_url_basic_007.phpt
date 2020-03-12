@@ -1,11 +1,11 @@
 --TEST--
-Test parse_url() function: Parse a load of URLs without specifying PHP_URL_PATH as the URL component
+Test parse_url() function: Parse a load of URLs without specifying PHP_URL_PATH as the URL component 
 --FILE--
 <?php
 /* Prototype  : proto mixed parse_url(string url, [int url_component])
- * Description: Parse a URL and return its components
+ * Description: Parse a URL and return its components 
  * Source code: ext/standard/url.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 /*
@@ -80,7 +80,6 @@ echo "Done";
 --> /foo.php?a=b&c=d   : string(8) "/foo.php"
 --> foo.php?a=b&c=d   : string(7) "foo.php"
 --> http://user:passwd@www.example.com:8080?bar=1&boom=0   : NULL
---> http://user_me-you:my_pas-word@www.example.com:8080?bar=1&boom=0   : NULL
 --> file:///path/to/file   : string(13) "/path/to/file"
 --> file://path/to/file   : string(8) "/to/file"
 --> file:/path/to/file   : string(13) "/path/to/file"

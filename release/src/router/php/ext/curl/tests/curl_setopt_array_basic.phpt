@@ -54,3 +54,4 @@ isset($tempname) and is_file($tempname) and @unlink($tempname);
 == Starting test curl_setopt_array($ch, $options); ==
 string(25) "Hello World!
 Hello World!"
+

@@ -10,4 +10,5 @@ class foo {
 $obj = new foo("Hello world");
 ?>
 --EXPECTF--
-Fatal error: Cannot use $this as parameter in %s on line %d
+Fatal error: Cannot re-assign $this in %sbug41117_1.php on line 3
+

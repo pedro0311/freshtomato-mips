@@ -3,6 +3,7 @@ Phar: fopen a .phar for writing (new file) zip-based
 --SKIPIF--
 <?php
 if (!extension_loaded("phar")) die("skip");
+if (version_compare(PHP_VERSION, "5.3", "<")) die("skip requires 5.3 or later");
 ?>
 --INI--
 phar.readonly=0
@@ -30,13 +31,13 @@ $phar->stopBuffering();
 ini_set('phar.readonly', 1);
 
 function err_handler($errno, $errstr, $errfile, $errline) {
-  echo "Recoverable fatal error: $errstr in $errfile on line $errline\n";
+  echo "Catchable fatal error: $errstr in $errfile on line $errline\n";
 }
 
 set_error_handler("err_handler", E_RECOVERABLE_ERROR);
 
 $fp = fopen($alias . '/b/new.php', 'wb');
-fwrite($fp, 'extra');
+fwrite($fp, b'extra');
 fclose($fp);
 
 include $alias . '/b/c.php';
@@ -47,6 +48,7 @@ include $alias . '/b/new.php';
 --CLEAN--
 <?php unlink(dirname(__FILE__) . '/' . basename(__FILE__, '.clean.php') . '.phar.zip'); ?>
 --EXPECTF--
+
 Warning: fopen(phar://%sopen_for_write_newfile_b.phar.zip/b/new.php): failed to open stream: phar error: write operations disabled by the php.ini setting phar.readonly in %sopen_for_write_newfile_b.php on line %d
 
 Warning: fwrite() expects parameter 1 to be resource, boolean given in %sopen_for_write_newfile_b.php on line %d

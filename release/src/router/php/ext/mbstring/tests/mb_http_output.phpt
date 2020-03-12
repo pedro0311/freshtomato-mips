@@ -1,5 +1,5 @@
 --TEST--
-mb_http_output()
+mb_http_output()  
 --SKIPIF--
 <?php extension_loaded('mbstring') or die('skip mbstring not available'); ?>
 --FILE--
@@ -49,16 +49,17 @@ $enc = mb_http_output();
 print "$enc\n";
 
 $r = mb_http_output($t_ary);
-($r === NULL) ? print "OK_BAD_ARY_SET\n" : print "NG_BAD_ARY_SET\n";
+($r === FALSE) ? print "OK_BAD_ARY_SET\n" : print "NG_BAD_ARY_SET\n";
 $enc = mb_http_output();
 print "$enc\n";
 
 $r = mb_http_output($t_obj);
-($r === NULL) ? print "OK_BAD_OBJ_SET\n" : print "NG_BAD_OBJ_SET\n";
+($r === FALSE) ? print "OK_BAD_OBJ_SET\n" : print "NG_BAD_OBJ_SET\n";
 $enc = mb_http_output();
 print "$enc\n";
 
 ?>
+
 --EXPECT--
 OK_ASCII_SET
 ASCII
@@ -80,3 +81,4 @@ EUC-JP
 ERR: Warning
 OK_BAD_OBJ_SET
 EUC-JP
+

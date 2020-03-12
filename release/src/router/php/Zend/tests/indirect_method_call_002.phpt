@@ -29,7 +29,4 @@ string(7) "testing"
 string(3) "foo"
 NULL
 
-Fatal error: Uncaught Error: Call to undefined method foo::www() in %s:%d
-Stack trace:
-#0 {main}
-  thrown in %s on line %d
+Fatal error: Call to undefined method foo::www() in %s on line %d

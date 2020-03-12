@@ -1,12 +1,12 @@
 --TEST--
 Bug #21957 (serialize() mangles objects with __sleep)
 --FILE--
-<?php
+<?php 
 class test
 {
 	public $a, $b;
 
-	function __construct()
+	function test()
 	{
 		$this->a = 7;
 		$this->b = 2;

@@ -1,3 +1,4 @@
+
 	/* $Id: fpm_conf.c,v 1.33.2.3 2008/12/13 03:50:29 anight Exp $ */
 	/* (c) 2007,2008 Andrei Nigmatulin */
 
@@ -54,7 +55,7 @@
 #define GO(field) offsetof(struct fpm_global_config_s, field)
 #define WPO(field) offsetof(struct fpm_worker_pool_config_s, field)
 
-static int fpm_conf_load_ini_file(char *filename);
+static int fpm_conf_load_ini_file(char *filename TSRMLS_DC);
 static char *fpm_conf_set_integer(zval *value, void **config, intptr_t offset);
 #if 0 /* not used for now */
 static char *fpm_conf_set_long(zval *value, void **config, intptr_t offset);
@@ -87,7 +88,7 @@ static char *ini_filename = NULL;
 static int ini_lineno = 0;
 static char *ini_include = NULL;
 
-/*
+/* 
  * Please keep the same order as in fpm_conf.h and in php-fpm.conf.in
  */
 static struct ini_value_parser_s ini_fpm_global_options[] = {
@@ -113,7 +114,7 @@ static struct ini_value_parser_s ini_fpm_global_options[] = {
 	{ 0, 0, 0 }
 };
 
-/*
+/* 
  * Please keep the same order as in fpm_conf.h and in php-fpm.conf.in
  */
 static struct ini_value_parser_s ini_fpm_pool_options[] = {
@@ -146,7 +147,6 @@ static struct ini_value_parser_s ini_fpm_pool_options[] = {
 	{ "access.format",             &fpm_conf_set_string,      WPO(access_format) },
 	{ "slowlog",                   &fpm_conf_set_string,      WPO(slowlog) },
 	{ "request_slowlog_timeout",   &fpm_conf_set_time,        WPO(request_slowlog_timeout) },
-	{ "request_slowlog_trace_depth", &fpm_conf_set_integer,     WPO(request_slowlog_trace_depth) },
 	{ "request_terminate_timeout", &fpm_conf_set_time,        WPO(request_terminate_timeout) },
 	{ "rlimit_files",              &fpm_conf_set_integer,     WPO(rlimit_files) },
 	{ "rlimit_core",               &fpm_conf_set_rlimit_core, WPO(rlimit_core) },
@@ -511,7 +511,7 @@ static char *fpm_conf_set_rlimit_core(zval *value, void **config, intptr_t offse
 
 		error = fpm_conf_set_integer(value, &subconf, 0);
 
-		if (error) {
+		if (error) { 
 			return error;
 		}
 
@@ -605,7 +605,7 @@ static void *fpm_worker_pool_config_alloc() /* {{{ */
 
 	wp->config = malloc(sizeof(struct fpm_worker_pool_config_s));
 
-	if (!wp->config) {
+	if (!wp->config) { 
 		fpm_worker_pool_free(wp);
 		return 0;
 	}
@@ -859,7 +859,7 @@ static int fpm_conf_process_all_pools() /* {{{ */
 
 		/* status */
 		if (wp->config->pm_status_path && *wp->config->pm_status_path) {
-			size_t i;
+			int i;
 			char *status = wp->config->pm_status_path;
 
 			if (*status != '/') {
@@ -873,8 +873,8 @@ static int fpm_conf_process_all_pools() /* {{{ */
 			}
 
 			for (i = 0; i < strlen(status); i++) {
-				if (!isalnum(status[i]) && status[i] != '/' && status[i] != '-' && status[i] != '_' && status[i] != '.' && status[i] != '~') {
-					zlog(ZLOG_ERROR, "[pool %s] the status path '%s' must contain only the following characters '[alphanum]/_-.~'", wp->config->name, status);
+				if (!isalnum(status[i]) && status[i] != '/' && status[i] != '-' && status[i] != '_' && status[i] != '.') {
+					zlog(ZLOG_ERROR, "[pool %s] the status path '%s' must contain only the following characters '[alphanum]/_-.'", wp->config->name, status);
 					return -1;
 				}
 			}
@@ -883,7 +883,7 @@ static int fpm_conf_process_all_pools() /* {{{ */
 		/* ping */
 		if (wp->config->ping_path && *wp->config->ping_path) {
 			char *ping = wp->config->ping_path;
-			size_t i;
+			int i;
 
 			if (*ping != '/') {
 				zlog(ZLOG_ERROR, "[pool %s] the ping path '%s' must start with a '/'", wp->config->name, ping);
@@ -896,8 +896,8 @@ static int fpm_conf_process_all_pools() /* {{{ */
 			}
 
 			for (i = 0; i < strlen(ping); i++) {
-				if (!isalnum(ping[i]) && ping[i] != '/' && ping[i] != '-' && ping[i] != '_' && ping[i] != '.' && ping[i] != '~') {
-					zlog(ZLOG_ERROR, "[pool %s] the ping path '%s' must containt only the following characters '[alphanum]/_-.~'", wp->config->name, ping);
+				if (!isalnum(ping[i]) && ping[i] != '/' && ping[i] != '-' && ping[i] != '_' && ping[i] != '.') {
+					zlog(ZLOG_ERROR, "[pool %s] the ping path '%s' must containt only the following characters '[alphanum]/_-.'", wp->config->name, ping);
 					return -1;
 				}
 			}
@@ -970,30 +970,6 @@ static int fpm_conf_process_all_pools() /* {{{ */
 				zlog(ZLOG_ERROR, "[pool %s] 'request_slowlog_timeout' (%d) can't be greater than 'request_terminate_timeout' (%d)", wp->config->name, wp->config->request_slowlog_timeout, wp->config->request_terminate_timeout);
 				return -1;
 			}
-		}
-
-		/* request_slowlog_trace_depth */
-		if (wp->config->request_slowlog_trace_depth) {
-#if HAVE_FPM_TRACE
-			if (! (wp->config->slowlog && *wp->config->slowlog)) {
-				zlog(ZLOG_ERROR, "[pool %s] 'slowlog' must be specified for use with 'request_slowlog_trace_depth'", wp->config->name);
-				return -1;
-			}
-#else
-			static int warned = 0;
-
-			if (!warned) {
-				zlog(ZLOG_WARNING, "[pool %s] 'request_slowlog_trace_depth' is not supported on your system", wp->config->name);
-				warned = 1;
-			}
-#endif
-
-			if (wp->config->request_slowlog_trace_depth <= 0) {
-				zlog(ZLOG_ERROR, "[pool %s] 'request_slowlog_trace_depth' (%d) must be a positive value", wp->config->name, wp->config->request_slowlog_trace_depth);
-				return -1;
-			}
-		} else {
-			wp->config->request_slowlog_trace_depth = 20;
 		}
 
 		/* chroot */
@@ -1177,7 +1153,7 @@ int fpm_conf_write_pid() /* {{{ */
 }
 /* }}} */
 
-static int fpm_conf_post_process(int force_daemon) /* {{{ */
+static int fpm_conf_post_process(int force_daemon TSRMLS_DC) /* {{{ */
 {
 	struct fpm_worker_pool_s *wp;
 
@@ -1248,7 +1224,7 @@ static int fpm_conf_post_process(int force_daemon) /* {{{ */
 		if (!wp->config->access_log || !*wp->config->access_log) {
 			continue;
 		}
-		if (0 > fpm_log_write(wp->config->access_format)) {
+		if (0 > fpm_log_write(wp->config->access_format TSRMLS_CC)) {
 			zlog(ZLOG_ERROR, "[pool %s] wrong format for access.format '%s'", wp->config->name, wp->config->access_format);
 			return -1;
 		}
@@ -1273,18 +1249,18 @@ static void fpm_conf_cleanup(int which, void *arg) /* {{{ */
 }
 /* }}} */
 
-static void fpm_conf_ini_parser_include(char *inc, void *arg) /* {{{ */
+static void fpm_conf_ini_parser_include(char *inc, void *arg TSRMLS_DC) /* {{{ */
 {
 	char *filename;
-	int *error = (int *)arg;
+	int *error = (int *)arg;;
 #ifdef HAVE_GLOB
 	glob_t g;
 #endif
-	size_t i;
+	int i;
 
 	if (!inc || !arg) return;
 	if (*error) return; /* We got already an error. Switch to the end. */
-	spprintf(&filename, 0, "%s", ini_filename);
+	spprintf(&filename, 0, "%s", ini_filename); 
 
 #ifdef HAVE_GLOB
 	{
@@ -1295,9 +1271,9 @@ static void fpm_conf_ini_parser_include(char *inc, void *arg) /* {{{ */
 				zlog(ZLOG_WARNING, "Nothing matches the include pattern '%s' from %s at line %d.", inc, filename, ini_lineno);
 				efree(filename);
 				return;
-			}
+			} 
 #endif /* GLOB_NOMATCH */
-			zlog(ZLOG_ERROR, "Unable to globalize '%s' (ret=%zd) from %s at line %d.", inc, i, filename, ini_lineno);
+			zlog(ZLOG_ERROR, "Unable to globalize '%s' (ret=%d) from %s at line %d.", inc, i, filename, ini_lineno);
 			*error = 1;
 			efree(filename);
 			return;
@@ -1307,7 +1283,7 @@ static void fpm_conf_ini_parser_include(char *inc, void *arg) /* {{{ */
 			int len = strlen(g.gl_pathv[i]);
 			if (len < 1) continue;
 			if (g.gl_pathv[i][len - 1] == '/') continue; /* don't parse directories */
-			if (0 > fpm_conf_load_ini_file(g.gl_pathv[i])) {
+			if (0 > fpm_conf_load_ini_file(g.gl_pathv[i] TSRMLS_CC)) {
 				zlog(ZLOG_ERROR, "Unable to include %s from %s at line %d", g.gl_pathv[i], filename, ini_lineno);
 				*error = 1;
 				efree(filename);
@@ -1317,7 +1293,7 @@ static void fpm_conf_ini_parser_include(char *inc, void *arg) /* {{{ */
 		globfree(&g);
 	}
 #else /* HAVE_GLOB */
-	if (0 > fpm_conf_load_ini_file(inc)) {
+	if (0 > fpm_conf_load_ini_file(inc TSRMLS_CC)) {
 		zlog(ZLOG_ERROR, "Unable to include %s from %s at line %d", inc, filename, ini_lineno);
 		*error = 1;
 		efree(filename);
@@ -1329,7 +1305,7 @@ static void fpm_conf_ini_parser_include(char *inc, void *arg) /* {{{ */
 }
 /* }}} */
 
-static void fpm_conf_ini_parser_section(zval *section, void *arg) /* {{{ */
+static void fpm_conf_ini_parser_section(zval *section, void *arg TSRMLS_DC) /* {{{ */
 {
 	struct fpm_worker_pool_s *wp;
 	struct fpm_worker_pool_config_s *config;
@@ -1367,7 +1343,7 @@ static void fpm_conf_ini_parser_section(zval *section, void *arg) /* {{{ */
 }
 /* }}} */
 
-static void fpm_conf_ini_parser_entry(zval *name, zval *value, void *arg) /* {{{ */
+static void fpm_conf_ini_parser_entry(zval *name, zval *value, void *arg TSRMLS_DC) /* {{{ */
 {
 	struct ini_value_parser_s *parser;
 	void *config = NULL;
@@ -1424,7 +1400,7 @@ static void fpm_conf_ini_parser_entry(zval *name, zval *value, void *arg) /* {{{
 }
 /* }}} */
 
-static void fpm_conf_ini_parser_array(zval *name, zval *key, zval *value, void *arg) /* {{{ */
+static void fpm_conf_ini_parser_array(zval *name, zval *key, zval *value, void *arg TSRMLS_DC) /* {{{ */
 {
 	int *error = (int *)arg;
 	char *err = NULL;
@@ -1480,7 +1456,7 @@ static void fpm_conf_ini_parser_array(zval *name, zval *key, zval *value, void *
 }
 /* }}} */
 
-static void fpm_conf_ini_parser(zval *arg1, zval *arg2, zval *arg3, int callback_type, void *arg) /* {{{ */
+static void fpm_conf_ini_parser(zval *arg1, zval *arg2, zval *arg3, int callback_type, void *arg TSRMLS_DC) /* {{{ */
 {
 	int *error;
 
@@ -1490,27 +1466,26 @@ static void fpm_conf_ini_parser(zval *arg1, zval *arg2, zval *arg3, int callback
 
 	switch(callback_type) {
 		case ZEND_INI_PARSER_ENTRY:
-			fpm_conf_ini_parser_entry(arg1, arg2, error);
-			break;
+			fpm_conf_ini_parser_entry(arg1, arg2, error TSRMLS_CC);
+			break;;
 		case ZEND_INI_PARSER_SECTION:
-			fpm_conf_ini_parser_section(arg1, error);
-			break;
+			fpm_conf_ini_parser_section(arg1, error TSRMLS_CC);
+			break;;
 		case ZEND_INI_PARSER_POP_ENTRY:
-			fpm_conf_ini_parser_array(arg1, arg3, arg2, error);
-			break;
+			fpm_conf_ini_parser_array(arg1, arg3, arg2, error TSRMLS_CC);
+			break;;
 		default:
 			zlog(ZLOG_ERROR, "[%s:%d] Unknown INI syntax", ini_filename, ini_lineno);
 			*error = 1;
-			break;
+			break;;
 	}
 }
 /* }}} */
 
-int fpm_conf_load_ini_file(char *filename) /* {{{ */
+int fpm_conf_load_ini_file(char *filename TSRMLS_DC) /* {{{ */
 {
 	int error = 0;
-	char *buf = NULL, *newbuf = NULL;
-	int bufsize = 0;
+	char buf[1024+1];
 	int fd, n;
 	int nb_read = 1;
 	char c = '*';
@@ -1537,58 +1512,40 @@ int fpm_conf_load_ini_file(char *filename) /* {{{ */
 	ini_lineno = 0;
 	while (nb_read > 0) {
 		int tmp;
-		ini_lineno++;
-		ini_filename = filename;
-		for (n = 0; (nb_read = read(fd, &c, sizeof(char))) == sizeof(char) && c != '\n'; n++) {
-			if (n == bufsize) {
-				bufsize += 1024;
-				newbuf = (char*) realloc(buf, sizeof(char) * (bufsize + 2));
-				if (newbuf == NULL) {
-					ini_recursion--;
-					close(fd);
-					free(buf);
-					return -1;
-				}
-				buf = newbuf;
-			}
-
+		memset(buf, 0, sizeof(char) * (1024 + 1));
+		for (n = 0; n < 1024 && (nb_read = read(fd, &c, sizeof(char))) == sizeof(char) && c != '\n'; n++) {
 			buf[n] = c;
 		}
-		if (n == 0) {
-			continue;
-		}
-		/* always append newline and null terminate */
 		buf[n++] = '\n';
-		buf[n] = '\0';
-		tmp = zend_parse_ini_string(buf, 1, ZEND_INI_SCANNER_NORMAL, (zend_ini_parser_cb_t)fpm_conf_ini_parser, &error);
+		ini_lineno++;
+		ini_filename = filename;
+		tmp = zend_parse_ini_string(buf, 1, ZEND_INI_SCANNER_NORMAL, (zend_ini_parser_cb_t)fpm_conf_ini_parser, &error TSRMLS_CC);
 		ini_filename = filename;
 		if (error || tmp == FAILURE) {
 			if (ini_include) free(ini_include);
 			ini_recursion--;
 			close(fd);
-			free(buf);
 			return -1;
 		}
 		if (ini_include) {
 			char *tmp = ini_include;
 			ini_include = NULL;
 			fpm_evaluate_full_path(&tmp, NULL, NULL, 0);
-			fpm_conf_ini_parser_include(tmp, &error);
+			fpm_conf_ini_parser_include(tmp, &error TSRMLS_CC);
 			if (error) {
 				free(tmp);
 				ini_recursion--;
 				close(fd);
-				free(buf);
 				return -1;
 			}
 			free(tmp);
 		}
 	}
-	free(buf);
 
 	ini_recursion--;
 	close(fd);
 	return ret;
+
 }
 /* }}} */
 
@@ -1599,7 +1556,7 @@ static void fpm_conf_dump() /* {{{ */
 	/*
 	 * Please keep the same order as in fpm_conf.h and in php-fpm.conf.in
 	 */
-	zlog(ZLOG_NOTICE, "[global]");
+	zlog(ZLOG_NOTICE, "[General]");
 	zlog(ZLOG_NOTICE, "\tpid = %s",                         STR2STR(fpm_global_config.pid_file));
 	zlog(ZLOG_NOTICE, "\terror_log = %s",                   STR2STR(fpm_global_config.error_log));
 #ifdef HAVE_SYSLOG_H
@@ -1662,7 +1619,6 @@ static void fpm_conf_dump() /* {{{ */
 		zlog(ZLOG_NOTICE, "\taccess.format = %s",              STR2STR(wp->config->access_format));
 		zlog(ZLOG_NOTICE, "\tslowlog = %s",                    STR2STR(wp->config->slowlog));
 		zlog(ZLOG_NOTICE, "\trequest_slowlog_timeout = %ds",   wp->config->request_slowlog_timeout);
-		zlog(ZLOG_NOTICE, "\trequest_slowlog_trace_depth = %d", wp->config->request_slowlog_trace_depth);
 		zlog(ZLOG_NOTICE, "\trequest_terminate_timeout = %ds", wp->config->request_terminate_timeout);
 		zlog(ZLOG_NOTICE, "\trlimit_files = %d",               wp->config->rlimit_files);
 		zlog(ZLOG_NOTICE, "\trlimit_core = %d",                wp->config->rlimit_core);
@@ -1691,6 +1647,7 @@ static void fpm_conf_dump() /* {{{ */
 int fpm_conf_init_main(int test_conf, int force_daemon) /* {{{ */
 {
 	int ret;
+	TSRMLS_FETCH();
 
 	if (fpm_globals.prefix && *fpm_globals.prefix) {
 		if (!fpm_conf_is_dir(fpm_globals.prefix)) {
@@ -1726,14 +1683,14 @@ int fpm_conf_init_main(int test_conf, int force_daemon) /* {{{ */
 		}
 	}
 
-	ret = fpm_conf_load_ini_file(fpm_globals.config);
+	ret = fpm_conf_load_ini_file(fpm_globals.config TSRMLS_CC);
 
 	if (0 > ret) {
 		zlog(ZLOG_ERROR, "failed to load configuration file '%s'", fpm_globals.config);
 		return -1;
 	}
 
-	if (0 > fpm_conf_post_process(force_daemon)) {
+	if (0 > fpm_conf_post_process(force_daemon TSRMLS_CC)) {
 		zlog(ZLOG_ERROR, "failed to post process the configuration");
 		return -1;
 	}

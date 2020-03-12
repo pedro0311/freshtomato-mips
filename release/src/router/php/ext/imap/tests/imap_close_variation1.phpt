@@ -7,7 +7,7 @@ extension_loaded('imap') or die('skip imap extension not available in this build
 --FILE--
 <?php
 /* Prototype  : bool imap_close(resource $stream_id [, int $options])
- * Description: Close an IMAP stream
+ * Description: Close an IMAP stream 
  * Source code: ext/imap/php_imap.c
  */
 
@@ -59,7 +59,7 @@ $inputs = array(
        false,
        TRUE,
        FALSE,
-
+       
        // empty data
 /*16*/ "",
        '',
@@ -69,7 +69,7 @@ $inputs = array(
 /*19*/ "string",
        'string',
        $heredoc,
-
+       
        // object data
 /*22*/ new classA(),
 
@@ -114,27 +114,27 @@ NULL
 
 -- Iteration 5 --
 
-Warning: imap_close() expects parameter 1 to be resource, float given in %simap_close_variation1.php on line 80
+Warning: imap_close() expects parameter 1 to be resource, double given in %simap_close_variation1.php on line 80
 NULL
 
 -- Iteration 6 --
 
-Warning: imap_close() expects parameter 1 to be resource, float given in %simap_close_variation1.php on line 80
+Warning: imap_close() expects parameter 1 to be resource, double given in %simap_close_variation1.php on line 80
 NULL
 
 -- Iteration 7 --
 
-Warning: imap_close() expects parameter 1 to be resource, float given in %simap_close_variation1.php on line 80
+Warning: imap_close() expects parameter 1 to be resource, double given in %simap_close_variation1.php on line 80
 NULL
 
 -- Iteration 8 --
 
-Warning: imap_close() expects parameter 1 to be resource, float given in %simap_close_variation1.php on line 80
+Warning: imap_close() expects parameter 1 to be resource, double given in %simap_close_variation1.php on line 80
 NULL
 
 -- Iteration 9 --
 
-Warning: imap_close() expects parameter 1 to be resource, float given in %simap_close_variation1.php on line 80
+Warning: imap_close() expects parameter 1 to be resource, double given in %simap_close_variation1.php on line 80
 NULL
 
 -- Iteration 10 --
@@ -169,12 +169,12 @@ NULL
 
 -- Iteration 16 --
 
-Warning: imap_close() expects parameter 1 to be resource, string given in %simap_close_variation1.php on line 80
+Warning: imap_close() expects parameter 1 to be resource, %unicode_string_optional% given in %simap_close_variation1.php on line 80
 NULL
 
 -- Iteration 17 --
 
-Warning: imap_close() expects parameter 1 to be resource, string given in %simap_close_variation1.php on line 80
+Warning: imap_close() expects parameter 1 to be resource, %unicode_string_optional% given in %simap_close_variation1.php on line 80
 NULL
 
 -- Iteration 18 --
@@ -184,17 +184,17 @@ NULL
 
 -- Iteration 19 --
 
-Warning: imap_close() expects parameter 1 to be resource, string given in %simap_close_variation1.php on line 80
+Warning: imap_close() expects parameter 1 to be resource, %unicode_string_optional% given in %simap_close_variation1.php on line 80
 NULL
 
 -- Iteration 20 --
 
-Warning: imap_close() expects parameter 1 to be resource, string given in %simap_close_variation1.php on line 80
+Warning: imap_close() expects parameter 1 to be resource, %unicode_string_optional% given in %simap_close_variation1.php on line 80
 NULL
 
 -- Iteration 21 --
 
-Warning: imap_close() expects parameter 1 to be resource, string given in %simap_close_variation1.php on line 80
+Warning: imap_close() expects parameter 1 to be resource, %unicode_string_optional% given in %simap_close_variation1.php on line 80
 NULL
 
 -- Iteration 22 --

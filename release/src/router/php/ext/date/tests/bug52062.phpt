@@ -2,7 +2,7 @@
 Bug #52062 (large timestamps with DateTime::getTimestamp and DateTime::setTimestamp) (32 bit)
 --SKIPIF--
 <?php
-if (PHP_INT_SIZE != 4) die('skip 32-bit only');
+if (PHP_INT_SIZE == 8) die('skip 32-bit only');
 ?>
 --INI--
 date.timezone=UTC
@@ -20,12 +20,10 @@ var_dump($d->getTimestamp());
 $i = new DateInterval('PT100000000000S');
 var_dump($i->format('%s'));
 ?>
---EXPECTF--
+--EXPECT--
 string(32) "5138-11-16 09:46:40 100000000000"
 bool(false)
 string(12) "100000000000"
-
-Warning: DateTime::setTimestamp() expects parameter 1 to be integer, float given in %s on line %d
-string(32) "5138-11-16 09:46:40 100000000000"
-bool(false)
+string(30) "2008-07-11 04:56:32 1215752192"
+int(1215752192)
 string(10) "1215752192"

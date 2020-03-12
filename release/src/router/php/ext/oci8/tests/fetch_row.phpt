@@ -43,7 +43,7 @@ oci8_test_sql_execute($c, $stmtarray);
 echo "Done\n";
 
 ?>
---EXPECT--
+--EXPECTF--
 array(2) {
   [0]=>
   string(1) "1"

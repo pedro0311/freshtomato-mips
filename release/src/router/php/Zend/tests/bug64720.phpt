@@ -10,7 +10,7 @@ class Stat {
         }
         return self::$requests[1];
     }
-
+    
     public function __destruct() {
         unset(self::$requests[1]);
     }
@@ -22,7 +22,7 @@ class Foo {
     }
 }
 
-class ErrorTest {
+class Error {
     private $trace;
     public function __construct() {
         $this->trace = debug_backtrace(1);
@@ -32,11 +32,11 @@ class ErrorTest {
 class Bar {
     public function __destruct() {
         Stat::getInstance();
-        new ErrorTest();
+        new Error();
     }
 
     public function test() {
-        new ErrorTest();
+        new Error();
     }
 }
 
@@ -44,6 +44,5 @@ $foo = new Foo();
 $bar = new Bar();
 $bar->test();
 ?>
-OK
---EXPECT--
-OK
+--EXPECTF--
+Fatal error: Access to undeclared static property: Stat::$requests in %sbug64720.php on line 12

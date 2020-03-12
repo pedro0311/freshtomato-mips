@@ -25,7 +25,9 @@
 #pragma alloca
 #  else
 #   ifndef alloca /* predefined by HP cc +Olibcalls */
+#    ifndef NETWARE
 char *alloca ();
+#    endif
 #   endif
 #  endif
 # endif
@@ -40,10 +42,7 @@ char *alloca ();
 #endif
 
 #ifndef MAXPATHLEN
-# if _WIN32
-#  include "win32/ioutil.h"
-#  define MAXPATHLEN PHP_WIN32_IOUTIL_MAXPATHLEN
-# elif PATH_MAX
+# ifdef PATH_MAX
 #  define MAXPATHLEN PATH_MAX
 # elif defined(MAX_PATH)
 #  define MAXPATHLEN MAX_PATH
@@ -69,12 +68,3 @@ char *alloca ();
 #endif
 
 #endif /* TSRM_CONFIG_COMMON_H */
-
-/*
- * Local variables:
- * tab-width: 4
- * c-basic-offset: 4
- * End:
- * vim600: sw=4 ts=4 fdm=marker
- * vim<600: sw=4 ts=4
- */

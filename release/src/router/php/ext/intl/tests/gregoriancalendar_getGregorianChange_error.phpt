@@ -16,6 +16,7 @@ var_dump($c->getGregorianChange(1));
 var_dump(intlgregcal_get_gregorian_change($c, 1));
 var_dump(intlgregcal_get_gregorian_change(1));
 --EXPECTF--
+
 Warning: IntlGregorianCalendar::getGregorianChange() expects exactly 0 parameters, 1 given in %s on line %d
 
 Warning: IntlGregorianCalendar::getGregorianChange(): intlgregcal_get_gregorian_change: bad arguments in %s on line %d
@@ -26,8 +27,4 @@ Warning: intlgregcal_get_gregorian_change() expects exactly 1 parameter, 2 given
 Warning: intlgregcal_get_gregorian_change(): intlgregcal_get_gregorian_change: bad arguments in %s on line %d
 bool(false)
 
-Fatal error: Uncaught TypeError: Argument 1 passed to intlgregcal_get_gregorian_change() must be an instance of IntlGregorianCalendar, integer given in %s:%d
-Stack trace:
-#0 %s(%d): intlgregcal_get_gregorian_change(1)
-#1 {main}
-  thrown in %s on line %d
+Catchable fatal error: Argument 1 passed to intlgregcal_get_gregorian_change() must be an instance of IntlGregorianCalendar, integer given in %s on line %d

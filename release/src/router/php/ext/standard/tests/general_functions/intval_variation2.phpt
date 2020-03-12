@@ -1,13 +1,11 @@
 --TEST--
-Test intval() function : usage variation
---SKIPIF--
-<?php if (PHP_INT_SIZE !== 4) die("skip this test is for 32-bit only");
+Test intval() function : usage variation 
 --FILE--
 <?php
 /* Prototype  : int intval(mixed var [, int base])
- * Description: Get the integer value of a variable using the optional base for the conversion
+ * Description: Get the integer value of a variable using the optional base for the conversion 
  * Source code: ext/standard/type.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing intval() : usage variation ***\n";
@@ -115,30 +113,28 @@ int(1)
 int(1)
 
 --float 12.3456789000e10--
-Error: 2 - intval() expects parameter 2 to be integer, float given, %s(%d)
-NULL
+int(1)
 
 --float -12.3456789000e10--
-Error: 2 - intval() expects parameter 2 to be integer, float given, %s(%d)
-NULL
+int(1)
 
 --float .5--
 int(1)
 
 --empty array--
-Error: 2 - intval() expects parameter 2 to be integer, array given, %s(%d)
+Error: 2 - intval() expects parameter 2 to be long, array given, %s(%d)
 NULL
 
 --int indexed array--
-Error: 2 - intval() expects parameter 2 to be integer, array given, %s(%d)
+Error: 2 - intval() expects parameter 2 to be long, array given, %s(%d)
 NULL
 
 --associative array--
-Error: 2 - intval() expects parameter 2 to be integer, array given, %s(%d)
+Error: 2 - intval() expects parameter 2 to be long, array given, %s(%d)
 NULL
 
 --nested arrays--
-Error: 2 - intval() expects parameter 2 to be integer, array given, %s(%d)
+Error: 2 - intval() expects parameter 2 to be long, array given, %s(%d)
 NULL
 
 --uppercase NULL--
@@ -160,35 +156,35 @@ int(1)
 int(1)
 
 --empty string DQ--
-Error: 2 - intval() expects parameter 2 to be integer, string given, %s(%d)
+Error: 2 - intval() expects parameter 2 to be long, string given, %s(%d)
 NULL
 
 --empty string SQ--
-Error: 2 - intval() expects parameter 2 to be integer, string given, %s(%d)
+Error: 2 - intval() expects parameter 2 to be long, string given, %s(%d)
 NULL
 
 --string DQ--
-Error: 2 - intval() expects parameter 2 to be integer, string given, %s(%d)
+Error: 2 - intval() expects parameter 2 to be long, string given, %s(%d)
 NULL
 
 --string SQ--
-Error: 2 - intval() expects parameter 2 to be integer, string given, %s(%d)
+Error: 2 - intval() expects parameter 2 to be long, string given, %s(%d)
 NULL
 
 --mixed case string--
-Error: 2 - intval() expects parameter 2 to be integer, string given, %s(%d)
+Error: 2 - intval() expects parameter 2 to be long, string given, %s(%d)
 NULL
 
 --heredoc--
-Error: 2 - intval() expects parameter 2 to be integer, string given, %s(%d)
+Error: 2 - intval() expects parameter 2 to be long, string given, %s(%d)
 NULL
 
 --instance of classWithToString--
-Error: 2 - intval() expects parameter 2 to be integer, object given, %s(%d)
+Error: 2 - intval() expects parameter 2 to be long, object given, %s(%d)
 NULL
 
 --instance of classWithoutToString--
-Error: 2 - intval() expects parameter 2 to be integer, object given, %s(%d)
+Error: 2 - intval() expects parameter 2 to be long, object given, %s(%d)
 NULL
 
 --undefined var--

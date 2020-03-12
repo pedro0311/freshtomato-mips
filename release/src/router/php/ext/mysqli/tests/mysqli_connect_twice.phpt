@@ -74,11 +74,11 @@ require_once('skipifconnectfailure.inc');
 ?>
 --EXPECTF--
 array(1) {
-  ["it_works"]=>
-  string(2) "ok"
+  [%u|b%"it_works"]=>
+  %unicode|string%(2) "ok"
 }
 array(1) {
-  ["syntax"]=>
-  string(18) "works also with oo"
+  [%u|b%"syntax"]=>
+  %unicode|string%(18) "works also with oo"
 }
 done!

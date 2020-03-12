@@ -3,9 +3,9 @@ Test get_class() function : usage variations  - passing unexpected types.
 --FILE--
 <?php
 /* Prototype  : proto string get_class([object object])
- * Description: Retrieves the class name
+ * Description: Retrieves the class name 
  * Source code: Zend/zend_builtin_functions.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing get_class() : usage variations ***\n";
@@ -102,27 +102,27 @@ bool(false)
 
 Arg value: 10.5 (type: double)
 
-Warning: get_class() expects parameter 1 to be object, float given in %sget_class_variation_001.php on line %d
+Warning: get_class() expects parameter 1 to be object, double given in %sget_class_variation_001.php on line %d
 bool(false)
 
 Arg value: -10.5 (type: double)
 
-Warning: get_class() expects parameter 1 to be object, float given in %sget_class_variation_001.php on line %d
+Warning: get_class() expects parameter 1 to be object, double given in %sget_class_variation_001.php on line %d
 bool(false)
 
 Arg value: 101234567000 (type: double)
 
-Warning: get_class() expects parameter 1 to be object, float given in %sget_class_variation_001.php on line %d
+Warning: get_class() expects parameter 1 to be object, double given in %sget_class_variation_001.php on line %d
 bool(false)
 
 Arg value: 1.07654321E-9 (type: double)
 
-Warning: get_class() expects parameter 1 to be object, float given in %sget_class_variation_001.php on line %d
+Warning: get_class() expects parameter 1 to be object, double given in %sget_class_variation_001.php on line %d
 bool(false)
 
 Arg value: 0.5 (type: double)
 
-Warning: get_class() expects parameter 1 to be object, float given in %sget_class_variation_001.php on line %d
+Warning: get_class() expects parameter 1 to be object, double given in %sget_class_variation_001.php on line %d
 bool(false)
 
 Arg value: Array (type: array)
@@ -152,12 +152,12 @@ bool(false)
 
 Arg value:  (type: NULL)
 
-Warning: get_class() expects parameter 1 to be object, null given in %s on line %d
+Warning: get_class() called without object from outside a class in %sget_class_variation_001.php on line %d
 bool(false)
 
 Arg value:  (type: NULL)
 
-Warning: get_class() expects parameter 1 to be object, null given in %s on line %d
+Warning: get_class() called without object from outside a class in %sget_class_variation_001.php on line %d
 bool(false)
 
 Arg value: 1 (type: boolean)
@@ -202,11 +202,11 @@ bool(false)
 
 Arg value:  (type: NULL)
 
-Warning: get_class() expects parameter 1 to be object, null given in %s on line %d
+Warning: get_class() called without object from outside a class in %sget_class_variation_001.php on line %d
 bool(false)
 
 Arg value:  (type: NULL)
 
-Warning: get_class() expects parameter 1 to be object, null given in %s on line %d
+Warning: get_class() called without object from outside a class in %sget_class_variation_001.php on line %d
 bool(false)
 Done

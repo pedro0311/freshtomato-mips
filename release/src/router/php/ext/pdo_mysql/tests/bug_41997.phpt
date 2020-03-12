@@ -42,13 +42,13 @@ print "done!";
 array(1) {
   [0]=>
   array(1) {
-    ["one"]=>
-    string(1) "1"
+    [%u|b%"one"]=>
+    %unicode|string%(1) "1"
   }
 }
 array(3) {
   [0]=>
-  string(5) "00000"
+  %unicode|string%(5) "00000"
   [1]=>
   NULL
   [2]=>
@@ -57,13 +57,13 @@ array(3) {
 array(1) {
   [0]=>
   array(1) {
-    ["two"]=>
-    string(1) "2"
+    [%u|b%"two"]=>
+    %unicode|string%(1) "2"
   }
 }
 array(3) {
   [0]=>
-  string(5) "00000"
+  %unicode|string%(5) "00000"
   [1]=>
   NULL
   [2]=>

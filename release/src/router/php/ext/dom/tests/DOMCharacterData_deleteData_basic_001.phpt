@@ -17,4 +17,4 @@ $cdata->deleteData(1, 10);
 var_dump($cdata->data);
 ?>
 --EXPECTF--
-string(%d) "t"
+%unicode|string%(%d) "t"

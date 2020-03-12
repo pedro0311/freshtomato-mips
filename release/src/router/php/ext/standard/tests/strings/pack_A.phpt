@@ -22,3 +22,4 @@ array(1) {
   [1]=>
   string(3) "foo"
 }
+

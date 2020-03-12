@@ -4,7 +4,6 @@ Test session_save_path() function : variation
 session.gc_probability=0
 session.save_path=
 session.name=PHPSESSID
-session.save_handler=files
 --SKIPIF--
 <?php include('skipif.inc'); ?>
 --FILE--
@@ -12,25 +11,21 @@ session.save_handler=files
 
 ob_start();
 
-/*
+/* 
  * Prototype : string session_save_path([string $path])
  * Description : Get and/or set the current session save path
- * Source code : ext/session/session.c
+ * Source code : ext/session/session.c 
  */
 
 echo "*** Testing session_save_path() : variation ***\n";
 
 $directory = dirname(__FILE__);
 var_dump(session_save_path());
-var_dump(session_save_path($directory));
-var_dump(session_save_path());
-
 var_dump(session_start());
 var_dump(session_save_path());
 var_dump(session_save_path($directory));
 var_dump(session_save_path());
 var_dump(session_destroy());
-
 var_dump(session_save_path());
 
 echo "Done";
@@ -39,14 +34,11 @@ ob_end_flush();
 --EXPECTF--
 *** Testing session_save_path() : variation ***
 string(0) ""
+bool(true)
 string(0) ""
-string(%d) "%stests"
+string(0) ""
+string(%d) "%s"
 bool(true)
-string(%d) "%stests"
-
-Warning: session_save_path(): Cannot change save path when session is active in %s on line 20
-bool(false)
-string(%d) "%stests"
-bool(true)
-string(%d) "%stests"
+string(%d) "%s"
 Done
+

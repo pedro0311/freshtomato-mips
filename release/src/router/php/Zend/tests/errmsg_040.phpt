@@ -6,10 +6,12 @@ errmsg: arrays are not allowed in class constants
 class test {
 	const TEST = array(1,2,3);
 }
+
 var_dump(test::TEST);
+
 echo "Done\n";
 ?>
---EXPECTF--
+--EXPECTF--	
 array(3) {
   [0]=>
   int(1)

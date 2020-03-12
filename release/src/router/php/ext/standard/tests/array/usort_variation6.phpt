@@ -3,7 +3,7 @@ Test usort() function : usage variations - multi-dimensional arrays
 --FILE--
 <?php
 /* Prototype  : bool usort(array $array_arg, string $cmp_function)
- * Description: Sort an array by values using a user-defined comparison function
+ * Description: Sort an array by values using a user-defined comparison function 
  * Source code: ext/standard/array.c
  */
 
@@ -72,12 +72,12 @@ array(8) {
   [2]=>
   array(1) {
     [0]=>
-    int(0)
+    string(0) ""
   }
   [3]=>
   array(1) {
     [0]=>
-    string(0) ""
+    int(0)
   }
   [4]=>
   array(1) {

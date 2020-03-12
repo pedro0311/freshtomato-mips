@@ -23,3 +23,4 @@ array(1) {
   [1]=>
   string(5) "str%c%c"
 }
+

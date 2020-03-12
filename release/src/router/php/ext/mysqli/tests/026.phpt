@@ -58,8 +58,8 @@ mysqli_close($link);
 --EXPECTF--
 array(2) {
   [0]=>
-  string(10) "Hello Worl"
+  %unicode|string%(10) "Hello Worl"
   [1]=>
-  string(99) "This is the first sentence. And this is the second sentence. And finally this is the last sentence."
+  %unicode|string%(99) "This is the first sentence. And this is the second sentence. And finally this is the last sentence."
 }
 done!

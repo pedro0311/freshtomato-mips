@@ -15,7 +15,4 @@ namespace foo {
 
 ?>
 --EXPECTF--
-Fatal error: Uncaught Error: Call to undefined function bar\test() in %s:%d
-Stack trace:
-#0 {main}
-  thrown in %s on line %d
+Fatal error: Call to undefined function bar\test() in %s on line %d

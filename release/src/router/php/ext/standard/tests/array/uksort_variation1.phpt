@@ -1,11 +1,11 @@
 --TEST--
-Test uksort() function : usage variation
+Test uksort() function : usage variation 
 --FILE--
 <?php
 /* Prototype  : bool uksort(array array_arg, string cmp_function)
- * Description: Sort an array by keys using a user-defined comparison function
+ * Description: Sort an array by keys using a user-defined comparison function 
  * Source code: ext/standard/array.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing uksort() : usage variation ***\n";
@@ -119,27 +119,27 @@ NULL
 
 --float 10.5--
 
-Warning: uksort() expects parameter 1 to be array, float given in %suksort_variation1.php on line %d
+Warning: uksort() expects parameter 1 to be array, double given in %suksort_variation1.php on line %d
 NULL
 
 --float -10.5--
 
-Warning: uksort() expects parameter 1 to be array, float given in %suksort_variation1.php on line %d
+Warning: uksort() expects parameter 1 to be array, double given in %suksort_variation1.php on line %d
 NULL
 
 --float 12.3456789000e10--
 
-Warning: uksort() expects parameter 1 to be array, float given in %suksort_variation1.php on line %d
+Warning: uksort() expects parameter 1 to be array, double given in %suksort_variation1.php on line %d
 NULL
 
 --float -12.3456789000e10--
 
-Warning: uksort() expects parameter 1 to be array, float given in %suksort_variation1.php on line %d
+Warning: uksort() expects parameter 1 to be array, double given in %suksort_variation1.php on line %d
 NULL
 
 --float .5--
 
-Warning: uksort() expects parameter 1 to be array, float given in %suksort_variation1.php on line %d
+Warning: uksort() expects parameter 1 to be array, double given in %suksort_variation1.php on line %d
 NULL
 
 --uppercase NULL--

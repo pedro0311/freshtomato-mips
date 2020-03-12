@@ -2,7 +2,7 @@
 Bug #60159 (Router returns false, but POST is not passed to requested resource)
 --SKIPIF--
 <?php
-include "skipif.inc";
+include "skipif.inc"; 
 ?>
 --FILE--
 <?php
@@ -40,7 +40,6 @@ fclose($fp);
 --EXPECTF--
 HTTP/1.1 200 OK
 Host: %s
-Date: %s
 Connection: close
 X-Powered-By: PHP/%s
 Content-type: text/html; charset=UTF-8

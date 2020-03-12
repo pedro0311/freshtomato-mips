@@ -4,10 +4,10 @@ Test variations in usage of log10()
 precision = 10
 --FILE--
 <?php
-/*
+/* 
  * proto float log10(float number)
  * Function is implemented in ext/standard/math.c
-*/
+*/ 
 
 
 //Test log10 with a different input values
@@ -21,12 +21,12 @@ $values = array(23,
 		"23",
 		"23.45",
 		"2.345e1",
-		"nonsense",
+		"nonsense",				
 		"1000",
 		"1000ABC",
 		null,
 		true,
-		false);
+		false);	
 
 for ($i = 0; $i < count($values); $i++) {
 	$res = log10($values[$i]);
@@ -45,7 +45,7 @@ float(1.361727836)
 float(1.370142847)
 float(1.370142847)
 
-Warning: log10() expects parameter 1 to be float, string given in %s on line %d
+Warning: log10() expects parameter 1 to be double, string given in %s on line %d
 NULL
 float(3)
 

@@ -124,3 +124,4 @@ for am_file in <<$1>>; do
   am_indx=`expr "<<$>>am_indx" + 1`
 done<<>>dnl>>)
 changequote([,]))])
+

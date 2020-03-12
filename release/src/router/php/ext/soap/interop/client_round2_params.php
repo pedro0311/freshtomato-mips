@@ -3,7 +3,7 @@
 // +----------------------------------------------------------------------+
 // | PHP Version 4                                                        |
 // +----------------------------------------------------------------------+
-// | Copyright (c) 1997-2018 The PHP Group                                |
+// | Copyright (c) 1997-2003 The PHP Group                                |
 // +----------------------------------------------------------------------+
 // | This source file is subject to version 2.02 of the PHP license,      |
 // | that is bundled with this package in the file LICENSE, and is        |
@@ -109,7 +109,7 @@ class SOAP_Test {
             		$res = $fault->faultcode;
                 $pos = strpos($res,':');
                 if ($pos !== false) {
-                	$res = substr($res,$pos+1);
+                	$res = substr($res,$pos+1);                	
                 }
                 if ($html) {
                     print "<font color=\"#ff0000\">FAILED: [$res] {$fault->faultstring}</font>\n";

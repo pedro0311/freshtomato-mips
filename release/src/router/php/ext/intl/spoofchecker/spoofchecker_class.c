@@ -1,6 +1,6 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -29,31 +29,49 @@ static zend_object_handlers Spoofchecker_handlers;
  * Auxiliary functions needed by objects of 'Spoofchecker' class
  */
 
-/* {{{ Spoofchecker_objects_free */
-void Spoofchecker_objects_free(zend_object *object)
+/* {{{ Spoofchecker_objects_dtor */
+static void Spoofchecker_objects_dtor(
+	void *object,
+	zend_object_handle handle TSRMLS_DC)
 {
-	Spoofchecker_object* co = php_intl_spoofchecker_fetch_object(object);
+	zend_objects_destroy_object(object, handle TSRMLS_CC);
+}
+/* }}} */
 
-	zend_object_std_dtor(&co->zo);
+/* {{{ Spoofchecker_objects_free */
+void Spoofchecker_objects_free(zend_object *object TSRMLS_DC)
+{
+	Spoofchecker_object* co = (Spoofchecker_object*)object;
 
-	spoofchecker_object_destroy(co);
+	zend_object_std_dtor(&co->zo TSRMLS_CC);
+
+	spoofchecker_object_destroy(co TSRMLS_CC);
+
+	efree(co);
 }
 /* }}} */
 
 /* {{{ Spoofchecker_object_create */
-zend_object *Spoofchecker_object_create(
-	zend_class_entry *ce)
+zend_object_value Spoofchecker_object_create(
+	zend_class_entry *ce TSRMLS_DC)
 {
+	zend_object_value    retval;
 	Spoofchecker_object*     intern;
 
-	intern = ecalloc(1, sizeof(Spoofchecker_object) + zend_object_properties_size(ce));
-	intl_error_init(SPOOFCHECKER_ERROR_P(intern));
-	zend_object_std_init(&intern->zo, ce);
+	intern = ecalloc(1, sizeof(Spoofchecker_object));
+	intl_error_init(SPOOFCHECKER_ERROR_P(intern) TSRMLS_CC);
+	zend_object_std_init(&intern->zo, ce TSRMLS_CC);
 	object_properties_init(&intern->zo, ce);
 
-	intern->zo.handlers = &Spoofchecker_handlers;
+	retval.handle = zend_objects_store_put(
+		intern,
+		Spoofchecker_objects_dtor,
+		(zend_objects_free_object_storage_t)Spoofchecker_objects_free,
+		NULL TSRMLS_CC);
 
-	return &intern->zo;
+	retval.handlers = &Spoofchecker_handlers;
+
+	return retval;
 }
 /* }}} */
 
@@ -100,24 +118,25 @@ zend_function_entry Spoofchecker_class_functions[] = {
 };
 /* }}} */
 
-static zend_object *spoofchecker_clone_obj(zval *object) /* {{{ */
+static zend_object_value spoofchecker_clone_obj(zval *object TSRMLS_DC) /* {{{ */
 {
-	zend_object *new_obj_val;
+	zend_object_value new_obj_val;
+	zend_object_handle handle = Z_OBJ_HANDLE_P(object);
 	Spoofchecker_object *sfo, *new_sfo;
 
-    sfo = Z_INTL_SPOOFCHECKER_P(object);
-    intl_error_reset(SPOOFCHECKER_ERROR_P(sfo));
+    sfo = (Spoofchecker_object *) zend_object_store_get_object(object TSRMLS_CC);
+    intl_error_reset(SPOOFCHECKER_ERROR_P(sfo) TSRMLS_CC);
 
-	new_obj_val = Spoofchecker_ce_ptr->create_object(Z_OBJCE_P(object));
-	new_sfo = php_intl_spoofchecker_fetch_object(new_obj_val);
-	/* clone standard parts */
-	zend_objects_clone_members(&new_sfo->zo, &sfo->zo);
+	new_obj_val = Spoofchecker_ce_ptr->create_object(Z_OBJCE_P(object) TSRMLS_CC);
+	new_sfo = (Spoofchecker_object *)zend_object_store_get_object_by_handle(new_obj_val.handle TSRMLS_CC);
+	/* clone standard parts */	
+	zend_objects_clone_members(&new_sfo->zo, new_obj_val, &sfo->zo, handle TSRMLS_CC);
 	/* clone internal object */
 	new_sfo->uspoof = uspoof_clone(sfo->uspoof, SPOOFCHECKER_ERROR_CODE_P(new_sfo));
 	if(U_FAILURE(SPOOFCHECKER_ERROR_CODE(new_sfo))) {
 		/* set up error in case error handler is interested */
-		intl_error_set( NULL, SPOOFCHECKER_ERROR_CODE(new_sfo), "Failed to clone SpoofChecker object", 0 );
-		Spoofchecker_objects_free(&new_sfo->zo); /* free new object */
+		intl_error_set( NULL, SPOOFCHECKER_ERROR_CODE(new_sfo), "Failed to clone SpoofChecker object", 0 TSRMLS_CC );
+		Spoofchecker_objects_dtor(new_sfo, new_obj_val.handle TSRMLS_CC); /* free new object */
 		zend_error(E_ERROR, "Failed to clone SpoofChecker object");
 	}
 	return new_obj_val;
@@ -127,20 +146,18 @@ static zend_object *spoofchecker_clone_obj(zval *object) /* {{{ */
 /* {{{ spoofchecker_register_Spoofchecker_class
  * Initialize 'Spoofchecker' class
  */
-void spoofchecker_register_Spoofchecker_class(void)
+void spoofchecker_register_Spoofchecker_class(TSRMLS_D)
 {
 	zend_class_entry ce;
 
 	/* Create and register 'Spoofchecker' class. */
 	INIT_CLASS_ENTRY(ce, "Spoofchecker", Spoofchecker_class_functions);
 	ce.create_object = Spoofchecker_object_create;
-	Spoofchecker_ce_ptr = zend_register_internal_class(&ce);
+	Spoofchecker_ce_ptr = zend_register_internal_class(&ce TSRMLS_CC);
 
 	memcpy(&Spoofchecker_handlers, zend_get_std_object_handlers(),
 		sizeof Spoofchecker_handlers);
-	Spoofchecker_handlers.offset = XtOffsetOf(Spoofchecker_object, zo);
-	Spoofchecker_handlers.clone_obj = spoofchecker_clone_obj;
-	Spoofchecker_handlers.free_obj = Spoofchecker_objects_free;
+	Spoofchecker_handlers.clone_obj = spoofchecker_clone_obj; 
 
 	if (!Spoofchecker_ce_ptr) {
 		zend_error(E_ERROR,
@@ -155,20 +172,20 @@ void spoofchecker_register_Spoofchecker_class(void)
  * Initialize internals of Spoofchecker_object.
  * Must be called before any other call to 'spoofchecker_object_...' functions.
  */
-void spoofchecker_object_init(Spoofchecker_object* co)
+void spoofchecker_object_init(Spoofchecker_object* co TSRMLS_DC)
 {
 	if (!co) {
 		return;
 	}
 
-	intl_error_init(SPOOFCHECKER_ERROR_P(co));
+	intl_error_init(SPOOFCHECKER_ERROR_P(co) TSRMLS_CC);
 }
 /* }}} */
 
 /* {{{ void spoofchecker_object_destroy( Spoofchecker_object* co )
  * Clean up mem allocted by internals of Spoofchecker_object
  */
-void spoofchecker_object_destroy(Spoofchecker_object* co)
+void spoofchecker_object_destroy(Spoofchecker_object* co TSRMLS_DC)
 {
 	if (!co) {
 		return;
@@ -179,7 +196,7 @@ void spoofchecker_object_destroy(Spoofchecker_object* co)
 		co->uspoof = NULL;
 	}
 
-	intl_error_reset(SPOOFCHECKER_ERROR_P(co));
+	intl_error_reset(SPOOFCHECKER_ERROR_P(co) TSRMLS_CC);
 }
 /* }}} */
 

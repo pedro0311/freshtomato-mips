@@ -10,14 +10,15 @@ class test {
 }
 
 class test2 extends test {
-	function foo(Test $arg) {}
+	function foo(Test $arg) {} 
 }
 
 class test3 extends test {
-	function foo($arg) {}
+	function foo($arg) {} 
 }
 
 echo "Done\n";
 ?>
---EXPECT--
+--EXPECTF--	
+Strict Standards: Declaration of test3::foo() should be compatible with test::foo(Test $arg) in %s on line %d
 Done

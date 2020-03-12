@@ -50,3 +50,4 @@ Warning: Value for function is no string in %s on line %d
 Warning: args element is no array in %s on line %d
 string(60) "#0 [unknown function][unknown][unknown][unknown]()
 #1 {main}"
+

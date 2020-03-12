@@ -6,7 +6,7 @@ Bug #29674 (inherited method doesn't have access to private variables of the der
 class BaseClass
 {
 	private $private_base = "Base";
-
+	
 	function printVars ()
 	{
 		var_dump($this->private_base);
@@ -38,8 +38,4 @@ NULL
 ===CHILD===
 string(4) "Base"
 
-Fatal error: Uncaught Error: Cannot access private property ChildClass::$private_child in %sbug29674.php:%d
-Stack trace:
-#0 %s(%d): BaseClass->printVars()
-#1 {main}
-  thrown in %sbug29674.php on line %d
+Fatal error: Cannot access private property ChildClass::$private_child in %sbug29674.php on line %d

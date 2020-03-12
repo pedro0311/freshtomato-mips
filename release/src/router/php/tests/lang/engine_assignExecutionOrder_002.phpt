@@ -26,9 +26,9 @@ $g1 = array(10,10);
 $g2 = array(20,20);
 $g3 = array(30,30);
 $g = array($g1,$g2,$g3);
-list($e[$f++],$e[$f++]) = $g[2];
+list($e[$f++],$e[$f++]) = $g[$f];
 // expect 30,30
-var_dump($e);
+var_dump($e); 
 
 
 $i1 = array(1,2);
@@ -38,8 +38,8 @@ $i4 = array(array(1000,2000),3000);
 $i = array($i1,$i2,$i3,$i4);
 $j = array(0,0,0);
 $h = 0;
-// a list of lists
-list(list($j[$h++],$j[$h++]),$j[$h++]) = $i[3];
+// a list of lists 
+list(list($j[$h++],$j[$h++]),$j[$h++]) = $i[$h];
 var_dump($j);
 
 
@@ -50,7 +50,7 @@ list(list($l,$m),$n) = $k;
 echo "L=$l M=$m N=$n\n";
 
 
-// expect $x and $y to be null - this fails on php.net 5.2.1 (invalid opcode) - fixed in 5.2.3
+// expect $x and $y to be null - this fails on php.net 5.2.1 (invalid opcode) - fixed in 5.2.3 
 list($o,$p) = 20;
 echo "O=$o and P=$p\n";
 
@@ -65,7 +65,7 @@ list(list(list($r,$s,,$t),list($u,$v),,$w),,$x) = $q4;
 echo "$r $s $t $u $v $w $x\n";
 
 
-// expect y and z to be undefined
+// expect y and z to be undefined 
 list($y,$z) = array();
 echo "Y=$y,Z=$z\n";
 
@@ -77,7 +77,7 @@ echo "AA=$aa\n";
 list($cc,,$dd) = array(10,20,30,40);
 echo "CC=$cc DD=$dd\n";
 
-// expect the inner array to be defined
+// expect the inner array to be defined 
 $ee = array("original array");
 function f() {
   global $ee;
@@ -116,9 +116,9 @@ L=100 M=200 N=300
 O= and P=
 10 20 40 50 60 70 80
 
-Notice: Undefined offset: 0 in %s on line %d
-
 Notice: Undefined offset: 1 in %s on line %d
+
+Notice: Undefined offset: 0 in %s on line %d
 Y=,Z=
 
 Notice: Undefined offset: 1 in %s on line %d

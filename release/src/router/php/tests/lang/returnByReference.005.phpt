@@ -6,11 +6,11 @@ Class C {
 	function returnConstantByValue() {
 		return 100;
 	}
-
+	
 	function &returnConstantByRef() {
 		return 100;
 	}
-
+	
 	static function &returnVariableByRef() {
 		return $GLOBALS['a'];
 	}
@@ -40,9 +40,10 @@ var_dump($a, $b);
 
 ?>
 --EXPECTF--
+
 ---> 1. Trying to assign by reference the return value of a function that returns by value:
 
-Notice: Only variables should be assigned by reference in %s on line 20
+Strict Standards: Only variables should be assigned by reference in %s on line 20
 int(5)
 int(100)
 

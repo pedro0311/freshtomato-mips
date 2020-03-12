@@ -1,9 +1,9 @@
 --TEST--
 mysqli_connect()
 --SKIPIF--
-<?php
+<?php 
 require_once('skipif.inc');
-require_once('skipifemb.inc');
+require_once('skipifemb.inc'); 
 require_once('skipifconnectfailure.inc');
 ?>
 --FILE--
@@ -151,25 +151,25 @@ require_once('skipifconnectfailure.inc');
 --EXPECTF--
 Warning: mysqli_connect(): (%s/%d): Access denied for user '%s'@'%s' (using password: YES) in %s on line %d
 array(1) {
-  ["testing"]=>
-  string(21) "mysqli.default_socket"
+  [%u|b%"testing"]=>
+  %unicode|string%(21) "mysqli.default_socket"
 }
 array(1) {
-  ["testing"]=>
-  string(19) "mysqli.default_port"
+  [%u|b%"testing"]=>
+  %unicode|string%(19) "mysqli.default_port"
 }
 array(1) {
-  ["testing"]=>
-  string(17) "mysqli.default_pw"
+  [%u|b%"testing"]=>
+  %unicode|string%(17) "mysqli.default_pw"
 }
 array(2) {
   [0]=>
-  string(19) "mysqli.default_user"
-  ["testing"]=>
-  string(19) "mysqli.default_user"
+  %unicode|string%(19) "mysqli.default_user"
+  [%u|b%"testing"]=>
+  %unicode|string%(19) "mysqli.default_user"
 }
 array(1) {
   [0]=>
-  string(19) "mysqli.default_host"
+  %unicode|string%(19) "mysqli.default_host"
 }
 done!

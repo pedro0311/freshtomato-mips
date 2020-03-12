@@ -3,7 +3,7 @@ Test rewinddir() function : usage variations - operate on a closed directory
 --FILE--
 <?php
 /* Prototype  : void rewinddir([resource $dir_handle])
- * Description: Rewind dir_handle back to the start
+ * Description: Rewind dir_handle back to the start 
  * Source code: ext/standard/dir.c
  * Alias to functions: rewind
  */
@@ -40,6 +40,6 @@ string(%d) "%s"
 
 -- Call to rewinddir() --
 
-Warning: rewinddir(): supplied resource is not a valid Directory resource in %s on line %d
+Warning: rewinddir(): %d is not a valid Directory resource in %s on line %d
 bool(false)
 ===DONE===

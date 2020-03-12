@@ -34,6 +34,8 @@ var_dump($c);
 
 ?>
 --EXPECTF--
+
+
 ---( $c->boolFalse )---
   --> Attempting implicit conversion to object using increment...
 
@@ -91,66 +93,66 @@ Notice: Undefined property: stdClass::$prop in %s on line 26
 ---( $c->boolTrue )---
   --> Attempting implicit conversion to object using increment...
 
-Warning: Attempt to %s property 'prop' of non-object in %s on line 18
+Warning: Attempt to %s property of non-object in %s on line 18
 
   --> Attempting implicit conversion to object using assignment...
 
-Warning: Attempt to assign property 'prop' of non-object in %s on line 22
+Warning: Attempt to assign property of non-object in %s on line 22
 
   --> Attempting implicit conversion to object using combined assignment...
 
-Warning: Attempt to assign property 'prop' of non-object in %s on line 26
+Warning: Attempt to assign property of non-object in %s on line 26
 
 
 ---( $c->nonEmptyString )---
   --> Attempting implicit conversion to object using increment...
 
-Warning: Attempt to %s property 'prop' of non-object in %s on line 18
+Warning: Attempt to %s property of non-object in %s on line 18
 
   --> Attempting implicit conversion to object using assignment...
 
-Warning: Attempt to assign property 'prop' of non-object in %s on line 22
+Warning: Attempt to assign property of non-object in %s on line 22
 
   --> Attempting implicit conversion to object using combined assignment...
 
-Warning: Attempt to assign property 'prop' of non-object in %s on line 26
+Warning: Attempt to assign property of non-object in %s on line 26
 
 
 ---( $c->intZero )---
   --> Attempting implicit conversion to object using increment...
 
-Warning: Attempt to %s property 'prop' of non-object in %s on line 18
+Warning: Attempt to %s property of non-object in %s on line 18
 
   --> Attempting implicit conversion to object using assignment...
 
-Warning: Attempt to assign property 'prop' of non-object in %s on line 22
+Warning: Attempt to assign property of non-object in %s on line 22
 
   --> Attempting implicit conversion to object using combined assignment...
 
-Warning: Attempt to assign property 'prop' of non-object in %s on line 26
+Warning: Attempt to assign property of non-object in %s on line 26
 
 
 
  --> Resulting object:object(C)#%d (6) {
-  ["boolFalse"]=>
+  [%u|b%"boolFalse"]=>
   object(stdClass)#%d (1) {
-    ["prop"]=>
-    string(24) " Implicit instantiation!"
+    [%u|b%"prop"]=>
+    %unicode|string%(24) " Implicit instantiation!"
   }
-  ["emptyString"]=>
+  [%u|b%"emptyString"]=>
   object(stdClass)#%d (1) {
-    ["prop"]=>
-    string(24) " Implicit instantiation!"
+    [%u|b%"prop"]=>
+    %unicode|string%(24) " Implicit instantiation!"
   }
-  ["null"]=>
+  [%u|b%"null"]=>
   object(stdClass)#%d (1) {
-    ["prop"]=>
-    string(24) " Implicit instantiation!"
+    [%u|b%"prop"]=>
+    %unicode|string%(24) " Implicit instantiation!"
   }
-  ["boolTrue"]=>
+  [%u|b%"boolTrue"]=>
   bool(true)
-  ["nonEmptyString"]=>
-  string(5) "hello"
-  ["intZero"]=>
+  [%u|b%"nonEmptyString"]=>
+  %unicode|string%(5) "hello"
+  [%u|b%"intZero"]=>
   int(0)
 }

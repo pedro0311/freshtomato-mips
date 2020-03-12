@@ -1,10 +1,12 @@
 --TEST--
 ZE2 errors caught as exceptions
+--SKIPIF--
+<?php if (version_compare(zend_version(), '2.0.0-dev', '<')) die('skip ZendEngine 2 needed'); ?>
 --FILE--
 <?php
 
 class MyException extends Exception {
-	function __construct($_errno, $_errmsg) {
+	function MyException($_errno, $_errmsg) {
 		$this->errno = $_errno;
 		$this->errmsg = $_errmsg;
 	}
@@ -12,7 +14,7 @@ class MyException extends Exception {
 	function getErrno() {
 		return $this->errno;
 	}
-
+    
 	function getErrmsg() {
 		return $this->errmsg;
 	}

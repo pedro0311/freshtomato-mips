@@ -37,7 +37,7 @@ var_dump(strlen($phar->getStub()));
 ?>
 ===DONE===
 --CLEAN--
-<?php
+<?php 
 unlink(dirname(__FILE__) . '/' . basename(__FILE__, '.clean.php') . '.phar');
 unlink(dirname(__FILE__) . '/' . basename(__FILE__, '.clean.php') . '.phar.zip');
 unlink(dirname(__FILE__) . '/' . basename(__FILE__, '.clean.php') . '2.phar');
@@ -46,12 +46,12 @@ __HALT_COMPILER();
 ?>
 --EXPECT--
 bool(false)
-int(6641)
+int(6673)
 bool(true)
 string(60) "<?php // zip-based phar archive stub file
 __HALT_COMPILER();"
 bool(true)
-int(6641)
+int(6673)
 bool(true)
-int(6641)
+int(6673)
 ===DONE===

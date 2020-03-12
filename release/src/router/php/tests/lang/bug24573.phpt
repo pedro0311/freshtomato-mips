@@ -20,4 +20,5 @@ echo "OK\n";
 
 ?>
 --EXPECTF--
+
 Fatal error: Cannot re-assign $this in %s on line %d

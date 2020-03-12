@@ -4,7 +4,7 @@ Check LOBS are valid after statement free
 <?php
 $target_dbs = array('oracledb' => true, 'timesten' => false);  // test runs on these DBs
 require(dirname(__FILE__).'/skipif.inc');
-?>
+?> 
 --FILE--
 <?php
 
@@ -63,6 +63,7 @@ $stmtarray = array(
 oci8_test_sql_execute($c, $stmtarray);
 
 ?>
+
 --EXPECTF--
 Test 1 - explicit statement close
 test data
@@ -71,7 +72,7 @@ Test 2 - implicit statement close
 test data
 object(OCI-Lob)#%d (1) {
   ["descriptor"]=>
-  resource(%d) of type (Unknown)
+  resource(%d) of type (oci8 descriptor)
 }
 
 Test 3 - no preallocated descriptor

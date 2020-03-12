@@ -14,6 +14,7 @@ foreach($reflect->getParameters() as $key => $value) {
 ?>
 ==DONE==
 --EXPECTF--
+
 Warning: ReflectionParameter::export() expects at least 2 parameters, 0 given in %s.php on line %d
 
 Warning: ReflectionParameter::export() expects at least 2 parameters, 0 given in %s.php on line %d

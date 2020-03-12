@@ -12,7 +12,7 @@ if(substr(PHP_OS, 0, 3) != "WIN")
      Returns TRUE on success or FALSE on failure.
 */
 
-/* Test copy() function: Trying to create copy of source file
+/* Test copy() function: Trying to create copy of source file 
      into different destination dir paths given in various notations */
 
 echo "*** Testing copy() function: copying data file across directories ***\n";
@@ -27,7 +27,7 @@ mkdir($dirname_with_blank);
 
 $src_file_name = dirname(__FILE__)."/copy_variation16.tmp";
 $file_handle = fopen($src_file_name, "w");
-fwrite($file_handle, str_repeat("Hello world, this is 2007 year ...\n", 100));
+fwrite($file_handle, str_repeat(b"Hello world, this is 2007 year ...\n", 100));
 fclose($file_handle);
 
 echo "- Size of source file => ";
@@ -80,6 +80,7 @@ rmdir($base_dir);
 
 echo "*** Done ***\n";
 ?>
+
 --EXPECTF--
 *** Testing copy() function: copying data file across directories ***
 - Size of source file => int(3500)

@@ -15,8 +15,6 @@ if ($msg = check_local_infile_support($link, $engine))
 mysqli_close($link);
 
 ?>
---INI--
-mysqli.allow_local_infile=1
 --FILE--
 <?php
 	require_once("connect.inc");

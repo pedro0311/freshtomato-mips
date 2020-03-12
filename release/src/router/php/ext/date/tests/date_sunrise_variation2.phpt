@@ -1,13 +1,11 @@
 --TEST--
 Test date_sunrise() function : usage variation - Passing unexpected values to second argument format.
---SKIPIF--
-<?php if (PHP_INT_SIZE != 4) echo "skip this test is for 32-bit only"; ?>
 --FILE--
 <?php
 /* Prototype  : mixed date_sunrise(mixed time [, int format [, float latitude [, float longitude [, float zenith [, float gmt_offset]]]]])
- * Description: Returns time of sunrise for a given day and location
+ * Description: Returns time of sunrise for a given day and location 
  * Source code: ext/date/php_date.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing date_sunrise() : usage variation ***\n";
@@ -116,98 +114,98 @@ bool(false)
 
 --float 12.3456789000e10--
 
-Warning: date_sunrise() expects parameter 2 to be integer, float given in %s on line %d
+Warning: date_sunrise(): Wrong return format given, pick one of SUNFUNCS_RET_TIMESTAMP, SUNFUNCS_RET_STRING or SUNFUNCS_RET_DOUBLE in %s on line %d
 bool(false)
 
 --float -12.3456789000e10--
 
-Warning: date_sunrise() expects parameter 2 to be integer, float given in %s on line %d
+Warning: date_sunrise(): Wrong return format given, pick one of SUNFUNCS_RET_TIMESTAMP, SUNFUNCS_RET_STRING or SUNFUNCS_RET_DOUBLE in %s on line %d
 bool(false)
 
 --float .5--
-int(1218174468)
+int(1218174483)
 
 --empty array--
 
-Warning: date_sunrise() expects parameter 2 to be integer, array given in %s on line %d
+Warning: date_sunrise() expects parameter 2 to be long, array given in %s on line %d
 bool(false)
 
 --int indexed array--
 
-Warning: date_sunrise() expects parameter 2 to be integer, array given in %s on line %d
+Warning: date_sunrise() expects parameter 2 to be long, array given in %s on line %d
 bool(false)
 
 --associative array--
 
-Warning: date_sunrise() expects parameter 2 to be integer, array given in %s on line %d
+Warning: date_sunrise() expects parameter 2 to be long, array given in %s on line %d
 bool(false)
 
 --nested arrays--
 
-Warning: date_sunrise() expects parameter 2 to be integer, array given in %s on line %d
+Warning: date_sunrise() expects parameter 2 to be long, array given in %s on line %d
 bool(false)
 
 --uppercase NULL--
-int(1218174468)
+int(1218174483)
 
 --lowercase null--
-int(1218174468)
+int(1218174483)
 
 --lowercase true--
-string(5) "06:47"
+string(5) "06:48"
 
 --lowercase false--
-int(1218174468)
+int(1218174483)
 
 --uppercase TRUE--
-string(5) "06:47"
+string(5) "06:48"
 
 --uppercase FALSE--
-int(1218174468)
+int(1218174483)
 
 --empty string DQ--
 
-Warning: date_sunrise() expects parameter 2 to be integer, string given in %s on line %d
+Warning: date_sunrise() expects parameter 2 to be long, string given in %s on line %d
 bool(false)
 
 --empty string SQ--
 
-Warning: date_sunrise() expects parameter 2 to be integer, string given in %s on line %d
+Warning: date_sunrise() expects parameter 2 to be long, string given in %s on line %d
 bool(false)
 
 --string DQ--
 
-Warning: date_sunrise() expects parameter 2 to be integer, string given in %s on line %d
+Warning: date_sunrise() expects parameter 2 to be long, string given in %s on line %d
 bool(false)
 
 --string SQ--
 
-Warning: date_sunrise() expects parameter 2 to be integer, string given in %s on line %d
+Warning: date_sunrise() expects parameter 2 to be long, string given in %s on line %d
 bool(false)
 
 --mixed case string--
 
-Warning: date_sunrise() expects parameter 2 to be integer, string given in %s on line %d
+Warning: date_sunrise() expects parameter 2 to be long, string given in %s on line %d
 bool(false)
 
 --heredoc--
 
-Warning: date_sunrise() expects parameter 2 to be integer, string given in %s on line %d
+Warning: date_sunrise() expects parameter 2 to be long, string given in %s on line %d
 bool(false)
 
 --instance of classWithToString--
 
-Warning: date_sunrise() expects parameter 2 to be integer, object given in %s on line %d
+Warning: date_sunrise() expects parameter 2 to be long, object given in %s on line %d
 bool(false)
 
 --instance of classWithoutToString--
 
-Warning: date_sunrise() expects parameter 2 to be integer, object given in %s on line %d
+Warning: date_sunrise() expects parameter 2 to be long, object given in %s on line %d
 bool(false)
 
 --undefined var--
-int(1218174468)
+int(1218174483)
 
 --unset var--
-int(1218174468)
+int(1218174483)
 ===DONE===

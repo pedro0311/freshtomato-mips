@@ -2,6 +2,7 @@
 ReflectionMethod::getDocComment()
 --INI--
 opcache.save_comments=1
+opcache.load_comments=1
 --FILE--
 <?php
 /**
@@ -26,7 +27,7 @@ class A {
      * My Doc Comment for A::finalStatPubf
      */
 	final static public function finalStatPubf() {}
-
+	
 }
 
 
@@ -44,7 +45,7 @@ class B extends A {
     private function privf() {}
 
 
-    /** My Doc Comment for B::protStatf
+    /** My Doc Comment for B::protStatf 
 
 
 
@@ -64,6 +65,8 @@ foreach (array('A', 'B') as $class) {
 }
 ?>
 --EXPECTF--
+
+
 ---> Doc comment for A::f():
 string(%d) "/**
      * My Doc Comment for A::f
@@ -98,7 +101,7 @@ string(%d) "/** *
 
 
 ---> Doc comment for B::protStatf():
-string(%d) "/** My Doc Comment for B::protStatf
+string(%d) "/** My Doc Comment for B::protStatf 
 
 
 

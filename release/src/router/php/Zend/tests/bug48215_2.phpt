@@ -7,8 +7,8 @@ class a {
 	public function a() { echo __METHOD__ . "\n"; }
 }
 class b extends a {}
-class c extends b {
-	function __construct() {
+class c extends b { 
+	function C() {
 		b::b();
 	}
 }
@@ -16,8 +16,4 @@ $c = new c();
 ?>
 ===DONE===
 --EXPECTF--
-Fatal error: Uncaught Error: Call to undefined method b::b() in %s:%d
-Stack trace:
-#0 %s(%d): c->__construct()
-#1 {main}
-  thrown in %s on line %d
+Fatal error: Call to undefined method b::b() in %s on line %d

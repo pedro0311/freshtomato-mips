@@ -7,7 +7,7 @@ include 'skipif.inc';
 --FILE--
 <?php
 include 'server.inc';
-function checkForClosedFilePointer($target_url, $curl_option, $description) {
+function checkForClosedFilePointer($curl_option, $description) {
 	$fp = fopen(dirname(__FILE__) . '/bug48203.tmp', 'w');
 
 	$ch1 = curl_init();
@@ -16,7 +16,7 @@ function checkForClosedFilePointer($target_url, $curl_option, $description) {
 	$options = array(
 		CURLOPT_RETURNTRANSFER => 1,
 		$curl_option => $fp,
-		CURLOPT_URL => $target_url,
+		CURLOPT_URL => curl_cli_server_start()
 	);
 
 	// we also need to set CURLOPT_VERBOSE to test CURLOPT_STDERR properly
@@ -47,10 +47,6 @@ function checkForClosedFilePointer($target_url, $curl_option, $description) {
 	curl_multi_remove_handle($mh, $ch2);
 	curl_multi_close($mh);
 
-	// Force curl to output results
-	fflush(STDERR);
-	fflush(STDOUT);
-
 	echo "Ok for $description\n";
 }
 
@@ -58,34 +54,31 @@ $options_to_check = array(
 	"CURLOPT_STDERR", "CURLOPT_WRITEHEADER", "CURLOPT_FILE", "CURLOPT_INFILE"
 );
 
-$target_url = curl_cli_server_start();
 foreach($options_to_check as $option) {
-	checkForClosedFilePointer($target_url, constant($option), $option);
+	checkForClosedFilePointer(constant($option), $option);
 }
 
 ?>
 --CLEAN--
 <?php @unlink(dirname(__FILE__) . '/bug48203.tmp'); ?>
 --EXPECTF--
-Warning: curl_multi_exec(): CURLOPT_STDERR resource has gone away, resetting to stderr in %s on line %d
+Warning: curl_multi_exec(): CURLOPT_STDERR resource has gone away, resetting to stderr in %sbug48203_multi.php on line 36
 
-Warning: curl_multi_exec(): CURLOPT_STDERR resource has gone away, resetting to stderr in %s on line %d
+Warning: curl_multi_exec(): CURLOPT_STDERR resource has gone away, resetting to stderr in %sbug48203_multi.php on line 36
 %A
 Ok for CURLOPT_STDERR
+%A
+Warning: curl_multi_exec(): CURLOPT_WRITEHEADER resource has gone away, resetting to default in %sbug48203_multi.php on line 36
 
-Warning: curl_multi_exec(): CURLOPT_WRITEHEADER resource has gone away, resetting to default in %s on line %d
-
-Warning: curl_multi_exec(): CURLOPT_WRITEHEADER resource has gone away, resetting to default in %s on line %d
+Warning: curl_multi_exec(): CURLOPT_WRITEHEADER resource has gone away, resetting to default in %sbug48203_multi.php on line 36
 Ok for CURLOPT_WRITEHEADER
 
-Warning: curl_multi_exec(): CURLOPT_FILE resource has gone away, resetting to default in %s on line %d
+Warning: curl_multi_exec(): CURLOPT_FILE resource has gone away, resetting to default in %sbug48203_multi.php on line 36
 
-Warning: curl_multi_exec(): CURLOPT_FILE resource has gone away, resetting to default in %s on line %d
-Hello World!
-Hello World!Hello World!
-Hello World!Ok for CURLOPT_FILE
+Warning: curl_multi_exec(): CURLOPT_FILE resource has gone away, resetting to default in %sbug48203_multi.php on line 36
+%AOk for CURLOPT_FILE
 
-Warning: curl_multi_exec(): CURLOPT_INFILE resource has gone away, resetting to default in %s on line %d
+Warning: curl_multi_exec(): CURLOPT_INFILE resource has gone away, resetting to default in %sbug48203_multi.php on line 36
 
-Warning: curl_multi_exec(): CURLOPT_INFILE resource has gone away, resetting to default in %s on line %d
+Warning: curl_multi_exec(): CURLOPT_INFILE resource has gone away, resetting to default in %sbug48203_multi.php on line 36
 Ok for CURLOPT_INFILE

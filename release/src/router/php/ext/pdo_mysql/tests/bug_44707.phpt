@@ -37,6 +37,8 @@ function bug_44707($db) {
 
 	$stmt = $db->prepare('INSERT INTO test(id, mybool) VALUES (?, ?)');
 	$stmt->bindParam(1, $id);
+	// From MySQL 4.1 on boolean and TINYINT don't match! INSERT will fail.
+	// Versions prior to 4.1 have a weak test and will accept this.
 	$stmt->bindParam(2, $mybool, PDO::PARAM_BOOL);
 	var_dump($mybool);
 
@@ -76,29 +78,15 @@ Native Prepared Statements
 bool(false)
 bool(false)
 bool(false)
+array(0) {
+}
 array(1) {
   [0]=>
   array(2) {
-    ["id"]=>
-    string(1) "1"
-    ["mybool"]=>
-    string(1) "0"
-  }
-}
-array(2) {
-  [0]=>
-  array(2) {
-    ["id"]=>
-    string(1) "1"
-    ["mybool"]=>
-    string(1) "0"
-  }
-  [1]=>
-  array(2) {
-    ["id"]=>
-    string(1) "1"
-    ["mybool"]=>
-    string(1) "0"
+    [%u|b%"id"]=>
+    %unicode|string%(1) "1"
+    [%u|b%"mybool"]=>
+    %unicode|string%(1) "0"
   }
 }
 done!

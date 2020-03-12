@@ -15,3 +15,4 @@ bool(false)
 
 Warning: password_verify() expects exactly 2 parameters, 1 given in %s on line %d
 bool(false)
+

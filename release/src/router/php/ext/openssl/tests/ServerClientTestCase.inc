@@ -2,28 +2,14 @@
 
 const WORKER_ARGV_VALUE = 'RUN_WORKER';
 
-const WORKER_DEFAULT_NAME = 'server';
-
-function phpt_notify($worker = WORKER_DEFAULT_NAME)
+function phpt_notify()
 {
-    ServerClientTestCase::getInstance()->notify($worker);
+    ServerClientTestCase::getInstance()->notify();
 }
 
-function phpt_wait($worker = WORKER_DEFAULT_NAME, $timeout = null)
+function phpt_wait()
 {
-    ServerClientTestCase::getInstance()->wait($worker, $timeout);
-}
-
-function phpt_has_sslv3() {
-    static $result = null;
-    if (!is_null($result)) {
-        return $result;
-    }
-    $server = @stream_socket_server('sslv3://127.0.0.1:10013');
-    if ($result = !!$server) {
-        fclose($server);
-    }
-    return $result;
+    ServerClientTestCase::getInstance()->wait();
 }
 
 /**
@@ -34,11 +20,11 @@ class ServerClientTestCase
 {
     private $isWorker = false;
 
-    private $workerHandle = [];
+    private $workerHandle;
 
-    private $workerStdIn = [];
+    private $workerStdIn;
 
-    private $workerStdOut = [];
+    private $workerStdOut;
 
     private static $instance;
 
@@ -60,41 +46,22 @@ class ServerClientTestCase
         $this->isWorker = $isWorker;
     }
 
-    private function spawnWorkerProcess($worker, $code)
+    private function spawnWorkerProcess($code)
     {
-        if (defined("PHP_WINDOWS_VERSION_MAJOR")) {
-            $ini = php_ini_loaded_file();
-            $cmd = sprintf(
-                '%s %s "%s" %s',
-                PHP_BINARY, $ini ? "-n -c $ini" : "",
-                __FILE__,
-                WORKER_ARGV_VALUE
-            );
-        } else {
-            $cmd = sprintf(
-                '%s "%s" %s %s',
-                PHP_BINARY,
-                __FILE__,
-                WORKER_ARGV_VALUE,
-                $worker
-            );
-        }
-        $this->workerHandle[$worker] = proc_open(
-            $cmd,
-            [['pipe', 'r'], ['pipe', 'w'], STDERR],
-            $pipes
-        );
-        $this->workerStdIn[$worker] = $pipes[0];
-        $this->workerStdOut[$worker] = $pipes[1];
+        $cmd = sprintf('%s "%s" %s', PHP_BINARY, __FILE__, WORKER_ARGV_VALUE);
 
-        fwrite($this->workerStdIn[$worker], $code . "\n---\n");
+        $this->workerHandle = proc_open($cmd, [['pipe', 'r'], ['pipe', 'w'], STDERR], $pipes);
+        $this->workerStdIn = $pipes[0];
+        $this->workerStdOut = $pipes[1];
+
+        fwrite($this->workerStdIn, $code . "\n---\n");
     }
 
-    private function cleanupWorkerProcess($worker)
+    private function cleanupWorkerProcess()
     {
-        fclose($this->workerStdIn[$worker]);
-        fclose($this->workerStdOut[$worker]);
-        proc_close($this->workerHandle[$worker]);
+        fclose($this->workerStdIn);
+        fclose($this->workerStdOut);
+        proc_close($this->workerHandle);
     }
 
     private function stripPhpTagsFromCode($code)
@@ -119,43 +86,21 @@ class ServerClientTestCase
         eval($code);
     }
 
-    public function run($masterCode, $workerCode)
+    public function run($proc1Code, $proc2Code)
     {
-        if (!is_array($workerCode)) {
-            $workerCode = [WORKER_DEFAULT_NAME => $workerCode];
-        }
-        foreach ($workerCode as $worker => $code) {
-            $this->spawnWorkerProcess($worker, $this->stripPhpTagsFromCode($code));
-        }
-        eval($this->stripPhpTagsFromCode($masterCode));
-        foreach ($workerCode as $worker => $code) {
-            $this->cleanupWorkerProcess($worker);
-        }
+        $this->spawnWorkerProcess($this->stripPhpTagsFromCode($proc2Code));
+        eval($this->stripPhpTagsFromCode($proc1Code));
+        $this->cleanupWorkerProcess();
+    }
+    
+    public function wait()
+    {
+        fgets($this->isWorker ? STDIN : $this->workerStdOut);
     }
 
-    public function wait($worker, $timeout = null)
+    public function notify()
     {
-        $handle = $this->isWorker ? STDIN : $this->workerStdOut[$worker];
-        if ($timeout === null) {
-            fgets($handle);
-            return true;
-        }
-
-        stream_set_blocking($handle, false);
-        $read = [$handle];
-        $result = stream_select($read, $write, $except, $timeout);
-        if (!$result) {
-            return false;
-        }
-
-        fgets($handle);
-        stream_set_blocking($handle, true);
-        return true;
-    }
-
-    public function notify($worker)
-    {
-        fwrite($this->isWorker ? STDOUT : $this->workerStdIn[$worker], "\n");
+        fwrite($this->isWorker ? STDOUT : $this->workerStdIn, "\n");
     }
 }
 

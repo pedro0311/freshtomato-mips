@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2018 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -22,17 +22,12 @@
 #define PHP_READLINE_H
 
 #if HAVE_LIBREADLINE || HAVE_LIBEDIT
-#ifndef PHP_WIN32
-#ifdef ZTS
+#ifdef ZTS 
 #warning Readline module will *NEVER* be thread-safe
-#endif
 #endif
 
 extern zend_module_entry readline_module_entry;
 #define phpext_readline_ptr &readline_module_entry
-
-#include "php_version.h"
-#define PHP_READLINE_VERSION PHP_VERSION
 
 #else
 
@@ -41,3 +36,4 @@ extern zend_module_entry readline_module_entry;
 #endif /* HAVE_LIBREADLINE */
 
 #endif /* PHP_READLINE_H */
+

@@ -87,35 +87,35 @@ MySQLPDOTest::skip();
 array(1) {
   [0]=>
   array(6) {
-    ["z"]=>
+    [%u|b%"z"]=>
     NULL
-    ["a"]=>
+    [%u|b%"a"]=>
     NULL
-    ["b"]=>
-    string(1) " "
-    ["c"]=>
+    [%u|b%"b"]=>
+    %unicode|string%(1) " "
+    [%u|b%"c"]=>
     NULL
-    ["d"]=>
-    string(2) " d"
-    ["e"]=>
-    string(3) "%se"
+    [%u|b%"d"]=>
+    %unicode|string%(2) " d"
+    [%u|b%"e"]=>
+    %unicode|string%(3) "%se"
   }
 }
 array(1) {
   [0]=>
   array(6) {
-    ["z"]=>
+    [%u|b%"z"]=>
     NULL
-    ["a"]=>
-    string(0) ""
-    ["b"]=>
-    string(1) " "
-    ["c"]=>
-    string(0) ""
-    ["d"]=>
-    string(2) " d"
-    ["e"]=>
-    string(3) "%se"
+    [%u|b%"a"]=>
+    %unicode|string%(0) ""
+    [%u|b%"b"]=>
+    %unicode|string%(1) " "
+    [%u|b%"c"]=>
+    %unicode|string%(0) ""
+    [%u|b%"d"]=>
+    %unicode|string%(2) " d"
+    [%u|b%"e"]=>
+    %unicode|string%(3) "%se"
   }
 }
 done!

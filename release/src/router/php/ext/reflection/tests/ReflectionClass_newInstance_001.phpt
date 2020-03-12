@@ -7,8 +7,8 @@ Steve Seear <stevseea@php.net>
 <?php
 class A {
 	public function A() {
-		echo "In constructor of class A\n";
-	}
+		echo "In constructor of class A\n"; 
+	}	
 }
 
 class B {
@@ -19,16 +19,16 @@ class B {
 
 class C {
 	protected function __construct() {
-		echo "In constructor of class C\n";
+		echo "In constructor of class C\n"; 
 	}
 }
 
 class D {
 	private function __construct() {
-		echo "In constructor of class D\n";
+		echo "In constructor of class D\n";		
 	}
 }
-class E {
+class E {	
 }
 
 
@@ -42,16 +42,9 @@ $a1 = $rcA->newInstance();
 $a2 = $rcA->newInstance('x');
 var_dump($a1, $a2);
 
-try {
-	var_dump($rcB->newInstance());
-} catch (Throwable $e) {
-	echo "Exception: " . $e->getMessage() . "\n";
-}
-try {
-	var_dump($rcB->newInstance('x', 123));
-} catch (Throwable $e) {
-	echo "Exception: " . $e->getMessage() . "\n";
-}
+$b1 = $rcB->newInstance();
+$b2 = $rcB->newInstance('x', 123);
+var_dump($b1, $b2);
 
 try {
 	$rcC->newInstance();
@@ -78,15 +71,24 @@ try {
 }
 ?>
 --EXPECTF--
-Deprecated: Methods with the same name as their class will not be constructors in a future version of PHP; A has a deprecated constructor in %s on line %d
 In constructor of class A
 In constructor of class A
 object(A)#%d (0) {
 }
 object(A)#%d (0) {
 }
-Exception: Too few arguments to function B::__construct(), 0 passed and exactly 2 expected
+
+Warning: Missing argument 1 for B::__construct() in %s on line 9
+
+Warning: Missing argument 2 for B::__construct() in %s on line 9
+
+Notice: Undefined variable: a in %s on line 10
+
+Notice: Undefined variable: b in %s on line 10
+In constructor of class B with args , 
 In constructor of class B with args x, 123
+object(B)#%d (0) {
+}
 object(B)#%d (0) {
 }
 Access to non-public constructor of class C

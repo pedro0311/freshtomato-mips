@@ -1,3 +1,4 @@
+
 	/* $Id$ */
 	/* (c) 2009 Jerome Loyet */
 
@@ -27,7 +28,7 @@ void fpm_status_increment_accepted_conn(struct fpm_shm_s *shm);
 void fpm_status_set_pm(struct fpm_shm_s *shm, int pm);
 void fpm_status_update_max_children_reached(struct fpm_shm_s *shm, unsigned int max_children_reached);
 void fpm_status_increment_max_children_reached(struct fpm_shm_s *shm);
-int fpm_status_handle_request(void);
+int fpm_status_handle_request(TSRMLS_D);
 
 extern struct fpm_shm_s *fpm_status_shm;
 

@@ -13,3 +13,4 @@ var_dump($s->setInfo());
 --EXPECTF--
 Warning: SplObjectStorage::setInfo() expects exactly 1 parameter, 0 given in %s on line %d
 NULL
+

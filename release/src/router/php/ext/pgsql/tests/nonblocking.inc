@@ -35,3 +35,4 @@ function nb_consume($db, $db_socket) {
 
     }
 };
+

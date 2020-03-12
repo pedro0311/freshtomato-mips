@@ -12,8 +12,8 @@ ob_start('output_handler');
 
 ob_end_clean();
 ?>
---EXPECTF--
-Fatal error: Uncaught Exception in %s:%d
+--EXPECTF--	
+Fatal error: Uncaught exception 'Exception' in %s:%d
 Stack trace:
 #0 [internal function]: output_handler('', %d)
 #1 %s(%d): ob_end_clean()

@@ -1,5 +1,7 @@
 --TEST--
 ZE2 object cloning, 6
+--SKIPIF--
+<?php if (version_compare(zend_version(), '2.0.0-dev', '<')) die('skip ZendEngine 2 needed'); ?>
 --INI--
 error_reporting=2047
 --FILE--
@@ -8,7 +10,7 @@ error_reporting=2047
 class MyCloneable {
 	static $id = 0;
 
-	function __construct() {
+	function MyCloneable() {
 		$this->id = self::$id++;
 	}
 
@@ -32,15 +34,8 @@ echo $clone->name . "\n";
 echo $clone->address . "\n";
 
 ?>
---EXPECTF--
-Notice: Accessing static property MyCloneable::$id as non static in %s on line %d
-
-Notice: Accessing static property MyCloneable::$id as non static in %s on line %d
+--EXPECT--
 0
-
-Notice: Accessing static property MyCloneable::$id as non static in %s on line %d
-
-Notice: Accessing static property MyCloneable::$id as non static in %s on line %d
 1
 Hello
 New York

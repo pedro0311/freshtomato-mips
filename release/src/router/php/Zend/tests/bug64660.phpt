@@ -7,4 +7,5 @@ function a() {
 }
 echo "Done\n";
 --EXPECTF--
+
 Parse error: memory exhausted in %s on line %d 

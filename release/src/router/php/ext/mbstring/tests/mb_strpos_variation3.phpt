@@ -4,12 +4,11 @@ Test mb_strpos() function : usage variations - pass different data types as $off
 <?php
 extension_loaded('mbstring') or die('skip');
 function_exists('mb_strpos') or die("skip mb_strpos() is not available in this build");
-if (PHP_INT_SIZE != 8) die('skip 64-bit only');
 ?>
 --FILE--
 <?php
 /* Prototype  : int mb_strpos(string $haystack, string $needle [, int $offset [, string $encoding]])
- * Description: Find position of first occurrence of a string within another
+ * Description: Find position of first occurrence of a string within another 
  * Source code: ext/mbstring/mbstring.c
  */
 
@@ -20,8 +19,8 @@ if (PHP_INT_SIZE != 8) die('skip 64-bit only');
 echo "*** Testing mb_strpos() : usage variations ***\n";
 
 // Initialise function arguments not being substituted
-$needle = 'a';
-$haystack = 'string_val';
+$needle = b'a';
+$haystack = b'string_val';
 $encoding = 'utf-8';
 
 //get an unset variable
@@ -51,47 +50,45 @@ $inputs = array(
 /*1*/  0,
        1,
        12345,
-	   -5,
        -2345,
 
        // float data
-/*6*/  10.5,
-       -5.5,
-	   -100.5,
+/*5*/  10.5,
+       -10.5,
        12.3456789000e10,
        12.3456789000E-10,
        .5,
 
        // null data
-/*12*/ NULL,
+/*10*/ NULL,
        null,
 
        // boolean data
-/*14*/ true,
+/*12*/ true,
        false,
        TRUE,
        FALSE,
-
+       
        // empty data
-/*18*/ "",
+/*16*/ "",
        '',
 
        // string data
-/*20*/ "string",
+/*18*/ "string",
        'string',
        $heredoc,
-
+       
        // object data
-/*23*/ new classA(),
+/*21*/ new classA(),
 
        // undefined data
-/*24*/ @$undefined_var,
+/*22*/ @$undefined_var,
 
        // unset data
-/*25*/ @$unset_var,
+/*23*/ @$unset_var,
 
        // resource variable
-/*26*/ $fp
+/*24*/ $fp
 );
 
 // loop through each element of $inputs to check the behavior of mb_strpos()
@@ -121,28 +118,28 @@ Warning: mb_strpos(): Offset not contained in string in %s on line %d
 bool(false)
 
 -- Iteration 4 --
-int(8)
-
--- Iteration 5 --
 
 Warning: mb_strpos(): Offset not contained in string in %s on line %d
+bool(false)
+
+-- Iteration 5 --
 bool(false)
 
 -- Iteration 6 --
+
+Warning: mb_strpos(): Offset not contained in string in %s on line %d
 bool(false)
 
 -- Iteration 7 --
-int(8)
+
+Warning: mb_strpos(): Offset not contained in string in %s on line %d
+bool(false)
 
 -- Iteration 8 --
-
-Warning: mb_strpos(): Offset not contained in string in %s on line %d
-bool(false)
+int(8)
 
 -- Iteration 9 --
-
-Warning: mb_strpos(): Offset not contained in string in %s on line %d
-bool(false)
+int(8)
 
 -- Iteration 10 --
 int(8)
@@ -163,49 +160,43 @@ int(8)
 int(8)
 
 -- Iteration 16 --
-int(8)
+
+Warning: mb_strpos() expects parameter 3 to be long, string given in %s on line %d
+bool(false)
 
 -- Iteration 17 --
-int(8)
+
+Warning: mb_strpos() expects parameter 3 to be long, string given in %s on line %d
+bool(false)
 
 -- Iteration 18 --
 
-Warning: mb_strpos() expects parameter 3 to be integer, string given in %s on line %d
-NULL
+Warning: mb_strpos() expects parameter 3 to be long, string given in %s on line %d
+bool(false)
 
 -- Iteration 19 --
 
-Warning: mb_strpos() expects parameter 3 to be integer, string given in %s on line %d
-NULL
+Warning: mb_strpos() expects parameter 3 to be long, string given in %s on line %d
+bool(false)
 
 -- Iteration 20 --
 
-Warning: mb_strpos() expects parameter 3 to be integer, string given in %s on line %d
-NULL
+Warning: mb_strpos() expects parameter 3 to be long, string given in %s on line %d
+bool(false)
 
 -- Iteration 21 --
 
-Warning: mb_strpos() expects parameter 3 to be integer, string given in %s on line %d
-NULL
+Warning: mb_strpos() expects parameter 3 to be long, object given in %s on line %d
+bool(false)
 
 -- Iteration 22 --
-
-Warning: mb_strpos() expects parameter 3 to be integer, string given in %s on line %d
-NULL
+int(8)
 
 -- Iteration 23 --
-
-Warning: mb_strpos() expects parameter 3 to be integer, object given in %s on line %d
-NULL
+int(8)
 
 -- Iteration 24 --
-int(8)
 
--- Iteration 25 --
-int(8)
-
--- Iteration 26 --
-
-Warning: mb_strpos() expects parameter 3 to be integer, resource given in %s on line %d
-NULL
+Warning: mb_strpos() expects parameter 3 to be long, resource given in %s on line %d
+bool(false)
 Done

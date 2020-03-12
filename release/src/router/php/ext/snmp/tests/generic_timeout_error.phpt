@@ -1,4 +1,4 @@
---TEST--
+--TEST--                                 
 Generic timeout (wrong community)
 --CREDITS--
 Boris Lytochkin
@@ -24,3 +24,4 @@ bool(false)
 
 Warning: snmpget(): No response from %s in %s on line %d
 bool(false)
+

@@ -1,3 +1,4 @@
+
 	/* $Id: fpm_stdio.c,v 1.22.2.2 2008/12/13 03:32:24 anight Exp $ */
 	/* (c) 2007,2008 Andrei Nigmatulin */
 
@@ -72,12 +73,6 @@ int fpm_stdio_init_final() /* {{{ */
 				return -1;
 			}
 		}
-#ifdef HAVE_SYSLOG_H
-		else if (fpm_globals.error_log_fd == ZLOG_SYSLOG) {
-			/* dup to /dev/null when using syslog */
-			dup2(STDOUT_FILENO, STDERR_FILENO);
-		}
-#endif
 	}
 	zlog_set_launched();
 	return 0;
@@ -102,6 +97,12 @@ int fpm_stdio_init_child(struct fpm_worker_pool_s *wp) /* {{{ */
 	fpm_globals.error_log_fd = -1;
 	zlog_set_fd(-1);
 
+	if (wp->listening_socket != STDIN_FILENO) {
+		if (0 > dup2(wp->listening_socket, STDIN_FILENO)) {
+			zlog(ZLOG_SYSERROR, "failed to init child stdio: dup2()");
+			return -1;
+		}
+	}
 	return 0;
 }
 /* }}} */
@@ -324,3 +325,4 @@ int fpm_stdio_open_error_log(int reopen) /* {{{ */
 	return 0;
 }
 /* }}} */
+

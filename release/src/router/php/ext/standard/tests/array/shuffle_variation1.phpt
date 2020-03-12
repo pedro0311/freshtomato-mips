@@ -3,7 +3,7 @@ Test shuffle() function : usage variations  - unexpected values for 'array_arg' 
 --FILE--
 <?php
 /* Prototype  : bool shuffle(array $array_arg)
- * Description: Randomly shuffle the contents of an array
+ * Description: Randomly shuffle the contents of an array 
  * Source code: ext/standard/array.c
 */
 
@@ -118,27 +118,27 @@ bool(false)
 
 -- Iteration 5 --
 
-Warning: shuffle() expects parameter 1 to be array, float given in %s on line %d
+Warning: shuffle() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 
 -- Iteration 6 --
 
-Warning: shuffle() expects parameter 1 to be array, float given in %s on line %d
+Warning: shuffle() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 
 -- Iteration 7 --
 
-Warning: shuffle() expects parameter 1 to be array, float given in %s on line %d
+Warning: shuffle() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 
 -- Iteration 8 --
 
-Warning: shuffle() expects parameter 1 to be array, float given in %s on line %d
+Warning: shuffle() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 
 -- Iteration 9 --
 
-Warning: shuffle() expects parameter 1 to be array, float given in %s on line %d
+Warning: shuffle() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 
 -- Iteration 10 --
@@ -211,3 +211,4 @@ bool(false)
 Warning: shuffle() expects parameter 1 to be array, resource given in %s on line %d
 bool(false)
 Done
+

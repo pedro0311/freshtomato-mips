@@ -2,7 +2,7 @@
 ZE2 ArrayAccess::offsetGet ambiguties
 --FILE--
 <?php
-class ObjectOne implements ArrayAccess {
+class object implements ArrayAccess {
 
 	public $a = array('1st', 1, 2=>'3rd', '4th'=>4);
 
@@ -35,7 +35,7 @@ class ObjectOne implements ArrayAccess {
 	}
 }
 
-$obj = new ObjectOne;
+$obj = new Object;
 
 var_dump($obj[1]);
 var_dump($obj[2]);
@@ -45,13 +45,13 @@ var_dump($obj[2]);
 ?>
 ===DONE===
 --EXPECTF--
-ObjectOne::offsetGet(1)
+object::offsetGet(1)
 string(6) "fooBar"
-ObjectOne::offsetGet(2)
+object::offsetGet(2)
 int(1)
-ObjectOne::offsetGet(2)
+object::offsetGet(2)
 
-Notice: Indirect modification of overloaded element of ObjectOne has no effect in %sarray_access_004.php on line 39
-ObjectOne::offsetGet(2)
+Notice: Indirect modification of overloaded element of object has no effect in %sarray_access_004.php on line 39
+object::offsetGet(2)
 int(1)
 ===DONE===

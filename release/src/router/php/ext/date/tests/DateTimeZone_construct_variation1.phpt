@@ -5,12 +5,12 @@ Test DateTime::__construct() function : usage variation - Passing unexpected val
 /* Prototype  : DateTimeZone::__construct  ( string $timezone  )
  * Description: Returns new DateTimeZone object
  * Source code: ext/date/php_date.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing DateTime::__construct() : usage variation -  unexpected values to first argument \$timezone***\n";
 
-//Set the default time zone
+//Set the default time zone 
 date_default_timezone_set("Europe/London");
 
 //get an unset variable
@@ -88,8 +88,8 @@ $inputs = array(
 
       // unset data
       'unset var' => @$unset_var,
-
-      // resource
+      
+      // resource 
       'resource' => $file_handle
 );
 
@@ -97,11 +97,11 @@ foreach($inputs as $variation =>$timezone) {
       echo "\n-- $variation --\n";
       try {
       	var_dump( new DateTimezone($timezone) );
-      } catch (Throwable $e) {
+      } catch(Exception $e) {
       	  $msg = $e->getMessage();
       	  echo "FAILED: " . $msg . "\n";
-      }
-
+      }	
+      
 };
 
 // closing the resource

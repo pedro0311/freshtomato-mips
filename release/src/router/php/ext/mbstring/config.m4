@@ -31,13 +31,13 @@ AC_DEFUN([PHP_MBSTRING_ADD_INSTALL_HEADERS], [
 ])
 
 AC_DEFUN([PHP_MBSTRING_EXTENSION], [
-  PHP_NEW_EXTENSION(mbstring, $PHP_MBSTRING_SOURCES, $ext_shared,, $PHP_MBSTRING_CFLAGS -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
+  PHP_NEW_EXTENSION(mbstring, $PHP_MBSTRING_SOURCES, $ext_shared,, $PHP_MBSTRING_CFLAGS)
   PHP_SUBST(MBSTRING_SHARED_LIBADD)
 
   for dir in $PHP_MBSTRING_EXTRA_BUILD_DIRS; do
     PHP_ADD_BUILD_DIR([$ext_builddir/$dir], 1)
   done
-
+  
   for dir in $PHP_MBSTRING_EXTRA_INCLUDES; do
     PHP_ADD_INCLUDE([$ext_srcdir/$dir])
     PHP_ADD_INCLUDE([$ext_builddir/$dir])
@@ -54,11 +54,7 @@ AC_DEFUN([PHP_MBSTRING_EXTENSION], [
       out="php_config.h"
     fi
   fi
-
-  if test "$PHP_MBSTRING_BUNDLED_ONIG" = "1"; then
-    cp $ext_srcdir/oniguruma/src/oniguruma.h $ext_srcdir/oniguruma/oniguruma.h
-  fi
-
+  
   for cfg in $PHP_MBSTRING_EXTRA_CONFIG_HEADERS; do
     cat > $ext_builddir/$cfg <<EOF
 #include "$out"
@@ -74,7 +70,6 @@ AC_DEFUN([PHP_MBSTRING_SETUP_MBREGEX], [
       dnl
       dnl Bundled oniguruma
       dnl
-      PHP_MBSTRING_BUNDLED_ONIG=1
       if test "$PHP_MBREGEX_BACKTRACK" != "no"; then
         AC_DEFINE([USE_COMBINATION_EXPLOSION_CHECK],1,[whether to check multibyte regex backtrack])
       fi
@@ -92,7 +87,15 @@ int foo(int x, ...) {
 }
 int main() { return foo(10, "", 3.14); }
         ], [php_cv_mbstring_stdarg=yes], [php_cv_mbstring_stdarg=no], [
+          dnl cross-compile needs something here
+          case $host_alias in
+          *netware*)
+          php_cv_mbstring_stdarg=yes
+          ;;
+          *)
           php_cv_mbstring_stdarg=no
+          ;;
+          esac
         ])
       ])
 
@@ -101,78 +104,66 @@ int main() { return foo(10, "", 3.14); }
       AC_CHECK_SIZEOF(short, 2)
       AC_CHECK_SIZEOF(long, 4)
       AC_C_CONST
-      AC_HEADER_TIME
+      AC_HEADER_TIME 
       AC_FUNC_ALLOCA
       AC_FUNC_MEMCMP
       AC_CHECK_HEADER([stdarg.h], [
         AC_DEFINE([HAVE_STDARG_PROTOTYPES], [1], [Define to 1 if you have the <stdarg.h> header file.])
       ], [])
       AC_DEFINE([PHP_ONIG_BUNDLED], [1], [Define to 1 if the bundled oniguruma is used])
-      AC_DEFINE([HAVE_ONIG], [1], [Define to 1 if the oniguruma library is available])
+      AC_DEFINE([HAVE_ONIG], [1], [Define to 1 if the oniguruma library is available]) 
       PHP_MBSTRING_ADD_CFLAG([-DNOT_RUBY])
       PHP_MBSTRING_ADD_BUILD_DIR([oniguruma])
-      PHP_MBSTRING_ADD_BUILD_DIR([oniguruma/src])
+      PHP_MBSTRING_ADD_BUILD_DIR([oniguruma/enc])
       PHP_MBSTRING_ADD_INCLUDE([oniguruma])
-      PHP_MBSTRING_ADD_CONFIG_HEADER([oniguruma/src/config.h])
+      PHP_MBSTRING_ADD_CONFIG_HEADER([oniguruma/config.h])
       PHP_MBSTRING_ADD_SOURCES([
-		oniguruma/src/ascii.c
-                oniguruma/src/big5.c
-                oniguruma/src/cp1251.c
-                oniguruma/src/euc_jp.c
-                oniguruma/src/euc_jp_prop.c
-                oniguruma/src/euc_kr.c
-                oniguruma/src/euc_tw.c
-                oniguruma/src/gb18030.c
-                oniguruma/src/iso8859_1.c
-                oniguruma/src/iso8859_10.c
-                oniguruma/src/iso8859_11.c
-                oniguruma/src/iso8859_13.c
-                oniguruma/src/iso8859_14.c
-                oniguruma/src/iso8859_15.c
-                oniguruma/src/iso8859_16.c
-                oniguruma/src/iso8859_2.c
-                oniguruma/src/iso8859_3.c
-                oniguruma/src/iso8859_4.c
-                oniguruma/src/iso8859_5.c
-                oniguruma/src/iso8859_6.c
-                oniguruma/src/iso8859_7.c
-                oniguruma/src/iso8859_8.c
-                oniguruma/src/iso8859_9.c
-                oniguruma/src/koi8.c
-                oniguruma/src/koi8_r.c
-                oniguruma/src/onig_init.c
-                oniguruma/src/regcomp.c
-                oniguruma/src/regenc.c
-                oniguruma/src/regerror.c
-                oniguruma/src/regexec.c
-                oniguruma/src/regext.c
-                oniguruma/src/reggnu.c
-                oniguruma/src/regparse.c
-                oniguruma/src/regposerr.c
-                oniguruma/src/regposix.c
-                oniguruma/src/regsyntax.c
-                oniguruma/src/regtrav.c
-                oniguruma/src/regversion.c
-                oniguruma/src/sjis.c
-                oniguruma/src/sjis_prop.c
-                oniguruma/src/st.c
-                oniguruma/src/unicode.c
-                oniguruma/src/unicode_fold1_key.c
-                oniguruma/src/unicode_fold2_key.c
-                oniguruma/src/unicode_fold3_key.c
-                oniguruma/src/unicode_unfold_key.c
-                oniguruma/src/utf16_be.c
-                oniguruma/src/utf16_le.c
-                oniguruma/src/utf32_be.c
-                oniguruma/src/utf32_le.c
-                oniguruma/src/utf8.c
+        oniguruma/regcomp.c
+        oniguruma/regerror.c
+        oniguruma/regexec.c
+        oniguruma/reggnu.c
+        oniguruma/regparse.c
+        oniguruma/regenc.c
+        oniguruma/regext.c
+        oniguruma/regsyntax.c
+        oniguruma/regtrav.c
+        oniguruma/regversion.c
+        oniguruma/st.c
+        oniguruma/enc/unicode.c
+        oniguruma/enc/ascii.c
+        oniguruma/enc/utf8.c
+        oniguruma/enc/euc_jp.c
+        oniguruma/enc/euc_tw.c
+        oniguruma/enc/euc_kr.c
+        oniguruma/enc/sjis.c
+        oniguruma/enc/iso8859_1.c
+        oniguruma/enc/iso8859_2.c
+        oniguruma/enc/iso8859_3.c
+        oniguruma/enc/iso8859_4.c
+        oniguruma/enc/iso8859_5.c
+        oniguruma/enc/iso8859_6.c
+        oniguruma/enc/iso8859_7.c
+        oniguruma/enc/iso8859_8.c
+        oniguruma/enc/iso8859_9.c
+        oniguruma/enc/iso8859_10.c
+        oniguruma/enc/iso8859_11.c
+        oniguruma/enc/iso8859_13.c
+        oniguruma/enc/iso8859_14.c
+        oniguruma/enc/iso8859_15.c
+        oniguruma/enc/iso8859_16.c
+        oniguruma/enc/koi8.c
+        oniguruma/enc/koi8_r.c
+        oniguruma/enc/big5.c
+        oniguruma/enc/utf16_be.c
+        oniguruma/enc/utf16_le.c
+        oniguruma/enc/utf32_be.c
+        oniguruma/enc/utf32_le.c
       ])
       PHP_MBSTRING_ADD_INSTALL_HEADERS([oniguruma/oniguruma.h])
     else
       dnl
       dnl External oniguruma
       dnl
-      PHP_MBSTRING_BUNDLED_ONIG=0
       if test ! -f "$PHP_ONIG/include/oniguruma.h"; then
         AC_MSG_ERROR([oniguruma.h not found in $PHP_ONIG/include])
       fi
@@ -180,7 +171,7 @@ int main() { return foo(10, "", 3.14); }
 
       PHP_CHECK_LIBRARY(onig, onig_init, [
         PHP_ADD_LIBRARY_WITH_PATH(onig, $PHP_ONIG/$PHP_LIBDIR, MBSTRING_SHARED_LIBADD)
-        AC_DEFINE([HAVE_ONIG], [1], [Define to 1 if the oniguruma library is available])
+        AC_DEFINE([HAVE_ONIG], [1], [Define to 1 if the oniguruma library is available]) 
       ],[
         AC_MSG_ERROR([Problem with oniguruma. Please check config.log for more information.])
       ], [
@@ -321,7 +312,7 @@ AC_DEFUN([PHP_MBSTRING_SETUP_LIBMBFL], [
   else
     dnl
     dnl External libmfl
-    dnl
+    dnl  
     for inc in include include/mbfl-1.0 include/mbfl; do
       if test -f "$PHP_LIBMBFL/$inc/mbfilter.h"; then
         PHP_LIBMBFL_INCLUDE="$inc"
@@ -331,7 +322,7 @@ AC_DEFUN([PHP_MBSTRING_SETUP_LIBMBFL], [
 
     if test -z "$PHP_LIBMBFL_INCLUDE"; then
       AC_MSG_ERROR([mbfilter.h not found. Please reinstall libmbfl library.])
-    else
+    else 
       PHP_ADD_INCLUDE([$PHP_LIBMBFL_INCLUDE])
     fi
 
@@ -367,7 +358,7 @@ PHP_ARG_WITH(onig, [for external oniguruma],
 [  --with-onig[=DIR]         MBSTRING: Use external oniguruma. DIR is the oniguruma install prefix.
                           If DIR is not set, the bundled oniguruma will be used], no, no)
 
-if test "$PHP_MBSTRING" != "no"; then
+if test "$PHP_MBSTRING" != "no"; then  
   AC_DEFINE([HAVE_MBSTRING],1,[whether to have multibyte string support])
 
   PHP_MBSTRING_ADD_BASE_SOURCES([mbstring.c php_unicode.c mb_gpc.c])
@@ -375,7 +366,7 @@ if test "$PHP_MBSTRING" != "no"; then
   if test "$PHP_MBREGEX" != "no"; then
     PHP_MBSTRING_SETUP_MBREGEX
   fi
-
+  
   dnl libmbfl is required
   PHP_MBSTRING_SETUP_LIBMBFL
   PHP_MBSTRING_EXTENSION

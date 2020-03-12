@@ -1,6 +1,6 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -30,7 +30,6 @@
 #include "collator/collator_sort.h"
 #include <unicode/ubrk.h>
 #include "intl_error.h"
-#include "Zend/zend_exceptions.h"
 
 extern zend_module_entry intl_module_entry;
 #define phpext_intl_ptr &intl_module_entry
@@ -46,22 +45,23 @@ extern zend_module_entry intl_module_entry;
 #endif
 
 ZEND_BEGIN_MODULE_GLOBALS(intl)
-	zval current_collator;
+	zval* current_collator;
 	char* default_locale;
 	collator_compare_func_t compare_func;
 	UBreakIterator* grapheme_iterator;
 	intl_error g_error;
-	zend_long error_level;
+	long error_level;
 	zend_bool use_exceptions;
 ZEND_END_MODULE_GLOBALS(intl)
 
-#if defined(ZTS) && defined(COMPILE_DL_INTL)
-ZEND_TSRMLS_CACHE_EXTERN()
+/* Macro to access request-wide global variables. */
+#ifdef ZTS
+#define INTL_G(v) TSRMG(intl_globals_id, zend_intl_globals *, v)
+#else
+#define INTL_G(v) (intl_globals.v)
 #endif
 
 ZEND_EXTERN_MODULE_GLOBALS(intl)
-/* Macro to access request-wide global variables. */
-#define INTL_G(v) ZEND_MODULE_GLOBALS_ACCESSOR(intl, v)
 
 PHP_MINIT_FUNCTION(intl);
 PHP_MSHUTDOWN_FUNCTION(intl);
@@ -69,7 +69,7 @@ PHP_RINIT_FUNCTION(intl);
 PHP_RSHUTDOWN_FUNCTION(intl);
 PHP_MINFO_FUNCTION(intl);
 
-const char *intl_locale_get_default( void );
+const char *intl_locale_get_default( TSRMLS_D );
 
 #define PHP_INTL_VERSION "1.1.0"
 

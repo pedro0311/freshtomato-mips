@@ -5,7 +5,7 @@ The same rules are applied for properties that are defined in the class hierarch
 error_reporting(E_ALL | E_STRICT);
 
 class Base {
-  private $hello;
+  private $hello;    
 }
 
 trait THello1 {
@@ -31,8 +31,10 @@ echo "POST-CLASS-GUARD2\n";
 $t = new TraitsTest;
 $t->hello = "foo";
 ?>
---EXPECTF--
+--EXPECTF--	
 PRE-CLASS-GUARD
+
+Strict Standards: Notice and THello1 define the same property ($hello) in the composition of Notice. This might be incompatible, to improve maintainability consider using accessor methods in traits instead. Class was composed in %s on line %d
 POST-CLASS-GUARD
 
 Fatal error: TraitsTest and THello1 define the same property ($hello) in the composition of TraitsTest. However, the definition differs and is considered incompatible. Class was composed in %s on line %d

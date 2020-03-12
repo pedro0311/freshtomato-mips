@@ -1,5 +1,5 @@
 --TEST--
-casting different variables to double using settype()
+casting different variables to double using settype() 
 --INI--
 precision=14
 --FILE--
@@ -38,7 +38,7 @@ foreach ($vars as $var) {
 
 echo "Done\n";
 ?>
---EXPECTF--
+--EXPECTF--	
 float(0)
 float(8754456)
 float(0)
@@ -52,6 +52,6 @@ float(1)
 float(0)
 float(%d)
 
-Notice: Object of class test could not be converted to float in %s on line %d
+Notice: Object of class test could not be converted to double in %s on line %d
 float(1)
 Done

@@ -23,6 +23,9 @@
 
 static const char rcsid[] = "#(@) $Id:";
 
+#ifdef _WIN32
+#include "xmlrpc_win32.h"
+#endif
 #include <string.h>
 #include <stdlib.h>
 #include "xml_to_soap.h"
@@ -63,10 +66,10 @@ static inline int is_soap_type(const char* soap_type) {
 
 /* utility func to generate a new attribute. possibly should be in xml_element.c?? */
 static xml_element_attr* new_attr(const char* key, const char* val) {
-	xml_element_attr* attr = emalloc(sizeof(xml_element_attr));
+	xml_element_attr* attr = malloc(sizeof(xml_element_attr));
 	if (attr) {
-		attr->key = key ? estrdup(key) : NULL;
-		attr->val = val ? estrdup(val) : NULL;
+		attr->key = key ? strdup(key) : NULL;
+		attr->val = val ? strdup(val) : NULL;
 	}
 	return attr;
 }
@@ -84,7 +87,7 @@ struct array_info {
 static struct array_info* parse_array_type_info(const char* array_type) {
 	struct array_info* ai = NULL;
 	if (array_type) {
-		ai = (struct array_info*)ecalloc(1, sizeof(struct array_info));
+		ai = (struct array_info*)calloc(1, sizeof(struct array_info));
 		if (ai) {
 			char buf[128], *p;
 			snprintf(buf, sizeof(buf), "%s", array_type);
@@ -214,7 +217,7 @@ static XMLRPC_VALUE gen_fault_xmlrpc(XMLRPC_VALUE node, xml_element* el_target) 
 }
 
 /* returns a new XMLRPC_VALUE representing a soap fault, comprised of a struct with four keys. */
-static XMLRPC_VALUE gen_soap_fault(const char* fault_code, const char* fault_string,
+static XMLRPC_VALUE gen_soap_fault(const char* fault_code, const char* fault_string, 
 											  const char* actor, const char* details) {
 	XMLRPC_VALUE xReturn = XMLRPC_CreateVector(TOKEN_FAULT, xmlrpc_vector_struct);
 	XMLRPC_AddValuesToVector(xReturn,
@@ -227,11 +230,11 @@ static XMLRPC_VALUE gen_soap_fault(const char* fault_code, const char* fault_str
 }
 
 /* translates xml soap dom to native data structures. recursive. */
-XMLRPC_VALUE xml_element_to_SOAP_REQUEST_worker(XMLRPC_REQUEST request,
+XMLRPC_VALUE xml_element_to_SOAP_REQUEST_worker(XMLRPC_REQUEST request, 
 																XMLRPC_VALUE xParent,
 																struct array_info* parent_array,
-																XMLRPC_VALUE xCurrent,
-																xml_element* el,
+																XMLRPC_VALUE xCurrent, 
+																xml_element* el, 
 																int depth) {
 	XMLRPC_REQUEST_TYPE rtype = xmlrpc_request_none;
 
@@ -249,7 +252,7 @@ XMLRPC_VALUE xml_element_to_SOAP_REQUEST_worker(XMLRPC_REQUEST request,
 		const char* type = NULL, *arrayType=NULL, *actor = NULL;
 		xml_element_attr* attr_iter = Q_Head(&el->attrs);
 		int b_must_understand = 0;
-
+		
 		/* in soap, types may be specified in either element name -or- with xsi:type attribute. */
 		if (is_soap_type(el->name)) {
 			type = el->name;
@@ -292,7 +295,7 @@ XMLRPC_VALUE xml_element_to_SOAP_REQUEST_worker(XMLRPC_REQUEST request,
 				/* TODO: implement callbacks or other mechanism for applications
 				   to "understand" these headers. For now, we just bail if we
 				   get a mustUnderstand header intended for us. */
-				XMLRPC_RequestSetError(request,
+				XMLRPC_RequestSetError(request, 
 											  gen_soap_fault("SOAP-ENV:MustUnderstand",
 																  "SOAP Must Understand Error",
 																  "", ""));
@@ -305,7 +308,7 @@ XMLRPC_VALUE xml_element_to_SOAP_REQUEST_worker(XMLRPC_REQUEST request,
 			XMLRPC_SetValueID_Case(xCurrent, id, 0, xmlrpc_case_exact);
 		}
 
-		/* according to soap spec,
+		/* according to soap spec, 
 		   depth 1 = Envelope, 2 = Header, Body & Fault, 3 = methodcall or response. */
 		if (depth == 3) {
 			const char* methodname = el->name;
@@ -404,7 +407,7 @@ XMLRPC_VALUE xml_element_to_SOAP_REQUEST_worker(XMLRPC_REQUEST request,
 			}
 			/* cleanup */
 			if (ai) {
-				efree(ai);
+				free(ai);
 			}
 		}
 	}
@@ -460,13 +463,13 @@ xml_element* SOAP_to_xml_element_worker(XMLRPC_REQUEST request, XMLRPC_VALUE nod
 
 				pAttrType = TOKEN_ARRAY;
 			}
-			/* check for fault, which is a rather special case.
+			/* check for fault, which is a rather special case. 
 			   (can't these people design anything consistent/simple/elegant?) */
 			else if (type == xmlrpc_type_struct) {
 				int fault_type = get_fault_type(node);
 				if (fault_type) {
 					if (fault_type == 1) {
-						/* gen fault from xmlrpc style fault codes
+						/* gen fault from xmlrpc style fault codes              
 						    notice that we get a new node, which must be freed herein. */
 						node = gen_fault_xmlrpc(node, elem_val);
 						bFreeNode = 1;
@@ -560,7 +563,7 @@ xml_element* SOAP_to_xml_element_worker(XMLRPC_REQUEST request, XMLRPC_VALUE nod
 				}
 			}
 		}
-		elem_val->name = estrdup(pName);
+		elem_val->name = strdup(pName);
 
 		/* cleanup */
 		if (bFreeNode) {
@@ -582,7 +585,7 @@ xml_element* SOAP_REQUEST_to_xml_element(XMLRPC_REQUEST request) {
 	/* safety first. */
 	if (root) {
 		xml_element* body = xml_elem_new();
-		root->name = estrdup("SOAP-ENV:Envelope");
+		root->name = strdup("SOAP-ENV:Envelope");
 
 		/* silly namespace stuff */
 		Q_PushTail(&root->attrs, new_attr("xmlns:SOAP-ENV", "http://schemas.xmlsoap.org/soap/envelope/"));
@@ -598,8 +601,8 @@ xml_element* SOAP_REQUEST_to_xml_element(XMLRPC_REQUEST request) {
 
 		if (body) {
 			/* go ahead and serialize first... */
-			xml_element* el_serialized =
-			SOAP_to_xml_element_worker(request,
+			xml_element* el_serialized =  
+			SOAP_to_xml_element_worker(request, 
 												XMLRPC_RequestGetData(request));
 
 			/* check for fault, in which case, there is no intermediate element */
@@ -617,7 +620,7 @@ xml_element* SOAP_REQUEST_to_xml_element(XMLRPC_REQUEST request) {
 					/* if we are making a request, we want to use the methodname as is. */
 					if (rtype == xmlrpc_request_call) {
 						if (methodname) {
-							rpc->name = estrdup(methodname);
+							rpc->name = strdup(methodname);
 						}
 					}
 					/* if it's a response, we append "Response". Also, given xmlrpc-epi
@@ -625,11 +628,11 @@ xml_element* SOAP_REQUEST_to_xml_element(XMLRPC_REQUEST request) {
 					   the response, so we have to check that. */
 					else {
 						char buf[128];
-						snprintf(buf, sizeof(buf), "%s%s",
+						snprintf(buf, sizeof(buf), "%s%s", 
 									methodname ? methodname : "",
 									"Response");
 
-						rpc->name = estrdup(buf);
+						rpc->name = strdup(buf);
 					}
 
 					/* add serialized data to method call/response.
@@ -657,10 +660,11 @@ xml_element* SOAP_REQUEST_to_xml_element(XMLRPC_REQUEST request) {
 					}
 				}
 			}
-			body->name = estrdup("SOAP-ENV:Body");
+			body->name = strdup("SOAP-ENV:Body");
 			Q_PushTail(&root->children, body);
 		}
 	}
 
 	return root;
 }
+

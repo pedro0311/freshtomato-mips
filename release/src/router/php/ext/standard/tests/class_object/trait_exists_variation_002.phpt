@@ -3,14 +3,14 @@ Test trait_exists() function : usage variations  - unexpected types for argument
 --FILE--
 <?php
 /* Prototype  : proto bool trait_exists(string traitname [, bool autoload])
- * Description: Checks if the trait exists
+ * Description: Checks if the trait exists 
  * Source code: Zend/zend_builtin_functions.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
-spl_autoload_register(function ($traitName) {
-	echo "In autoload($traitName)\n";
-});
+function __autoload($traitName) {
+	echo "In __autoload($traitName)\n";
+}
 
 function test_error_handler($err_no, $err_msg, $filename, $linenum, $vars) {
 	echo "Error: $err_no - $err_msg, $filename($linenum)\n";
@@ -95,35 +95,35 @@ Arg value 0
 bool(false)
 
 Arg value 1 
-In autoload(string_val)
+In __autoload(string_val)
 bool(false)
 
 Arg value 12345 
-In autoload(string_val)
+In __autoload(string_val)
 bool(false)
 
 Arg value -2345 
-In autoload(string_val)
+In __autoload(string_val)
 bool(false)
 
 Arg value 10.5 
-In autoload(string_val)
+In __autoload(string_val)
 bool(false)
 
 Arg value -10.5 
-In autoload(string_val)
+In __autoload(string_val)
 bool(false)
 
 Arg value 101234567000 
-In autoload(string_val)
+In __autoload(string_val)
 bool(false)
 
 Arg value 1.07654321E-9 
-In autoload(string_val)
+In __autoload(string_val)
 bool(false)
 
 Arg value 0.5 
-In autoload(string_val)
+In __autoload(string_val)
 bool(false)
 Error: 8 - Array to string conversion, %strait_exists_variation_002.php(%d)
 
@@ -158,14 +158,14 @@ Arg value
 bool(false)
 
 Arg value 1 
-In autoload(string_val)
+In __autoload(string_val)
 bool(false)
 
 Arg value  
 bool(false)
 
 Arg value 1 
-In autoload(string_val)
+In __autoload(string_val)
 bool(false)
 
 Arg value  
@@ -178,11 +178,11 @@ Arg value
 bool(false)
 
 Arg value string 
-In autoload(string_val)
+In __autoload(string_val)
 bool(false)
 
 Arg value string 
-In autoload(string_val)
+In __autoload(string_val)
 bool(false)
 Error: 4096 - Object of class stdClass could not be converted to string, %s(80)
 

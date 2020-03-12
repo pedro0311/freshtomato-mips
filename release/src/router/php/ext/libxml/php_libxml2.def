@@ -1546,4 +1546,3 @@ xmlXPtrRangeToFunction
 xmlXPtrWrapLocationSet
 xmlBufContent
 xmlBufUse
-xmlBufferDetach

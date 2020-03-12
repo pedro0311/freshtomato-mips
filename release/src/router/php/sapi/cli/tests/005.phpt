@@ -1,8 +1,8 @@
 --TEST--
 show information about class
 --SKIPIF--
-<?php
-include "skipif.inc";
+<?php 
+include "skipif.inc"; 
 if (!extension_loaded("reflection")) {
     die("skip reflection extension required");
 }
@@ -18,7 +18,7 @@ var_dump(`"$php" -n --rc exception`);
 
 echo "Done\n";
 ?>
---EXPECTF--
+--EXPECTF-- 
 string(40) "Exception: Class unknown does not exist
 "
 string(183) "Class [ <internal:Core> class stdClass ] {
@@ -40,7 +40,7 @@ string(183) "Class [ <internal:Core> class stdClass ] {
 }
 
 "
-string(1607) "Class [ <internal:Core> class Exception implements Throwable ] {
+string(1418) "Class [ <internal:Core> class Exception ] {
 
   - Constants [0] {
   }
@@ -77,28 +77,28 @@ string(1607) "Class [ <internal:Core> class Exception implements Throwable ] {
     Method [ <internal:Core> public method __wakeup ] {
     }
 
-    Method [ <internal:Core, prototype Throwable> final public method getMessage ] {
+    Method [ <internal:Core> final public method getMessage ] {
     }
 
-    Method [ <internal:Core, prototype Throwable> final public method getCode ] {
+    Method [ <internal:Core> final public method getCode ] {
     }
 
-    Method [ <internal:Core, prototype Throwable> final public method getFile ] {
+    Method [ <internal:Core> final public method getFile ] {
     }
 
-    Method [ <internal:Core, prototype Throwable> final public method getLine ] {
+    Method [ <internal:Core> final public method getLine ] {
     }
 
-    Method [ <internal:Core, prototype Throwable> final public method getTrace ] {
+    Method [ <internal:Core> final public method getTrace ] {
     }
 
-    Method [ <internal:Core, prototype Throwable> final public method getPrevious ] {
+    Method [ <internal:Core> final public method getPrevious ] {
     }
 
-    Method [ <internal:Core, prototype Throwable> final public method getTraceAsString ] {
+    Method [ <internal:Core> final public method getTraceAsString ] {
     }
 
-    Method [ <internal:Core, prototype Throwable> public method __toString ] {
+    Method [ <internal:Core> public method __toString ] {
     }
   }
 }

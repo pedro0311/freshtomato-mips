@@ -21,39 +21,12 @@ var_dump($free_me);
 --EXPECTF--
 array(3) {
   [0]=>
-  array(3) {
-    [0]=>
-    *RECURSION*
-    [1]=>
-    *RECURSION*
-    [2]=>
-    object(ArrayObject)#%d (1) {
-      ["storage":"ArrayObject":private]=>
-      *RECURSION*
-    }
-  }
+  *RECURSION*
   [1]=>
-  array(3) {
-    [0]=>
-    *RECURSION*
-    [1]=>
-    *RECURSION*
-    [2]=>
-    object(ArrayObject)#%d (1) {
-      ["storage":"ArrayObject":private]=>
-      *RECURSION*
-    }
-  }
+  *RECURSION*
   [2]=>
   object(ArrayObject)#%d (1) {
     ["storage":"ArrayObject":private]=>
-    array(3) {
-      [0]=>
-      *RECURSION*
-      [1]=>
-      *RECURSION*
-      [2]=>
-      *RECURSION*
-    }
+    *RECURSION*
   }
 }

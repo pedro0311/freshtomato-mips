@@ -1,10 +1,10 @@
 --TEST--
-Testing error with non-double first paramenter of imagegammacorrect() of GD library,
+Testing error with non-double first paramenter of imagegammacorrect() of GD library, 
 --CREDITS--
 Rafael Dohms <rdohms [at] gmail [dot] com>
 #testfest PHPSP on 2009-06-20
 --SKIPIF--
-<?php
+<?php 
 	if (!extension_loaded("gd")) die("skip GD not present");
 ?>
 --FILE--
@@ -14,4 +14,4 @@ $gamma = imagegammacorrect($image, 'string', 5);
 
 ?>
 --EXPECTF--
-Warning: imagegammacorrect() expects parameter 2 to be float, %s given in %s on line %d
+Warning: imagegammacorrect() expects parameter 2 to be double, %s given in %s on line %d

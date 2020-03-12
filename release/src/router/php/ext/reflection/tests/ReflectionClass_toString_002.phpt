@@ -25,6 +25,8 @@ foreach (array('A', 'B', 'C', 'D') as $class) {
 
 ?>
 --EXPECTF--
+
+
 ----( Reflection class A: )----
 Class [ <user> class A ] {
   @@ %s 2-4

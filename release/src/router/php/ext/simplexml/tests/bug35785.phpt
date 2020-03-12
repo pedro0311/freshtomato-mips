@@ -9,8 +9,9 @@ $xml = simplexml_load_string("<root></root>");
 $xml->bla->posts->name = "FooBar";
 echo $xml->asXML();
 $xml = simplexml_load_string("<root></root>");
-var_dump(isset($xml->bla->posts));
-$xml->bla->posts[0]->name = "FooBar";
+$count = count($xml->bla->posts);
+var_dump($count);
+$xml->bla->posts[$count]->name = "FooBar";
 echo $xml->asXML();
 $xml = simplexml_load_string("<root></root>");
 $xml->bla->posts[]->name = "FooBar";
@@ -21,7 +22,7 @@ echo $xml->asXML();
 --EXPECTF--
 <?xml version="1.0"?>
 <root><bla><posts><name>FooBar</name></posts></bla></root>
-bool(false)
+int(0)
 <?xml version="1.0"?>
 <root><bla><posts><name>FooBar</name></posts></bla></root>
 <?xml version="1.0"?>

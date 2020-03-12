@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2018 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -56,10 +56,10 @@ ZEND_END_ARG_INFO();
 /* }}} */
 
 /*
-* class DOMCharacterData extends DOMNode
+* class DOMCharacterData extends DOMNode 
 *
 * URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-FF21A306
-* Since:
+* Since: 
 */
 
 const zend_function_entry php_dom_characterdata_class_functions[] = {
@@ -71,67 +71,80 @@ const zend_function_entry php_dom_characterdata_class_functions[] = {
 	PHP_FE_END
 };
 
-/* {{{ data	string
-readonly=no
+/* {{{ data	string	
+readonly=no 
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-72AB8359
-Since:
+Since: 
 */
-int dom_characterdata_data_read(dom_object *obj, zval *retval)
+int dom_characterdata_data_read(dom_object *obj, zval **retval TSRMLS_DC)
 {
-	xmlNodePtr nodep = dom_object_get_node(obj);
+	xmlNodePtr nodep;
 	xmlChar *content;
 
+	nodep = dom_object_get_node(obj);
+
 	if (nodep == NULL) {
-		php_dom_throw_error(INVALID_STATE_ERR, 0);
+		php_dom_throw_error(INVALID_STATE_ERR, 0 TSRMLS_CC);
 		return FAILURE;
 	}
 
+	ALLOC_ZVAL(*retval);
+	
 	if ((content = xmlNodeGetContent(nodep)) != NULL) {
-		ZVAL_STRING(retval, (char *) content);
+		ZVAL_STRING(*retval, content, 1);
 		xmlFree(content);
 	} else {
-		ZVAL_EMPTY_STRING(retval);
+		ZVAL_EMPTY_STRING(*retval);
 	}
 
 	return SUCCESS;
 }
 
-int dom_characterdata_data_write(dom_object *obj, zval *newval)
+int dom_characterdata_data_write(dom_object *obj, zval *newval TSRMLS_DC)
 {
-	xmlNode *nodep = dom_object_get_node(obj);
-	zend_string *str;
+	zval value_copy;
+	xmlNode *nodep;
+
+	nodep = dom_object_get_node(obj);
 
 	if (nodep == NULL) {
-		php_dom_throw_error(INVALID_STATE_ERR, 0);
+		php_dom_throw_error(INVALID_STATE_ERR, 0 TSRMLS_CC);
 		return FAILURE;
 	}
 
-	str = zval_get_string(newval);
+	convert_to_string_copy(newval, value_copy);
 
-	xmlNodeSetContentLen(nodep, (xmlChar *) ZSTR_VAL(str), ZSTR_LEN(str) + 1);
+	xmlNodeSetContentLen(nodep, Z_STRVAL_P(newval), Z_STRLEN_P(newval) + 1);
 
-	zend_string_release(str);
+	if (newval == &value_copy) {
+		zval_dtor(newval);
+	}
+
 	return SUCCESS;
 }
 
 /* }}} */
 
-/* {{{ length	long
-readonly=yes
+/* {{{ length	long	
+readonly=yes 
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-7D61178C
-Since:
+Since: 
 */
-int dom_characterdata_length_read(dom_object *obj, zval *retval)
+int dom_characterdata_length_read(dom_object *obj, zval **retval TSRMLS_DC)
 {
-	xmlNodePtr nodep = dom_object_get_node(obj);
+	xmlNodePtr nodep;
 	xmlChar *content;
 	long length = 0;
 
+	nodep = dom_object_get_node(obj);
+
 	if (nodep == NULL) {
-		php_dom_throw_error(INVALID_STATE_ERR, 0);
+		php_dom_throw_error(INVALID_STATE_ERR, 0 TSRMLS_CC);
 		return FAILURE;
 	}
 
+	ALLOC_ZVAL(*retval);
+	
 	content = xmlNodeGetContent(nodep);
 
 	if (content) {
@@ -139,7 +152,7 @@ int dom_characterdata_length_read(dom_object *obj, zval *retval)
 		xmlFree(content);
 	}
 
-	ZVAL_LONG(retval, length);
+	ZVAL_LONG(*retval, length);
 
 	return SUCCESS;
 }
@@ -148,7 +161,7 @@ int dom_characterdata_length_read(dom_object *obj, zval *retval)
 
 /* {{{ proto string dom_characterdata_substring_data(int offset, int count);
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-6531BCCF
-Since:
+Since: 
 */
 PHP_FUNCTION(dom_characterdata_substring_data)
 {
@@ -156,11 +169,11 @@ PHP_FUNCTION(dom_characterdata_substring_data)
 	xmlChar    *cur;
 	xmlChar    *substring;
 	xmlNodePtr  node;
-	zend_long        offset, count;
+	long        offset, count;
 	int         length;
 	dom_object	*intern;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Oll", &id, dom_characterdata_class_entry, &offset, &count) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Oll", &id, dom_characterdata_class_entry, &offset, &count) == FAILURE) {
 		return;
 	}
 
@@ -173,9 +186,9 @@ PHP_FUNCTION(dom_characterdata_substring_data)
 
 	length = xmlUTF8Strlen(cur);
 
-	if (offset < 0 || count < 0 || ZEND_LONG_INT_OVFL(offset) || ZEND_LONG_INT_OVFL(count) || offset > length) {
+	if (offset < 0 || count < 0 || offset > length) {
 		xmlFree(cur);
-		php_dom_throw_error(INDEX_SIZE_ERR, dom_get_strict_error(intern->document));
+		php_dom_throw_error(INDEX_SIZE_ERR, dom_get_strict_error(intern->document) TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
@@ -183,11 +196,11 @@ PHP_FUNCTION(dom_characterdata_substring_data)
 		count = length - offset;
 	}
 
-	substring = xmlUTF8Strsub(cur, (int)offset, (int)count);
+	substring = xmlUTF8Strsub(cur, offset, count);
 	xmlFree(cur);
 
 	if (substring) {
-		RETVAL_STRING((char *) substring);
+		RETVAL_STRING(substring, 1);
 		xmlFree(substring);
 	} else {
 		RETVAL_EMPTY_STRING();
@@ -197,7 +210,7 @@ PHP_FUNCTION(dom_characterdata_substring_data)
 
 /* {{{ proto void dom_characterdata_append_data(string arg);
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-32791A2F
-Since:
+Since: 
 */
 PHP_FUNCTION(dom_characterdata_append_data)
 {
@@ -205,9 +218,9 @@ PHP_FUNCTION(dom_characterdata_append_data)
 	xmlNode *nodep;
 	dom_object *intern;
 	char *arg;
-	size_t arg_len;
+	int arg_len;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Os", &id, dom_characterdata_class_entry, &arg, &arg_len) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Os", &id, dom_characterdata_class_entry, &arg, &arg_len) == FAILURE) {
 		return;
 	}
 
@@ -223,7 +236,7 @@ PHP_FUNCTION(dom_characterdata_append_data)
     }
     nodep->properties = NULL;
 #else
-	xmlTextConcat(nodep, (xmlChar *) arg, arg_len);
+	xmlTextConcat(nodep, arg, arg_len);
 #endif
 	RETURN_TRUE;
 }
@@ -231,7 +244,7 @@ PHP_FUNCTION(dom_characterdata_append_data)
 
 /* {{{ proto void dom_characterdata_insert_data(int offset, string arg);
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-3EDB695F
-Since:
+Since: 
 */
 PHP_FUNCTION(dom_characterdata_insert_data)
 {
@@ -239,12 +252,11 @@ PHP_FUNCTION(dom_characterdata_insert_data)
 	xmlChar		*cur, *first, *second;
 	xmlNodePtr  node;
 	char		*arg;
-	zend_long        offset;
-	int         length;
-	size_t arg_len;
+	long        offset;
+	int         length, arg_len;
 	dom_object	*intern;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Ols", &id, dom_characterdata_class_entry, &offset, &arg, &arg_len) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Ols", &id, dom_characterdata_class_entry, &offset, &arg, &arg_len) == FAILURE) {
 		return;
 	}
 
@@ -257,20 +269,20 @@ PHP_FUNCTION(dom_characterdata_insert_data)
 
 	length = xmlUTF8Strlen(cur);
 
-	if (offset < 0 || ZEND_LONG_INT_OVFL(offset) || offset > length) {
+	if (offset < 0 || offset > length) {
 		xmlFree(cur);
-		php_dom_throw_error(INDEX_SIZE_ERR, dom_get_strict_error(intern->document));
+		php_dom_throw_error(INDEX_SIZE_ERR, dom_get_strict_error(intern->document) TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
-	first = xmlUTF8Strndup(cur, (int)offset);
-	second = xmlUTF8Strsub(cur, (int)offset, length - (int)offset);
+	first = xmlUTF8Strndup(cur, offset);
+	second = xmlUTF8Strsub(cur, offset, length - offset);
 	xmlFree(cur);
 
 	xmlNodeSetContent(node, first);
-	xmlNodeAddContent(node, (xmlChar *) arg);
+	xmlNodeAddContent(node, arg);
 	xmlNodeAddContent(node, second);
-
+	
 	xmlFree(first);
 	xmlFree(second);
 
@@ -280,18 +292,18 @@ PHP_FUNCTION(dom_characterdata_insert_data)
 
 /* {{{ proto void dom_characterdata_delete_data(int offset, int count);
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-7C603781
-Since:
+Since: 
 */
 PHP_FUNCTION(dom_characterdata_delete_data)
 {
 	zval *id;
 	xmlChar    *cur, *substring, *second;
 	xmlNodePtr  node;
-	zend_long        offset, count;
+	long        offset, count;
 	int         length;
 	dom_object	*intern;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Oll", &id, dom_characterdata_class_entry, &offset, &count) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Oll", &id, dom_characterdata_class_entry, &offset, &count) == FAILURE) {
 		return;
 	}
 
@@ -304,14 +316,14 @@ PHP_FUNCTION(dom_characterdata_delete_data)
 
 	length = xmlUTF8Strlen(cur);
 
-	if (offset < 0 || count < 0 || ZEND_LONG_INT_OVFL(offset) || ZEND_LONG_INT_OVFL(count) || offset > length) {
+	if (offset < 0 || count < 0 || offset > length) {
 		xmlFree(cur);
-		php_dom_throw_error(INDEX_SIZE_ERR, dom_get_strict_error(intern->document));
+		php_dom_throw_error(INDEX_SIZE_ERR, dom_get_strict_error(intern->document) TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
 	if (offset > 0) {
-		substring = xmlUTF8Strsub(cur, 0, (int)offset);
+		substring = xmlUTF8Strsub(cur, 0, offset);
 	} else {
 		substring = NULL;
 	}
@@ -320,7 +332,7 @@ PHP_FUNCTION(dom_characterdata_delete_data)
 		count = length - offset;
 	}
 
-	second = xmlUTF8Strsub(cur, (int)offset + (int)count, length - (int)offset);
+	second = xmlUTF8Strsub(cur, offset + count, length - offset);
 	substring = xmlStrcat(substring, second);
 
 	xmlNodeSetContent(node, substring);
@@ -335,7 +347,7 @@ PHP_FUNCTION(dom_characterdata_delete_data)
 
 /* {{{ proto void dom_characterdata_replace_data(int offset, int count, string arg);
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-E5CBA7FB
-Since:
+Since: 
 */
 PHP_FUNCTION(dom_characterdata_replace_data)
 {
@@ -343,12 +355,11 @@ PHP_FUNCTION(dom_characterdata_replace_data)
 	xmlChar		*cur, *substring, *second = NULL;
 	xmlNodePtr  node;
 	char		*arg;
-	zend_long        offset, count;
-	int         length;
-	size_t arg_len;
+	long        offset, count;
+	int         length, arg_len;
 	dom_object	*intern;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Olls", &id, dom_characterdata_class_entry, &offset, &count, &arg, &arg_len) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Olls", &id, dom_characterdata_class_entry, &offset, &count, &arg, &arg_len) == FAILURE) {
 		return;
 	}
 
@@ -361,14 +372,14 @@ PHP_FUNCTION(dom_characterdata_replace_data)
 
 	length = xmlUTF8Strlen(cur);
 
-	if (offset < 0 || count < 0 || ZEND_LONG_INT_OVFL(offset) || ZEND_LONG_INT_OVFL(count) || offset > length) {
+	if (offset < 0 || count < 0 || offset > length) {
 		xmlFree(cur);
-		php_dom_throw_error(INDEX_SIZE_ERR, dom_get_strict_error(intern->document));
+		php_dom_throw_error(INDEX_SIZE_ERR, dom_get_strict_error(intern->document) TSRMLS_CC);
 		RETURN_FALSE;
 	}
 
 	if (offset > 0) {
-		substring = xmlUTF8Strsub(cur, 0, (int)offset);
+		substring = xmlUTF8Strsub(cur, 0, offset);
 	} else {
 		substring = NULL;
 	}
@@ -378,10 +389,10 @@ PHP_FUNCTION(dom_characterdata_replace_data)
 	}
 
 	if (offset < length) {
-		second = xmlUTF8Strsub(cur, (int)offset + count, length - (int)offset);
+		second = xmlUTF8Strsub(cur, offset + count, length - offset);
 	}
 
-	substring = xmlStrcat(substring, (xmlChar *) arg);
+	substring = xmlStrcat(substring, arg);
 	substring = xmlStrcat(substring, second);
 
 	xmlNodeSetContent(node, substring);

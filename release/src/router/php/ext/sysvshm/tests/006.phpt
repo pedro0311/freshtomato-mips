@@ -1,10 +1,7 @@
 --TEST--
 shm_remove_var() tests
 --SKIPIF--
-<?php
-if (!extension_loaded("sysvshm")){ print 'skip'; }
-if (!function_exists('ftok')){ print 'skip'; }
-?>
+<?php if (!extension_loaded("sysvshm")) print "skip"; ?>
 --FILE--
 <?php
 
@@ -28,7 +25,8 @@ var_dump(shm_get_var($s, 1));
 shm_remove($s);
 echo "Done\n";
 ?>
---EXPECTF--
+--EXPECTF--	
+
 Warning: shm_remove_var() expects exactly 2 parameters, 0 given in %s006.php on line %d
 NULL
 

@@ -12,6 +12,7 @@ try {
 }
 ?>
 --EXPECTF--
+
 Warning: SplFileObject::seek() expects exactly 1 parameter, 2 given in %s
 
 Warning: SplFileObject::seek() expects exactly 1 parameter, 0 given in %s

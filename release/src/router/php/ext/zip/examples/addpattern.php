@@ -10,3 +10,4 @@ $options = array('remove_path' => '/home/pierre/cvs/gd/libgd/tests',
 $found = $z->addPattern("/(\.png)$/i", "/home/pierre/cvs/gd/libgd/tests", $options);
 var_dump($found);
 $z->close();
+

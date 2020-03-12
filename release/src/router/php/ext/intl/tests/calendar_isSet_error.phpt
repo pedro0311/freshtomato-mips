@@ -18,7 +18,9 @@ var_dump($c->isSet(-1));
 
 var_dump(intlcal_is_set($c));
 var_dump(intlcal_is_set(1, 2));
+
 --EXPECTF--
+
 Warning: IntlCalendar::isSet() expects exactly 1 parameter, 0 given in %s on line %d
 
 Warning: IntlCalendar::isSet(): intlcal_is_set: bad arguments in %s on line %d
@@ -37,8 +39,4 @@ Warning: intlcal_is_set() expects exactly 2 parameters, 1 given in %s on line %d
 Warning: intlcal_is_set(): intlcal_is_set: bad arguments in %s on line %d
 bool(false)
 
-Fatal error: Uncaught TypeError: Argument 1 passed to intlcal_is_set() must be an instance of IntlCalendar, integer given in %s:%d
-Stack trace:
-#0 %s(%d): intlcal_is_set(1, 2)
-#1 {main}
-  thrown in %s on line %d
+Catchable fatal error: Argument 1 passed to intlcal_is_set() must be an instance of IntlCalendar, integer given in %s on line %d

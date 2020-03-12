@@ -33,14 +33,14 @@ class B {
 set_error_handler(
   array('PHPUnit_Util_ErrorHandler', 'handleError'), E_ALL | E_STRICT
 );
-
+            
 $o = new B;
 $o->bar();
 ?>
 --EXPECTF--
-Fatal error: Uncaught RuntimeException in %sbug45805.php:%d
+Fatal error: Uncaught exception 'RuntimeException' in %sbug45805.php:%d
 Stack trace:
-#0 %sbug45805.php(%d): PHPUnit_Util_ErrorHandler::handleError(8, 'Only variables ...', '%s', %d, Array)
+#0 %sbug45805.php(%d): PHPUnit_Util_ErrorHandler::handleError(2048, 'Only variables ...', '%s', %d, Array)
 #1 [internal function]: B->foo()
 #2 %sbug45805.php(%d): ReflectionMethod->invoke(Object(B))
 #3 %sbug45805.php(%d): B->bar()

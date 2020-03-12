@@ -2,7 +2,7 @@
 Implement Req #60850 (Built in web server does not set $_SERVER['SCRIPT_FILENAME'] when using router)
 --SKIPIF--
 <?php
-include "skipif.inc";
+include "skipif.inc"; 
 ?>
 --FILE--
 <?php
@@ -37,7 +37,6 @@ fclose($fp);
 --EXPECTF--
 HTTP/1.1 200 OK
 Host: %s
-Date: %s
 Connection: close
 X-Powered-By: %s
 Content-type: text/html; charset=UTF-8

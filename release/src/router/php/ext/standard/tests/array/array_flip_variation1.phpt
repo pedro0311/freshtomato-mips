@@ -3,7 +3,7 @@ Test array_flip() function : usage variations - unexpected values for 'input' ar
 --FILE--
 <?php
 /* Prototype  : array array_flip(array $input)
- * Description: Return array with key <-> value flipped
+ * Description: Return array with key <-> value flipped 
  * Source code: ext/standard/array.c
 */
 
@@ -24,7 +24,7 @@ class MyClass
 
 //resource variable
 $fp = fopen(__FILE__,'r');
-
+    
 //array of values for 'input' argument
 $values = array(
           // int data
@@ -102,23 +102,23 @@ Warning: array_flip() expects parameter 1 to be array, integer given in %s on li
 NULL
 -- Iteration 5 --
 
-Warning: array_flip() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_flip() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 6 --
 
-Warning: array_flip() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_flip() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 7 --
 
-Warning: array_flip() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_flip() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 8 --
 
-Warning: array_flip() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_flip() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 9 --
 
-Warning: array_flip() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_flip() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 10 --
 

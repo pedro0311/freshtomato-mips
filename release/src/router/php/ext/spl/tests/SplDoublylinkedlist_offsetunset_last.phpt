@@ -13,9 +13,9 @@ var_dump($list);
 ?>
 --EXPECTF--
 object(SplDoublyLinkedList)#1 (2) {
-  ["flags":"SplDoublyLinkedList":private]=>
+  [%u|b%"flags":%u|b%"SplDoublyLinkedList":private]=>
   int(0)
-  ["dllist":"SplDoublyLinkedList":private]=>
+  [%u|b%"dllist":%u|b%"SplDoublyLinkedList":private]=>
   array(2) {
     [0]=>
     %string|unicode%(2) "oh"

@@ -25,8 +25,10 @@ session_start();
 var_dump($session_id === session_id());
 var_dump($_SESSION['cnt']); // Should be int(2)
 session_write_close();
+
 --EXPECTF--
 Testing file module
 bool(true)
 bool(true)
 int(2)
+

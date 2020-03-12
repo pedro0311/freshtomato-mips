@@ -44,18 +44,18 @@ $db->exec('DROP TABLE IF EXISTS test');
 array(3) {
   [0]=>
   array(1) {
-    ["bar"]=>
-    string(3) "foo"
+    [%u|b%"bar"]=>
+    %unicode|string%(3) "foo"
   }
   [1]=>
   array(1) {
-    ["bar"]=>
+    [%u|b%"bar"]=>
     NULL
   }
   [2]=>
   array(1) {
-    ["bar"]=>
-    string(3) "qaz"
+    [%u|b%"bar"]=>
+    %unicode|string%(3) "qaz"
   }
 }
 done!

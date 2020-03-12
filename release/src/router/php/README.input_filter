@@ -12,7 +12,7 @@ enforced.  It is implemented as a SAPI hook and is called from the
 treat_data and post handler functions.  To implement your own security
 policy you will need to write a standard PHP extension.  There is also
 a powerful standard implementation in ext/filter that should suit most
-peoples' needs.  However, if you want to implement your own security
+peoples' needs.  However, if you want to implement your own security 
 policy, read on.
 
 A simple implementation might look like the following.  This stores the
@@ -138,7 +138,7 @@ SAPI_INPUT_FILTER_FUNC(my_sapi_input_filter)
     strcpy(raw_var, "RAW_");
     strlcat(raw_var,var,var_len+5);
 
-    php_register_variable_ex(raw_var, &new_var, array_ptr);
+    php_register_variable_ex(raw_var, &new_var, array_ptr TSRMLS_DC);
 
     php_strip_tags(*val, val_len, NULL, NULL, 0);
 
@@ -154,7 +154,7 @@ PHP_FUNCTION(my_get_raw)
     zval **tmp;
     zval *array_ptr = NULL;
 
-    if(zend_parse_parameters(2, "ls", &arg, &var, &var_len) == FAILURE) {
+    if(zend_parse_parameters(2 TSRMLS_CC, "ls", &arg, &var, &var_len) == FAILURE) {
         return;
     }
 
@@ -181,3 +181,4 @@ PHP_FUNCTION(my_get_raw)
         RETVAL_FALSE;
     }
 }
+

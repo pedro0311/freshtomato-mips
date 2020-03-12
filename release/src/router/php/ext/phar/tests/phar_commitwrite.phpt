@@ -24,12 +24,12 @@ var_dump($p->getStub());
 ?>
 ===DONE===
 --CLEAN--
-<?php
+<?php 
 unlink(dirname(__FILE__) . '/brandnewphar.phar');
 __HALT_COMPILER();
 ?>
 --EXPECT--
-int(6641)
+int(6673)
 string(200) "<?php
 function __autoload($class)
 {

@@ -1,7 +1,7 @@
 --TEST--
 Bug #22231 (segfault when returning a global variable by reference)
 --INI--
-error_reporting=E_ALL
+error_reporting=E_ALL | E_DEPRECATED
 --FILE--
 <?php
 class foo {
@@ -9,8 +9,7 @@ class foo {
 }
 
 function &foo(){
-    $obj = new foo();
-    $GLOBALS['foo'] = &$obj;
+    $GLOBALS['foo'] = &new foo();
     return $GLOBALS['foo'];
 }
 $bar = &foo();
@@ -28,6 +27,7 @@ $foo = &foo();
 var_dump($foo->fubar);
 ?>
 --EXPECTF--
+Deprecated: Assigning the return value of new by reference is deprecated in %s on line %d
 object(foo)#%d (1) {
   ["fubar"]=>
   string(5) "fubar"

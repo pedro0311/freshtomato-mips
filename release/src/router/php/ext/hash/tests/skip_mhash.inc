@@ -1,5 +1,5 @@
 <?php
-if (!function_exists("mhash")) {
+if (!extension_loaded("mhash") || !function_exists("mhash")) {
 	die("skip mhash extension is not available");
 }
 ?>

@@ -3,14 +3,14 @@ Test array_shift() function : usage variations - call recursively
 --FILE--
 <?php
 /* Prototype  : mixed array_shift(array &$stack)
- * Description: Pops an element off the beginning of the array
+ * Description: Pops an element off the beginning of the array 
  * Source code: ext/standard/array.c
  */
 
 /*
- * Use the result of one call to array_shift
+ * Use the result of one call to array_shift 
  * as the $stack argument of another call to array_shift()
- * When done in one statement causes strict error messages.
+ * When done in one statement causes strict error messages. 
  */
 
 echo "*** Testing array_shift() : usage variations ***\n";
@@ -35,9 +35,9 @@ echo "Done";
 
 -- Incorrect Method: --
 
-Notice: Only variables should be passed by reference in %s on line %d
+Strict Standards: Only variables should be passed by reference in %s on line %d
 
-Notice: Only variables should be passed by reference in %s on line %d
+Strict Standards: Only variables should be passed by reference in %s on line %d
 string(4) "zero"
 
 -- Correct Method: --

@@ -15,7 +15,4 @@ test()->test = 2;
 
 ?>
 --EXPECTF--
-Fatal error: Uncaught Error: Cannot access private property foo::$test in %s:%d
-Stack trace:
-#0 {main}
-  thrown in %s on line %d
+Fatal error: Cannot access private property foo::$test in %s on line %d

@@ -7,7 +7,6 @@ Bug #22690 (ob_start() is broken with create_function() callbacks)
 	echo $foo("bar\n");
 ?>
 bar
---EXPECTF--
-Deprecated: Function create_function() is deprecated in %s on line %d
+--EXPECT--
 BAR
 BAR

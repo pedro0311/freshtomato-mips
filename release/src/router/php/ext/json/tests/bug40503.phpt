@@ -1,7 +1,7 @@
 --TEST--
 Bug #40503 (json_encode() value corruption on 32bit systems with overflown values)
 --INI--
-serialize_precision=-1
+precision=14
 --SKIPIF--
 <?php if (!extension_loaded("json")) print "skip"; ?>
 --FILE--

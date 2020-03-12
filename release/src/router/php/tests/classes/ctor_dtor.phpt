@@ -1,10 +1,12 @@
 --TEST--
 ZE2 The new constructor/destructor is called
+--SKIPIF--
+<?php if (version_compare(zend_version(), '2.0.0-dev', '<')) die('skip ZendEngine 2 needed'); ?>
 --FILE--
 <?php
 
 class early {
-	function __construct() {
+	function early() {
 		echo __CLASS__ . "::" . __FUNCTION__ . "\n";
 	}
 	function __destruct() {
@@ -22,7 +24,7 @@ class late {
 }
 
 $t = new early();
-$t->__construct();
+$t->early();
 unset($t);
 $t = new late();
 //unset($t); delay to end of script
@@ -30,8 +32,8 @@ $t = new late();
 echo "Done\n";
 ?>
 --EXPECTF--
-early::__construct
-early::__construct
+early::early
+early::early
 early::__destruct
 late::__construct
 Done

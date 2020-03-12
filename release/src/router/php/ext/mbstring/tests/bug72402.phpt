@@ -1,10 +1,7 @@
 --TEST--
 Bug #72402: _php_mb_regex_ereg_replace_exec - double free
 --SKIPIF--
-<?php
-if (!extension_loaded('mbstring')) die('skip mbstring extension not available');
-if (!function_exists('mb_ereg_replace_callback')) die('skip mb_ereg_replace_callback() not available');
-?>
+<?php extension_loaded('mbstring') or die('skip mbstring not available'); ?>
 --FILE--
 <?php
 function throwit() {

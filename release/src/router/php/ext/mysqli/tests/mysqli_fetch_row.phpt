@@ -45,11 +45,11 @@ require_once('skipifconnectfailure.inc');
 [004]
 array(3) {
   [0]=>
-  string(1) "1"
+  %unicode|string%(1) "1"
   [1]=>
-  string(1) "a"
+  %unicode|string%(1) "a"
   [2]=>
-  string(1) "1"
+  %unicode|string%(1) "1"
 }
 [005]
 NULL

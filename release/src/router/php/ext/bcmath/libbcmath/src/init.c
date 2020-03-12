@@ -26,7 +26,7 @@
                 Computer Science Department, 9062
                 Western Washington University
                 Bellingham, WA 98226-9062
-
+       
 *************************************************************************/
 
 #include <config.h>
@@ -37,6 +37,10 @@
 #include <stdarg.h>
 #include "bcmath.h"
 #include "private.h"
+
+#if SANDER_0
+ bc_num _bc_Free_list = NULL;
+#endif
 
 /* new_num allocates a number and sets fields to known values. */
 
@@ -57,6 +61,7 @@ _bc_new_num_ex (length, scale, persistent)
     _bc_Free_list = temp->n_next;
   } else {
     temp = (bc_num) pemalloc (sizeof(bc_struct), persistent);
+    if (temp == NULL) bc_out_of_memory ();
   }
 #endif
   temp->n_sign = PLUS;
@@ -65,6 +70,7 @@ _bc_new_num_ex (length, scale, persistent)
   temp->n_refs = 1;
   /* PHP Change:  malloc() -> pemalloc() */
   temp->n_ptr = (char *) safe_pemalloc (1, length, scale, persistent);
+  if (temp->n_ptr == NULL) bc_out_of_memory();
   temp->n_value = temp->n_ptr;
   memset (temp->n_ptr, 0, length+scale);
   return temp;
@@ -98,7 +104,7 @@ _bc_free_num_ex (num, persistent)
 /* Intitialize the number package! */
 
 void
-bc_init_numbers (void)
+bc_init_numbers (TSRMLS_D)
 {
   BCG(_zero_) = _bc_new_num_ex (1,0,1);
   BCG(_one_)  = _bc_new_num_ex (1,0,1);
@@ -121,7 +127,8 @@ bc_copy_num (bc_num num)
 /* Initialize a number NUM by making it a copy of zero. */
 
 void
-bc_init_num (bc_num *num)
+bc_init_num (bc_num *num TSRMLS_DC)
 {
   *num = bc_copy_num (BCG(_zero_));
 }
+

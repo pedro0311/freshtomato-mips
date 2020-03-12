@@ -1,9 +1,7 @@
 --TEST--
 datefmt_get_locale_code()
 --SKIPIF--
-<?php if( !extension_loaded( 'intl' ) ) die('skip');
-if (PHP_INT_SIZE != 8) die('skip 64-bit only');
-?>
+<?php if( !extension_loaded( 'intl' ) ) print 'skip'; ?>
 --FILE--
 <?php
 
@@ -20,7 +18,7 @@ function ut_main()
 		'en_UK',
 		'hi'
 	);
-
+	
 	$res_str = '';
 
 	foreach( $locale_arr as $locale_entry )

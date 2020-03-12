@@ -75,3 +75,4 @@ bool(false)
 
 Warning: PDO::query(): SQLSTATE[HY000]: General error: fetch mode requires the classname argument in %s
 bool(false)
+

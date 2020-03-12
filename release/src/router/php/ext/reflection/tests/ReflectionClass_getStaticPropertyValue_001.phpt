@@ -1,8 +1,10 @@
 --TEST--
-ReflectionClass::getStaticPropertyValue()
+ReflectionClass::getStaticPropertyValue() 
 --CREDITS--
 Robin Fernandes <robinf@php.net>
 Steve Seear <stevseea@php.net>
+--SKIPIF--
+<?php if (version_compare(zend_version(), '2.4.0', '>=')) die('skip ZendEngine 2.3 or below needed'); ?>
 --FILE--
 <?php
 class A {
@@ -42,7 +44,7 @@ try {
 
 try {
 	var_dump($rcA->getStaticPropertyValue("privateOverridden"));
-	echo "you should not see this";
+	echo "you should not see this";	
 } catch (Exception $e) {
 	echo $e->getMessage() . "\n";
 }
@@ -51,9 +53,17 @@ try {
 --EXPECTF--
 Retrieving static values from A:
 string(13) "default value"
+string(16) "original private"
+string(13) "default value"
+string(18) "original protected"
+string(15) "original public"
 
-Fatal error: Uncaught ReflectionException: Class A does not have a property named  in %s:%d
-Stack trace:
-#0 %s(%d): ReflectionClass->getStaticPropertyValue('\x00A\x00privateOverr...')
-#1 {main}
-  thrown in %s on line %d
+Retrieving static values from B:
+string(16) "original private"
+string(15) "changed private"
+string(17) "changed protected"
+string(14) "changed public"
+
+Retrieving non-existent values from A with no default value:
+Class A does not have a property named protectedOverridden
+Class A does not have a property named privateOverridden

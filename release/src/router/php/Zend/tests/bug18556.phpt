@@ -3,12 +3,12 @@ Bug #18556 (Setting locale to 'tr_TR' lowercases class names)
 --FILE--
 <?php
 $g_lang = 'tr_TR';
-putenv("LANG=$g_lang");
+putenv("LANG=$g_lang"); 
 setlocale(LC_ALL, $g_lang);
 
 class InfoBlob {
    var $foo;
-   function __construct() {
+   function InfoBlob() {
       $this->foo = "Foo";
    }
 }

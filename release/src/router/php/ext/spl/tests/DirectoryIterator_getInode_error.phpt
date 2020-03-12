@@ -19,8 +19,9 @@ if (substr(PHP_OS, 0, 3) == 'WIN') die("skip this test not for Windows platforms
 $fileInfo = new SplFileInfo('not_existing');
 var_dump($fileInfo->getInode());
 ?>
+
 --EXPECTF--
-Fatal error: Uncaught RuntimeException: SplFileInfo::getInode(): stat failed for %s in %s
+Fatal error: Uncaught exception 'RuntimeException' with message 'SplFileInfo::getInode(): stat failed for %s' in %s
 Stack trace:
 #0 %s: SplFileInfo->getInode()
 #1 {main}

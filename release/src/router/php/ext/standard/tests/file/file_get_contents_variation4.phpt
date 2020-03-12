@@ -5,9 +5,9 @@ Dave Kelsey <d_kelsey@uk.ibm.com>
 --FILE--
 <?php
 /* Prototype  : string file_get_contents(string filename [, bool use_include_path [, resource context [, long offset [, long maxlen]]]])
- * Description: Read the entire file into a string
+ * Description: Read the entire file into a string 
  * Source code: ext/standard/file.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing file_get_contents() : usage variation ***\n";
@@ -107,10 +107,10 @@ $inputs = array(
 
       // unset data
       'unset var' => @$unset_var,
-
+      
       //non context resource
       'file resource' => $fileRes,
-
+      
       //valid stream context
       'stream context' => $strContext,
 );
@@ -147,23 +147,23 @@ Error: 2 - file_get_contents() expects parameter 3 to be resource, integer given
 NULL
 
 --float 10.5--
-Error: 2 - file_get_contents() expects parameter 3 to be resource, float given, %s(%d)
+Error: 2 - file_get_contents() expects parameter 3 to be resource, double given, %s(%d)
 NULL
 
 --float -10.5--
-Error: 2 - file_get_contents() expects parameter 3 to be resource, float given, %s(%d)
+Error: 2 - file_get_contents() expects parameter 3 to be resource, double given, %s(%d)
 NULL
 
 --float 12.3456789000e10--
-Error: 2 - file_get_contents() expects parameter 3 to be resource, float given, %s(%d)
+Error: 2 - file_get_contents() expects parameter 3 to be resource, double given, %s(%d)
 NULL
 
 --float -12.3456789000e10--
-Error: 2 - file_get_contents() expects parameter 3 to be resource, float given, %s(%d)
+Error: 2 - file_get_contents() expects parameter 3 to be resource, double given, %s(%d)
 NULL
 
 --float .5--
-Error: 2 - file_get_contents() expects parameter 3 to be resource, float given, %s(%d)
+Error: 2 - file_get_contents() expects parameter 3 to be resource, double given, %s(%d)
 NULL
 
 --empty array--

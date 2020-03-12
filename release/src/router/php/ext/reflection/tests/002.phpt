@@ -6,7 +6,7 @@ Reflection properties are read only
 class ReflectionMethodEx extends ReflectionMethod
 {
 	public $foo = "xyz";
-
+	
 	function __construct($c,$m)
 	{
 		echo __METHOD__ . "\n";
@@ -50,14 +50,14 @@ var_dump($r->bar);
 ===DONE===
 --EXPECTF--
 ReflectionMethodEx::__construct
-string(26) "ReflectionFunctionAbstract"
-string(7) "getName"
-string(3) "xyz"
+%unicode|string%(26) "ReflectionFunctionAbstract"
+%unicode|string%(7) "getName"
+%unicode|string%(3) "xyz"
 NULL
 Cannot set read-only property ReflectionMethodEx::$class
 Cannot set read-only property ReflectionMethodEx::$name
-string(26) "ReflectionFunctionAbstract"
-string(7) "getName"
-string(3) "bar"
-string(3) "baz"
+%unicode|string%(26) "ReflectionFunctionAbstract"
+%unicode|string%(7) "getName"
+%unicode|string%(3) "bar"
+%unicode|string%(3) "baz"
 ===DONE===

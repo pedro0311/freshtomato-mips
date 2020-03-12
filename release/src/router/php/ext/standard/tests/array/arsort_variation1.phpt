@@ -4,7 +4,7 @@ Test arsort() function : usage variations - unexpected values for 'array_arg' ar
 <?php
 /* Prototype  : bool arsort(array &array_arg [, int sort_flags])
  * Description: Sort an array and maintain index association
-                Elements will be arranged from highest to lowest when this function has completed.
+                Elements will be arranged from highest to lowest when this function has completed. 
  * Source code: ext/standard/array.c
 */
 
@@ -76,7 +76,7 @@ $unexpected_values = array (
 // loop though each element of the array and check the working of arsort()
 // when $array argument is supplied with different values from $unexpected_values
 echo "\n-- Testing arsort() by supplying different unexpected values for 'array' argument --\n";
-echo "\n-- Flag values are defualt, SORT_REGULAR, SORT_NUMERIC, SORT_STRING --\n";
+echo "\n-- Flag values are defualt, SORT_REGULAR, SORT_NUMERIC, SORT_STRING --\n"; 
 
 $counter = 1;
 for($index = 0; $index < count($unexpected_values); $index ++) {
@@ -151,68 +151,68 @@ Warning: arsort() expects parameter 1 to be array, integer given in %sarsort_var
 bool(false)
 -- Iteration 5 --
 
-Warning: arsort() expects parameter 1 to be array, float given in %sarsort_variation1.php on line %d
+Warning: arsort() expects parameter 1 to be array, double given in %sarsort_variation1.php on line %d
 bool(false)
 
-Warning: arsort() expects parameter 1 to be array, float given in %sarsort_variation1.php on line %d
+Warning: arsort() expects parameter 1 to be array, double given in %sarsort_variation1.php on line %d
 bool(false)
 
-Warning: arsort() expects parameter 1 to be array, float given in %sarsort_variation1.php on line %d
+Warning: arsort() expects parameter 1 to be array, double given in %sarsort_variation1.php on line %d
 bool(false)
 
-Warning: arsort() expects parameter 1 to be array, float given in %sarsort_variation1.php on line %d
+Warning: arsort() expects parameter 1 to be array, double given in %sarsort_variation1.php on line %d
 bool(false)
 -- Iteration 6 --
 
-Warning: arsort() expects parameter 1 to be array, float given in %sarsort_variation1.php on line %d
+Warning: arsort() expects parameter 1 to be array, double given in %sarsort_variation1.php on line %d
 bool(false)
 
-Warning: arsort() expects parameter 1 to be array, float given in %sarsort_variation1.php on line %d
+Warning: arsort() expects parameter 1 to be array, double given in %sarsort_variation1.php on line %d
 bool(false)
 
-Warning: arsort() expects parameter 1 to be array, float given in %sarsort_variation1.php on line %d
+Warning: arsort() expects parameter 1 to be array, double given in %sarsort_variation1.php on line %d
 bool(false)
 
-Warning: arsort() expects parameter 1 to be array, float given in %sarsort_variation1.php on line %d
+Warning: arsort() expects parameter 1 to be array, double given in %sarsort_variation1.php on line %d
 bool(false)
 -- Iteration 7 --
 
-Warning: arsort() expects parameter 1 to be array, float given in %sarsort_variation1.php on line %d
+Warning: arsort() expects parameter 1 to be array, double given in %sarsort_variation1.php on line %d
 bool(false)
 
-Warning: arsort() expects parameter 1 to be array, float given in %sarsort_variation1.php on line %d
+Warning: arsort() expects parameter 1 to be array, double given in %sarsort_variation1.php on line %d
 bool(false)
 
-Warning: arsort() expects parameter 1 to be array, float given in %sarsort_variation1.php on line %d
+Warning: arsort() expects parameter 1 to be array, double given in %sarsort_variation1.php on line %d
 bool(false)
 
-Warning: arsort() expects parameter 1 to be array, float given in %sarsort_variation1.php on line %d
+Warning: arsort() expects parameter 1 to be array, double given in %sarsort_variation1.php on line %d
 bool(false)
 -- Iteration 8 --
 
-Warning: arsort() expects parameter 1 to be array, float given in %sarsort_variation1.php on line %d
+Warning: arsort() expects parameter 1 to be array, double given in %sarsort_variation1.php on line %d
 bool(false)
 
-Warning: arsort() expects parameter 1 to be array, float given in %sarsort_variation1.php on line %d
+Warning: arsort() expects parameter 1 to be array, double given in %sarsort_variation1.php on line %d
 bool(false)
 
-Warning: arsort() expects parameter 1 to be array, float given in %sarsort_variation1.php on line %d
+Warning: arsort() expects parameter 1 to be array, double given in %sarsort_variation1.php on line %d
 bool(false)
 
-Warning: arsort() expects parameter 1 to be array, float given in %sarsort_variation1.php on line %d
+Warning: arsort() expects parameter 1 to be array, double given in %sarsort_variation1.php on line %d
 bool(false)
 -- Iteration 9 --
 
-Warning: arsort() expects parameter 1 to be array, float given in %sarsort_variation1.php on line %d
+Warning: arsort() expects parameter 1 to be array, double given in %sarsort_variation1.php on line %d
 bool(false)
 
-Warning: arsort() expects parameter 1 to be array, float given in %sarsort_variation1.php on line %d
+Warning: arsort() expects parameter 1 to be array, double given in %sarsort_variation1.php on line %d
 bool(false)
 
-Warning: arsort() expects parameter 1 to be array, float given in %sarsort_variation1.php on line %d
+Warning: arsort() expects parameter 1 to be array, double given in %sarsort_variation1.php on line %d
 bool(false)
 
-Warning: arsort() expects parameter 1 to be array, float given in %sarsort_variation1.php on line %d
+Warning: arsort() expects parameter 1 to be array, double given in %sarsort_variation1.php on line %d
 bool(false)
 -- Iteration 10 --
 

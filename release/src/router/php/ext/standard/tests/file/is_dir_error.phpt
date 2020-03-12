@@ -19,6 +19,7 @@ var_dump( is_dir("/no/such/dir") );
 
 echo "*** Done ***";
 ?>
+
 --CLEAN--
 <?php
 rmdir(dirname(__FILE__)."/is_dir_error");

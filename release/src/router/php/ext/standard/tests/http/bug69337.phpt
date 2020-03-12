@@ -35,6 +35,7 @@ var_dump($f);
 ?>
 ==DONE==
 --EXPECTF--
-Warning: file_get_contents(http://127.0.0.1:22345/): failed to open stream: HTTP request failed! HTTP/1.0 404 Not Found%ain %s on line %d
-bool(false)
+string(26) "HTTP/1.0 404 Not Found
+
+"
 ==DONE==

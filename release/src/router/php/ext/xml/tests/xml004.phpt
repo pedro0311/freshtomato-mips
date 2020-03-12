@@ -27,7 +27,7 @@ function start_element($xp, $elem, $attribs)
 {
 	print "<$elem";
 	if (sizeof($attribs)) {
-        foreach ($attribs as $k => $v) {
+		while (list($k, $v) = each($attribs)) {
 			print " $k=\"$v\"";
 		}
 	}

@@ -1,7 +1,5 @@
 --TEST--
 Test count_chars() function : usage variations - test values for $mode argument
---SKIPIF--
-<?php if (PHP_INT_SIZE != 8) die("skip this test is for 64-bit only");
 --FILE--
 <?php
 
@@ -29,40 +27,40 @@ $inputs =  array (
 			  255,
 			  2147483647,
 		      -2147483648,
-
+			
 			  // float values
 /* 6 */		  0.0,
 			  1.3,
 			  10.5,
 			  -20.5,
 			  10.1234567e10,
-
+			
 			  // array values
 /* 11 */	  array(),
 			  array(1, 2, 3, 4, 5, 6, 7, 8, 9),
-
+			
 			  // boolean values
 /* 14 */	  true,
 			  false,
 			  TRUE,
 			  FALSE,
-
+			
 			  // null values
 /* 18 */	  NULL,
 			  null,
-
+			  
 			  // string values
 /* 20 */	  "ABCD",
 			  'abcd',
 			  "1ABC",
 			  "5ABC",
-
+			  
 			  // objects
 /* 24 */ 	  new sample(),
-
+			
 			   // undefined variable
 /* 25 */	  @$undefined_var,
-
+			
 			  // unset variable
 /* 26 */	  @$unset_var
 );
@@ -117,11 +115,11 @@ Warning: count_chars(): Unknown mode in %s on line %d
 bool(false)
 -- Iteration 11 --
 
-Warning: count_chars() expects parameter 2 to be integer, array given in %s on line %d
+Warning: count_chars() expects parameter 2 to be long, array given in %s on line %d
 bool(false)
 -- Iteration 12 --
 
-Warning: count_chars() expects parameter 2 to be integer, array given in %s on line %d
+Warning: count_chars() expects parameter 2 to be long, array given in %s on line %d
 bool(false)
 -- Iteration 13 --
 bool(true)
@@ -137,11 +135,11 @@ bool(true)
 bool(true)
 -- Iteration 19 --
 
-Warning: count_chars() expects parameter 2 to be integer, string given in %s on line %d
+Warning: count_chars() expects parameter 2 to be long, string given in %s on line %d
 bool(false)
 -- Iteration 20 --
 
-Warning: count_chars() expects parameter 2 to be integer, string given in %s on line %d
+Warning: count_chars() expects parameter 2 to be long, string given in %s on line %d
 bool(false)
 -- Iteration 21 --
 
@@ -155,7 +153,7 @@ Warning: count_chars(): Unknown mode in %s on line %d
 bool(false)
 -- Iteration 23 --
 
-Warning: count_chars() expects parameter 2 to be integer, object given in %s on line %d
+Warning: count_chars() expects parameter 2 to be long, object given in %s on line %d
 bool(false)
 -- Iteration 24 --
 bool(true)

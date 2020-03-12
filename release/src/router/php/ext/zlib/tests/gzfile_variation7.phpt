@@ -29,6 +29,7 @@ foreach ( $variation_array as $var ) {
 ?>
 ===DONE===
 --EXPECTF--
+
 Warning: gzfile(string): failed to open stream: No such file or directory in %s on line %d
 bool(false)
 

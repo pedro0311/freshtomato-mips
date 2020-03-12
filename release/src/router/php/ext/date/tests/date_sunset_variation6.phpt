@@ -3,9 +3,9 @@ Test date_sunset() function : usage variation - Passing unexpected values to six
 --FILE--
 <?php
 /* Prototype  : mixed date_sunset(mixed time [, int format [, float latitude [, float longitude [, float zenith [, float gmt_offset]]]]])
- * Description: Returns time of sunset for a given day and location
+ * Description: Returns time of sunset for a given day and location 
  * Source code: ext/date/php_date.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing date_sunset() : usage variation ***\n";
@@ -103,194 +103,194 @@ foreach($inputs as $key =>$value) {
 *** Testing date_sunset() : usage variation ***
 
 --int 0--
-string(5) "12:41"
-float(12.684%d)
-int(1218199264)
+string(5) "12:40"
+float(12.681%d)
+int(1218199253)
 
 --int 1--
-string(5) "13:41"
-float(13.684%d)
-int(1218199264)
+string(5) "13:40"
+float(13.681%d)
+int(1218199253)
 
 --int 12345--
-string(5) "21:41"
-float(21.684%d)
-int(1218199264)
+string(5) "21:40"
+float(21.681%d)
+int(1218199253)
 
 --int -12345--
-string(5) "19:41"
-float(19.684%d)
-int(1218199264)
+string(5) "19:40"
+float(19.681%d)
+int(1218199253)
 
 --empty array--
 
-Warning: date_sunset() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
 --int indexed array--
 
-Warning: date_sunset() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
 --associative array--
 
-Warning: date_sunset() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
 --nested arrays--
 
-Warning: date_sunset() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, array given in %s on line %d
 bool(false)
 
 --uppercase NULL--
-string(5) "12:41"
-float(12.684%d)
-int(1218199264)
+string(5) "12:40"
+float(12.681%d)
+int(1218199253)
 
 --lowercase null--
-string(5) "12:41"
-float(12.684%d)
-int(1218199264)
+string(5) "12:40"
+float(12.681%d)
+int(1218199253)
 
 --lowercase true--
-string(5) "13:41"
-float(13.684%d)
-int(1218199264)
+string(5) "13:40"
+float(13.681%d)
+int(1218199253)
 
 --lowercase false--
-string(5) "12:41"
-float(12.684%d)
-int(1218199264)
+string(5) "12:40"
+float(12.681%d)
+int(1218199253)
 
 --uppercase TRUE--
-string(5) "13:41"
-float(13.684%d)
-int(1218199264)
+string(5) "13:40"
+float(13.681%d)
+int(1218199253)
 
 --uppercase FALSE--
-string(5) "12:41"
-float(12.684%d)
-int(1218199264)
+string(5) "12:40"
+float(12.681%d)
+int(1218199253)
 
 --empty string DQ--
 
-Warning: date_sunset() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
 --empty string SQ--
 
-Warning: date_sunset() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
 --string DQ--
 
-Warning: date_sunset() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
 --string SQ--
 
-Warning: date_sunset() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
 --mixed case string--
 
-Warning: date_sunset() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
 --heredoc--
 
-Warning: date_sunset() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, string given in %s on line %d
 bool(false)
 
 --instance of classWithToString--
 
-Warning: date_sunset() expects parameter 6 to be float, object given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, object given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, object given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, object given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, object given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, object given in %s on line %d
 bool(false)
 
 --instance of classWithoutToString--
 
-Warning: date_sunset() expects parameter 6 to be float, object given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, object given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, object given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, object given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 6 to be float, object given in %s on line %d
+Warning: date_sunset() expects parameter 6 to be double, object given in %s on line %d
 bool(false)
 
 --undefined var--
-string(5) "12:41"
-float(12.684%d)
-int(1218199264)
+string(5) "12:40"
+float(12.681%d)
+int(1218199253)
 
 --unset var--
-string(5) "12:41"
-float(12.684%d)
-int(1218199264)
+string(5) "12:40"
+float(12.681%d)
+int(1218199253)
 ===DONE===

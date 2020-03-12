@@ -1,10 +1,7 @@
 --TEST--
 shm_attach() tests
 --SKIPIF--
-<?php
-if (!extension_loaded("sysvshm")){ print 'skip'; }
-if (!function_exists('ftok')){ print 'skip'; }
-?>
+<?php if (!extension_loaded("sysvshm")) print "skip"; ?>
 --FILE--
 <?php
 
@@ -25,7 +22,7 @@ var_dump($s = shm_attach($key, 1024));
 shm_remove($key);
 var_dump($s = shm_attach($key, 1024));
 shm_remove($s);
-var_dump($s = shm_attach($key, 1024, 0666));
+var_dump(shm_attach($key, 1024, 0666));
 shm_remove($s);
 
 var_dump($s = shm_attach($key, 1024));
@@ -35,7 +32,7 @@ shm_remove($s);
 
 echo "Done\n";
 ?>
---EXPECTF--
+--EXPECTF--	
 Warning: shm_attach() expects at least 1 parameter, 0 given in %s on line %d
 NULL
 

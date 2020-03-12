@@ -2,7 +2,7 @@
 Test key(), current(), next() & reset() functions
 --FILE--
 <?php
-/* Prototype & Usage:
+/* Prototype & Usage: 
    mixed key ( array &$array ) -> returns the index element of the current array position
    mixed current ( array &$array ) -> returns the current element in the array
    mixed next ( array &$array ) -> similar to current() but advances the internal pointer to next element
@@ -19,16 +19,16 @@ $basic_arrays = array (
   array('d' => 'drink', 'p' => 'port', 's' => 'set'),   // another associative array
   array(1 => 'One', 2 => 'two', 3 => "three")           // associative array with key as integers
 );
-
+            
 $varient_arrays = array (
    array(),    // empty array
    array(""),  // array with null string
-   array(NULL),// array with NULL
+   array(NULL),// array with NULL 
    array(null),// array with null
    array(NULL, true, null, "", 1), // mixed array
-   array(-1.5 => "test", -2 => "rest", 2.5 => "two",
+   array(-1.5 => "test", -2 => "rest", 2.5 => "two", 
          "" => "string", 0 => "zero", "" => "" ) // mixed array
-);
+);  
 
 echo "*** Testing basic operations ***\n";
 $loop_count = 1;
@@ -69,7 +69,7 @@ foreach ($varient_arrays as $sub_array )  {
   echo "\n";
 }
 
-/*test these functions on array which is already unset */
+/*test these functions on array which is already unset */ 
 echo "\n-- Testing variation: when array is unset --\n";
 $unset_array = array (1);
 unset($unset_array);
@@ -94,7 +94,7 @@ var_dump( current($temp_array, $temp_array) );
 var_dump( reset($temp_array, $temp_array) );
 var_dump( next($temp_array, $temp_array) );
 
-// invalid args type, valid argument: array
+// invalid args type, valid argument: array 
 $int_var = 1;
 $float_var = 1.5;
 $string = "string";
@@ -116,7 +116,7 @@ var_dump( reset($string) );
 
 echo "Done\n";
 ?>
---EXPECTF--
+--EXPECTF--	
 *** Testing basic operations ***
 -- Iteration 1 --
 int(0)
@@ -459,12 +459,8 @@ array(5) {
 
 -- Testing variation: when array is unset --
 
-Notice: Undefined variable: unset_array in %s on line %d
-
 Warning: current() expects parameter 1 to be array, null given in %s on line %d
 NULL
-
-Notice: Undefined variable: unset_array in %s on line %d
 
 Warning: key() expects parameter 1 to be array, null given in %s on line %d
 NULL
@@ -504,7 +500,7 @@ NULL
 Warning: key() expects parameter 1 to be array, integer given in %s on line %d
 NULL
 
-Warning: key() expects parameter 1 to be array, float given in %s on line %d
+Warning: key() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 Warning: key() expects parameter 1 to be array, string given in %s on line %d
@@ -513,7 +509,7 @@ NULL
 Warning: current() expects parameter 1 to be array, integer given in %s on line %d
 NULL
 
-Warning: current() expects parameter 1 to be array, float given in %s on line %d
+Warning: current() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 Warning: current() expects parameter 1 to be array, string given in %s on line %d
@@ -522,7 +518,7 @@ NULL
 Warning: next() expects parameter 1 to be array, integer given in %s on line %d
 NULL
 
-Warning: next() expects parameter 1 to be array, float given in %s on line %d
+Warning: next() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 Warning: next() expects parameter 1 to be array, string given in %s on line %d
@@ -531,7 +527,7 @@ NULL
 Warning: reset() expects parameter 1 to be array, integer given in %s on line %d
 NULL
 
-Warning: reset() expects parameter 1 to be array, float given in %s on line %d
+Warning: reset() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 Warning: reset() expects parameter 1 to be array, string given in %s on line %d

@@ -9,7 +9,7 @@ phar.require_hash=0
 <?php
 $fname = dirname(__FILE__) . '/' . basename(__FILE__, '.php') . '.1.phar.php';
 $pname = 'phar://hio';
-$file = '<?php include "' . $pname . '/a.php"; __HALT_COMPILER(); ?>';
+$file = b'<?php include "' . $pname . '/a.php"; __HALT_COMPILER(); ?>';
 
 $files = array();
 $files['a.php']   = '<?php echo "This is a\n"; include "'.$pname.'/b.php"; ?>';
@@ -27,7 +27,7 @@ try {
 ?>
 ===DONE===
 --CLEAN--
-<?php
+<?php 
 unlink(dirname(__FILE__) . '/' . basename(__FILE__, '.clean.php') . '.1.phar.php');
 ?>
 --EXPECTF--

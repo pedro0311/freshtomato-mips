@@ -2,8 +2,9 @@
 Bug #63305 (zend_mm_heap corrupted with traits)
 --FILE--
 <?php
+new Attachment("");
 
-spl_autoload_register(function ($class) {
+function __autoload($class) {
     switch ($class) {
     case "Attachment":
         eval(<<<'PHP'
@@ -35,9 +36,7 @@ PHP
         break;
     }
     return TRUE;
-});
-
-new Attachment("");
+}
 echo "okey";
 ?>
 --EXPECT--

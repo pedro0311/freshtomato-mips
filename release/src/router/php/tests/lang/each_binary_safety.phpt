@@ -9,6 +9,5 @@ while (list($key, $val) = each($arr)) {
 	echo urlencode($key), ' => ', urlencode($val), "\n";
 }
 ?>
---EXPECTF--
-Deprecated: The each() function is deprecated. This message will be suppressed on further calls in %s on line %d
+--EXPECT--
 7: foo%00bar => foo%00bar

@@ -3,7 +3,7 @@ Test array_unshift() function : usage variations - unexpected values for 'array'
 --FILE--
 <?php
 /* Prototype  : int array_unshift(array $array, mixed $var [, mixed ...])
- * Description: Pushes elements onto the beginning of the array
+ * Description: Pushes elements onto the beginning of the array 
  * Source code: ext/standard/array.c
 */
 
@@ -91,7 +91,7 @@ foreach($arrays as $array) {
   echo "\n-- Iteration $iterator --";
 
   /* with default arguments */
-  // returns element count in the resulting array after arguments are pushed to
+  // returns element count in the resulting array after arguments are pushed to 
   // beginning of the given array
   $temp_array = $array;
   var_dump( array_unshift($temp_array, $var) );
@@ -155,47 +155,47 @@ NULL
 int(-2345)
 
 -- Iteration 5 --
-Warning: array_unshift() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_unshift() expects parameter 1 to be array, double given in %s on line %d
 NULL
 float(10.5)
 
-Warning: array_unshift() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_unshift() expects parameter 1 to be array, double given in %s on line %d
 NULL
 float(10.5)
 
 -- Iteration 6 --
-Warning: array_unshift() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_unshift() expects parameter 1 to be array, double given in %s on line %d
 NULL
 float(-10.5)
 
-Warning: array_unshift() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_unshift() expects parameter 1 to be array, double given in %s on line %d
 NULL
 float(-10.5)
 
 -- Iteration 7 --
-Warning: array_unshift() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_unshift() expects parameter 1 to be array, double given in %s on line %d
 NULL
 float(123456789000)
 
-Warning: array_unshift() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_unshift() expects parameter 1 to be array, double given in %s on line %d
 NULL
 float(123456789000)
 
 -- Iteration 8 --
-Warning: array_unshift() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_unshift() expects parameter 1 to be array, double given in %s on line %d
 NULL
 float(1.23456789E-9)
 
-Warning: array_unshift() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_unshift() expects parameter 1 to be array, double given in %s on line %d
 NULL
 float(1.23456789E-9)
 
 -- Iteration 9 --
-Warning: array_unshift() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_unshift() expects parameter 1 to be array, double given in %s on line %d
 NULL
 float(0.5)
 
-Warning: array_unshift() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_unshift() expects parameter 1 to be array, double given in %s on line %d
 NULL
 float(0.5)
 

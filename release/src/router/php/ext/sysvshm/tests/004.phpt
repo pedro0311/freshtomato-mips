@@ -1,10 +1,7 @@
 --TEST--
 shm_put_var() tests
 --SKIPIF--
-<?php
-if (!extension_loaded("sysvshm")){ print 'skip'; }
-if (!function_exists('ftok')){ print 'skip'; }
-?>
+<?php if (!extension_loaded("sysvshm")) print "skip"; ?>
 --FILE--
 <?php
 
@@ -25,7 +22,7 @@ shm_remove($s);
 
 echo "Done\n";
 ?>
---EXPECTF--
+--EXPECTF--	
 Warning: shm_put_var() expects exactly 3 parameters, 0 given in %s004.php on line %d
 NULL
 

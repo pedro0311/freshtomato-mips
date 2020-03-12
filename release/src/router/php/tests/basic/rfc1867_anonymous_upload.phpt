@@ -2,6 +2,8 @@
 rfc1867 anonymous upload
 --INI--
 file_uploads=1
+error_reporting=E_ALL&~E_NOTICE
+comment=debug builds show some additional E_NOTICE errors
 upload_max_filesize=1024
 max_file_uploads=10
 --POST_RAW--
@@ -26,28 +28,28 @@ var_dump($_POST);
 array(2) {
   [%d]=>
   array(5) {
-    ["name"]=>
+    [%u|b%"name"]=>
     %string|unicode%(9) "file1.txt"
-    ["type"]=>
+    [%u|b%"type"]=>
     %string|unicode%(16) "text/plain-file1"
-    ["tmp_name"]=>
+    [%u|b%"tmp_name"]=>
     %string|unicode%(%d) "%s"
-    ["error"]=>
+    [%u|b%"error"]=>
     int(0)
-    ["size"]=>
+    [%u|b%"size"]=>
     int(1)
   }
   [%d]=>
   array(5) {
-    ["name"]=>
+    [%u|b%"name"]=>
     %string|unicode%(9) "file2.txt"
-    ["type"]=>
+    [%u|b%"type"]=>
     %string|unicode%(16) "text/plain-file2"
-    ["tmp_name"]=>
+    [%u|b%"tmp_name"]=>
     %string|unicode%(%d) "%s"
-    ["error"]=>
+    [%u|b%"error"]=>
     int(0)
-    ["size"]=>
+    [%u|b%"size"]=>
     int(1)
   }
 }

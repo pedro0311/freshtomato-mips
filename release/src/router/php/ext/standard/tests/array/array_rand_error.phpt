@@ -1,9 +1,9 @@
 --TEST--
-Test array_rand() function : error conditions
+Test array_rand() function : error conditions 
 --FILE--
 <?php
 /* Prototype  : mixed array_rand(array input [, int num_req])
- * Description: Return key/keys for random entry/entries in the array
+ * Description: Return key/keys for random entry/entries in the array 
  * Source code: ext/standard/array.c
 */
 
@@ -35,3 +35,4 @@ NULL
 Warning: array_rand() expects at most 2 parameters, 3 given in %s on line %d
 NULL
 Done
+

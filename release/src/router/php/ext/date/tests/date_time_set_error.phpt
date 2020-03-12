@@ -1,13 +1,13 @@
 --TEST--
-Test date_time_set() function : error conditions
+Test date_time_set() function : error conditions 
 --FILE--
 <?php
 /* Prototype  : DateTime date_time_set  ( DateTime $object  , int $hour  , int $minute  [, int $second  ] )
- * Description: Resets the current time of the DateTime object to a different time.
+ * Description: Resets the current time of the DateTime object to a different time. 
  * Source code: ext/date/php_date.c
  * Alias to functions: DateTime::setTime
  */
-
+ 
 date_default_timezone_set("Europe/London");
 
 echo "*** Testing date_time_set() : error conditions ***\n";
@@ -24,17 +24,16 @@ var_dump( date_time_set($datetime, $hour) );
 echo "\n-- Testing date_time_set() function with more than expected no. of arguments --\n";
 $min = 15;
 $sec = 30;
-$microseconds = 123123;
 $extra_arg = 10;
-var_dump( date_time_set($datetime, $hour, $min, $sec, $microseconds, $extra_arg) );
+var_dump( date_time_set($datetime, $hour, $min, $sec, $extra_arg) );
 
 echo "\n-- Testing date_time_set() function with an invalid values for \$object argument --\n";
 $invalid_obj = new stdClass();
-var_dump( date_time_set($invalid_obj, $hour, $min, $sec) );
+var_dump( date_time_set($invalid_obj, $hour, $min, $sec) );  
 $invalid_obj = 10;
 var_dump( date_time_set($invalid_obj, $hour, $min, $sec) );
 $invalid_obj = null;
-var_dump( date_time_set($invalid_obj, $hour, $min, $sec) );
+var_dump( date_time_set($invalid_obj, $hour, $min, $sec) ); 
 ?>
 ===DONE===
 --EXPECTF--
@@ -55,7 +54,7 @@ bool(false)
 
 -- Testing date_time_set() function with more than expected no. of arguments --
 
-Warning: date_time_set() expects at most 5 parameters, 6 given in %s on line %d
+Warning: date_time_set() expects at most 4 parameters, 5 given in %s on line %d
 bool(false)
 
 -- Testing date_time_set() function with an invalid values for $object argument --

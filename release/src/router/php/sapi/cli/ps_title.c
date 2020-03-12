@@ -28,26 +28,24 @@
  * The following code is adopted from the PostgreSQL's ps_status(.h/.c).
  */
 
-#ifdef PHP_WIN32
-#include "config.w32.h"
-#include <windows.h>
-#include <process.h>
-#include "win32/codepage.h"
-#else
-#include "php_config.h"
-extern char** environ;
-#endif
-
 #include "ps_title.h"
 #include <stdio.h>
 
 #ifdef HAVE_UNISTD_H
-#include <sys/types.h>
 #include <unistd.h>
 #endif
 
 #include <string.h>
 #include <stdlib.h>
+
+#ifdef PHP_WIN32
+#include "config.w32.h"
+#include <windows.h>
+#include <process.h>
+#else
+#include "php_config.h"
+extern char** environ;
+#endif
 
 #ifdef HAVE_SYS_PSTAT_H
 #include <sys/pstat.h> /* for HP-UX */
@@ -127,13 +125,11 @@ static size_t ps_buffer_cur_len; /* actual string length in ps_buffer */
 static int save_argc;
 static char** save_argv;
 
-/*
+/* 
  * This holds the 'locally' allocated environ from the save_ps_args method.
  * This is subsequently free'd at exit.
  */
-#if defined(PS_USE_CLOBBER_ARGV)
 static char** frozen_environ, **new_environ;
-#endif
 
 /*
  * Call this method early, before any code has used the original argv passed in
@@ -224,10 +220,8 @@ char** save_ps_args(int argc, char** argv)
         for (i = 0; i < argc; i++)
         {
             new_argv[i] = strdup(argv[i]);
-            if (!new_argv[i]) {
-                free(new_argv);
+            if (!new_argv[i])
                 goto clobber_error;
-            }
         }
         new_argv[argc] = NULL;
 
@@ -317,7 +311,7 @@ const char* ps_title_errno(int rc)
 
 #ifdef PS_USE_WIN32
     case PS_TITLE_WINDOWS_ERROR:
-        sprintf(windows_error_details, "Windows error code: %lu", GetLastError());
+        sprintf(windows_error_details, "Windows error code: %d", GetLastError());
         return windows_error_details;
 #endif
     }
@@ -371,13 +365,8 @@ int set_ps_title(const char* title)
 
 #ifdef PS_USE_WIN32
     {
-	wchar_t *ps_buffer_w = php_win32_cp_any_to_w(ps_buffer);
-
-        if (!ps_buffer_w || !SetConsoleTitleW(ps_buffer_w)) {
+        if (!SetConsoleTitle(ps_buffer))
             return PS_TITLE_WINDOWS_ERROR;
-	}
-
-	free(ps_buffer_w);
     }
 #endif /* PS_USE_WIN32 */
 
@@ -397,24 +386,8 @@ int get_ps_title(int *displen, const char** string)
         return rc;
 
 #ifdef PS_USE_WIN32
-    {
-	wchar_t ps_buffer_w[MAX_PATH];
-	char *tmp;
-
-        if (!(ps_buffer_cur_len = GetConsoleTitleW(ps_buffer_w, (DWORD)sizeof(ps_buffer_w)))) {
-            return PS_TITLE_WINDOWS_ERROR;
-	}
-
-	tmp = php_win32_cp_conv_w_to_any(ps_buffer_w, PHP_WIN32_CP_IGNORE_LEN, &ps_buffer_cur_len);
-	if (!tmp) {
-            return PS_TITLE_WINDOWS_ERROR;
-	}
-
-	ps_buffer_cur_len = ps_buffer_cur_len > sizeof(ps_buffer)-1 ? sizeof(ps_buffer)-1 : ps_buffer_cur_len;
-
-	memmove(ps_buffer, tmp, ps_buffer_cur_len);
-	free(tmp);
-    }
+    if (!(ps_buffer_cur_len = GetConsoleTitle(ps_buffer, ps_buffer_size)))
+        return PS_TITLE_WINDOWS_ERROR;
 #endif
     *displen = (int)ps_buffer_cur_len;
     *string = ps_buffer;

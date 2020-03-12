@@ -1,13 +1,13 @@
 --TEST--
-Test readfile() function : usage variation
+Test readfile() function : usage variation 
 --CREDITS--
 Dave Kelsey <d_kelsey@uk.ibm.com>
 --FILE--
 <?php
 /* Prototype  : int readfile(string filename [, bool use_include_path[, resource context]])
- * Description: Output a file or a URL
+ * Description: Output a file or a URL 
  * Source code: ext/standard/file.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing readfile() : usage variation ***\n";
@@ -107,7 +107,7 @@ $inputs = array(
 
       // unset data
       'unset var' => @$unset_var,
-
+      
       // file resource
       'file resource' => $fileRes,
 );
@@ -150,23 +150,23 @@ Error: 2 - readfile() expects parameter 3 to be resource, integer given, %s(%d)
 file not read
 
 --float 10.5--
-Error: 2 - readfile() expects parameter 3 to be resource, float given, %s(%d)
+Error: 2 - readfile() expects parameter 3 to be resource, double given, %s(%d)
 file not read
 
 --float -10.5--
-Error: 2 - readfile() expects parameter 3 to be resource, float given, %s(%d)
+Error: 2 - readfile() expects parameter 3 to be resource, double given, %s(%d)
 file not read
 
 --float 12.3456789000e10--
-Error: 2 - readfile() expects parameter 3 to be resource, float given, %s(%d)
+Error: 2 - readfile() expects parameter 3 to be resource, double given, %s(%d)
 file not read
 
 --float -12.3456789000e10--
-Error: 2 - readfile() expects parameter 3 to be resource, float given, %s(%d)
+Error: 2 - readfile() expects parameter 3 to be resource, double given, %s(%d)
 file not read
 
 --float .5--
-Error: 2 - readfile() expects parameter 3 to be resource, float given, %s(%d)
+Error: 2 - readfile() expects parameter 3 to be resource, double given, %s(%d)
 file not read
 
 --empty array--

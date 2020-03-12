@@ -37,19 +37,12 @@ var_dump($c);
 
 echo "Done\n";
 ?>
---EXPECTF--
-Warning: A non-numeric value encountered in %s on line %d
+--EXPECTF--	
 int(75636)
-
-Notice: A non well formed numeric value encountered in %s on line %d
 int(951858)
 int(48550510)
 float(75661.68)
-
-Warning: A non-numeric value encountered in %s on line %d
 int(75636)
-
-Notice: A non well formed numeric value encountered in %s on line %d
 int(951858)
 int(48550510)
 float(75661.68)

@@ -1,5 +1,5 @@
 --TEST--
-Test extract() function - ensure EXTR_REFS works when array is referenced and keys clash with variables in current scope.
+Test extract() function - ensure EXTR_REFS works when array is referenced and keys clash with variables in current scope. 
 --FILE--
 <?php
 $a = array('foo' => 'original.foo');
@@ -10,4 +10,4 @@ $foo = 'changed.foo';
 var_dump($a['foo']);
 ?>
 --EXPECTF--
-string(11) "changed.foo"
+%unicode|string%(11) "changed.foo"

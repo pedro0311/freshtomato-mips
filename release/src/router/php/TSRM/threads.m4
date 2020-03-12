@@ -1,17 +1,17 @@
 dnl  Copyright (c) 1999, 2000 Sascha Schumann. All rights reserved.
-dnl
+dnl 
 dnl  Redistribution and use in source and binary forms, with or without
 dnl  modification, are permitted provided that the following conditions
 dnl  are met:
-dnl
+dnl 
 dnl  1. Redistributions of source code must retain the above copyright
 dnl     notice, this list of conditions and the following disclaimer.
-dnl
+dnl 
 dnl  2. Redistributions in binary form must reproduce the above copyright
 dnl     notice, this list of conditions and the following disclaimer in
 dnl     the documentation and/or other materials provided with the
 dnl     distribution.
-dnl
+dnl 
 dnl  THIS SOFTWARE IS PROVIDED BY SASCHA SCHUMANN ``AS IS'' AND ANY
 dnl  EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 dnl  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -66,7 +66,7 @@ dnl
 dnl Check whether the current setup can use POSIX threads calls
 dnl
 AC_DEFUN([PTHREADS_CHECK_COMPILE], [
-AC_LINK_IFELSE([ AC_LANG_SOURCE([
+AC_TRY_RUN( [
 #include <pthread.h>
 #include <stddef.h>
 
@@ -80,11 +80,18 @@ int main() {
     int data = 1;
     pthread_mutexattr_init(&mattr);
     return pthread_create(&thd, NULL, thread_routine, &data);
-} ]) ], [
-  pthreads_checked=yes
+} ], [
+  pthreads_working=yes
   ], [
-  pthreads_checked=no
-  ]
+  pthreads_working=no
+  ], [
+  dnl For cross compiling running this test is of no use. NetWare supports pthreads
+  pthreads_working=no
+  case $host_alias in
+  *netware*)
+    pthreads_working=yes
+  esac
+]
 ) ] )dnl
 dnl
 dnl PTHREADS_CHECK()
@@ -97,7 +104,7 @@ dnl  -Kthread          UDK cc (UnixWare)
 dnl  -mt               WorkShop cc (Solaris)
 dnl  -mthreads         gcc (AIX)
 dnl  -pthread          gcc (Linux, FreeBSD, NetBSD, OpenBSD)
-dnl  -pthreads         gcc (Solaris)
+dnl  -pthreads         gcc (Solaris) 
 dnl  -qthreaded        AIX cc V5
 dnl  -threads          gcc (HP-UX)
 dnl
@@ -117,39 +124,35 @@ else
   AC_CACHE_CHECK(for pthreads_cflags,ac_cv_pthreads_cflags,[
   ac_cv_pthreads_cflags=
   if test "$pthreads_working" != "yes"; then
-    for flag in -kthread -pthread -pthreads -mthreads -Kthread -threads -mt -qthreaded; do
+    for flag in -kthread -pthread -pthreads -mthreads -Kthread -threads -mt -qthreaded; do 
       ac_save=$CFLAGS
       CFLAGS="$CFLAGS $flag"
       PTHREADS_CHECK_COMPILE
       CFLAGS=$ac_save
-      if test "$pthreads_checked" = "yes"; then
+      if test "$pthreads_working" = "yes"; then
         ac_cv_pthreads_cflags=$flag
         break
       fi
     done
   fi
-  ])
-
-  AC_CACHE_CHECK(for pthreads_lib, ac_cv_pthreads_lib,[
-  ac_cv_pthreads_lib=
-  if test "$pthreads_working" != "yes"; then
-   for lib in pthread pthreads c_r; do
-      ac_save=$LIBS
-      LIBS="$LIBS -l$lib"
-      PTHREADS_CHECK_COMPILE
-      LIBS=$ac_save
-      if test "$pthreads_checked" = "yes"; then
-        ac_cv_pthreads_lib=$lib
-        break
-      fi
-    done
-  fi
-  ])
-
-  if test "x$ac_cv_pthreads_cflags" != "x" -o "x$ac_cv_pthreads_lib" != "x"; then
-    pthreads_working="yes"
-  fi
 fi
+])
+
+AC_CACHE_CHECK(for pthreads_lib, ac_cv_pthreads_lib,[
+ac_cv_pthreads_lib=
+if test "$pthreads_working" != "yes"; then
+  for lib in pthread pthreads c_r; do
+    ac_save=$LIBS
+    LIBS="$LIBS -l$lib"
+    PTHREADS_CHECK_COMPILE
+    LIBS=$ac_save
+    if test "$pthreads_working" = "yes"; then
+      ac_cv_pthreads_lib=$lib
+      break
+    fi
+  done
+fi
+])
 
 if test "$pthreads_working" = "yes"; then
   threads_result="POSIX-Threads found"

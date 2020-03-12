@@ -9,15 +9,15 @@ if (strtoupper(substr(PHP_OS, 0, 3)) != 'WIN') {
 --FILE--
 <?php
 /* Prototype  : string strftime(string format [, int timestamp])
- * Description: Format a local time/date according to locale settings
+ * Description: Format a local time/date according to locale settings 
  * Source code: ext/date/php_date.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing strftime() : usage variation ***\n";
 
 // Initialise function arguments not being substituted (if any)
-setlocale(LC_ALL, "C");
+setlocale(LC_ALL, "en_US");
 date_default_timezone_set("Asia/Calcutta");
 $timestamp = mktime(8, 8, 8, 8, 8, 2008);
 
@@ -34,7 +34,7 @@ foreach($inputs as $key =>$value) {
       echo "\n--$key--\n";
 	  var_dump( strftime($value) );
 	  var_dump( strftime($value, $timestamp) );
-}
+}	  
 
 ?>
 ===DONE===
@@ -42,8 +42,8 @@ foreach($inputs as $key =>$value) {
 *** Testing strftime() : usage variation ***
 
 --Preferred date and time representation--
-string(%d) "%s %s %d %d:%d:%d %d"
-string(24) "Fri Aug  8 08:08:08 2008"
+string(%d) "%d/%d/%d %d:%d:%d"
+string(17) "08/08/08 08:08:08"
 
 --Preferred date representation--
 string(%d) "%d/%d/%d"

@@ -3,7 +3,7 @@ Test key() function : usage variations - Pass different data types as $array_arg
 --FILE--
 <?php
 /* Prototype  : mixed key(array $array_arg)
- * Description: Return the key of the element currently pointed to by the internal array pointer
+ * Description: Return the key of the element currently pointed to by the internal array pointer 
  * Source code: ext/standard/array.c
  */
 
@@ -59,7 +59,7 @@ $inputs = array(
        false,
        TRUE,
        FALSE,
-
+       
        // empty data
 /*16*/ "",
        '',
@@ -69,7 +69,7 @@ $inputs = array(
 /*19*/ "string",
        'string',
        $heredoc,
-
+       
        // object data
 /*22*/ new classA(),
 
@@ -119,27 +119,27 @@ NULL
 
 -- Iteration 5 --
 
-Warning: key() expects parameter 1 to be array, float given in %s on line %d
+Warning: key() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 6 --
 
-Warning: key() expects parameter 1 to be array, float given in %s on line %d
+Warning: key() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 7 --
 
-Warning: key() expects parameter 1 to be array, float given in %s on line %d
+Warning: key() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 8 --
 
-Warning: key() expects parameter 1 to be array, float given in %s on line %d
+Warning: key() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 9 --
 
-Warning: key() expects parameter 1 to be array, float given in %s on line %d
+Warning: key() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 10 --

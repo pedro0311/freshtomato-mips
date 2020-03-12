@@ -57,7 +57,7 @@ oci8_test_sql_execute($c, $stmtarray);
 echo "Done\n";
 
 ?>
---EXPECT--
+--EXPECTF--
 Test 1 - must do define before execute
 bool(true)
 NULL
@@ -69,3 +69,4 @@ Test 3 - no new define done
 string(4) "some"
 string(5) "thing"
 Done
+

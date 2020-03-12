@@ -67,3 +67,4 @@ Array
 )
 #0  {closure}(23) called at [%s:%d]
 #1  test(Closure Object ()) called at [%s:%d]
+

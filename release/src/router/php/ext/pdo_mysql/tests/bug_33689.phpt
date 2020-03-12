@@ -41,8 +41,8 @@ MySQLPDOTest::dropTestTable();
 ?>
 --EXPECTF--
 object(PDOStatement)#%d (1) {
-  ["queryString"]=>
-  string(18) "SELECT * from test"
+  [%u|b%"queryString"]=>
+  %unicode|string%(18) "SELECT * from test"
 }
 Array
 (

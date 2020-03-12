@@ -2,6 +2,7 @@
 Test ReflectionProperty::getDocComment() usage.
 --INI--
 opcache.save_comments=1
+opcache.load_comments=1
 --FILE--
 <?php
 
@@ -42,6 +43,7 @@ foreach(array('A', 'B') as $class) {
 
 ?>
 --EXPECTF--
+
 ---> Doc comment for A::$a:
 string(%d) "/**
      * My Doc Comment for $a

@@ -5,41 +5,25 @@ else
 	TS="";
 fi
 if [[ "$ENABLE_DEBUG" == 1 ]]; then
-	DEBUG="--enable-debug --without-pcre-valgrind";
+	DEBUG="--enable-debug";
 else
 	DEBUG="";
 fi
-
-if [[ -z "$CONFIG_LOG_FILE" ]]; then
-	CONFIG_QUIET="--quiet"
-	CONFIG_LOG_FILE="/dev/stdout"
-else
-	CONFIG_QUIET=""
-fi
-if [[ -z "$MAKE_LOG_FILE" ]]; then
-	MAKE_QUIET="--quiet"
-	MAKE_LOG_FILE="/dev/stdout"
-else
-	MAKE_QUIET=""
-fi
-
-MAKE_JOBS=${MAKE_JOBS:-2}
-
 ./buildconf --force
 ./configure \
---prefix="$HOME"/php-install \
-$CONFIG_QUIET \
+--prefix=$HOME"/php-install" \
+--quiet \
 $DEBUG \
 $TS \
---enable-phpdbg \
 --enable-fpm \
 --with-pdo-mysql=mysqlnd \
+--with-mysql=mysqlnd \
 --with-mysqli=mysqlnd \
 --with-pgsql \
 --with-pdo-pgsql \
 --with-pdo-sqlite \
 --enable-intl \
---without-pear \
+--with-pear \
 --with-gd \
 --with-jpeg-dir=/usr \
 --with-png-dir=/usr \
@@ -47,6 +31,7 @@ $TS \
 --enable-zip \
 --with-zlib \
 --with-zlib-dir=/usr \
+--with-mcrypt=/usr \
 --enable-soap \
 --enable-xmlreader \
 --with-xsl \
@@ -66,17 +51,13 @@ $TS \
 --with-openssl \
 --with-gmp \
 --enable-bcmath \
+--enable-phpdbg \
 --enable-calendar \
 --enable-ftp \
 --with-pspell=/usr \
+--with-recode=/usr \
 --with-enchant=/usr \
 --enable-wddx \
---with-freetype-dir=/usr \
---with-xpm-dir=/usr \
---with-kerberos \
---enable-sysvmsg \
---enable-zend-test \
-> "$CONFIG_LOG_FILE"
-
-make "-j${MAKE_JOBS}" $MAKE_QUIET > "$MAKE_LOG_FILE"
-make install >> "$MAKE_LOG_FILE"
+--enable-sysvmsg 
+make -j2 --quiet
+make install

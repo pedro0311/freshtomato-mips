@@ -31,23 +31,23 @@ $dir_paths = array(
   "$dir_path/../.././tempnam_variation2",
   "$dir_path/..///tempnam_variation2_sub//..//../tempnam_variation2",
   "$dir_path/BADDIR",
-
-
+  
+  
   // relative paths
   ".",
   "tempname_variation2",
   "tempname_variation2/",
   "tempnam_variation2/tempnam_variation2_sub",
-  "tempnam_variation2//tempnam_variation2_sub",
+  "tempnam_variation2//tempnam_variation2_sub",  
   "./tempnam_variation2/../tempnam_variation2/tempnam_variation2_sub",
-  "BADDIR",
+  "BADDIR",  
 );
 
 for($i = 0; $i<count($dir_paths); $i++) {
   $j = $i+1;
   echo "\n-- Iteration $j --\n";
   $file_name = tempnam($dir_paths[$i], "tempnam_variation2.tmp");
-
+  
   if( file_exists($file_name) ){
 
     echo "File name is => ";
@@ -57,11 +57,11 @@ for($i = 0; $i<count($dir_paths); $i++) {
     echo "File permissions are => ";
     printf("%o", fileperms($file_name) );
     echo "\n";
-
+    
     echo "File created in => ";
     $file_dir = dirname($file_name);
     $dir_req = $dir_paths[$i];
-
+        
     if (realpath($file_dir) == realpath(sys_get_temp_dir())) {
        echo "temp dir\n";
     }
@@ -70,14 +70,14 @@ for($i = 0; $i<count($dir_paths); $i++) {
     }
     else {
        echo "unknown location\n";
-    }
-
+    }    
+    
 
   }
   else {
     echo "-- File is not created --";
   }
-
+  
   unlink($file_name);
 }
 
@@ -121,8 +121,6 @@ File permissions are => 100600
 File created in => directory specified
 
 -- Iteration 7 --
-
-Notice: tempnam(): file created in the system's temporary directory in %stempnam_variation2.php on line %d
 File name is => %s/tempnam_variation2.tmp%s
 File permissions are => 100600
 File created in => temp dir
@@ -133,15 +131,11 @@ File permissions are => 100600
 File created in => directory specified
 
 -- Iteration 9 --
-
-Notice: tempnam(): file created in the system's temporary directory in %stempnam_variation2.php on line %d
 File name is => %s/tempnam_variation2.tmp%s
 File permissions are => 100600
 File created in => temp dir
 
 -- Iteration 10 --
-
-Notice: tempnam(): file created in the system's temporary directory in %stempnam_variation2.php on line %d
 File name is => %s/tempnam_variation2.tmp%s
 File permissions are => 100600
 File created in => temp dir
@@ -162,8 +156,6 @@ File permissions are => 100600
 File created in => directory specified
 
 -- Iteration 14 --
-
-Notice: tempnam(): file created in the system's temporary directory in %stempnam_variation2.php on line %d
 File name is => %s/tempnam_variation2.tmp%s
 File permissions are => 100600
 File created in => temp dir

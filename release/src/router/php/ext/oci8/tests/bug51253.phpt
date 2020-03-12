@@ -4,7 +4,7 @@ Bug #51253 (oci_bind_array_by_name() array references)
 <?php
 $target_dbs = array('oracledb' => true, 'timesten' => false);  // test runs on these DBs
 require(dirname(__FILE__).'/skipif.inc');
-?>
+?> 
 --FILE--
 <?php
 
@@ -19,15 +19,15 @@ $statement = oci_parse($c, $create);
 oci_execute($statement);
 
 $create_pkg = "
-CREATE OR REPLACE PACKAGE BUG51253_PKG AS
-  TYPE ARRTYPE IS TABLE OF VARCHAR(20) INDEX BY BINARY_INTEGER;
-  PROCEDURE iobind(c1 IN OUT ARRTYPE);
+CREATE OR REPLACE PACKAGE BUG51253_PKG AS 
+  TYPE ARRTYPE IS TABLE OF VARCHAR(20) INDEX BY BINARY_INTEGER; 
+  PROCEDURE iobind(c1 IN OUT ARRTYPE); 
 END BUG51253_PKG;";
 $statement = oci_parse($c, $create_pkg);
 oci_execute($statement);
 
 $create_pkg_body = "
-CREATE OR REPLACE PACKAGE BODY BUG51253_PKG AS
+CREATE OR REPLACE PACKAGE BODY BUG51253_PKG AS 
   CURSOR CUR IS SELECT name FROM bind_test;
   PROCEDURE iobind(c1 IN OUT ARRTYPE) IS
     BEGIN
@@ -89,19 +89,19 @@ $statement = oci_parse($c, "DROP TABLE BIND_TEST");
 
 echo "Done\n";
 ?>
---EXPECT--
+--EXPECT--	
 Test 1
 array(5) {
   [0]=>
-  string(3) "one"
+  string(4) "five"
   [1]=>
-  string(3) "two"
+  string(4) "four"
   [2]=>
   string(5) "three"
   [3]=>
-  string(4) "four"
+  string(3) "two"
   [4]=>
-  string(4) "five"
+  string(3) "one"
 }
 array(5) {
   [0]=>

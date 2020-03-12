@@ -7,12 +7,7 @@ PDO_HEADER_FILES= \
 
 
 $(srcdir)/pdo_sql_parser.c: $(srcdir)/pdo_sql_parser.re
-	@(cd $(top_srcdir); \
-	if test -f ./pdo_sql_parser.re; then \
-		$(RE2C) --no-generation-date -o pdo_sql_parser.c pdo_sql_parser.re; \
-	else \
-		$(RE2C) --no-generation-date -o ext/pdo/pdo_sql_parser.c ext/pdo/pdo_sql_parser.re; \
-	fi)
+	(cd $(top_srcdir); $(RE2C) --no-generation-date -o ext/pdo/pdo_sql_parser.c ext/pdo/pdo_sql_parser.re)
 
 install-pdo-headers:
 	@echo "Installing PDO headers:           $(INSTALL_ROOT)$(phpincludedir)/ext/pdo/"
@@ -33,3 +28,4 @@ install-pdo-headers:
 
 # mini hack
 install: $(all_targets) $(install_targets) install-pdo-headers
+

@@ -29,6 +29,7 @@ foreach($inputs as $input) {
 };
 ?>
 --EXPECTF--
+
 -- Iteration 1 --
 
 Warning: mb_strtolower(): Unknown encoding "12345" in %s on line %d

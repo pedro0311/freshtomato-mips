@@ -26,7 +26,7 @@
                 Computer Science Department, 9062
                 Western Washington University
                 Bellingham, WA 98226-9062
-
+       
 *************************************************************************/
 
 #include <config.h>
@@ -81,3 +81,4 @@ bc_int2num (num, val)
   while (ix-- > 0)
     *vptr++ = *--bptr;
 }
+

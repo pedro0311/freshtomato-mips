@@ -15,7 +15,7 @@ precision=14
    Description: Returns the type of the PHP variable var
 
    Prototype: bool settype ( mixed &$var, string $type );
-   Description: Set the type of variable var to type
+   Description: Set the type of variable var to type 
 */
 
 /* Test usage variation of gettype() and settype() functions:
@@ -35,8 +35,8 @@ function foo($errno, $errstr, $errfile, $errline) {
    echo "$errno: $errstr\n";
 }
 //set the error handler, this is required as
-// settype() would fail with catachable fatal error
-set_error_handler("foo");
+// settype() would fail with catachable fatal error 
+set_error_handler("foo"); 
 
 $var1 = "another string";
 $var2 = array(2,3,4);
@@ -50,7 +50,7 @@ class point
   var $x;
   var $y;
 
-  function __construct($x, $y) {
+  function point($x, $y) {
      $this->x = $x;
      $this->y = $y;
   }
@@ -60,15 +60,15 @@ class point
   }
 }
 
-$var_values = array (
+$var_values = array ( 
   /* nulls */
-  null,
+  null,  
 
   /* boolean */
-  FALSE,
+  FALSE, 
   TRUE,
   true,
-
+ 
   /* strings */
   "\xFF",
   "\x66",
@@ -82,7 +82,7 @@ $var_values = array (
   "10",
   "10string",
   '10string',
-  "1",
+  "1",  
   "-1",
   "1e2",
   " 1",
@@ -128,11 +128,11 @@ $var_values = array (
   0555,
   -0555,
   02224242434343152, // an octal value > than max int
-
+  
   /* floats */
   1e5,
   -1e5,
-  1E5,
+  1E5, 
   -1E5,
   -1.5,
   .5,
@@ -158,7 +158,7 @@ $var_values = array (
   $undef_var
 );
 
-// test conversion to these types
+// test conversion to these types                 
 $types = array(
   "integer",
   "int"
@@ -173,13 +173,13 @@ foreach ($types as $type) {
 
     // get the current data type
     var_dump( gettype($var) );
-
+   
     // convert it to new type
     var_dump( settype($var, $type) );
-
+    
     // dump the converted $var
     var_dump( $var );
-
+ 
     // get the new type of the $var
     var_dump( gettype($var) );
   }
@@ -282,7 +282,7 @@ string(7) "integer"
 -- Iteration 18 --
 string(6) "string"
 bool(true)
-int(100)
+int(1)
 string(7) "integer"
 -- Iteration 19 --
 string(6) "string"
@@ -297,7 +297,7 @@ string(7) "integer"
 -- Iteration 21 --
 string(6) "string"
 bool(true)
-int(0)
+int(-1)
 string(7) "integer"
 -- Iteration 22 --
 string(6) "string"
@@ -312,7 +312,7 @@ string(7) "integer"
 -- Iteration 24 --
 string(6) "string"
 bool(true)
-int(100)
+int(1)
 string(7) "integer"
 -- Iteration 25 --
 string(6) "string"
@@ -327,7 +327,7 @@ string(7) "integer"
 -- Iteration 27 --
 string(6) "string"
 bool(true)
-int(0)
+int(-1)
 string(7) "integer"
 -- Iteration 28 --
 string(6) "string"
@@ -687,7 +687,7 @@ string(7) "integer"
 -- Iteration 18 --
 string(6) "string"
 bool(true)
-int(100)
+int(1)
 string(7) "integer"
 -- Iteration 19 --
 string(6) "string"
@@ -702,7 +702,7 @@ string(7) "integer"
 -- Iteration 21 --
 string(6) "string"
 bool(true)
-int(0)
+int(-1)
 string(7) "integer"
 -- Iteration 22 --
 string(6) "string"
@@ -717,7 +717,7 @@ string(7) "integer"
 -- Iteration 24 --
 string(6) "string"
 bool(true)
-int(100)
+int(1)
 string(7) "integer"
 -- Iteration 25 --
 string(6) "string"
@@ -732,7 +732,7 @@ string(7) "integer"
 -- Iteration 27 --
 string(6) "string"
 bool(true)
-int(0)
+int(-1)
 string(7) "integer"
 -- Iteration 28 --
 string(6) "string"

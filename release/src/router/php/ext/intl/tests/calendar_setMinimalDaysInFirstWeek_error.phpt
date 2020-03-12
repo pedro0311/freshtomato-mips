@@ -18,6 +18,7 @@ var_dump($c->setMinimalDaysInFirstWeek(0));
 
 var_dump(intlcal_set_minimal_days_in_first_week($c, 0));
 var_dump(intlcal_set_minimal_days_in_first_week(1, 2));
+
 --EXPECTF--
 Warning: IntlCalendar::setMinimalDaysInFirstWeek() expects exactly 1 parameter, 0 given in %s on line %d
 
@@ -35,8 +36,5 @@ bool(false)
 Warning: intlcal_set_minimal_days_in_first_week(): intlcal_set_minimal_days_in_first_week: invalid number of days; must be between 1 and 7 in %s on line %d
 bool(false)
 
-Fatal error: Uncaught TypeError: Argument 1 passed to intlcal_set_minimal_days_in_first_week() must be an instance of IntlCalendar, integer given in %s:%d
-Stack trace:
-#0 %s(%d): intlcal_set_minimal_days_in_first_week(1, 2)
-#1 {main}
-  thrown in %s on line %d
+Catchable fatal error: Argument 1 passed to intlcal_set_minimal_days_in_first_week() must be an instance of IntlCalendar, integer given in %s on line %d
+

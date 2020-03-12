@@ -16,13 +16,13 @@ $format2 = "%o %o";
 $format3 = "%o %o %o";
 $arg1 = array(021);
 $arg2 = array(021,0347);
-$arg3 = array(021,0347,0567);
+$arg3 = array(021,0347,05678);
 
 /* creating dumping file */
 $data_file = dirname(__FILE__) . '/vfprintf_basic8.txt';
 if (!($fp = fopen($data_file, 'wt')))
    return;
-
+   
 vfprintf($fp, $format1,$arg1);
 fprintf($fp, "\n");
 

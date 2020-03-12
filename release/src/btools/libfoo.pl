@@ -170,8 +170,8 @@ sub fixDyn
 	fixDynDep("tincd", "liblzo2.so.2.0.0");
 	fixDynDep("openvpn", "liblzo2.so.2.0.0");
 	fixDynDep("usb_modeswitch", "libusb-1.0.so");
-	fixDynDep("nginx", "libpcre.so.1.2.10");
-	fixDynDep("libpcreposix.so.0.0.6", "libpcre.so.1.2.10");
+	fixDynDep("nginx", "libpcre.so.1.2.12");
+	fixDynDep("libpcreposix.so.0.0.7", "libpcre.so.1.2.12");
 
 #minidlna module, bwq518
 	fixDynDep("minidlna", "libz.so.1");
@@ -262,8 +262,8 @@ sub fixDyn
 #	fixDynDep("libbcm.so", "libshared.so");
 #	fixDynDep("libbcm.so", "libc.so.0");
 
-	fixDynDep("nginx", "libpcre.so.1.2.10");
-	fixDynDep("nginx", "libpcreposix.so.0.0.6");
+	fixDynDep("nginx", "libpcre.so.1.2.12");
+	fixDynDep("nginx", "libpcreposix.so.0.0.7");
 	fixDynDep("php-cgi", "libxml2.so.2.9.10");
 	fixDynDep("php-cgi", "libpng12.so.0.59.0");
 	fixDynDep("php-cgi", "libpng.so.3.59.0");
@@ -604,8 +604,8 @@ genSO("${root}/usr/lib/libsodium.so.23.0.0", "${router}/libsodium/src/libsodium/
 genSO("${root}/usr/lib/libpng.so.3.59.0", "${router}/libpng/.libs/libpng.a", "", "-L${router}/zlib");
 genSO("${root}/usr/lib/libpng12.so.0.59.0", "${router}/libpng/.libs/libpng12.a", "", "-L${router}/zlib");
 genSO("${root}/usr/lib/libxml2.so.2.9.10", "${router}/libxml2/.libs/libxml2.a", "", "-L${router}/zlib");
-genSO("${root}/usr/lib/libpcre.so.1.2.10", "${router}/pcre/.libs/libpcre.a");
-genSO("${root}/usr/lib/libpcreposix.so.0.0.6", "${router}/pcre/.libs/libpcreposix.a");
+genSO("${root}/usr/lib/libpcre.so.1.2.12", "${router}/pcre/.libs/libpcre.a");
+genSO("${root}/usr/lib/libpcreposix.so.0.0.7", "${router}/pcre/.libs/libpcreposix.a");
 genSO("${root}/usr/lib/libatomic_ops.so.1.0.3", "${router}/libatomic_ops/src/.libs/libatomic_ops.a");
 genSO("${root}/usr/lib/libncurses.so.6", "${router}/libncurses/lib/libncurses.a");
 

@@ -15,7 +15,4 @@ new X();
 ?>
 --EXPECTF--
 BB
-Fatal error: Uncaught Error: Class 'X' not found in %sbug47699.php:%d
-Stack trace:
-#0 {main}
-  thrown in %sbug47699.php on line %d
+Fatal error: Class 'X' not found in %sbug47699.php on line %d

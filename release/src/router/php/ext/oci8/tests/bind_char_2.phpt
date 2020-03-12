@@ -11,7 +11,7 @@ if (!(isset($matches[0]) && $matches[1] >= 12)) {
 }
 ?>
 --ENV--
-NLS_LANG=.AL32UTF8
+NLS_LANG=
 --FILE--
 <?php
 
@@ -25,7 +25,7 @@ $stmtarray = array(
 	"create table bind_char_tab (id number, c1 date)",
 	"insert into bind_char_tab values (1, '2008-04-20')",
 );
-
+						 
 oci8_test_sql_execute($c, $stmtarray);
 
 // Run Test
@@ -85,7 +85,7 @@ function do_e_q($s)
 $stmtarray = array(
 	"drop table bind_char_tab"
 );
-
+						 
 oci8_test_sql_execute($c, $stmtarray);
 
 echo "Done\n";
@@ -102,14 +102,15 @@ Test 1.2: Type: AFC.  Length: default
     :2008-04-20:
 Test 1.3: Type: AFC:  Length: 0
   Querying:
-    :1:
-    :2008-04-20:
+    Oci_execute error ORA-1460 Exiting Query
 Test 1.4: Type: AFC:  Length: strlen
   Querying:
     :1:
     :2008-04-20:
 Test 1.5: Type: AFC.  Length: strlen-1
   Querying:
+    :1:
+    :2008-04-20:
 Test 1.6: Type: AFC.  Length: strlen+1
   Querying:
     :1:

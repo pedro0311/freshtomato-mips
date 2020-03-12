@@ -1,7 +1,7 @@
 --TEST--
 SPL: RecursiveIteratorIterator - Exception thrown in endchildren which should be handled in next()
 --FILE--
-<?php
+<?php 
 
 $arr = array(array(1,2));
 $arrOb = new ArrayObject($arr);
@@ -9,7 +9,7 @@ $arrOb = new ArrayObject($arr);
 $recArrIt = new RecursiveArrayIterator($arrOb->getIterator());
 
 class MyRecursiveIteratorIterator extends RecursiveIteratorIterator {
-
+    
     function endchildren() {
     	throw new Exception;
     }
@@ -34,7 +34,7 @@ foreach ($recItIt2 as $val) echo "$val\n";
 1
 2
 
-Fatal error: Uncaught Exception in %s
+Fatal error: Uncaught exception 'Exception' in %s
 Stack trace:
 #0 [internal function]: MyRecursiveIteratorIterator->endchildren()
 #1 %s: RecursiveIteratorIterator->next()

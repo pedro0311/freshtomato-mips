@@ -1,5 +1,5 @@
 --TEST--
-Test gmstrftime() function : usage variation - Checking date related formats which was not supported on Windows before VC14.
+Test gmstrftime() function : usage variation - Checking date related formats which are not supported on Windows. 
 --SKIPIF--
 <?php
 if (strtoupper(substr(PHP_OS, 0, 3)) != 'WIN') {
@@ -9,16 +9,16 @@ if (strtoupper(substr(PHP_OS, 0, 3)) != 'WIN') {
 --FILE--
 <?php
 /* Prototype  : string gmstrftime(string format [, int timestamp])
- * Description: Format a GMT/UCT time/date according to locale settings
+ * Description: Format a GMT/UCT time/date according to locale settings 
  * Source code: ext/date/php_date.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing gmstrftime() : usage variation ***\n";
 
 // Initialise function arguments not being substituted (if any)
 $timestamp = gmmktime(8, 8, 8, 8, 8, 2008);
-setlocale(LC_ALL, "C");
+setlocale(LC_ALL, "en_US");
 date_default_timezone_set("Asia/Calcutta");
 
 //array of values to iterate over
@@ -43,18 +43,18 @@ foreach($inputs as $key =>$value) {
 *** Testing gmstrftime() : usage variation ***
 
 --Century number--
-string(2) "%d"
-string(2) "20"
+bool(false)
+bool(false)
 
 --Month Date Year--
-string(%d) "%d/%d/%d"
-string(8) "08/08/08"
+bool(false)
+bool(false)
 
 --Year with century--
-string(%d) "%d"
-string(4) "2008"
+bool(false)
+bool(false)
 
 --Year without century--
-string(2) "%d"
-string(2) "08"
+bool(false)
+bool(false)
 ===DONE===

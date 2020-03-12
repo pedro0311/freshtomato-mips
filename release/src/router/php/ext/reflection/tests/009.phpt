@@ -2,6 +2,7 @@
 ReflectionFunction basic tests
 --INI--
 opcache.save_comments=1
+opcache.load_comments=1
 --FILE--
 <?php
 
@@ -47,7 +48,7 @@ var_dump($func->getNumberOfRequiredParameters());
 echo "Done\n";
 
 ?>
---EXPECTF--
+--EXPECTF--	
 /**
 hoho
 */
@@ -75,7 +76,7 @@ int(6)
 --getEndline--
 int(8)
 --getDocComment--
-string(%d) "/**
+string(11) "/**
 hoho
 */"
 --getStaticVariables--
@@ -92,17 +93,17 @@ bool(false)
 --getParameters--
 array(3) {
   [0]=>
-  object(ReflectionParameter)#2 (1) {
+  &object(ReflectionParameter)#2 (1) {
     ["name"]=>
     string(1) "a"
   }
   [1]=>
-  object(ReflectionParameter)#3 (1) {
+  &object(ReflectionParameter)#3 (1) {
     ["name"]=>
     string(1) "b"
   }
   [2]=>
-  object(ReflectionParameter)#4 (1) {
+  &object(ReflectionParameter)#4 (1) {
     ["name"]=>
     string(1) "c"
   }

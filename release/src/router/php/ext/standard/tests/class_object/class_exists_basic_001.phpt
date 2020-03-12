@@ -1,18 +1,18 @@
 --TEST--
-Test class_exists() function : basic functionality
+Test class_exists() function : basic functionality 
 --FILE--
 <?php
 /* Prototype  : proto bool class_exists(string classname [, bool autoload])
- * Description: Checks if the class exists
+ * Description: Checks if the class exists 
  * Source code: Zend/zend_builtin_functions.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing class_exists() : basic functionality ***\n";
 
-spl_autoload_register(function ($className) {
-	echo "In autoload($className)\n";
-});
+function __autoload($className) {
+	echo "In __autoload($className)\n";
+}
 
 echo "Calling class_exists() on non-existent class with autoload explicitly enabled:\n";
 var_dump( class_exists('C', true) );
@@ -34,7 +34,7 @@ echo "Done";
 --EXPECTF--
 *** Testing class_exists() : basic functionality ***
 Calling class_exists() on non-existent class with autoload explicitly enabled:
-In autoload(C)
+In __autoload(C)
 bool(false)
 
 Calling class_exists() on existing class with autoload explicitly enabled:
@@ -47,7 +47,7 @@ Calling class_exists() on existing class with autoload explicitly disabled:
 bool(true)
 
 Calling class_exists() on non-existent class with autoload unspecified:
-In autoload(E)
+In __autoload(E)
 bool(false)
 
 Calling class_exists() on existing class with autoload unspecified:

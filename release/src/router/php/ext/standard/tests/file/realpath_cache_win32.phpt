@@ -15,11 +15,11 @@ var_dump($data[__DIR__]);
 
 echo "Done\n";
 ?>
---EXPECTF--
+--EXPECTF--	
 int(%d)
 array(8) {
   ["key"]=>
-  %s(%d%s)
+  %s(%d)
   ["is_dir"]=>
   bool(true)
   ["realpath"]=>

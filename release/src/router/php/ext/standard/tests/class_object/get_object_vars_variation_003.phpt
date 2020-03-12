@@ -3,9 +3,9 @@ Test get_object_vars() function : usage variations  - unexpected types for argum
 --FILE--
 <?php
 /* Prototype  : proto array get_object_vars(object obj)
- * Description: Returns an array of object properties
+ * Description: Returns an array of object properties 
  * Source code: Zend/zend_builtin_functions.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing get_object_vars() : usage variations ***\n";
@@ -100,27 +100,27 @@ NULL
 
 Arg value 10.5 
 
-Warning: get_object_vars() expects parameter 1 to be object, float given in %s on line %d
+Warning: get_object_vars() expects parameter 1 to be object, double given in %s on line %d
 NULL
 
 Arg value -10.5 
 
-Warning: get_object_vars() expects parameter 1 to be object, float given in %s on line %d
+Warning: get_object_vars() expects parameter 1 to be object, double given in %s on line %d
 NULL
 
 Arg value 101234567000 
 
-Warning: get_object_vars() expects parameter 1 to be object, float given in %s on line %d
+Warning: get_object_vars() expects parameter 1 to be object, double given in %s on line %d
 NULL
 
 Arg value 1.07654321E-9 
 
-Warning: get_object_vars() expects parameter 1 to be object, float given in %s on line %d
+Warning: get_object_vars() expects parameter 1 to be object, double given in %s on line %d
 NULL
 
 Arg value 0.5 
 
-Warning: get_object_vars() expects parameter 1 to be object, float given in %s on line %d
+Warning: get_object_vars() expects parameter 1 to be object, double given in %s on line %d
 NULL
 
 Arg value Array 

@@ -15,4 +15,5 @@ echo $root->child;
 echo "\n---Done---\n";
 ?>
 --EXPECT--
+
 ---Done--- 

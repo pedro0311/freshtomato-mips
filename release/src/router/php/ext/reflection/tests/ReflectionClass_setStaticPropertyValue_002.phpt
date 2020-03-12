@@ -44,6 +44,7 @@ try {
 
 ?>
 --EXPECTF--
+
 Warning: ReflectionClass::setStaticPropertyValue() expects exactly 2 parameters, 3 given in %s on line 8
 NULL
 

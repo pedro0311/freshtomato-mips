@@ -3,12 +3,12 @@ Test array_sum() function : usage variations - unexpected values for 'input' arg
 --FILE--
 <?php
 /* Prototype  : mixed array_sum(array $input)
- * Description: Returns the sum of the array entries
+ * Description: Returns the sum of the array entries 
  * Source code: ext/standard/array.c
 */
 
 /*
-* Passing different scalar/nonscalar values as 'input' argument to array_sum()
+* Passing different scalar/nonscalar values as 'input' argument to array_sum() 
 */
 
 echo "*** Testing array_sum() : unexpected values for 'input' ***\n";
@@ -102,23 +102,23 @@ Warning: array_sum() expects parameter 1 to be array, integer given in %s on lin
 NULL
 -- Iteration 5 --
 
-Warning: array_sum() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_sum() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 6 --
 
-Warning: array_sum() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_sum() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 7 --
 
-Warning: array_sum() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_sum() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 8 --
 
-Warning: array_sum() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_sum() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 9 --
 
-Warning: array_sum() expects parameter 1 to be array, float given in %s on line %d
+Warning: array_sum() expects parameter 1 to be array, double given in %s on line %d
 NULL
 -- Iteration 10 --
 

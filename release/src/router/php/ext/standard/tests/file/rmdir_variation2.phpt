@@ -5,9 +5,9 @@ Dave Kelsey <d_kelsey@uk.ibm.com>
 --FILE--
 <?php
 /* Prototype  : bool rmdir(string dirname[, resource context])
- * Description: Remove a directory
+ * Description: Remove a directory 
  * Source code: ext/standard/file.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing rmdir() : usage variation ***\n";
@@ -102,7 +102,7 @@ $inputs = array(
 
       // unset data
       'unset var' => @$unset_var,
-
+      
       // non stream context resource
       $fileres,
 );
@@ -139,23 +139,23 @@ Error: 2 - rmdir() expects parameter 2 to be resource, integer given, %s(%d)
 bool(false)
 
 --float 10.5--
-Error: 2 - rmdir() expects parameter 2 to be resource, float given, %s(%d)
+Error: 2 - rmdir() expects parameter 2 to be resource, double given, %s(%d)
 bool(false)
 
 --float -10.5--
-Error: 2 - rmdir() expects parameter 2 to be resource, float given, %s(%d)
+Error: 2 - rmdir() expects parameter 2 to be resource, double given, %s(%d)
 bool(false)
 
 --float 12.3456789000e10--
-Error: 2 - rmdir() expects parameter 2 to be resource, float given, %s(%d)
+Error: 2 - rmdir() expects parameter 2 to be resource, double given, %s(%d)
 bool(false)
 
 --float -12.3456789000e10--
-Error: 2 - rmdir() expects parameter 2 to be resource, float given, %s(%d)
+Error: 2 - rmdir() expects parameter 2 to be resource, double given, %s(%d)
 bool(false)
 
 --float .5--
-Error: 2 - rmdir() expects parameter 2 to be resource, float given, %s(%d)
+Error: 2 - rmdir() expects parameter 2 to be resource, double given, %s(%d)
 bool(false)
 
 --empty array--

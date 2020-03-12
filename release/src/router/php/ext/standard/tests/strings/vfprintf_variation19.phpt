@@ -38,7 +38,7 @@ $args_array = array(
   array(65, 66, 67),
   array(2e1, 2e-1, -2e1),
   array(-11, +22, 33),
-  array(012, -023, +023),
+  array(012, -02394, +02389),
   array(0x11, -0x22, +0x33),
   array(0x11, -0x22, +0x33),
   array(2e1, 2e-1, -2e1)
@@ -49,7 +49,7 @@ $args_array = array(
 $data_file = dirname(__FILE__) . '/vfprintf_variation19.txt';
 if (!($fp = fopen($data_file, 'wt')))
    return;
-
+   
 // looping to test vfprintf() with different scientific formats from the above $format array
 // and with non-scientific values from the above $args_array array
 $counter = 1;
@@ -63,7 +63,7 @@ fclose($fp);
 print_r(file_get_contents($data_file));
 echo "\n";
 
-unlink($data_file);
+unlink($data_file); 
 ?>
 ===DONE===
 --EXPECT--

@@ -1,6 +1,6 @@
 /*
   zip_string.c -- string handling (with encoding)
-  Copyright (C) 2012-2014 Dieter Baron and Thomas Klausner
+  Copyright (C) 2012 Dieter Baron and Thomas Klausner
 
   This file is part of libzip, a library to manipulate ZIP archives.
   The authors can be contacted at <libzip@nih.at>
@@ -31,15 +31,17 @@
   IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+
 
 #include <stdlib.h>
 #include <string.h>
 
 #include "zipint.h"
 
+
 
 zip_uint32_t
-_zip_string_crc32(const zip_string_t *s)
+_zip_string_crc32(const struct zip_string *s)
 {
     zip_uint32_t crc;
     
@@ -51,9 +53,10 @@ _zip_string_crc32(const zip_string_t *s)
     return crc;
 }
 
+
 
 int
-_zip_string_equal(const zip_string_t *a, const zip_string_t *b)
+_zip_string_equal(const struct zip_string *a, const struct zip_string *b)
 {
     if (a == NULL || b == NULL)
 	return a == b;
@@ -66,9 +69,10 @@ _zip_string_equal(const zip_string_t *a, const zip_string_t *b)
     return (memcmp(a->raw, b->raw, a->length) == 0);
 }
 
+
 
 void
-_zip_string_free(zip_string_t *s)
+_zip_string_free(struct zip_string *s)
 {
     if (s == NULL)
 	return;
@@ -78,9 +82,10 @@ _zip_string_free(zip_string_t *s)
     free(s);
 }
 
+
 
 const zip_uint8_t *
-_zip_string_get(zip_string_t *string, zip_uint32_t *lenp, zip_flags_t flags, zip_error_t *error)
+_zip_string_get(struct zip_string *string, zip_uint32_t *lenp, zip_flags_t flags, struct zip_error *error)
 {
     static const zip_uint8_t empty[1] = "";
 
@@ -114,9 +119,10 @@ _zip_string_get(zip_string_t *string, zip_uint32_t *lenp, zip_flags_t flags, zip
     return string->raw;
 }
 
+
 
 zip_uint16_t
-_zip_string_length(const zip_string_t *s)
+_zip_string_length(const struct zip_string *s)
 {
     if (s == NULL)
 	return 0;
@@ -124,12 +130,13 @@ _zip_string_length(const zip_string_t *s)
     return s->length;
 }
 
+
 
-zip_string_t *
-_zip_string_new(const zip_uint8_t *raw, zip_uint16_t length, zip_flags_t flags, zip_error_t *error)
+struct zip_string *
+_zip_string_new(const zip_uint8_t *raw, zip_uint16_t length, zip_flags_t flags, struct zip_error *error)
 {
-    zip_string_t *s;
-    zip_encoding_type_t expected_encoding;
+    struct zip_string *s;
+    enum zip_encoding_type expected_encoding;
     
     if (length == 0)
 	return NULL;
@@ -145,16 +152,16 @@ _zip_string_new(const zip_uint8_t *raw, zip_uint16_t length, zip_flags_t flags, 
 	expected_encoding = ZIP_ENCODING_CP437;
 	break;
     default:
-	zip_error_set(error, ZIP_ER_INVAL, 0);
+	_zip_error_set(error, ZIP_ER_INVAL, 0);
 	return NULL;
     }
 	
-    if ((s=(zip_string_t *)malloc(sizeof(*s))) == NULL) {
-	zip_error_set(error, ZIP_ER_MEMORY, 0);
+    if ((s=(struct zip_string *)malloc(sizeof(*s))) == NULL) {
+	_zip_error_set(error, ZIP_ER_MEMORY, 0);
 	return NULL;
     }
 
-    if ((s->raw=(zip_uint8_t *)malloc((size_t)(length+1))) == NULL) {
+    if ((s->raw=(zip_uint8_t *)malloc(length+1)) == NULL) {
 	free(s);
 	return NULL;
     }
@@ -169,7 +176,7 @@ _zip_string_new(const zip_uint8_t *raw, zip_uint16_t length, zip_flags_t flags, 
     if (expected_encoding != ZIP_ENCODING_UNKNOWN) {
 	if (_zip_guess_encoding(s, expected_encoding) == ZIP_ENCODING_ERROR) {
 	    _zip_string_free(s);
-	    zip_error_set(error, ZIP_ER_INVAL, 0);
+	    _zip_error_set(error, ZIP_ER_INVAL, 0);
 	    return NULL;
 	}
     }
@@ -177,12 +184,13 @@ _zip_string_new(const zip_uint8_t *raw, zip_uint16_t length, zip_flags_t flags, 
     return s;
 }
 
+
 
-int
-_zip_string_write(zip_t *za, const zip_string_t *s)
+void
+_zip_string_write(const struct zip_string *s, FILE *f)
 {
     if (s == NULL)
-	return 0;
+	return;
     
-    return _zip_write(za, s->raw, s->length);
+    fwrite(s->raw, s->length, 1, f);
 }

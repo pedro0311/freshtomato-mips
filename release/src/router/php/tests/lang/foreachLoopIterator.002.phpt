@@ -14,14 +14,11 @@ class MyIterator implements Iterator {
 $f = new MyIterator;
 echo "-----( Try to iterate with &\$value: )-----\n";
 foreach ($f as $k=>&$v) {
-	echo "$k => $v\n";
+	echo "$k => $v\n";	
 }
 
 ?>
 --EXPECTF--
 -----( Try to iterate with &$value: )-----
 
-Fatal error: Uncaught Error: An iterator cannot be used with foreach by reference in %s:13
-Stack trace:
-#0 {main}
-  thrown in %s on line 13
+Fatal error: An iterator cannot be used with foreach by reference in %s on line 13

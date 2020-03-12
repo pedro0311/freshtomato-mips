@@ -1,8 +1,8 @@
-/*
+/* 
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2018 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -20,14 +20,10 @@
 
 #include "php.h"
 
-#include <sys/types.h>
+#include <sys/types.h>                                                                                                        
 
 #ifdef HAVE_SYS_IPC_H
 #include <sys/ipc.h>
-#endif
-
-#ifdef PHP_WIN32
-#include "win32/ipc.h"
 #endif
 
 #if HAVE_FTOK
@@ -36,31 +32,30 @@
 PHP_FUNCTION(ftok)
 {
 	char *pathname, *proj;
-	size_t pathname_len, proj_len;
+	int pathname_len, proj_len;
 	key_t k;
 
-	ZEND_PARSE_PARAMETERS_START(2, 2)
-		Z_PARAM_PATH(pathname, pathname_len)
-		Z_PARAM_STRING(proj, proj_len)
-	ZEND_PARSE_PARAMETERS_END();
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ps", &pathname, &pathname_len, &proj, &proj_len) == FAILURE) {
+		return;
+	}
 
 	if (pathname_len == 0){
-		php_error_docref(NULL, E_WARNING, "Pathname is invalid");
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Pathname is invalid");
 		RETURN_LONG(-1);
 	}
 
 	if (proj_len != 1){
-		php_error_docref(NULL, E_WARNING, "Project identifier is invalid");
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Project identifier is invalid");
 		RETURN_LONG(-1);
 	}
 
-	if (php_check_open_basedir(pathname)) {
+	if (php_check_open_basedir(pathname TSRMLS_CC)) {
 		RETURN_LONG(-1);
 	}
 
 	k = ftok(pathname, proj[0]);
 	if (k == -1) {
-		php_error_docref(NULL, E_WARNING, "ftok() failed - %s", strerror(errno));
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "ftok() failed - %s", strerror(errno));
 	}
 
 	RETURN_LONG(k);

@@ -1,10 +1,7 @@
 --TEST--
 shm_remove() tests
 --SKIPIF--
-<?php
-if (!extension_loaded("sysvshm")){ print 'skip'; }
-if (!function_exists('ftok')){ print 'skip'; }
-?>
+<?php if (!extension_loaded("sysvshm")) print "skip"; ?>
 --FILE--
 <?php
 
@@ -17,13 +14,15 @@ var_dump(shm_remove(0));
 var_dump(shm_remove(""));
 
 var_dump(shm_remove($s));
+var_dump(shm_remove($s));
 
 shm_detach($s);
 var_dump(shm_remove($s));
 
 echo "Done\n";
 ?>
---EXPECTF--
+--EXPECTF--	
+
 Warning: shm_remove() expects exactly 1 parameter, 0 given in %s007.php on line %d
 NULL
 
@@ -36,7 +35,9 @@ NULL
 Warning: shm_remove() expects parameter 1 to be resource, string given in %s007.php on line %d
 NULL
 bool(true)
+bool(true)
 
-Warning: shm_remove(): supplied resource is not a valid sysvshm resource in %s007.php on line %d
+Warning: shm_remove(): %d is not a valid sysvshm resource in %s007.php on line %d
 bool(false)
 Done
+

@@ -1,3 +1,4 @@
+
 	/* $Id: fpm_trace.c,v 1.1 2008/07/20 20:59:00 anight Exp $ */
 	/* (c) 2007,2008 Andrei Nigmatulin */
 
@@ -10,8 +11,12 @@
 int fpm_trace_get_strz(char *buf, size_t sz, long addr) /* {{{ */
 {
 	int i;
-	long l = addr;
+	long l;
 	char *lc = (char *) &l;
+
+	if (0 > fpm_trace_get_long(addr, &l)) {
+		return -1;
+	}
 
 	i = l % SIZEOF_LONG;
 	l -= i;
@@ -32,3 +37,5 @@ int fpm_trace_get_strz(char *buf, size_t sz, long addr) /* {{{ */
 	}
 }
 /* }}} */
+
+

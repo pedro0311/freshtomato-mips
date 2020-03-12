@@ -78,8 +78,8 @@ array(11) {
   [8]=>
   NULL
   [9]=>
-  string(4) "foo1"
+  %unicode|string%(4) "foo1"
   [10]=>
-  string(4) "1000"
+  %unicode|string%(4) "1000"
 }
 done!

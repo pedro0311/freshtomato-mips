@@ -53,5 +53,5 @@ if (!mysqli_query($link, "DROP TABLE IF EXISTS mbind"))
 mysqli_close($link);
 ?>
 --EXPECTF--
-string(6) "foobar"
+%unicode|string%(6) "foobar"
 done!

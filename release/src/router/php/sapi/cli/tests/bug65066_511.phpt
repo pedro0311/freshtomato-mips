@@ -4,7 +4,7 @@ Bug #65066 (Cli server not responsive when responding with 422 http status code)
 allow_url_fopen=1
 --SKIPIF--
 <?php
-include "skipif.inc";
+include "skipif.inc"; 
 ?>
 --FILE--
 <?php
@@ -34,7 +34,6 @@ HEADER
 --EXPECTF--
 HTTP/1.1 511 Network Authentication Required
 Host: %s
-Date: %s
 Connection: close
 X-Powered-By: PHP/%s
 Content-type: text/html; charset=UTF-8

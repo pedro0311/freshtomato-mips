@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2018 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -30,7 +30,7 @@
 #include "php_com_dotnet_internal.h"
 
 
-PHP_COM_DOTNET_API OLECHAR *php_com_string_to_olestring(char *string, size_t string_len, int codepage)
+PHP_COM_DOTNET_API OLECHAR *php_com_string_to_olestring(char *string, uint string_len, int codepage TSRMLS_DC)
 {
 	OLECHAR *olestring = NULL;
 	DWORD flags = codepage == CP_UTF8 ? 0 : MB_PRECOMPOSED | MB_ERR_INVALID_CHARS;
@@ -49,7 +49,7 @@ PHP_COM_DOTNET_API OLECHAR *php_com_string_to_olestring(char *string, size_t str
 		/* XXX if that's a real multibyte string, olestring is obviously allocated excessively.
 		This should be fixed by reallocating the olestring, but as emalloc is used, that doesn't
 		matter much. */
-		ok = MultiByteToWideChar(codepage, flags, string, (int)string_len, olestring, (int)string_len);
+		ok = MultiByteToWideChar(codepage, flags, string, string_len, olestring, string_len);
 		if (ok > 0 && ok < string_len) {
 			olestring[ok] = '\0';
 		}
@@ -62,7 +62,7 @@ PHP_COM_DOTNET_API OLECHAR *php_com_string_to_olestring(char *string, size_t str
 	if (!ok) {
 		char *msg = php_win32_error_to_msg(GetLastError());
 
-		php_error_docref(NULL, E_WARNING,
+		php_error_docref(NULL TSRMLS_CC, E_WARNING,
 			"Could not convert string to unicode: `%s'", msg);
 
 		LocalFree(msg);
@@ -71,10 +71,10 @@ PHP_COM_DOTNET_API OLECHAR *php_com_string_to_olestring(char *string, size_t str
 	return olestring;
 }
 
-PHP_COM_DOTNET_API char *php_com_olestring_to_string(OLECHAR *olestring, size_t *string_len, int codepage)
+PHP_COM_DOTNET_API char *php_com_olestring_to_string(OLECHAR *olestring, uint *string_len, int codepage TSRMLS_DC)
 {
 	char *string;
-	uint32_t length = 0;
+	uint length = 0;
 	BOOL ok;
 
 	length = WideCharToMultiByte(codepage, 0, olestring, -1, NULL, 0, NULL, NULL);
@@ -93,7 +93,7 @@ PHP_COM_DOTNET_API char *php_com_olestring_to_string(OLECHAR *olestring, size_t 
 	if (!ok) {
 		char *msg = php_win32_error_to_msg(GetLastError());
 
-		php_error_docref(NULL, E_WARNING,
+		php_error_docref(NULL TSRMLS_CC, E_WARNING,
 			"Could not convert string from unicode: `%s'", msg);
 
 		LocalFree(msg);

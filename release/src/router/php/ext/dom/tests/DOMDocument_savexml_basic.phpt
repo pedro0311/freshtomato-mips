@@ -33,6 +33,7 @@ $result = file_get_contents($filename);
 var_dump($result == $dom->saveXML());
 
 unlink($filename);
+
 --EXPECTF--
 int(151)
 bool(true)

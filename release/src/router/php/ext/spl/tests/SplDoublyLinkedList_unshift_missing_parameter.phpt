@@ -10,3 +10,4 @@ var_dump($dll->unshift());
 --EXPECTF--
 Warning: SplDoublyLinkedList::unshift() expects exactly 1 parameter, 0 given in %s on line %d
 NULL
+

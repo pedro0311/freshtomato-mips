@@ -7,10 +7,10 @@ Test session_unset() function : basic functionality
 
 ob_start();
 
-/*
+/* 
  * Prototype : void session_unset(void)
  * Description : Free all session variables
- * Source code : ext/session/session.c
+ * Source code : ext/session/session.c 
  */
 
 echo "*** Testing session_unset() : basic functionality ***\n";
@@ -33,10 +33,11 @@ array(1) {
   ["foo"]=>
   string(12) "Hello World!"
 }
-bool(true)
+NULL
 array(0) {
 }
 bool(true)
 array(0) {
 }
 Done
+

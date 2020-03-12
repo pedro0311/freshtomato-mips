@@ -1,17 +1,17 @@
 --TEST--
 Test xml_set_processing_instruction_handler() function : usage variations
 --SKIPIF--
-<?php
+<?php 
 if (!extension_loaded("xml")) {
-	print "skip - XML extension not loaded";
-}
+	print "skip - XML extension not loaded"; 
+}	 
 ?>
 --FILE--
 <?php
 /* Prototype  : proto int xml_set_processing_instruction_handler(resource parser, string hdl)
- * Description: Set up processing instruction (PI) handler
+ * Description: Set up processing instruction (PI) handler 
  * Source code: ext/xml/xml.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing xml_set_processing_instruction_handler() : usage variations ***\n";
@@ -78,9 +78,9 @@ $values = array(
 
       // object data
       new aClass(),
-
+      
       // resource data
-      $fp,
+      $fp, 
 
       // undefined data
       $undefined_var,
@@ -124,27 +124,27 @@ NULL
 
 Arg value 10.5 
 
-Warning: xml_set_processing_instruction_handler() expects parameter 1 to be resource, float given in %s on line %d
+Warning: xml_set_processing_instruction_handler() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 Arg value -10.5 
 
-Warning: xml_set_processing_instruction_handler() expects parameter 1 to be resource, float given in %s on line %d
+Warning: xml_set_processing_instruction_handler() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 Arg value 101234567000 
 
-Warning: xml_set_processing_instruction_handler() expects parameter 1 to be resource, float given in %s on line %d
+Warning: xml_set_processing_instruction_handler() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 Arg value 1.07654321E-9 
 
-Warning: xml_set_processing_instruction_handler() expects parameter 1 to be resource, float given in %s on line %d
+Warning: xml_set_processing_instruction_handler() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 Arg value 0.5 
 
-Warning: xml_set_processing_instruction_handler() expects parameter 1 to be resource, float given in %s on line %d
+Warning: xml_set_processing_instruction_handler() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 Arg value Array 
@@ -242,3 +242,4 @@ Arg value
 Warning: xml_set_processing_instruction_handler() expects parameter 1 to be resource, null given in %s on line %d
 NULL
 Done
+

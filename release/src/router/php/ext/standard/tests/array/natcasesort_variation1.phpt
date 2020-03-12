@@ -58,7 +58,7 @@ $inputs = array(
        false,
        TRUE,
        FALSE,
-
+       
        // empty data
 /*16*/ "",
        '',
@@ -68,7 +68,7 @@ $inputs = array(
 /*19*/ "string",
        'string',
        $heredoc,
-
+       
        // object data
 /*22*/ new classA(),
 
@@ -119,27 +119,27 @@ NULL
 
 -- Iteration 5 --
 
-Warning: natcasesort() expects parameter 1 to be array, float given in %s on line %d
+Warning: natcasesort() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 6 --
 
-Warning: natcasesort() expects parameter 1 to be array, float given in %s on line %d
+Warning: natcasesort() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 7 --
 
-Warning: natcasesort() expects parameter 1 to be array, float given in %s on line %d
+Warning: natcasesort() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 8 --
 
-Warning: natcasesort() expects parameter 1 to be array, float given in %s on line %d
+Warning: natcasesort() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 9 --
 
-Warning: natcasesort() expects parameter 1 to be array, float given in %s on line %d
+Warning: natcasesort() expects parameter 1 to be array, double given in %s on line %d
 NULL
 
 -- Iteration 10 --
@@ -220,3 +220,4 @@ NULL
 Warning: natcasesort() expects parameter 1 to be array, resource given in %s on line %d
 NULL
 Done
+

@@ -31,7 +31,6 @@ var_dump($dd->validate());
 
 echo "Done.\n";
 
-?>
 --EXPECT--
 string(10) "-//FOO/BAR"
 string(25) "http://example.com/foobar"

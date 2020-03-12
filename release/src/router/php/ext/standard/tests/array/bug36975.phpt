@@ -2,13 +2,13 @@
 Bug #36975 (natcasesort() causes array_pop() to misbehave)
 --FILE--
 <?php
-$a = array('aa', 'aa', 'bb', 'bb', 'cc', 'cc');
+$a = array('aa', 'aa', 'bb', 'bb', 'cc', 'cc');                  
 $test = natcasesort($a);
-if ($test) {
-  echo "natcasesort success!\n";
-}
-$val = array_pop($a);
-$a[] = $val;
+if ($test) {                                                            
+  echo "natcasesort success!\n";                                        
+}                                                                       
+$val = array_pop($a);                                            
+$a[] = $val;                                                     
 var_dump($a);
 
 $b = array(1 => 'foo', 0 => 'baz');
@@ -31,13 +31,13 @@ array(6) {
   string(2) "aa"
   [1]=>
   string(2) "aa"
-  [2]=>
-  string(2) "bb"
   [3]=>
   string(2) "bb"
-  [4]=>
-  string(2) "cc"
+  [2]=>
+  string(2) "bb"
   [5]=>
+  string(2) "cc"
+  [6]=>
   string(2) "cc"
 }
 Array
@@ -47,16 +47,16 @@ Array
     [3] => bar
 )
 array(6) {
-  [0]=>
-  int(0)
-  [1]=>
-  int(0)
-  [2]=>
+  [4]=>
   int(0)
   [3]=>
   int(0)
-  [4]=>
-  string(3) "foo"
+  [2]=>
+  int(0)
+  [1]=>
+  int(0)
   [5]=>
+  string(3) "foo"
+  [6]=>
   string(3) "bar"
 }

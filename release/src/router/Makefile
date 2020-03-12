@@ -33,6 +33,30 @@ define unpatch_files
  done
 endef
 
+define CMAKE_CrossOptions
+ ( \
+  echo "SET(CMAKE_CROSSCOMPILING \"TRUE\")" >>$(1); \
+  echo "SET(TOP $(TOP))" >>$(1); \
+  echo "SET(CMAKE_SYSTEM_NAME Linux)" >>$(1); \
+  echo "SET(CMAKE_SYSTEM_VERSION $(LINUX_KERNEL))" >>$(1); \
+  echo "SET(CMAKE_SYSTEM $(PLATFORM))" >>$(1); \
+  echo "SET(CMAKE_SYSTEM_PROCESSOR $(ARCH))" >>$(1); \
+  echo "SET(CMAKE_C_COMPILER $(CC))" >>$(1); \
+  echo "SET(CMAKE_CXX_COMPILER $(CXX))" >>$(1); \
+  echo "SET(CMAKE_AR $(AR))" >>$(1); \
+  echo "SET(CMAKE_LINKER $(LD))" >>$(1); \
+  echo "SET(CMAKE_NM $(NM))" >>$(1); \
+  echo "SET(CMAKE_OBJCOPY $(OBJCOPY))" >>$(1); \
+  echo "SET(CMAKE_OBJDUMP $(OBJDUMP))" >>$(1); \
+  echo "SET(CMAKE_RANLIB $(RANLIB))" >>$(1); \
+  echo "SET(CMAKE_STRIP $(STRIP))" >>$(1); \
+  echo "SET(CMAKE_FIND_ROOT_PATH $(TOOLCHAIN))" >>$(1); \
+  echo "SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)" >>$(1); \
+  echo "SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)" >>$(1); \
+  echo "SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)" >>$(1); \
+ )
+endef
+
 
 #
 #
@@ -758,7 +782,7 @@ cyassl-clean:
 
 ifeq ($(TCONFIG_KEYGEN),)
 ifeq ($(TCONFIG_OPENSSL11),y)
-OPENSSL_CIPHERS := no-camellia no-idea no-rc2 no-cast no-seed no-gost no-md4 no-mdc2 no-rmd160 no-cms no-engine no-ocsp no-srp no-ts no-afalgeng no-ocb no-ocsp \
+OPENSSL_CIPHERS := no-camellia no-idea no-rc2 no-cast no-seed no-gost no-md4 no-mdc2 no-rmd160 no-cms no-engine no-ocsp no-srp no-ts no-afalgeng no-ocb \
                    no-tests no-unit-test no-ui-console no-whirlpool no-blake2 no-cmac no-multiblock no-nextprotoneg no-comp no-ct no-scrypt no-sctp no-siphash no-ubsan \
                    no-rc5 no-rdrand no-capieng no-rfc3779 no-hw no-zlib no-sse2 no-ssl-trace no-dtls1 no-psk no-md2 no-devcryptoeng no-dgram no-dtls
 else
@@ -1807,15 +1831,15 @@ pcre: pcre/stamp-h1
 	@$(MAKE) -C pcre
 
 pcre-install:
-	install -D pcre/.libs/libpcre.so.1 $(INSTALLDIR)/pcre/usr/lib/libpcre.so.1.2.10
-	$(STRIP) -s $(INSTALLDIR)/pcre/usr/lib/libpcre.so.1.2.10
+	install -D pcre/.libs/libpcre.so.1 $(INSTALLDIR)/pcre/usr/lib/libpcre.so.1.2.12
+	$(STRIP) -s $(INSTALLDIR)/pcre/usr/lib/libpcre.so.1.2.12
 	cd $(INSTALLDIR)/pcre/usr/lib/ && \
-		ln -sf libpcre.so.1.2.10 libpcre.so.1
+		ln -sf libpcre.so.1.2.12 libpcre.so.1
 #unused at the moment - shibby
-#	install -D pcre/.libs/libpcreposix.so.0.0.6 $(INSTALLDIR)/pcre/usr/lib/libpcreposix.so.0.0.6
-#	$(STRIP) -s $(INSTALLDIR)/pcre/usr/lib/libpcreposix.so.0.0.6
+#	install -D pcre/.libs/libpcreposix.so.0.0.7 $(INSTALLDIR)/pcre/usr/lib/libpcreposix.so.0.0.7
+#	$(STRIP) -s $(INSTALLDIR)/pcre/usr/lib/libpcreposix.so.0.0.7
 #	cd $(INSTALLDIR)/pcre/usr/lib/ && \
-#		ln -sf libpcreposix.so.0.0.6 libpcreposix.so.0
+#		ln -sf libpcreposix.so.0.0.7 libpcreposix.so.0
 
 pcre-clean:
 	( if [ -f pcre/Makefile ]; then \
@@ -2621,32 +2645,45 @@ libyaml-clean:
 	-$(MAKE) -C libyaml clean
 	@rm -rf libyaml/stamp-h1 libyaml/src/.deps libyaml/src/tests/.deps
 
-getdns/stamp-h1: $(OPENSSLDIR) libyaml
+getdns/build/Makefile:
+	@rm -rf getdns/build && mkdir -p getdns/build
 	$(call patch_files,getdns)
-	cd getdns && autoreconf -fsi && \
-	CFLAGS="-Os -Wall $(EXTRACFLAGS) -I$(TOP)/$(OPENSSLDIR)/include -I$(TOP)/libyaml/include -ffunction-sections -fdata-sections" \
-	LDFLAGS="-L$(TOP)/$(OPENSSLDIR) -L$(TOP)/libyaml/src/.libs -ffunction-sections -fdata-sections -Wl,--gc-sections" \
-	LIBS="-lcrypto -lssl -lyaml -lpthread" \
-	$(CONFIGURE) --prefix=/usr --sysconfdir=/etc --localstatedir=/var \
-		--enable-static --disable-shared --disable-gost \
-		--without-libidn --without-libidn2 \
-		--without-getdns_query --without-getdns_server_mon \
-		--without-libunbound --enable-stub-only --with-stubby \
-		--with-ssl=$(TOP)/$(OPENSSLDIR) --with-libyaml=$(TOP)/libyaml
-	@touch $@
+	cd getdns/build && \
+	$(call CMAKE_CrossOptions, crosscompiled.cmake) && \
+	cmake -DCMAKE_TOOLCHAIN_FILE=crosscompiled.cmake \
+		-DCMAKE_INSTALL_PREFIX:PATH=/usr \
+		-DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_SKIP_RPATH=TRUE \
+		-DCMAKE_C_FLAGS="-Os -DNDEBUG -ffunction-sections -fdata-sections -std=c99 $(EXTRACFLAGS)" \
+		-DCMAKE_EXE_LINKER_FLAGS="-Wl,--gc-sections $(if $(TCONFIG_OPENSSL11),-lpthread,)" \
+		-DENABLE_STATIC=TRUE -DENABLE_SHARED=FALSE -DENABLE_GOST=FALSE \
+		-DBUILD_GETDNS_QUERY=FALSE \
+		-DBUILD_GETDNS_SERVER_MON=FALSE \
+		-DBUILD_STUBBY=TRUE -DENABLE_STUB_ONLY=TRUE \
+		-DBUILD_LIBEV=FALSE -DBUILD_LIBEVENT2=FALSE -DBUILD_LIBUV=FALSE \
+		-DBUILD_TESTING=FALSE \
+		-DOPENSSL_ROOT_DIR=$(TOP)/$(OPENSSLDIR) \
+		-DOPENSSL_INCLUDE_DIR=$(TOP)/$(OPENSSLDIR)/include \
+		-DOPENSSL_CRYPTO_LIBRARY=$(TOP)/$(OPENSSLDIR)/libcrypto.so \
+		-DOPENSSL_SSL_LIBRARY=$(TOP)/$(OPENSSLDIR)/libssl.so \
+		-DLIBYAML_DIR=$(TOP)/libyaml \
+		-DLIBYAML_INCLUDE_DIR=$(TOP)/libyaml/include \
+		-DLIBYAML_LIBRARY=$(TOP)/libyaml/src/.libs/libyaml.a \
+		-DCMAKE_DISABLE_FIND_PACKAGE_Libsystemd=TRUE \
+		-DUSE_LIBIDN2=FALSE \
+		-DSTRPTIME_WORKS_EXITCODE=0 \
+		-DTHREADS_PTHREAD_ARG=0 \
+		..
 
-getdns: getdns/stamp-h1
-	@$(SEP)
-	$(MAKE) -C getdns $(PARALLEL_BUILD)
+getdns: $(OPENSSLDIR) libyaml getdns/build/Makefile
+	$(MAKE) -C getdns/build
 
 getdns-install:
 	install -d $(INSTALLDIR)/getdns/usr/sbin
-	install -D getdns/src/stubby $(INSTALLDIR)/getdns/usr/sbin/stubby
+	install -D getdns/build/stubby/stubby $(INSTALLDIR)/getdns/usr/sbin/stubby
 	$(STRIP) -s $(INSTALLDIR)/getdns/usr/sbin/stubby
 
 getdns-clean:
-	-@$(MAKE) -C getdns clean
-	@rm -rf getdns/stamp-h1 getdns/src/.libs getdns/src/tools/.libs
+	@rm -rf getdns/build
 	$(call unpatch_files,getdns)
 
 tor/stamp-h1: $(OPENSSLDIR) zlib libevent

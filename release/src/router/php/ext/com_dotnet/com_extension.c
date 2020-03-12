@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2018 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -22,15 +22,12 @@
 #include "config.h"
 #endif
 
-#include <intsafe.h>
-
 #include "php.h"
 #include "php_ini.h"
 #include "ext/standard/info.h"
 #include "php_com_dotnet.h"
 #include "php_com_dotnet_internal.h"
 #include "Zend/zend_exceptions.h"
-#include "Zend/zend_interfaces.h"
 
 ZEND_DECLARE_MODULE_GLOBALS(com_dotnet)
 static PHP_GINIT_FUNCTION(com_dotnet);
@@ -245,7 +242,7 @@ zend_module_entry com_dotnet_module_entry = {
 	PHP_RINIT(com_dotnet),
 	PHP_RSHUTDOWN(com_dotnet),
 	PHP_MINFO(com_dotnet),
-	PHP_COM_DOTNET_VERSION,
+	"0.1",
 	PHP_MODULE_GLOBALS(com_dotnet),
 	PHP_GINIT(com_dotnet),
 	NULL,
@@ -255,9 +252,6 @@ zend_module_entry com_dotnet_module_entry = {
 /* }}} */
 
 #ifdef COMPILE_DL_COM_DOTNET
-#ifdef ZTS
-ZEND_TSRMLS_CACHE_DEFINE()
-#endif
 ZEND_GET_MODULE(com_dotnet)
 #endif
 
@@ -276,7 +270,7 @@ static PHP_INI_MH(OnTypeLibFileUpdate)
 	char *strtok_buf = NULL;
 	int cached;
 
-	if (NULL == new_value || !new_value->val[0] || (typelib_file = VCWD_FOPEN(new_value->val, "r"))==NULL) {
+	if (!new_value || !new_value[0] || (typelib_file = VCWD_FOPEN(new_value, "r"))==NULL) {
 		return FAILURE;
 	}
 
@@ -313,9 +307,9 @@ static PHP_INI_MH(OnTypeLibFileUpdate)
 			ptr--;
 		}
 
-		if ((pTL = php_com_load_typelib_via_cache(typelib_name, COMG(code_page), &cached)) != NULL) {
+		if ((pTL = php_com_load_typelib_via_cache(typelib_name, COMG(code_page), &cached TSRMLS_CC)) != NULL) {
 			if (!cached) {
-				php_com_import_typelib(pTL, mode, COMG(code_page));
+				php_com_import_typelib(pTL, mode, COMG(code_page) TSRMLS_CC);
 			}
 			ITypeLib_Release(pTL);
 		}
@@ -341,9 +335,6 @@ PHP_INI_END()
  */
 static PHP_GINIT_FUNCTION(com_dotnet)
 {
-#if defined(COMPILE_DL_COM_DOTNET) && defined(ZTS)
-	ZEND_TSRMLS_CACHE_UPDATE();
-#endif
 	memset(com_dotnet_globals, 0, sizeof(*com_dotnet_globals));
 	com_dotnet_globals->code_page = CP_ACP;
 }
@@ -355,57 +346,43 @@ PHP_MINIT_FUNCTION(com_dotnet)
 {
 	zend_class_entry ce, *tmp;
 
-	zend_hash_init(&com_dotnet_object_properties, 0, NULL, NULL, 0);
-
 	php_com_wrapper_minit(INIT_FUNC_ARGS_PASSTHRU);
 	php_com_persist_minit(INIT_FUNC_ARGS_PASSTHRU);
 
 	INIT_CLASS_ENTRY(ce, "com_exception", NULL);
-	php_com_exception_class_entry = zend_register_internal_class_ex(&ce, zend_ce_exception);
+	php_com_exception_class_entry = zend_register_internal_class_ex(&ce, zend_exception_get_default(TSRMLS_C), NULL TSRMLS_CC);
 	php_com_exception_class_entry->ce_flags |= ZEND_ACC_FINAL;
 /*	php_com_exception_class_entry->constructor->common.fn_flags |= ZEND_ACC_PROTECTED; */
 
 	INIT_CLASS_ENTRY(ce, "com_safearray_proxy", NULL);
-	php_com_saproxy_class_entry = zend_register_internal_class(&ce);
+	php_com_saproxy_class_entry = zend_register_internal_class(&ce TSRMLS_CC);
 	php_com_saproxy_class_entry->ce_flags |= ZEND_ACC_FINAL;
 /*	php_com_saproxy_class_entry->constructor->common.fn_flags |= ZEND_ACC_PROTECTED; */
 	php_com_saproxy_class_entry->get_iterator = php_com_saproxy_iter_get;
-
+	
 	INIT_CLASS_ENTRY(ce, "variant", NULL);
 	ce.create_object = php_com_object_new;
-	php_com_variant_class_entry = zend_register_internal_class(&ce);
+	php_com_variant_class_entry = zend_register_internal_class(&ce TSRMLS_CC);
 	php_com_variant_class_entry->get_iterator = php_com_iter_get;
-	php_com_variant_class_entry->serialize = zend_class_serialize_deny;
-	php_com_variant_class_entry->unserialize = zend_class_unserialize_deny;
 
 	INIT_CLASS_ENTRY(ce, "com", NULL);
 	ce.create_object = php_com_object_new;
-	tmp = zend_register_internal_class_ex(&ce, php_com_variant_class_entry);
+	tmp = zend_register_internal_class_ex(&ce, php_com_variant_class_entry, "variant" TSRMLS_CC);
 	tmp->get_iterator = php_com_iter_get;
-	tmp->serialize = zend_class_serialize_deny;
-	tmp->unserialize = zend_class_unserialize_deny;
 
 	zend_ts_hash_init(&php_com_typelibraries, 0, NULL, php_com_typelibrary_dtor, 1);
 
 #if HAVE_MSCOREE_H
 	INIT_CLASS_ENTRY(ce, "dotnet", NULL);
 	ce.create_object = php_com_object_new;
-	tmp = zend_register_internal_class_ex(&ce, php_com_variant_class_entry);
+	tmp = zend_register_internal_class_ex(&ce, php_com_variant_class_entry, "variant" TSRMLS_CC);
 	tmp->get_iterator = php_com_iter_get;
-	tmp->serialize = zend_class_serialize_deny;
-	tmp->unserialize = zend_class_unserialize_deny;
 #endif
 
 	REGISTER_INI_ENTRIES();
 
 #define COM_CONST(x) REGISTER_LONG_CONSTANT(#x, x, CONST_CS|CONST_PERSISTENT)
-
-#define COM_ERR_CONST(x) { \
-	zend_long __tmp; \
-	ULongToIntPtr(x, &__tmp); \
-	REGISTER_LONG_CONSTANT(#x, __tmp, CONST_CS|CONST_PERSISTENT); \
-}
-
+	
 	COM_CONST(CLSCTX_INPROC_SERVER);
 	COM_CONST(CLSCTX_INPROC_HANDLER);
 	COM_CONST(CLSCTX_LOCAL_SERVER);
@@ -464,15 +441,11 @@ PHP_MINIT_FUNCTION(com_dotnet)
 #ifdef NORM_IGNOREKASHIDA
 	COM_CONST(NORM_IGNOREKASHIDA);
 #endif
-	COM_ERR_CONST(DISP_E_DIVBYZERO);
-	COM_ERR_CONST(DISP_E_OVERFLOW);
-	COM_ERR_CONST(DISP_E_BADINDEX);
-	COM_ERR_CONST(MK_E_UNAVAILABLE);
+	COM_CONST(DISP_E_DIVBYZERO);
+	COM_CONST(DISP_E_OVERFLOW);
+	COM_CONST(DISP_E_BADINDEX);
+	COM_CONST(MK_E_UNAVAILABLE);
 
-#if SIZEOF_ZEND_LONG == 8
-	COM_CONST(VT_UI8);
-	COM_CONST(VT_I8);
-#endif
 	return SUCCESS;
 }
 /* }}} */
@@ -484,7 +457,7 @@ PHP_MSHUTDOWN_FUNCTION(com_dotnet)
 	UNREGISTER_INI_ENTRIES();
 #if HAVE_MSCOREE_H
 	if (COMG(dotnet_runtime_stuff)) {
-		php_com_dotnet_mshutdown();
+		php_com_dotnet_mshutdown(TSRMLS_C);
 	}
 #endif
 
@@ -508,7 +481,7 @@ PHP_RSHUTDOWN_FUNCTION(com_dotnet)
 {
 #if HAVE_MSCOREE_H
 	if (COMG(dotnet_runtime_stuff)) {
-		php_com_dotnet_rshutdown();
+		php_com_dotnet_rshutdown(TSRMLS_C);
 	}
 #endif
 	COMG(rshutdown_started) = 1;

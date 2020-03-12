@@ -22,14 +22,14 @@ $format2 = "%o %o";
 $format3 = "%o %o %o";
 $arg1 = 021;
 $arg2 = -0347;
-$arg3 = 0567;
+$arg3 = 05678;
 
 echo "\n-- Calling printf() with no arguments --\n";
 $result = printf($format);
 echo "\n";
 var_dump($result);
 
-echo "\n-- Calling printf() with one arguments --\n";
+echo "\n-- Calling printf() with one arguments --\n"; 
 $result = printf($format1, $arg1);
 echo "\n";
 var_dump($result);

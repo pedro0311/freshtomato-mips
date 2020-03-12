@@ -4,10 +4,10 @@ oci_lob_import()/read()
 <?php
 $target_dbs = array('oracledb' => true, 'timesten' => false);  // test runs on these DBs
 require(dirname(__FILE__).'/skipif.inc');
-?>
+?> 
 --FILE--
 <?php
-
+	
 require dirname(__FILE__).'/connect.inc';
 require dirname(__FILE__).'/create_table.inc';
 
@@ -40,7 +40,7 @@ oci_execute($s, OCI_DEFAULT);
 var_dump($row = oci_fetch_array($s));
 
 while (!$row[0]->eof()) {
-	var_dump(str_replace("\r", "", $row[0]->read(1024)));
+	var_dump($row[0]->read(1024));
 }
 
 require dirname(__FILE__).'/drop_table.inc';

@@ -89,7 +89,7 @@ oci_close($c);
 ?>
 ===DONE===
 <?php exit(0); ?>
---EXPECT--
+--EXPECTF--
 Test 0 - base table creation without binds
 array(5) {
   ["ID"]=>

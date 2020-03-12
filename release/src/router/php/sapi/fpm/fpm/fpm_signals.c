@@ -1,3 +1,4 @@
+
 	/* $Id: fpm_signals.c,v 1.24 2008/08/26 15:09:15 anight Exp $ */
 	/* (c) 2007,2008 Andrei Nigmatulin */
 
@@ -143,7 +144,7 @@ static void sig_soft_quit(int signo) /* {{{ */
 	int saved_errno = errno;
 
 	/* closing fastcgi listening socket will force fcgi_accept() exit immediately */
-	close(fpm_globals.listening_socket);
+	close(0);
 	if (0 > socket(AF_UNIX, SOCK_STREAM, 0)) {
 		zlog(ZLOG_WARNING, "failed to create a new socket");
 	}
@@ -173,7 +174,7 @@ static void sig_handler(int signo) /* {{{ */
 
 	saved_errno = errno;
 	s = sig_chars[signo];
-	zend_quiet_write(sp[1], &s, sizeof(s));
+	write(sp[1], &s, sizeof(s));
 	errno = saved_errno;
 }
 /* }}} */
@@ -240,8 +241,6 @@ int fpm_signals_init_child() /* {{{ */
 		zlog(ZLOG_SYSERROR, "failed to init child signals: sigaction()");
 		return -1;
 	}
-
-	zend_signal_init();
 	return 0;
 }
 /* }}} */
@@ -251,3 +250,4 @@ int fpm_signals_get_fd() /* {{{ */
 	return sp[0];
 }
 /* }}} */
+

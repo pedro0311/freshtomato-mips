@@ -27,7 +27,7 @@ $inputs = array (
 
   // mixed value array
   array(.0001, .0021, -.01, -1, 0, .09, 2, -.9, 10.6E-2, -10.6E-2, 33),
-
+ 
   // array values contains minimum and maximum ranges
   array(2147483647, 2147483648, -2147483647, -2147483648, -0, 0, -2147483649)
 );
@@ -41,6 +41,7 @@ foreach ($inputs as $array_arg) {
 
 echo "Done";
 ?>
+
 --EXPECTF--
 *** Testing natcasesort() : usage variation ***
 
@@ -122,9 +123,9 @@ array(7) {
   float(-2147483648)
   [6]=>
   float(-2147483649)
-  [4]=>
-  int(0)
   [5]=>
+  int(0)
+  [4]=>
   int(0)
   [0]=>
   int(2147483647)

@@ -1,8 +1,8 @@
 /*
   +----------------------------------------------------------------------+
-  | PHP Version 7                                                        |
+  | PHP Version 5                                                        |
   +----------------------------------------------------------------------+
-  | Copyright (c) 1997-2018 The PHP Group                                |
+  | Copyright (c) 1997-2016 The PHP Group                                |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -20,9 +20,9 @@
 
 #include "php.h"
 
-#ifdef USE_STRLCPY_PHP_IMPL
+#ifndef HAVE_STRLCPY
 
-/*     $OpenBSD: strlcpy.c,v 1.15 2016/10/16 17:37:39 dtucker Exp $    */
+/*	$OpenBSD: strlcpy.c,v 1.4 1999/05/01 18:56:41 millert Exp $	*/
 
 /*
  * Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
@@ -52,7 +52,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char *rcsid = "$OpenBSD: strlcpy.c,v 1.15 2016/10/16 17:37:39 dtucker Exp $";
+static char *rcsid = "$OpenBSD: strlcpy.c,v 1.4 1999/05/01 18:56:41 millert Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <sys/types.h>
@@ -68,31 +68,27 @@ PHPAPI size_t php_strlcpy(dst, src, siz)
 	const char *src;
 	size_t siz;
 {
-	const char *s = src;
-	size_t n = siz;
+	register char *d = dst;
+	register const char *s = src;
+	register size_t n = siz;
 
 	/* Copy as many bytes as will fit */
-	if (n != 0) {
-		while (--n != 0) {
-			if ((*dst++ = *src++) == 0)
+	if (n != 0 && --n != 0) {
+		do {
+			if ((*d++ = *s++) == 0)
 				break;
-		}
+		} while (--n != 0);
 	}
 
 	/* Not enough room in dst, add NUL and traverse rest of src */
 	if (n == 0) {
 		if (siz != 0)
-			*dst = '\0';		/* NUL-terminate dst */
-		while (*src++)
+			*d = '\0';		/* NUL-terminate dst */
+		while (*s++)
 			;
 	}
 
-	/*
-	 * Cast pointers to unsigned type before calculation, to avoid signed
-	 * overflow when the string ends where the MSB has changed.
-	 * Return value does not include NUL.
-	 */
-	return((uintptr_t)src - (uintptr_t)s - 1);
+	return(s - src - 1);	/* count does not include NUL */
 }
 
 #endif /* !HAVE_STRLCPY */

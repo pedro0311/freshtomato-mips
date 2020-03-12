@@ -18,5 +18,5 @@ Jean-Marc Fontaine <jmf@durcommefaire.net>
 ?>
 ===DONE===
 --EXPECTF--
-string(24) "text/plain;charset=utf-8"
+%unicode|string%(24) "text/plain;charset=utf-8"
 ===DONE===

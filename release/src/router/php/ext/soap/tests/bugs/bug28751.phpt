@@ -4,13 +4,13 @@ Bug #28751 (SoapServer does not call _autoload())
 <?php require_once('skipif.inc'); ?>
 --FILE--
 <?php
-spl_autoload_register(function ($className) {
+function __autoload($className) {
 	class SoapServerActions {
     function test() {
       return "Hello World";
     }
 	}
-});
+}
 
 $server = new SoapServer(NULL, array('uri'=>"http://testuri.org"));
 $server->setClass("SoapServerActions");

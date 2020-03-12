@@ -7,7 +7,7 @@ if (PHP_INT_SIZE != 4) die("skip this test is for 32bit platform only");
 --FILE--
 <?php
 /* Prototype  : string vprintf(string $format , array $args)
- * Description: Output a formatted string
+ * Description: Output a formatted string 
  * Source code: ext/standard/formatted_print.c
 */
 
@@ -38,7 +38,7 @@ $args_array = array(
   array(65, 66, 67),
   array(2e1, 2e-1, -2e1),
   array(-11, +22, 33),
-  array(012, -023, +023),
+  array(012, -02394, +02389),
   array(0x11, -0x22, +0x33),
   array(0x11, -0x22, +0x33),
   array(2e1, 2e-1, -2e1)

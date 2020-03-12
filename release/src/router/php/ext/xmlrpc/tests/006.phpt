@@ -1,10 +1,13 @@
 --TEST--
 xmlrpc_decode() Simple test decode type string
+
 --CREDITS--
 Michel Araujo <araujo_michel@yahoo.com.br>
 #PHPSP 2013-08-22
+
 --SKIPIF--
 <?php if (!extension_loaded("xmlrpc")) print "skip"; ?>
+
 --FILE--
 <?php
 
@@ -21,5 +24,6 @@ XML;
 
 $response = xmlrpc_decode($xml);
 echo $response;
+
 --EXPECT--
 Is string

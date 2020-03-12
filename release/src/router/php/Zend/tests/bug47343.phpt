@@ -8,7 +8,7 @@ class A
 	{
 		gc_collect_cycles();
 	}
-
+	
 	public function getB()
 	{
 		$this->data['foo'] = new B($this);
@@ -20,7 +20,7 @@ class A
 
 class B
 {
-	public function __construct($A)
+	public function B($A)
 	{
 		$this->A = $A;
 	}

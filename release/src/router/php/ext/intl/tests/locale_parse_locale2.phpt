@@ -102,7 +102,7 @@ uk-ua_CALIFORNIA@currency=;currency=GRN:
 language : 'uk' , region : 'UA' , variant0 : 'CALIFORNIA' ,
 ---------------------
 root:
-%s
+language : 'root' ,
 ---------------------
 uk@currency=EURO:
 language : 'uk' ,

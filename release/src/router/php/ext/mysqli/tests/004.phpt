@@ -34,7 +34,7 @@ require_once('skipifconnectfailure.inc');
 
 	if (!$stmt = mysqli_prepare($link, "SELECT * FROM test_bind_fetch ORDER BY c1"))
 		printf("[007] [%d] %s\n", mysqli_errno($link), mysqli_error($link));
-
+	
 	$c1 = $c2 = NULL;
 	mysqli_stmt_bind_result($stmt, $c1, $c2);
 	mysqli_stmt_execute($stmt);
@@ -64,26 +64,26 @@ mysqli_close($link);
 --EXPECTF--
 array(2) {
   [0]=>
-  string(10) "1234567890"
+  %unicode|string%(10) "1234567890"
   [1]=>
-  string(15) "this is a test0"
+  %unicode|string%(15) "this is a test0"
 }
 array(2) {
   [0]=>
-  string(10) "1234567891"
+  %unicode|string%(10) "1234567891"
   [1]=>
-  string(15) "this is a test1"
+  %unicode|string%(15) "this is a test1"
 }
 array(2) {
   [0]=>
-  string(10) "1234567892"
+  %unicode|string%(10) "1234567892"
   [1]=>
-  string(15) "this is a test2"
+  %unicode|string%(15) "this is a test2"
 }
 array(2) {
   [0]=>
-  string(10) "1234567893"
+  %unicode|string%(10) "1234567893"
   [1]=>
-  string(15) "this is a test3"
+  %unicode|string%(15) "this is a test3"
 }
 done!

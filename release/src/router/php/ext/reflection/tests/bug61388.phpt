@@ -25,12 +25,6 @@ Array
 (
     [0] => ReflectionProperty Object
         (
-            [name] => 0
-            [class] => stdClass
-        )
-
-    [1] => ReflectionProperty Object
-        (
             [name] => oo
             [class] => stdClass
         )

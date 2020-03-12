@@ -1,39 +1,33 @@
 --TEST--
 Test var_export() function with integer values
---SKIPIF--
-<?php
-if (PHP_INT_SIZE < 8) {
-        die("skip 64-bit only");
-}
-?>
 --FILE--
 <?php
 /* Prototype  : mixed var_export(mixed var [, bool return])
- * Description: Outputs or returns a string representation of a variable
+ * Description: Outputs or returns a string representation of a variable 
  * Source code: ext/standard/var.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing var_export() with integer values ***\n";
-// different integer vlaues
+// different integer vlaues 
 $valid_ints = array(
                 '0' => '0',
                 '1' => '1',
                 '-1' => '-1',
                 '-2147483648' => '-2147483648', // max negative integer value
-                '-2147483647' => '-2147483647',
+                '-2147483647' => '-2147483647', 
                 '2147483647' => 2147483647,  // max positive integer value
                 '2147483640' => 2147483640,
                 '0x123B' => 0x123B,      // integer as hexadecimal
                 "'0x12ab'" => '0x12ab',
                 "'0Xfff'" => '0Xfff',
                 "'0XFA'" => '0XFA',
-                "-0x80000000" => -0x7FFFFFFF - 1, // max negative integer as hexadecimal
-                "'0x7fffffff'" => '0x7fffffff',  // max positive integer as hexadecimal
-                "0x7FFFFFFF" => 0x7FFFFFFF,  // max positive integer as hexadecimal
+                "-0x80000000" => -0x80000000, // max negative integer as hexadecimal
+                "'0x7fffffff'" => '0x7fffffff',  // max postive integer as hexadecimal
+                "0x7FFFFFFF" => 0x7FFFFFFF,  // max postive integer as hexadecimal
                 "'0123'" => '0123',        // integer as octal
-                "01912" => 01,       // should be quivalent to octal 1
-                "-020000000000" => -017777777777 - 1, // max negative integer as octal
+                "01912" => 01912,       // should be quivalent to octal 1
+                "-020000000000" => -020000000000, // max negative integer as octal
                 "017777777777" => 017777777777,  // max positive integer as octal
 );
 

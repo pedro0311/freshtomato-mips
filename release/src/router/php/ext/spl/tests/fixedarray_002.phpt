@@ -3,9 +3,6 @@ SPL: FixedArray: overloading
 --FILE--
 <?php
 class A extends SplFixedArray {
-	public $prop1 = NULL;
-	public $prop2 = NULL;
-
     public function count() {
         return 2;
     }

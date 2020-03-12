@@ -8,10 +8,10 @@ require_once('skipifconnectfailure.inc');
 
 require_once('connect.inc');
 if (!$link = my_mysqli_connect($host, $user, $passwd, $db, $port, $socket))
-	die(sprintf("skip Cannot connect, [%d] %s", mysqli_connect_errno(), mysqli_connect_error()));
+	die(sprintf("Cannot connect, [%d] %s", mysqli_connect_errno(), mysqli_connect_error()));
 
 if (!have_innodb($link))
-	die(sprintf("skip Needs InnoDB support, [%d] %s", $link->errno, $link->error));
+	die(sprintf("Needs InnoDB support, [%d] %s", $link->errno, $link->error));
 ?>
 --FILE--
 <?php
@@ -97,7 +97,7 @@ if (!have_innodb($link))
 			$res = mysqli_query($link, "SELECT id FROM test WHERE id = 2");
 		}
 	}
-
+	
 	if (!mysqli_begin_transaction($link, -1)) {
 			printf("[019] [%d] %s\n", mysqli_errno($link), mysqli_error($link));
 	}

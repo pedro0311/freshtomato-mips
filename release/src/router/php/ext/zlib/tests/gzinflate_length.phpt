@@ -23,3 +23,4 @@ Strings are equal
 
 Warning: gzinflate(): insufficient memory in %s on line %d
 Failed (as expected)
+

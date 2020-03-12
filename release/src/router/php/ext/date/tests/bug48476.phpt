@@ -29,3 +29,5 @@ bool(false)
 
 Warning: timezone_location_get(): The DateTimeZone object has not been correctly initialized by its constructor in %sbug48476.php on line 18
 bool(false)
+
+

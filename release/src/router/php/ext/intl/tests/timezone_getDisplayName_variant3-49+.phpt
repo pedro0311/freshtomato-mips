@@ -19,8 +19,8 @@ var_dump($lsb->getDisplayName(false, IntlTimeZone::DISPLAY_LONG, 'pt_PT'));
 
 ?>
 ==DONE==
---EXPECTF--
+--EXPECT--
 string(30) "Western European Standard Time"
 string(30) "Western European Standard Time"
-string(32) "Hora %cadrão da Europa Ocidental"
+string(32) "Hora Padrão da Europa Ocidental"
 ==DONE==

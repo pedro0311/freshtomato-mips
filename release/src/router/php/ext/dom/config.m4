@@ -12,7 +12,7 @@ fi
 
 if test "$PHP_DOM" != "no"; then
 
-  if test "$PHP_LIBXML" = "no"; then
+  if test "$PHP_LIBXML" = "no"; then   
     AC_MSG_ERROR([DOM extension requires LIBXML extension, add --enable-libxml])
   fi
 
@@ -27,12 +27,12 @@ if test "$PHP_DOM" != "no"; then
                             nodelist.c text.c comment.c domconfiguration.c \
                             domimplementationsource.c entityreference.c \
                             notation.c xpath.c dom_iterators.c \
-                            typeinfo.c domerror.c domlocator.c namednodemap.c userdatahandler.c],
+                            typeinfo.c domerror.c domlocator.c namednodemap.c userdatahandler.c], 
                             $ext_shared)
     PHP_SUBST(DOM_SHARED_LIBADD)
     PHP_INSTALL_HEADERS([ext/dom/xml_common.h])
     PHP_ADD_EXTENSION_DEP(dom, libxml)
   ], [
-    AC_MSG_ERROR([libxml2 not found. Please check your libxml2 installation.])
+    AC_MSG_ERROR([xml2-config not found. Please check your libxml2 installation.])
   ])
 fi

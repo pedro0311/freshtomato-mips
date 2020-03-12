@@ -30,9 +30,9 @@
   </maintainer>
  </maintainers>
  <description>
-This module enables you to transparently read and write
-gzip (.gz) compressed files, through versions of most of
-the filesystem functions which work with gzip-compressed
+This module enables you to transparently read and write 
+gzip (.gz) compressed files, through versions of most of 
+the filesystem functions which work with gzip-compressed 
 files (and uncompressed files, too, but not with sockets).
  </description>
  <license>PHP</license>
@@ -50,6 +50,7 @@ package.xml added to support installation using pear installer
    <file role="src" name="config.w32"/>
    <file role="src" name="php_zlib.h"/>
    <file role="src" name="zlib.c"/>
+   <file role="src" name="zlib.dsp"/>
    <file role="src" name="zlib_fopen_wrapper.c"/>
    <file role="src" name="php_zlib.def"/>
    <file role="test" name="tests/001.phpt"/>

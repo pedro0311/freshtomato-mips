@@ -18,7 +18,7 @@ MySQLPDOTest::skip();
 			$dsn = MySQLPDOTest::getDSN();
 			$user = PDO_MYSQL_TEST_USER;
 			$pass = PDO_MYSQL_TEST_PASS;
-			$uri = sprintf('uri:file://%s', (substr(PHP_OS, 0, 3) == 'WIN' ? str_replace('\\', '/', $file) : $file));
+			$uri = sprintf('uri:file:%s', $file);
 
 			if ($fp = @fopen($file, 'w')) {
 				// ok, great we can create a file with a DSN in it
@@ -46,14 +46,10 @@ MySQLPDOTest::skip();
 				try {
 					$db = new PDO($uri, $user, $pass);
 				} catch (PDOException $e) {
-					$expected = array(
-						"SQLSTATE[HY000] [1049] Unknown database 'letshopeinvalid'",
-						"SQLSTATE[HY000] [2002] No such file or directory"
-					);
 					printf("[003] URI=%s, DSN=%s, File=%s (%d bytes, '%s'), chr(0) test, %s\n",
 					$uri, $dsn,
 					$file, filesize($file), file_get_contents($file),
-					(in_array($e->getMessage(), $expected) ? 'EXPECTED ERROR' : $e->getMessage()));
+					$e->getMessage());
 				}
 				unlink($file);
 			}
@@ -72,5 +68,9 @@ MySQLPDOTest::skip();
 	print "done!";
 ?>
 --EXPECTF--
-[003] URI=uri:file://%spdomuri.tst, DSN=mysql%sdbname=%s, File=%spdomuri.tst (%d bytes, 'mysql%sdbname=letshopeinvalid%s'), chr(0) test, EXPECTED ERROR
+Warning: PDO::__construct(%s
+[002] URI=uri:file:%spdomuri.tst, DSN=mysql%sdbname=%s, File=%spdomuri.tst (%d bytes, 'mysql%sdbname=%s'), invalid data source URI
+
+Warning: PDO::__construct(%s
+[003] URI=uri:file:%spdomuri.tst, DSN=mysql%sdbname=%s, File=%spdomuri.tst (%d bytes, 'mysql%sdbname=letshopeinvalid%s'), chr(0) test, invalid data source URI
 done!

@@ -46,5 +46,5 @@ array(13) {
   ["application_name"]=>
   string(%d) %s
 }
-string(%d) "%a"
+string(%d) "%s"
 OK

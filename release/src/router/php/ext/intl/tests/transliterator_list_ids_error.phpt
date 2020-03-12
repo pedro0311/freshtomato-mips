@@ -9,6 +9,7 @@ ini_set("intl.error_level", E_WARNING);
 var_dump(transliterator_list_ids(array()));
 
 echo "Done.\n";
+
 --EXPECTF--
 Warning: transliterator_list_ids() expects exactly 0 parameters, 1 given in %s on line %d
 

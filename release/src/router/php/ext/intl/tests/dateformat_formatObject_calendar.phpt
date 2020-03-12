@@ -3,7 +3,7 @@ IntlDateFormatter::formatObject(): IntlCalendar tests
 --SKIPIF--
 <?php
 if (!extension_loaded('intl')) die('skip intl extension not enabled'); ?>
-<?php if (version_compare(INTL_ICU_VERSION, '50.1.2') >=  0) die('skip for ICU < 50.1.2'); ?>
+<?php if (version_compare(INTL_ICU_VERSION, '51.2') >=  0) die('skip for ICU < 51.2'); ?>
 --FILE--
 <?php
 ini_set("intl.error_level", E_WARNING);
@@ -27,6 +27,7 @@ echo IntlDateFormatter::formatObject($cal, IntlDateFormatter::FULL, "en-US"), "\
 
 ?>
 ==DONE==
+
 --EXPECTF--
 01/01/2012 00:00:00
 Domingo, 1 de Janeiro de 2012 0:00:00 Hora %Sda Europa Ocidental
@@ -37,3 +38,4 @@ Domingo, 1 de Janeiro de 2012 5:00:00 GMT+03:00
 06/02/1433 00:00:00
 Sunday, Safar 6, 1433 12:00:00 AM Western European %STime
 ==DONE==
+

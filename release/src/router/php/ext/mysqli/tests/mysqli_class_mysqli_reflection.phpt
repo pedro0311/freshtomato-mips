@@ -37,7 +37,7 @@ Modifiers: '0'
 Parent Class: ''
 Extension: 'mysqli'
 
-Inspecting method '__construct'
+Inspecting method 'mysqli'
 isFinal: no
 isAbstract: no
 isPublic: yes
@@ -49,104 +49,46 @@ isDestructor: no
 isInternal: yes
 isUserDefined: no
 returnsReference: no
-Modifiers: 256
+Modifiers: 8448
 Number of Parameters: 6
 Number of Required Parameters: 0
 
-Inspecting parameter 'host' of method '__construct'
+Inspecting parameter 'host' of method 'mysqli'
 isArray: no
 allowsNull: no
 isPassedByReference: no
 isOptional: yes
 isDefaultValueAvailable: no
 
-Inspecting parameter 'user' of method '__construct'
+Inspecting parameter 'user' of method 'mysqli'
 isArray: no
 allowsNull: no
 isPassedByReference: no
 isOptional: yes
 isDefaultValueAvailable: no
 
-Inspecting parameter 'password' of method '__construct'
+Inspecting parameter 'password' of method 'mysqli'
 isArray: no
 allowsNull: no
 isPassedByReference: no
 isOptional: yes
 isDefaultValueAvailable: no
 
-Inspecting parameter 'database' of method '__construct'
+Inspecting parameter 'database' of method 'mysqli'
 isArray: no
 allowsNull: no
 isPassedByReference: no
 isOptional: yes
 isDefaultValueAvailable: no
 
-Inspecting parameter 'port' of method '__construct'
+Inspecting parameter 'port' of method 'mysqli'
 isArray: no
 allowsNull: no
 isPassedByReference: no
 isOptional: yes
 isDefaultValueAvailable: no
 
-Inspecting parameter 'socket' of method '__construct'
-isArray: no
-allowsNull: no
-isPassedByReference: no
-isOptional: yes
-isDefaultValueAvailable: no
-
-Inspecting method '__construct'
-isFinal: no
-isAbstract: no
-isPublic: yes
-isPrivate: no
-isProtected: no
-isStatic: no
-isConstructor: yes
-isDestructor: no
-isInternal: yes
-isUserDefined: no
-returnsReference: no
-Modifiers: 256
-Number of Parameters: 6
-Number of Required Parameters: 0
-
-Inspecting parameter 'host' of method '__construct'
-isArray: no
-allowsNull: no
-isPassedByReference: no
-isOptional: yes
-isDefaultValueAvailable: no
-
-Inspecting parameter 'user' of method '__construct'
-isArray: no
-allowsNull: no
-isPassedByReference: no
-isOptional: yes
-isDefaultValueAvailable: no
-
-Inspecting parameter 'password' of method '__construct'
-isArray: no
-allowsNull: no
-isPassedByReference: no
-isOptional: yes
-isDefaultValueAvailable: no
-
-Inspecting parameter 'database' of method '__construct'
-isArray: no
-allowsNull: no
-isPassedByReference: no
-isOptional: yes
-isDefaultValueAvailable: no
-
-Inspecting parameter 'port' of method '__construct'
-isArray: no
-allowsNull: no
-isPassedByReference: no
-isOptional: yes
-isDefaultValueAvailable: no
-
-Inspecting parameter 'socket' of method '__construct'
+Inspecting parameter 'socket' of method 'mysqli'
 isArray: no
 allowsNull: no
 isPassedByReference: no
@@ -583,6 +525,64 @@ isPassedByReference: no
 isOptional: no
 isDefaultValueAvailable: no
 
+Inspecting method 'mysqli'
+isFinal: no
+isAbstract: no
+isPublic: yes
+isPrivate: no
+isProtected: no
+isStatic: no
+isConstructor: yes
+isDestructor: no
+isInternal: yes
+isUserDefined: no
+returnsReference: no
+Modifiers: 8448
+Number of Parameters: 6
+Number of Required Parameters: 0
+
+Inspecting parameter 'host' of method 'mysqli'
+isArray: no
+allowsNull: no
+isPassedByReference: no
+isOptional: yes
+isDefaultValueAvailable: no
+
+Inspecting parameter 'user' of method 'mysqli'
+isArray: no
+allowsNull: no
+isPassedByReference: no
+isOptional: yes
+isDefaultValueAvailable: no
+
+Inspecting parameter 'password' of method 'mysqli'
+isArray: no
+allowsNull: no
+isPassedByReference: no
+isOptional: yes
+isDefaultValueAvailable: no
+
+Inspecting parameter 'database' of method 'mysqli'
+isArray: no
+allowsNull: no
+isPassedByReference: no
+isOptional: yes
+isDefaultValueAvailable: no
+
+Inspecting parameter 'port' of method 'mysqli'
+isArray: no
+allowsNull: no
+isPassedByReference: no
+isOptional: yes
+isDefaultValueAvailable: no
+
+Inspecting parameter 'socket' of method 'mysqli'
+isArray: no
+allowsNull: no
+isPassedByReference: no
+isOptional: yes
+isDefaultValueAvailable: no
+
 Inspecting method 'next_result'
 isFinal: no
 isAbstract: no
@@ -657,7 +657,7 @@ isDestructor: no
 isInternal: yes
 isUserDefined: no
 returnsReference: no
-Modifiers: 257
+Modifiers: 268435713
 Number of Parameters: 5
 Number of Required Parameters: 4
 
@@ -732,7 +732,7 @@ isInternal: yes
 isUserDefined: no
 returnsReference: no
 Modifiers: 256
-Number of Parameters: 2
+Number of Parameters: 1
 Number of Required Parameters: 1
 
 Inspecting parameter 'query' of method 'query'
@@ -740,13 +740,6 @@ isArray: no
 allowsNull: no
 isPassedByReference: no
 isOptional: no
-isDefaultValueAvailable: no
-
-Inspecting parameter 'resultmode' of method 'query'
-isArray: no
-allowsNull: no
-isPassedByReference: no
-isOptional: yes
 isDefaultValueAvailable: no
 
 Inspecting method 'real_connect'

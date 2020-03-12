@@ -6,7 +6,7 @@ define('OBJECT_COUNT', 10000);
 
 $containers = array();
 
-class ObjectOne {
+class Object {
     protected $_guid = 0;
     public function __construct() {
 		global $containers;
@@ -20,7 +20,7 @@ class ObjectOne {
 }
 
 for ($i = 0; $i < OBJECT_COUNT; ++$i) {
-    new ObjectOne();
+    new Object();
 }
 
 // You probably won't see this because of the "zend_mm_heap corrupted"

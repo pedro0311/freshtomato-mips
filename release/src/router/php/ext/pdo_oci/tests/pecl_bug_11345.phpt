@@ -15,7 +15,7 @@ PDOTest::skip();
 
 try {
     $dbh = new PDO('oci:dbname=xxx;charset=yyy', 'abc', 'def');
-}
+} 
 catch (PDOException $e) {
     echo 'Connection failed: ' . $e->getMessage(). "\n";
     exit;
@@ -24,5 +24,6 @@ catch (PDOException $e) {
 echo "Done\n";
 
 ?>
+
 --EXPECTF--
 Connection failed: SQLSTATE[HY000]: OCINlsCharSetNameToId: unknown character set name (%s)

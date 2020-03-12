@@ -37,3 +37,4 @@ object(B)#%d (4) {
   ["v4"]=>
   string(1) "B"
 }
+

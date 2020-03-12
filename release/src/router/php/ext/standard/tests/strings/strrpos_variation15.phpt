@@ -1,7 +1,5 @@
 --TEST--
 Test strrpos() function : usage variations - unexpected inputs for 'haystack', 'needle' & 'offset' arguments
---SKIPIF--
-<?php if (PHP_INT_SIZE !== 4) die("skip this test is for 32-bit only");
 --FILE--
 <?php
 /* Prototype  : int strrpos ( string $haystack, string $needle [, int $offset] );
@@ -21,11 +19,11 @@ unset($unset_var);
 class sample  {
   public function __toString() {
     return "object";
-  }
+  } 
 }
 
 //getting the resource
-$file_handle = fopen(__FILE__, "r");
+$file_handle = fopen(__FILE__, "r"); 
 
 // array with different values
 $values =  array (
@@ -112,7 +110,7 @@ Warning: strrpos(): Offset is greater than the length of haystack string in %s o
 bool(false)
 -- Iteration 7 --
 
-Warning: strrpos() expects parameter 3 to be integer, float given in %s on line %d
+Warning: strrpos(): Offset is greater than the length of haystack string in %s on line %d
 bool(false)
 -- Iteration 8 --
 bool(false)
@@ -148,15 +146,15 @@ bool(false)
 bool(false)
 -- Iteration 19 --
 
-Warning: strrpos() expects parameter 3 to be integer, object given in %s on line %d
+Warning: strrpos() expects parameter 3 to be long, object given in %s on line %d
 bool(false)
 -- Iteration 20 --
 
-Warning: strrpos() expects parameter 3 to be integer, string given in %s on line %d
+Warning: strrpos() expects parameter 3 to be long, string given in %s on line %d
 bool(false)
 -- Iteration 21 --
 
-Warning: strrpos() expects parameter 3 to be integer, string given in %s on line %d
+Warning: strrpos() expects parameter 3 to be long, string given in %s on line %d
 bool(false)
 -- Iteration 22 --
 bool(false)

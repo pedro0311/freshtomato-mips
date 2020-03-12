@@ -38,7 +38,7 @@ var_dump(fgetss($fp, 0));
 
 echo "Done\n";
 ?>
---EXPECTF--
+--EXPECTF--	
 string(18) "askasdfasdfaaaaaa
 "
 string(6) "dddddd"
@@ -78,6 +78,6 @@ bool(false)
 Warning: fgetss(): Length parameter must be greater than 0 in %s on line %d
 bool(false)
 
-Warning: fgetss(): supplied resource is not a valid stream resource in %s on line %d
+Warning: fgetss(): %d is not a valid stream resource in %s on line %d
 bool(false)
 Done

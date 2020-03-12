@@ -3,12 +3,12 @@ Test shuffle() function : usage variation - associative arrays with diff types o
 --FILE--
 <?php
 /* Prototype  : bool shuffle(array $array_arg)
- * Description: Randomly shuffle the contents of an array
+ * Description: Randomly shuffle the contents of an array 
  * Source code: ext/standard/array.c
 */
 
 /*
-* Test behaviour of shuffle() function when associative arrays
+* Test behaviour of shuffle() function when associative arrays 
 * having different types of values, are passed to 'array_arg' argument
 */
 
@@ -41,10 +41,10 @@ $array_arg = array(
        array(NULL => -0x123, "NULL" => -0xabc, "-ABC" => -0xABC, -0xAB1 => -0xAb1),
 
        // array with positive octal values
-/*9*/  array(0123 => 0123, "0234" => 0234, '034' => 034, 00 => 00),
+/*9*/  array(0123 => 0123, "02348" => 02348, '034' => 034, 00 => 00),
 
        // array with negative octal values
-       array(-0123 => -0123, "-0234" => -0234, '-034' => -034),
+       array(-0123 => -0123, "-02348" => -02348, '-034' => -034),
 
        // array with null values
 /*11*/ array(NULL => NULL, "null" => NULL, "NULL" => NULL)
@@ -56,9 +56,9 @@ echo "\n*** Testing shuffle() with arrays having different types of values ***\n
 $counter = 1;
 foreach($array_arg as $arr) {
   echo "\n-- Iteration $counter --\n";
-  var_dump( shuffle($arr) );
+  var_dump( shuffle($arr) );  
   echo "\nThe output array is:\n";
-  var_dump( $arr );
+  var_dump( $arr ); 
   $counter++;
 }
 
@@ -228,3 +228,4 @@ array(3) {
   NULL
 }
 Done
+

@@ -8,7 +8,7 @@ function_exists('mb_ereg') or die("skip mb_ereg() is not available in this build
 --FILE--
 <?php
 /* Prototype  : int mb_ereg(string $pattern, string $string [, array $registers])
- * Description: Regular expression match for multibyte string
+ * Description: Regular expression match for multibyte string 
  * Source code: ext/mbstring/php_mbregex.c
  */
 
@@ -66,7 +66,7 @@ $inputs = array(
        false,
        TRUE,
        FALSE,
-
+ 
 // empty data
 /*16*/ "",
        '',
@@ -75,7 +75,7 @@ $inputs = array(
 /*18*/ "string",
        'string',
        $heredoc,
-
+ 
 // object data
 /*21*/ new classA(),
 
@@ -106,93 +106,77 @@ fclose($fp);
 echo "Done";
 
 ?>
+
 --EXPECTF--
 *** Testing mb_ereg() : usage variations ***
 
 -- Iteration 1 --
 bool(false)
-array(0) {
-}
+NULL
 
 -- Iteration 2 --
 bool(false)
-array(0) {
-}
+NULL
 
 -- Iteration 3 --
 bool(false)
-array(0) {
-}
+NULL
 
 -- Iteration 4 --
 bool(false)
-array(0) {
-}
+NULL
 
 -- Iteration 5 --
 bool(false)
-array(0) {
-}
+NULL
 
 -- Iteration 6 --
 bool(false)
-array(0) {
-}
+NULL
 
 -- Iteration 7 --
 bool(false)
-array(0) {
-}
+NULL
 
 -- Iteration 8 --
 bool(false)
-array(0) {
-}
+NULL
 
 -- Iteration 9 --
 bool(false)
-array(0) {
-}
+NULL
 
 -- Iteration 10 --
 bool(false)
-array(0) {
-}
+NULL
 
 -- Iteration 11 --
 bool(false)
-array(0) {
-}
+NULL
 
 -- Iteration 12 --
 bool(false)
-array(0) {
-}
+NULL
 
 -- Iteration 13 --
 bool(false)
-array(0) {
-}
+NULL
 
 -- Iteration 14 --
 bool(false)
-array(0) {
-}
+NULL
 
 -- Iteration 15 --
 bool(false)
-array(0) {
-}
+NULL
 
 -- Iteration 16 --
 bool(false)
-array(0) {
-}
+NULL
 
 -- Iteration 17 --
 bool(false)
-array(0) {
-}
+NULL
 
 -- Iteration 18 --
 int(3)
@@ -210,23 +194,19 @@ array(1) {
 
 -- Iteration 20 --
 bool(false)
-array(0) {
-}
+NULL
 
 -- Iteration 21 --
 bool(false)
-array(0) {
-}
+NULL
 
 -- Iteration 22 --
 bool(false)
-array(0) {
-}
+NULL
 
 -- Iteration 23 --
 bool(false)
-array(0) {
-}
+NULL
 
 -- Iteration 24 --
 

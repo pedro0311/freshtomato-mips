@@ -7,37 +7,16 @@ phar.readonly=0
 --FILE--
 <?php
 ini_set('phar.readonly', 1);
-
-function print_exception($e) {
-	echo "\nException: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine() . "\n";
-}
-
 Phar::mungServer('hi');
 Phar::createDefaultStub(array());
 Phar::loadPhar(array());
 Phar::canCompress('hi');
-try {
-	$a = new Phar(array());
-} catch (TypeError $e) {
-	print_exception($e);
-}
-try {
-	$a = new Phar(dirname(__FILE__) . '/files/frontcontroller10.phar');
-} catch (PharException $e) {
-	print_exception($e);
-}
+$a = new Phar(array());
+$a = new Phar(dirname(__FILE__) . '/files/frontcontroller10.phar');
 $a->convertToExecutable(array());
 $a->convertToData(array());
-try {
-	$b = new PharData(dirname(__FILE__) . '/whatever.tar');
-} catch (PharException $e) {
-	print_exception($e);
-}
-try {
-	$c = new PharData(dirname(__FILE__) . '/whatever.zip');
-} catch (PharException $e) {
-	print_exception($e);
-}
+$b = new PharData(dirname(__FILE__) . '/whatever.tar');
+$c = new PharData(dirname(__FILE__) . '/whatever.zip');
 $b->delete(array());
 try {
 $a->delete('oops');
@@ -151,13 +130,13 @@ Warning: Phar::createDefaultStub() expects parameter 1 to be a valid path, array
 
 Warning: Phar::loadPhar() expects parameter 1 to be a valid path, array given in %sbadparameters.php on line %d
 
-Warning: Phar::canCompress() expects parameter 1 to be integer, %string given in %sbadparameters.php on line %d
+Warning: Phar::canCompress() expects parameter 1 to be long, %string given in %sbadparameters.php on line %d
 
-Exception: Phar::__construct() expects parameter 1 to be a valid path, array given in %sbadparameters.php on line %d
+Warning: Phar::__construct() expects parameter 1 to be a valid path, array given in %sbadparameters.php on line %d
 
-Warning: Phar::convertToExecutable() expects parameter 1 to be integer, array given in %sbadparameters.php on line %d
+Warning: Phar::convertToExecutable() expects parameter 1 to be long, array given in %sbadparameters.php on line %d
 
-Warning: Phar::convertToData() expects parameter 1 to be integer, array given in %sbadparameters.php on line %d
+Warning: Phar::convertToData() expects parameter 1 to be long, array given in %sbadparameters.php on line %d
 
 Warning: PharData::delete() expects parameter 1 to be a valid path, array given in %sbadparameters.php on line %d
 Cannot write out phar archive, phar is read-only
@@ -177,10 +156,10 @@ Warning: Phar::setDefaultStub() expects parameter 1 to be %string, array given i
 Cannot change stub: phar.readonly=1
 Cannot set signature algorithm, phar is read-only
 
-Warning: Phar::compress() expects parameter 1 to be integer, array given in %sbadparameters.php on line %d
+Warning: Phar::compress() expects parameter 1 to be long, array given in %sbadparameters.php on line %d
 Cannot compress phar archive, phar is read-only
 
-Warning: Phar::compressFiles() expects parameter 1 to be integer, array given in %sbadparameters.php on line %d
+Warning: Phar::compressFiles() expects parameter 1 to be long, array given in %sbadparameters.php on line %d
 Phar is readonly, cannot change compression
 
 Warning: Phar::copy() expects exactly 2 parameters, 1 given in %sbadparameters.php on line %d

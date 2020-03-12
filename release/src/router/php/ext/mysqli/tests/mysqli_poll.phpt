@@ -134,6 +134,7 @@ if (!$IS_MYSQLND)
 	print "done!";
 ?>
 --EXPECTF--
+
 Warning: mysqli_poll(): Negative values passed for sec and/or usec in %s on line %d
 
 Warning: mysqli_poll(): Negative values passed for sec and/or usec in %s on line %d

@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | Zend Engine                                                          |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1998-2018 Zend Technologies Ltd. (http://www.zend.com) |
+   | Copyright (c) 1998-2016 Zend Technologies Ltd. (http://www.zend.com) |
    +----------------------------------------------------------------------+
    | This source file is subject to version 2.00 of the Zend license,     |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -28,10 +28,6 @@
 #include "zend_globals.h"
 #include <zend_ini_parser.h>
 #include "zend_ini_scanner.h"
-
-#ifdef YYDEBUG
-#undef YYDEBUG
-#endif
 
 #if 0
 # define YYDEBUG(s, c) printf("state: %d char: %c\n", s, c)
@@ -110,8 +106,6 @@ ZEND_API ts_rsrc_id ini_scanner_globals_id;
 ZEND_API zend_ini_scanner_globals ini_scanner_globals;
 #endif
 
-#define ZEND_SYSTEM_INI CG(ini_parser_unbuffered_errors)
-
 /* Eat leading whitespace */
 #define EAT_LEADING_WHITESPACE()                     \
 	while (yyleng) {                                 \
@@ -138,25 +132,26 @@ ZEND_API zend_ini_scanner_globals ini_scanner_globals;
 /* Eat trailing whitespace */
 #define EAT_TRAILING_WHITESPACE()	EAT_TRAILING_WHITESPACE_EX('X')
 
-#define zend_ini_copy_value(retval, str, len)	\
-	ZVAL_NEW_STR(retval, zend_string_init(str, len, ZEND_SYSTEM_INI))
+#define zend_ini_copy_value(retval, str, len) {  \
+	Z_STRVAL_P(retval) = zend_strndup(str, len); \
+	Z_STRLEN_P(retval) = len;                    \
+	Z_TYPE_P(retval) = IS_STRING;                \
+}
 
-
-#define RETURN_TOKEN(type, str, len) {                             \
-	if (SCNG(scanner_mode) == ZEND_INI_SCANNER_TYPED &&            \
-		(YYSTATE == STATE(ST_VALUE) || YYSTATE == STATE(ST_RAW))) {\
-		zend_ini_copy_typed_value(ini_lval, type, str, len);       \
-	} else {                                                       \
-		zend_ini_copy_value(ini_lval, str, len);                   \
-	}                                                              \
-	return type;                                                   \
+#define RETURN_TOKEN(type, str, len) {                       \
+	if (SCNG(scanner_mode) == ZEND_INI_SCANNER_TYPED) {      \
+		zend_ini_copy_typed_value(ini_lval, type, str, len); \
+	} else {                                                 \
+		zend_ini_copy_value(ini_lval, str, len);             \
+	}                                                        \
+	return type;                                             \
 }
 
 static inline int convert_to_number(zval *retval, const char *str, const int str_len)
 {
 	zend_uchar type;
 	int overflow;
-	zend_long lval;
+	long lval;
 	double dval;
 
 	if ((type = is_numeric_string_ex(str, str_len, &lval, &dval, 0, &overflow)) != 0) {
@@ -194,22 +189,23 @@ static void zend_ini_copy_typed_value(zval *retval, const int type, const char *
 	}
 }
 
-static void _yy_push_state(int new_state)
+static void _yy_push_state(int new_state TSRMLS_DC)
 {
-	zend_stack_push(&SCNG(state_stack), (void *) &YYGETCONDITION());
+	zend_stack_push(&SCNG(state_stack), (void *) &YYGETCONDITION(), sizeof(int));
 	YYSETCONDITION(new_state);
 }
 
 #define yy_push_state(state_and_tsrm) _yy_push_state(yyc##state_and_tsrm)
 
-static void yy_pop_state(void)
+static void yy_pop_state(TSRMLS_D)
 {
-	int *stack_state = zend_stack_top(&SCNG(state_stack));
+	int *stack_state;
+	zend_stack_top(&SCNG(state_stack), (void **) &stack_state);
 	YYSETCONDITION(*stack_state);
 	zend_stack_del_top(&SCNG(state_stack));
 }
 
-static void yy_scan_buffer(char *str, unsigned int len)
+static void yy_scan_buffer(char *str, unsigned int len TSRMLS_DC)
 {
 	YYCURSOR = (YYCTYPE*)str;
 	SCNG(yy_start) = YYCURSOR;
@@ -220,7 +216,7 @@ static void yy_scan_buffer(char *str, unsigned int len)
 
 /* {{{ init_ini_scanner()
 */
-static int init_ini_scanner(int scanner_mode, zend_file_handle *fh)
+static int init_ini_scanner(int scanner_mode, zend_file_handle *fh TSRMLS_DC)
 {
 	/* Sanity check */
 	if (scanner_mode != ZEND_INI_SCANNER_NORMAL && scanner_mode != ZEND_INI_SCANNER_RAW && scanner_mode != ZEND_INI_SCANNER_TYPED) {
@@ -238,7 +234,7 @@ static int init_ini_scanner(int scanner_mode, zend_file_handle *fh)
 		ini_filename = NULL;
 	}
 
-	zend_stack_init(&SCNG(state_stack), sizeof(int));
+	zend_stack_init(&SCNG(state_stack));
 	BEGIN(INITIAL);
 
 	return SUCCESS;
@@ -247,7 +243,7 @@ static int init_ini_scanner(int scanner_mode, zend_file_handle *fh)
 
 /* {{{ shutdown_ini_scanner()
 */
-void shutdown_ini_scanner(void)
+void shutdown_ini_scanner(TSRMLS_D)
 {
 	zend_stack_destroy(&SCNG(state_stack));
 	if (ini_filename) {
@@ -258,7 +254,7 @@ void shutdown_ini_scanner(void)
 
 /* {{{ zend_ini_scanner_get_lineno()
 */
-ZEND_COLD int zend_ini_scanner_get_lineno(void)
+int zend_ini_scanner_get_lineno(TSRMLS_D)
 {
 	return SCNG(lineno);
 }
@@ -266,7 +262,7 @@ ZEND_COLD int zend_ini_scanner_get_lineno(void)
 
 /* {{{ zend_ini_scanner_get_filename()
 */
-ZEND_COLD char *zend_ini_scanner_get_filename(void)
+char *zend_ini_scanner_get_filename(TSRMLS_D)
 {
 	return ini_filename ? ini_filename : "Unknown";
 }
@@ -274,21 +270,21 @@ ZEND_COLD char *zend_ini_scanner_get_filename(void)
 
 /* {{{ zend_ini_open_file_for_scanning()
 */
-int zend_ini_open_file_for_scanning(zend_file_handle *fh, int scanner_mode)
+int zend_ini_open_file_for_scanning(zend_file_handle *fh, int scanner_mode TSRMLS_DC)
 {
 	char *buf;
 	size_t size;
 
-	if (zend_stream_fixup(fh, &buf, &size) == FAILURE) {
+	if (zend_stream_fixup(fh, &buf, &size TSRMLS_CC) == FAILURE) {
 		return FAILURE;
 	}
 
-	if (init_ini_scanner(scanner_mode, fh) == FAILURE) {
-		zend_file_handle_dtor(fh);
+	if (init_ini_scanner(scanner_mode, fh TSRMLS_CC) == FAILURE) {
+		zend_file_handle_dtor(fh TSRMLS_CC);
 		return FAILURE;
 	}
 
-	yy_scan_buffer(buf, (unsigned int)size);
+	yy_scan_buffer(buf, size TSRMLS_CC);
 
 	return SUCCESS;
 }
@@ -296,15 +292,15 @@ int zend_ini_open_file_for_scanning(zend_file_handle *fh, int scanner_mode)
 
 /* {{{ zend_ini_prepare_string_for_scanning()
 */
-int zend_ini_prepare_string_for_scanning(char *str, int scanner_mode)
+int zend_ini_prepare_string_for_scanning(char *str, int scanner_mode TSRMLS_DC)
 {
-	int len = (int)strlen(str);
+	int len = strlen(str);
 
-	if (init_ini_scanner(scanner_mode, NULL) == FAILURE) {
+	if (init_ini_scanner(scanner_mode, NULL TSRMLS_CC) == FAILURE) {
 		return FAILURE;
 	}
 
-	yy_scan_buffer(str, len);
+	yy_scan_buffer(str, len TSRMLS_CC);
 
 	return SUCCESS;
 }
@@ -312,7 +308,7 @@ int zend_ini_prepare_string_for_scanning(char *str, int scanner_mode)
 
 /* {{{ zend_ini_escape_string()
  */
-static void zend_ini_escape_string(zval *lval, char *str, int len, char quote_type)
+static void zend_ini_escape_string(zval *lval, char *str, int len, char quote_type TSRMLS_DC)
 {
 	register char *s, *t;
 	char *end;
@@ -359,7 +355,7 @@ static void zend_ini_escape_string(zval *lval, char *str, int len, char quote_ty
 }
 /* }}} */
 
-int ini_lex(zval *ini_lval)
+int ini_lex(zval *ini_lval TSRMLS_DC)
 {
 restart:
 	SCNG(yy_text) = YYCURSOR;
@@ -409,9 +405,9 @@ SECTION_VALUE_CHARS ([^$\n\r;"'\]\\]|("\\"{ANY_CHAR})|{LITERAL_DOLLAR})
 <INITIAL>"[" { /* Section start */
 	/* Enter section data lookup state */
 	if (SCNG(scanner_mode) == ZEND_INI_SCANNER_RAW) {
-		BEGIN(ST_SECTION_RAW);
+		yy_push_state(ST_SECTION_RAW TSRMLS_CC);
 	} else {
-		BEGIN(ST_SECTION_VALUE);
+		yy_push_state(ST_SECTION_VALUE TSRMLS_CC);
 	}
 	return TC_SECTION;
 }
@@ -434,12 +430,12 @@ SECTION_VALUE_CHARS ([^$\n\r;"'\]\\]|("\\"{ANY_CHAR})|{LITERAL_DOLLAR})
 <INITIAL>{LABEL}"["{TABS_AND_SPACES}* { /* Start of option with offset */
 	/* Eat leading whitespace */
 	EAT_LEADING_WHITESPACE();
-
+	
 	/* Eat trailing whitespace and [ */
 	EAT_TRAILING_WHITESPACE_EX('[');
 
 	/* Enter offset lookup state */
-	BEGIN(ST_OFFSET);
+	yy_push_state(ST_OFFSET TSRMLS_CC);
 
 	RETURN_TOKEN(TC_OFFSET, yytext, yyleng);
 }
@@ -450,7 +446,7 @@ SECTION_VALUE_CHARS ([^$\n\r;"'\]\\]|("\\"{ANY_CHAR})|{LITERAL_DOLLAR})
 }
 
 <ST_DOUBLE_QUOTES,ST_SECTION_VALUE,ST_VALUE,ST_OFFSET>{DOLLAR_CURLY} { /* Variable start */
-	yy_push_state(ST_VARNAME);
+	yy_push_state(ST_VARNAME TSRMLS_CC);
 	return TC_DOLLAR_CURLY;
 }
 
@@ -465,7 +461,7 @@ SECTION_VALUE_CHARS ([^$\n\r;"'\]\\]|("\\"{ANY_CHAR})|{LITERAL_DOLLAR})
 }
 
 <ST_VARNAME>"}" { /* Variable end */
-	yy_pop_state();
+	yy_pop_state(TSRMLS_C);
 	return '}';
 }
 
@@ -493,16 +489,15 @@ SECTION_VALUE_CHARS ([^$\n\r;"'\]\\]|("\\"{ANY_CHAR})|{LITERAL_DOLLAR})
 
 <INITIAL>{TABS_AND_SPACES}*[=]{TABS_AND_SPACES}* { /* Start option value */
 	if (SCNG(scanner_mode) == ZEND_INI_SCANNER_RAW) {
-		BEGIN(ST_RAW);
+		yy_push_state(ST_RAW TSRMLS_CC);
 	} else {
-		BEGIN(ST_VALUE);
+		yy_push_state(ST_VALUE TSRMLS_CC);
 	}
 	return '=';
 }
 
 <ST_RAW>{RAW_VALUE_CHARS} { /* Raw value, only used when SCNG(scanner_mode) == ZEND_INI_SCANNER_RAW. */
-	unsigned char *sc = NULL;
-	EAT_LEADING_WHITESPACE();
+	char *sc = NULL;
 	while (YYCURSOR < YYLIMIT) {
 		switch (*YYCURSOR) {
 			case '\n':
@@ -513,34 +508,28 @@ SECTION_VALUE_CHARS ([^$\n\r;"'\]\\]|("\\"{ANY_CHAR})|{LITERAL_DOLLAR})
 				if (sc == NULL) {
 					sc = YYCURSOR;
 				}
-				YYCURSOR++;
-				break;
-			case '"':
-				if (yytext[0] == '"') {
-					sc = NULL;
-				}
-				YYCURSOR++;
-				break;
+				/* no break */
 			default:
 				YYCURSOR++;
 				break;
 		}
 	}
 end_raw_value_chars:
-	if (sc) {
-		yyleng = sc - SCNG(yy_text);
-	} else {
-		yyleng = YYCURSOR - SCNG(yy_text);
-	}
+	yyleng = YYCURSOR - SCNG(yy_text);
 
-	EAT_TRAILING_WHITESPACE();
+	/* Eat trailing semicolons */
+	while (yytext[yyleng - 1] == ';') {
+		yyleng--;
+	}
 
 	/* Eat leading and trailing double quotes */
 	if (yyleng > 1 && yytext[0] == '"' && yytext[yyleng - 1] == '"') {
 		SCNG(yy_text)++;
 		yyleng = yyleng - 2;
+	} else if (sc) {
+		YYCURSOR = sc;
+		yyleng = YYCURSOR - SCNG(yy_text);
 	}
-
 	RETURN_TOKEN(TC_RAW, yytext, yyleng);
 }
 
@@ -585,12 +574,12 @@ end_raw_value_chars:
 }
 
 <ST_SECTION_VALUE,ST_VALUE,ST_OFFSET>{TABS_AND_SPACES}*["] { /* Double quoted '"' string start */
-	yy_push_state(ST_DOUBLE_QUOTES);
+	yy_push_state(ST_DOUBLE_QUOTES TSRMLS_CC);
 	return '"';
 }
 
 <ST_DOUBLE_QUOTES>["]{TABS_AND_SPACES}* { /* Double quoted '"' string ends */
-	yy_pop_state();
+	yy_pop_state(TSRMLS_C);
 	return '"';
 }
 
@@ -598,7 +587,7 @@ end_raw_value_chars:
 	if (YYCURSOR > YYLIMIT) {
 		return 0;
 	}
-
+	
 	while (YYCURSOR < YYLIMIT) {
 		switch (*YYCURSOR++) {
 			case '"':
@@ -619,14 +608,14 @@ end_raw_value_chars:
 			default:
 				continue;
 		}
-
+		
 		YYCURSOR--;
 		break;
 	}
 
 	yyleng = YYCURSOR - SCNG(yy_text);
-
-	zend_ini_escape_string(ini_lval, yytext, yyleng, '"');
+	
+	zend_ini_escape_string(ini_lval, yytext, yyleng, '"' TSRMLS_CC);
 	return TC_QUOTED_STRING;
 }
 
@@ -645,6 +634,13 @@ end_raw_value_chars:
 }
 
 <INITIAL,ST_VALUE,ST_RAW>{TABS_AND_SPACES}*[;][^\r\n]*{NEWLINE} { /* Comment */
+	BEGIN(INITIAL);
+	SCNG(lineno)++;
+	return END_OF_LINE;
+}
+
+<INITIAL>{TABS_AND_SPACES}*[#][^\r\n]*{NEWLINE} { /* #Comment */
+	zend_error(E_DEPRECATED, "Comments starting with '#' are deprecated in %s on line %d", zend_ini_scanner_get_filename(TSRMLS_C), SCNG(lineno));
 	BEGIN(INITIAL);
 	SCNG(lineno)++;
 	return END_OF_LINE;

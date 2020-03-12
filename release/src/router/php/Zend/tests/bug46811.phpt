@@ -9,4 +9,5 @@ var_dump(ini_get("arg_separator.output"));
 ?>
 --EXPECTF--
 bool(false)
-string(1) "&"
+%unicode|string%(1) "&"
+

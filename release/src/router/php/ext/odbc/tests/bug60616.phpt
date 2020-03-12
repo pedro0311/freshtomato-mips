@@ -2,7 +2,7 @@
 odbc_exec(): Getting accurate unicode data from query
 --SKIPIF--
 <?php include 'skipif.inc'; ?>
-<?php
+<?php 
 	if ("unixODBC" != ODBC_TYPE) {
 		die("skip ODBC_TYPE != unixODBC");
 	}
@@ -17,7 +17,7 @@ $euc_jp = base64_decode($euc_jp_base64);
 $ascii = 'abcdefghijklmnopqrstuvwxyz;]=#0123456789';
 
 include 'config.inc';
-ini_set("odbc.defaultlrl", 4); // Set artificially low
+ini_set("odbc.defaultlrl", 4); // Set artifically low
 
 $conn = odbc_connect($dsn, $user, $pass);
 

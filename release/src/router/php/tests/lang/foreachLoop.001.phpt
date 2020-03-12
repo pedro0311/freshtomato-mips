@@ -60,5 +60,5 @@ string(1) "f"
 int(2)
 string(1) "f"
 
-string(1) "a"
-string(1) "a"
+bool(false)
+bool(false)

@@ -1,18 +1,17 @@
 --TEST--
-Test posix_getpgid() function : variation
+Test posix_getpgid() function : variation 
 --SKIPIF--
-<?php
-PHP_INT_SIZE == 4 or die("skip - 32-bit only");
+<?php 
 if((!extension_loaded("posix")) || (!function_exists("posix_getpgid"))) {
 	 print "skip - POSIX extension not loaded or posix_getpgid() does not exist";
-}
+} 
 ?>
 --FILE--
 <?php
 /* Prototype  : proto int posix_getpgid(void)
- * Description: Get the process group id of the specified process (This is not a POSIX function, but a SVR4ism, so we compile conditionally)
+ * Description: Get the process group id of the specified process (This is not a POSIX function, but a SVR4ism, so we compile conditionally) 
  * Source code: ext/posix/posix.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing posix_getpgid() : usage variations ***\n";
@@ -63,7 +62,7 @@ $values = array(
 
       // unset data
       $unset_var,
-
+      
       // object data
       new stdclass(),
 );
@@ -96,8 +95,6 @@ Arg value -10.5
 valid output
 
 Arg value 101234567000 
-
-Warning: posix_getpgid() expects parameter 1 to be integer, float given in %s on line %d
 valid output
 
 Arg value 1.07654321E-9 
@@ -110,35 +107,35 @@ Notice: Array to string conversion in %sposix_getpgid_variation.php on line %d
 
 Arg value Array 
 
-Warning: posix_getpgid() expects parameter 1 to be integer, array given in %s on line %d
+Warning: posix_getpgid() expects parameter 1 to be long, array given in %s on line %d
 valid output
 
 Notice: Array to string conversion in %sposix_getpgid_variation.php on line %d
 
 Arg value Array 
 
-Warning: posix_getpgid() expects parameter 1 to be integer, array given in %s on line %d
+Warning: posix_getpgid() expects parameter 1 to be long, array given in %s on line %d
 valid output
 
 Notice: Array to string conversion in %sposix_getpgid_variation.php on line %d
 
 Arg value Array 
 
-Warning: posix_getpgid() expects parameter 1 to be integer, array given in %s on line %d
+Warning: posix_getpgid() expects parameter 1 to be long, array given in %s on line %d
 valid output
 
 Notice: Array to string conversion in %sposix_getpgid_variation.php on line %d
 
 Arg value Array 
 
-Warning: posix_getpgid() expects parameter 1 to be integer, array given in %s on line %d
+Warning: posix_getpgid() expects parameter 1 to be long, array given in %s on line %d
 valid output
 
 Notice: Array to string conversion in %sposix_getpgid_variation.php on line %d
 
 Arg value Array 
 
-Warning: posix_getpgid() expects parameter 1 to be integer, array given in %s on line %d
+Warning: posix_getpgid() expects parameter 1 to be long, array given in %s on line %d
 valid output
 
 Arg value  
@@ -161,22 +158,22 @@ valid output
 
 Arg value  
 
-Warning: posix_getpgid() expects parameter 1 to be integer, string given in %s on line %d
+Warning: posix_getpgid() expects parameter 1 to be long, string given in %s on line %d
 valid output
 
 Arg value  
 
-Warning: posix_getpgid() expects parameter 1 to be integer, string given in %s on line %d
+Warning: posix_getpgid() expects parameter 1 to be long, string given in %s on line %d
 valid output
 
 Arg value string 
 
-Warning: posix_getpgid() expects parameter 1 to be integer, string given in %s on line %d
+Warning: posix_getpgid() expects parameter 1 to be long, string given in %s on line %d
 valid output
 
 Arg value string 
 
-Warning: posix_getpgid() expects parameter 1 to be integer, string given in %s on line %d
+Warning: posix_getpgid() expects parameter 1 to be long, string given in %s on line %d
 valid output
 
 Arg value  
@@ -185,4 +182,4 @@ valid output
 Arg value  
 valid output
 
-Recoverable fatal error: Object of class stdClass could not be converted to string in %s on line %d
+Catchable fatal error: Object of class stdClass could not be converted to string in %s on line %d

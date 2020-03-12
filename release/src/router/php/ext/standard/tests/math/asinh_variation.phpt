@@ -4,10 +4,10 @@ Test variations in usage of asinh()
 precision = 10
 --FILE--
 <?php
-/*
+/* 
  * proto float asinh(float number)
  * Function is implemented in ext/standard/math.c
-*/
+*/ 
 
 
 //Test asinh with a different input values
@@ -21,12 +21,12 @@ $values = array(23,
 		"23",
 		"23.45",
 		"2.345e1",
-		"nonsense",
+		"nonsense",				
 		"1000",
 		"1000ABC",
 		null,
 		true,
-		false);
+		false);	
 
 for ($i = 0; $i < count($values); $i++) {
 	$res = asinh($values[$i]);
@@ -45,7 +45,7 @@ float(3.829113652)
 float(3.848471992)
 float(3.848471992)
 
-Warning: asinh() expects parameter 1 to be float, string given in %s on line %d
+Warning: asinh() expects parameter 1 to be double, string given in %s on line %d
 NULL
 float(7.60090271)
 

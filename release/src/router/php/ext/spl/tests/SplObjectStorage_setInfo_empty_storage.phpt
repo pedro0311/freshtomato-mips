@@ -12,3 +12,4 @@ var_dump($s->setInfo('some_value'));
 ?>
 --EXPECT--
 NULL
+

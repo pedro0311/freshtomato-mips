@@ -1,12 +1,14 @@
 --TEST--
 ZE2 An interface is inherited
+--SKIPIF--
+<?php if (version_compare(zend_version(), '2.0.0-dev', '<')) die('skip ZendEngine 2 needed'); ?>
 --FILE--
 <?php
 
 interface if_a {
 	function f_a();
 }
-
+	
 interface if_b extends if_a {
 	function f_b();
 }

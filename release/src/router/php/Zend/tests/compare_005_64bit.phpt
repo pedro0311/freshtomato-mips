@@ -44,11 +44,11 @@ foreach($a as $var) {
 		my_dump($a[$i]);
 		echo "\n";
 	}
-}
+}	
 
 echo "Done\n";
 ?>
---EXPECTF--
+--EXPECTF--	
 array(3) {  [0]=>  int(1)  [1]=>  int(2)  [2]=>  int(3)} >= array(3) {  [0]=>  int(1)  [1]=>  int(2)  [2]=>  int(3)}
 array(3) {  [0]=>  int(1)  [1]=>  int(2)  [2]=>  int(3)} >= string(0) ""
 array(3) {  [0]=>  int(1)  [1]=>  int(2)  [2]=>  int(3)} >= int(1)
@@ -118,13 +118,13 @@ float(2.5) >= NULL
 float(2.5) >= bool(true)
 float(2.5) >= bool(false)
 float(2.5)
-Notice: Object of class stdClass could not be converted to float in %s on line %d
+Notice: Object of class stdClass could not be converted to double in %s on line %d
  >= object(stdClass)#%d (0) {}
 float(2.5)
-Notice: Object of class stdClass could not be converted to float in %s on line %d
+Notice: Object of class stdClass could not be converted to double in %s on line %d
  >= object(stdClass)#%d (0) {}
 float(2.5)
-Notice: Object of class test could not be converted to float in %s on line %d
+Notice: Object of class test could not be converted to double in %s on line %d
  >= object(test)#%d (0) {}
 float(2.5) < array(0) {}
 float(2.5) >= int(-9223372036854775808)
@@ -260,7 +260,7 @@ object(stdClass)#%d (0) {}
 Notice: Object of class stdClass could not be converted to int in %s on line %d
  >= int(1)
 object(stdClass)#%d (0) {}
-Notice: Object of class stdClass could not be converted to float in %s on line %d
+Notice: Object of class stdClass could not be converted to double in %s on line %d
  < float(2.5)
 object(stdClass)#%d (0) {}
 Notice: Object of class stdClass could not be converted to int in %s on line %d
@@ -285,7 +285,7 @@ object(stdClass)#%d (0) {}
 Notice: Object of class stdClass could not be converted to int in %s on line %d
  >= int(1)
 object(stdClass)#%d (0) {}
-Notice: Object of class stdClass could not be converted to float in %s on line %d
+Notice: Object of class stdClass could not be converted to double in %s on line %d
  < float(2.5)
 object(stdClass)#%d (0) {}
 Notice: Object of class stdClass could not be converted to int in %s on line %d
@@ -310,7 +310,7 @@ object(test)#%d (0) {}
 Notice: Object of class test could not be converted to int in %s on line %d
  >= int(1)
 object(test)#%d (0) {}
-Notice: Object of class test could not be converted to float in %s on line %d
+Notice: Object of class test could not be converted to double in %s on line %d
  < float(2.5)
 object(test)#%d (0) {}
 Notice: Object of class test could not be converted to int in %s on line %d

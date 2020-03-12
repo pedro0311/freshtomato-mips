@@ -3,30 +3,13 @@ dnl $Id$
 dnl
 
 PHP_ARG_ENABLE(opcache, whether to enable Zend OPcache support,
-[  --disable-opcache       Disable Zend OPcache support], yes)
-
-PHP_ARG_ENABLE(opcache-file, whether to enable file based caching,
-[  --disable-opcache-file  Disable file based caching], yes, no)
-
-PHP_ARG_ENABLE(huge-code-pages, whether to enable copying PHP CODE pages into HUGE PAGES,
-[  --disable-huge-code-pages
-                          Disable copying PHP CODE pages into HUGE PAGES], yes, no)
+[  --enable-opcache        Enable Zend OPcache support], yes)
 
 if test "$PHP_OPCACHE" != "no"; then
-
-  if test "$PHP_OPCACHE_FILE" = "yes"; then
-    AC_DEFINE(HAVE_OPCACHE_FILE_CACHE, 1, [Define to enable file based caching (experimental)])
-  fi
-
-  if test "$PHP_HUGE_CODE_PAGES" = "yes"; then
-    AC_DEFINE(HAVE_HUGE_CODE_PAGES, 1, [Define to enable copying PHP CODE pages into HUGE PAGES (experimental)])
-  fi
 
   AC_CHECK_FUNC(mprotect,[
     AC_DEFINE(HAVE_MPROTECT, 1, [Define if you have mprotect() function])
   ])
-
-  AC_CHECK_HEADERS([unistd.h sys/uio.h])
 
   AC_MSG_CHECKING(for sysvipc shared memory support)
   AC_TRY_RUN([
@@ -343,6 +326,43 @@ int main() {
     msg=yes,msg=no,msg=no)
   AC_MSG_RESULT([$msg])
 
+flock_type=unknown
+AC_MSG_CHECKING("whether flock struct is linux ordered")
+AC_TRY_RUN([
+  #include <fcntl.h>
+  struct flock lock = { 1, 2, 3, 4, 5 };
+  int main() { 
+    if(lock.l_type == 1 && lock.l_whence == 2 && lock.l_start == 3 && lock.l_len == 4) {
+		return 0;
+    }
+    return 1;
+  } 
+], [
+	flock_type=linux
+    AC_DEFINE([HAVE_FLOCK_LINUX], [], [Struct flock is Linux-type])
+    AC_MSG_RESULT("yes")
+], AC_MSG_RESULT("no") )
+
+AC_MSG_CHECKING("whether flock struct is BSD ordered")
+AC_TRY_RUN([
+  #include <fcntl.h>
+  struct flock lock = { 1, 2, 3, 4, 5 };
+  int main() { 
+    if(lock.l_start == 1 && lock.l_len == 2 && lock.l_type == 4 && lock.l_whence == 5) {
+		return 0;
+    }
+    return 1;
+  } 
+], [
+	flock_type=bsd
+    AC_DEFINE([HAVE_FLOCK_BSD], [], [Struct flock is BSD-type]) 
+    AC_MSG_RESULT("yes")
+], AC_MSG_RESULT("no") )
+
+if test "$flock_type" = "unknown"; then
+	AC_MSG_ERROR([Don't know how to define struct flock on this system[,] set --enable-opcache=no])
+fi
+
   PHP_NEW_EXTENSION(opcache,
 	ZendAccelerator.c \
 	zend_accelerator_blacklist.c \
@@ -351,35 +371,13 @@ int main() {
 	zend_accelerator_module.c \
 	zend_persist.c \
 	zend_persist_calc.c \
-	zend_file_cache.c \
 	zend_shared_alloc.c \
 	zend_accelerator_util_funcs.c \
 	shared_alloc_shm.c \
 	shared_alloc_mmap.c \
 	shared_alloc_posix.c \
-	Optimizer/zend_optimizer.c \
-	Optimizer/pass1_5.c \
-	Optimizer/pass2.c \
-	Optimizer/pass3.c \
-	Optimizer/optimize_func_calls.c \
-	Optimizer/block_pass.c \
-	Optimizer/optimize_temp_vars_5.c \
-	Optimizer/nop_removal.c \
-	Optimizer/compact_literals.c \
-	Optimizer/zend_cfg.c \
-	Optimizer/zend_dfg.c \
-	Optimizer/dfa_pass.c \
-	Optimizer/zend_ssa.c \
-	Optimizer/zend_inference.c \
-	Optimizer/zend_func_info.c \
-	Optimizer/zend_call_graph.c \
-	Optimizer/sccp.c \
-	Optimizer/scdf.c \
-	Optimizer/dce.c \
-	Optimizer/compact_vars.c \
-	Optimizer/zend_dump.c,
-	shared,,-DZEND_ENABLE_STATIC_TSRMLS_CACHE=1,,yes)
+	Optimizer/zend_optimizer.c,
+	shared,,,,yes)
 
   PHP_ADD_BUILD_DIR([$ext_builddir/Optimizer], 1)
-  PHP_ADD_EXTENSION_DEP(opcache, pcre)
 fi

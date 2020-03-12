@@ -110,7 +110,7 @@ $ini = <<<'INI'
 foo=bar1
 ; comment
 _foo=bar2
-; comment
+# comment
 foo_=bar3
 INI;
 file_put_contents($filename, $ini);
@@ -120,7 +120,7 @@ var_dump(parse_ini_file($filename, true));
 @unlink($filename);
 echo "Done\n";
 ?>
---EXPECTF--
+--EXPECTF--	
 Warning: parse_ini_file() expects at least 1 parameter, 0 given in %sparse_ini_file.php on line 6
 bool(false)
 
@@ -205,6 +205,8 @@ array(3) {
   ["foo_"]=>
   string(4) "bar3"
 }
+
+Deprecated: Comments starting with '#' are deprecated in %s
 array(3) {
   ["foo"]=>
   string(4) "bar1"

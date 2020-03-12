@@ -3,7 +3,7 @@ Test htmlspecialchars_decode() function : usage variations - unexpected values f
 --FILE--
 <?php
 /* Prototype  : string htmlspecialchars_decode(string $string [, int $quote_style])
- * Description: Convert special HTML entities back to characters
+ * Description: Convert special HTML entities back to characters 
  * Source code: ext/standard/html.c
 */
 
@@ -14,7 +14,7 @@ Test htmlspecialchars_decode() function : usage variations - unexpected values f
 echo "*** Testing htmlspecialchars_decode() : usage variations ***\n";
 
 // Initialise function arguments
-// value initialized = Roy's height > Sam's height. 13 < 15. 1111 & 0000 = 0000. " double quote string "
+// value initialized = Roy's height > Sam's height. 13 < 15. 1111 & 0000 = 0000. " double quote string " 
 $string = "<html>Roy&#039;s height &gt; Sam&#039;s height. 13 &lt; 15. 1111 &amp; 0000 = 0000. &quot; double quote string &quot;</html>";
 
 //get a class
@@ -102,9 +102,7 @@ string(104) "<html>Roy&#039;s height > Sam&#039;s height. 13 < 15. 1111 & 0000 =
 string(104) "<html>Roy&#039;s height > Sam&#039;s height. 13 < 15. 1111 & 0000 = 0000. " double quote string "</html>"
 
 -- Iteration 3 --
-
-Warning: htmlspecialchars_decode() expects parameter 2 to be integer, float given in %s on line %d
-NULL
+string(114) "<html>Roy&#039;s height > Sam&#039;s height. 13 < 15. 1111 & 0000 = 0000. &quot; double quote string &quot;</html>"
 
 -- Iteration 4 --
 string(114) "<html>Roy&#039;s height > Sam&#039;s height. 13 < 15. 1111 & 0000 = 0000. &quot; double quote string &quot;</html>"
@@ -114,27 +112,27 @@ string(114) "<html>Roy&#039;s height > Sam&#039;s height. 13 < 15. 1111 & 0000 =
 
 -- Iteration 6 --
 
-Warning: htmlspecialchars_decode() expects parameter 2 to be integer, array given in %shtmlspecialchars_decode_variation2.php on line %d
+Warning: htmlspecialchars_decode() expects parameter 2 to be long, array given in %shtmlspecialchars_decode_variation2.php on line %d
 NULL
 
 -- Iteration 7 --
 
-Warning: htmlspecialchars_decode() expects parameter 2 to be integer, array given in %shtmlspecialchars_decode_variation2.php on line %d
+Warning: htmlspecialchars_decode() expects parameter 2 to be long, array given in %shtmlspecialchars_decode_variation2.php on line %d
 NULL
 
 -- Iteration 8 --
 
-Warning: htmlspecialchars_decode() expects parameter 2 to be integer, array given in %shtmlspecialchars_decode_variation2.php on line %d
+Warning: htmlspecialchars_decode() expects parameter 2 to be long, array given in %shtmlspecialchars_decode_variation2.php on line %d
 NULL
 
 -- Iteration 9 --
 
-Warning: htmlspecialchars_decode() expects parameter 2 to be integer, array given in %shtmlspecialchars_decode_variation2.php on line %d
+Warning: htmlspecialchars_decode() expects parameter 2 to be long, array given in %shtmlspecialchars_decode_variation2.php on line %d
 NULL
 
 -- Iteration 10 --
 
-Warning: htmlspecialchars_decode() expects parameter 2 to be integer, array given in %shtmlspecialchars_decode_variation2.php on line %d
+Warning: htmlspecialchars_decode() expects parameter 2 to be long, array given in %shtmlspecialchars_decode_variation2.php on line %d
 NULL
 
 -- Iteration 11 --
@@ -157,27 +155,27 @@ string(114) "<html>Roy&#039;s height > Sam&#039;s height. 13 < 15. 1111 & 0000 =
 
 -- Iteration 17 --
 
-Warning: htmlspecialchars_decode() expects parameter 2 to be integer, string given in %shtmlspecialchars_decode_variation2.php on line %d
+Warning: htmlspecialchars_decode() expects parameter 2 to be long, string given in %shtmlspecialchars_decode_variation2.php on line %d
 NULL
 
 -- Iteration 18 --
 
-Warning: htmlspecialchars_decode() expects parameter 2 to be integer, string given in %shtmlspecialchars_decode_variation2.php on line %d
+Warning: htmlspecialchars_decode() expects parameter 2 to be long, string given in %shtmlspecialchars_decode_variation2.php on line %d
 NULL
 
 -- Iteration 19 --
 
-Warning: htmlspecialchars_decode() expects parameter 2 to be integer, string given in %shtmlspecialchars_decode_variation2.php on line %d
+Warning: htmlspecialchars_decode() expects parameter 2 to be long, string given in %shtmlspecialchars_decode_variation2.php on line %d
 NULL
 
 -- Iteration 20 --
 
-Warning: htmlspecialchars_decode() expects parameter 2 to be integer, string given in %shtmlspecialchars_decode_variation2.php on line %d
+Warning: htmlspecialchars_decode() expects parameter 2 to be long, string given in %shtmlspecialchars_decode_variation2.php on line %d
 NULL
 
 -- Iteration 21 --
 
-Warning: htmlspecialchars_decode() expects parameter 2 to be integer, object given in %shtmlspecialchars_decode_variation2.php on line %d
+Warning: htmlspecialchars_decode() expects parameter 2 to be long, object given in %shtmlspecialchars_decode_variation2.php on line %d
 NULL
 
 -- Iteration 22 --
@@ -188,6 +186,6 @@ string(114) "<html>Roy&#039;s height > Sam&#039;s height. 13 < 15. 1111 & 0000 =
 
 -- Iteration 24 --
 
-Warning: htmlspecialchars_decode() expects parameter 2 to be integer, resource given in %shtmlspecialchars_decode_variation2.php on line %d
+Warning: htmlspecialchars_decode() expects parameter 2 to be long, resource given in %shtmlspecialchars_decode_variation2.php on line %d
 NULL
 Done

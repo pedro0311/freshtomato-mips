@@ -7,7 +7,7 @@ namespace test\ns1;
 function foo() {
   echo __FUNCTION__,"\n";
 }
-
+  
 foo();
 \test\ns1\foo();
 bar();
@@ -16,6 +16,7 @@ bar();
 function bar() {
   echo __FUNCTION__,"\n";
 }
+
 --EXPECT--
 test\ns1\foo
 test\ns1\foo

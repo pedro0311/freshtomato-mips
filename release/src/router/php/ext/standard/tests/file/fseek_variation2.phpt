@@ -2,12 +2,10 @@
 Test fseek() function : usage variations  - different types for whence
 --CREDITS--
 Dave Kelsey <d_kelsey@uk.ibm.com>
---SKIPIF--
-<?php if (PHP_INT_SIZE != 8) die("skip this test is for 64-bit only");
 --FILE--
 <?php
 /* Prototype  : proto int fseek(resource fp, int offset [, int whence])
- * Description: Seek on a file pointer
+ * Description: Seek on a file pointer 
  * Source code: ext/standard/file.c
  * Alias to functions: gzseek
  */
@@ -128,25 +126,25 @@ int(3)
 
 Arg value  
 
-Warning: fseek() expects parameter 3 to be integer, string given in %s on line %d
+Warning: fseek() expects parameter 3 to be long, string given in %s on line %d
 bool(false)
 int(3)
 
 Arg value  
 
-Warning: fseek() expects parameter 3 to be integer, string given in %s on line %d
+Warning: fseek() expects parameter 3 to be long, string given in %s on line %d
 bool(false)
 int(3)
 
 Arg value string 
 
-Warning: fseek() expects parameter 3 to be integer, string given in %s on line %d
+Warning: fseek() expects parameter 3 to be long, string given in %s on line %d
 bool(false)
 int(3)
 
 Arg value string 
 
-Warning: fseek() expects parameter 3 to be integer, string given in %s on line %d
+Warning: fseek() expects parameter 3 to be long, string given in %s on line %d
 bool(false)
 int(3)
 
@@ -158,3 +156,4 @@ Arg value
 int(0)
 int(3)
 Done
+

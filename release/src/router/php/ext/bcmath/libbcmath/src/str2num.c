@@ -26,7 +26,7 @@
                 Computer Science Department, 9062
                 Western Washington University
                 Bellingham, WA 98226-9062
-
+       
 *************************************************************************/
 
 #include <config.h>
@@ -41,7 +41,7 @@
 /* Convert strings to bc numbers.  Base 10 only.*/
 
 void
-bc_str2num (bc_num *num, char *str, int scale)
+bc_str2num (bc_num *num, char *str, int scale TSRMLS_DC)
 {
   int digits, strscale;
   char *ptr, *nptr;
@@ -57,9 +57,9 @@ bc_str2num (bc_num *num, char *str, int scale)
   zero_int = FALSE;
   if ( (*ptr == '+') || (*ptr == '-'))  ptr++;  /* Sign */
   while (*ptr == '0') ptr++;			/* Skip leading zeros. */
-  while (*ptr >= '0' && *ptr <= '9') ptr++, digits++;	/* digits */
+  while (isdigit((int)*ptr)) ptr++, digits++;	/* digits */
   if (*ptr == '.') ptr++;			/* decimal point */
-  while (*ptr >= '0' && *ptr <= '9') ptr++, strscale++;	/* digits */
+  while (isdigit((int)*ptr)) ptr++, strscale++;	/* digits */
   if ((*ptr != '\0') || (digits+strscale == 0))
     {
       *num = bc_copy_num (BCG(_zero_));
@@ -105,7 +105,5 @@ bc_str2num (bc_num *num, char *str, int scale)
       for (;strscale > 0; strscale--)
 	*nptr++ = CH_VAL(*ptr++);
     }
-
-  if (bc_is_zero (*num))
-    (*num)->n_sign = PLUS;
 }
+

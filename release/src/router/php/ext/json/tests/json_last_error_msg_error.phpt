@@ -18,3 +18,4 @@ NULL
 
 Warning: json_last_error_msg() expects exactly 0 parameters, 4 given in %s on line %d
 NULL
+

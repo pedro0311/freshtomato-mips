@@ -2,7 +2,7 @@
 Bug #61977 test CLI web-server support for Mime Type File extensions mapping
 --SKIPIF--
 <?php
-include "skipif.inc";
+include "skipif.inc"; 
 ?>
 --FILE--
 <?php
@@ -48,7 +48,7 @@ foo.html => Content-Type: text/html; charset=UTF-8
 foo.htm => Content-Type: text/html; charset=UTF-8
 foo.svg => Content-Type: image/svg+xml
 foo.css => Content-Type: text/css; charset=UTF-8
-foo.js => Content-Type: application/javascript
+foo.js => Content-Type: text/javascript; charset=UTF-8
 foo.png => Content-Type: image/png
 foo.webm => Content-Type: video/webm
 foo.ogv => Content-Type: video/ogg

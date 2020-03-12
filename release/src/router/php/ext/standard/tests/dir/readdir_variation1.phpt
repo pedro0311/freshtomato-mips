@@ -3,7 +3,7 @@ Test readdir() function : usage variations - different data types as $dir_handle
 --FILE--
 <?php
 /* Prototype  : string readdir([resource $dir_handle])
- * Description: Read directory entry from dir_handle
+ * Description: Read directory entry from dir_handle 
  * Source code: ext/standard/dir.c
  */
 
@@ -55,7 +55,7 @@ $inputs = array(
        false,
        TRUE,
        FALSE,
-
+       
        // empty data
 /*16*/ "",
        '',
@@ -65,7 +65,7 @@ $inputs = array(
 /*19*/ "string",
        'string',
        $heredoc,
-
+       
        // object data
 /*22*/ new classA(),
 
@@ -110,27 +110,27 @@ NULL
 
 -- Iteration 5 --
 
-Warning: readdir() expects parameter 1 to be resource, float given in %s on line %d
+Warning: readdir() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 -- Iteration 6 --
 
-Warning: readdir() expects parameter 1 to be resource, float given in %s on line %d
+Warning: readdir() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 -- Iteration 7 --
 
-Warning: readdir() expects parameter 1 to be resource, float given in %s on line %d
+Warning: readdir() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 -- Iteration 8 --
 
-Warning: readdir() expects parameter 1 to be resource, float given in %s on line %d
+Warning: readdir() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 -- Iteration 9 --
 
-Warning: readdir() expects parameter 1 to be resource, float given in %s on line %d
+Warning: readdir() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 -- Iteration 10 --

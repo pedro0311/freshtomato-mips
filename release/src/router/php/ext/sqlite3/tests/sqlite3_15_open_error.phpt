@@ -24,7 +24,7 @@ echo "Done\n";
 unlink($unreadable);
 ?>
 --EXPECTF--
-Exception: Unable to open database: %s in %ssqlite3_15_open_error.php:%d
+exception 'Exception' with message 'Unable to open database: %s' in %ssqlite3_15_open_error.php:%d
 Stack trace:
 #0 %ssqlite3_15_open_error.php(%d): SQLite3->__construct('%s')
 #1 {main}

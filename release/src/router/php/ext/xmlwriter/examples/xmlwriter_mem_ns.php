@@ -27,3 +27,4 @@ xmlwriter_end_document($xw);
 $out = xmlwriter_output_memory($xw, 0);
 
 echo $out;
+

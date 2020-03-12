@@ -1,5 +1,5 @@
 --TEST--
-SPL: Test on RecursiveIteratorIterator key function checking switch statements
+SPL: Test on RecursiveIteratorIterator key function checking switch statements 
 --CREDITS--
 Rohan Abraham (rohanabrahams@gmail.com)
 TestFest London May 2009
@@ -16,18 +16,18 @@ TestFest London May 2009
 ?>
 --EXPECTF--
 one=>1
-string(3) "one"
+%unicode|string%(3) "one"
 two=>2
-string(3) "two"
+%unicode|string%(3) "two"
 four=>4
-string(4) "four"
+%unicode|string%(4) "four"
 five=>5
-string(4) "five"
+%unicode|string%(4) "five"
 seven=>7
-string(5) "seven"
+%unicode|string%(5) "seven"
 eight=>8
-string(5) "eight"
+%unicode|string%(5) "eight"
 -100=>10
 int(-100)
 =>null
-string(0) ""
+%unicode|string%(0) ""

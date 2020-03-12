@@ -3,9 +3,9 @@ Test date_sunset() function : usage variation - Passing unexpected values to fif
 --FILE--
 <?php
 /* Prototype  : mixed date_sunset(mixed time [, int format [, float latitude [, float longitude [, float zenith [, float gmt_offset]]]]])
- * Description: Returns time of sunset for a given day and location
+ * Description: Returns time of sunset for a given day and location 
  * Source code: ext/date/php_date.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing date_sunset() : usage variation ***\n";
@@ -114,8 +114,8 @@ bool(false)
 
 --int 12345--
 string(5) "19:20"
-float(19.343%d)
-int(1218203437)
+float(19.340%d)
+int(1218203424)
 
 --int -12345--
 bool(false)
@@ -124,46 +124,46 @@ bool(false)
 
 --empty array--
 
-Warning: date_sunset() expects parameter 5 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, array given in %s on line %d
 bool(false)
 
 --int indexed array--
 
-Warning: date_sunset() expects parameter 5 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, array given in %s on line %d
 bool(false)
 
 --associative array--
 
-Warning: date_sunset() expects parameter 5 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, array given in %s on line %d
 bool(false)
 
 --nested arrays--
 
-Warning: date_sunset() expects parameter 5 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, array given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, array given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, array given in %s on line %d
 bool(false)
 
 --uppercase NULL--
@@ -198,90 +198,90 @@ bool(false)
 
 --empty string DQ--
 
-Warning: date_sunset() expects parameter 5 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, string given in %s on line %d
 bool(false)
 
 --empty string SQ--
 
-Warning: date_sunset() expects parameter 5 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, string given in %s on line %d
 bool(false)
 
 --string DQ--
 
-Warning: date_sunset() expects parameter 5 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, string given in %s on line %d
 bool(false)
 
 --string SQ--
 
-Warning: date_sunset() expects parameter 5 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, string given in %s on line %d
 bool(false)
 
 --mixed case string--
 
-Warning: date_sunset() expects parameter 5 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, string given in %s on line %d
 bool(false)
 
 --heredoc--
 
-Warning: date_sunset() expects parameter 5 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, string given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, string given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, string given in %s on line %d
 bool(false)
 
 --instance of classWithToString--
 
-Warning: date_sunset() expects parameter 5 to be float, object given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, object given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, object given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, object given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, object given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, object given in %s on line %d
 bool(false)
 
 --instance of classWithoutToString--
 
-Warning: date_sunset() expects parameter 5 to be float, object given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, object given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, object given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, object given in %s on line %d
 bool(false)
 
-Warning: date_sunset() expects parameter 5 to be float, object given in %s on line %d
+Warning: date_sunset() expects parameter 5 to be double, object given in %s on line %d
 bool(false)
 
 --undefined var--

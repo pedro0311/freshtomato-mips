@@ -1,12 +1,10 @@
 --TEST--
 Bug #33386 (ScriptControl only sees last function of class)
 --SKIPIF--
-<?php
-if (!extension_loaded("com_dotnet")) print "skip COM/.Net support not present";
-if (4 != PHP_INT_SIZE)  print "skip MSScriptControl isn't available under x64";
-?>
+<?php 
+if (!extension_loaded("com_dotnet")) print "skip COM/.Net support not present"; ?>
 --FILE--
-<?php
+<?php 
 error_reporting(E_ALL);
 
 class twoFuncs {

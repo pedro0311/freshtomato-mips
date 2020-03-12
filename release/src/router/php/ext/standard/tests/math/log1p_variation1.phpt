@@ -5,7 +5,7 @@ precision=14
 --FILE--
 <?php
 /* Prototype  : float log1p  ( float $arg  )
- * Description: Returns log(1 + number), computed in a way that is accurate even
+ * Description: Returns log(1 + number), computed in a way that is accurate even 
  *				when the value of number is close to zero
  * Source code: ext/standard/math.c
  */
@@ -35,7 +35,7 @@ $inputs = array(
 /*1*/  0,
        1,
        12345,
-       -2345,
+       -2345,       
        2147483647,
        -2147483648,
 
@@ -55,7 +55,7 @@ $inputs = array(
        false,
        TRUE,
        FALSE,
-
+       
        // empty data
 /*18*/ "",
        '',
@@ -65,10 +65,10 @@ $inputs = array(
 /*21*/ "abcxyz",
        'abcxyz',
        $heredoc,
-
+       
        // object data
-/*24*/ new classA(),
-
+/*24*/ new classA(),       
+       
        // undefined data
 /*25*/ @$undefined_var,
 
@@ -145,37 +145,37 @@ float(0)
 
 -- Iteration 18 --
 
-Warning: log1p() expects parameter 1 to be float, string given in %s on line %d
+Warning: log1p() expects parameter 1 to be double, string given in %s on line %d
 NULL
 
 -- Iteration 19 --
 
-Warning: log1p() expects parameter 1 to be float, string given in %s on line %d
+Warning: log1p() expects parameter 1 to be double, string given in %s on line %d
 NULL
 
 -- Iteration 20 --
 
-Warning: log1p() expects parameter 1 to be float, array given in %s on line %d
+Warning: log1p() expects parameter 1 to be double, array given in %s on line %d
 NULL
 
 -- Iteration 21 --
 
-Warning: log1p() expects parameter 1 to be float, string given in %s on line %d
+Warning: log1p() expects parameter 1 to be double, string given in %s on line %d
 NULL
 
 -- Iteration 22 --
 
-Warning: log1p() expects parameter 1 to be float, string given in %s on line %d
+Warning: log1p() expects parameter 1 to be double, string given in %s on line %d
 NULL
 
 -- Iteration 23 --
 
-Warning: log1p() expects parameter 1 to be float, string given in %s on line %d
+Warning: log1p() expects parameter 1 to be double, string given in %s on line %d
 NULL
 
 -- Iteration 24 --
 
-Warning: log1p() expects parameter 1 to be float, object given in %s on line %d
+Warning: log1p() expects parameter 1 to be double, object given in %s on line %d
 NULL
 
 -- Iteration 25 --
@@ -186,6 +186,6 @@ float(0)
 
 -- Iteration 27 --
 
-Warning: log1p() expects parameter 1 to be float, resource given in %s on line %d
+Warning: log1p() expects parameter 1 to be double, resource given in %s on line %d
 NULL
 ===Done===

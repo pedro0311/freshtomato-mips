@@ -14,7 +14,7 @@ function g() {
 }
 
 
-echo "\n\nOrder with local assignment:\n";
+echo "\n\nOrder with local assignment:\n"; 
 ${f()} = g();
 var_dump($name);
 
@@ -42,7 +42,7 @@ var_dump($oc);
 
 class C {
 	public static $name = "original";
-	public static $a = array();
+	public static $a = array(); 
 	public static $string = "hello";
 }
 echo "\n\nOrder with static property assignment:\n";
@@ -55,7 +55,7 @@ var_dump(C::$a);
 
 echo "\n\nOrder with indexed string assignment:\n";
 $string = "hello";
-function getOffset() {
+function getOffset() { 
 	echo "in getOffset()\n";
 	return 0;
 }
@@ -72,6 +72,8 @@ var_dump(C::$string);
 
 ?>
 --EXPECTF--
+
+
 Order with local assignment:
 in f()
 in g()
@@ -82,7 +84,7 @@ Order with array assignment:
 in f()
 in g()
 array(1) {
-  ["name"]=>
+  [%u|b%"name"]=>
   %string|unicode%(14) "assigned value"
 }
 
@@ -91,7 +93,7 @@ Order with object property assignment:
 in f()
 in g()
 object(stdClass)#%d (1) {
-  ["assigned value"]=>
+  [%u|b%"assigned value"]=>
   %string|unicode%(14) "assigned value"
 }
 
@@ -100,11 +102,11 @@ Order with nested object property assignment:
 in f()
 in g()
 object(stdClass)#%d (1) {
-  ["o1"]=>
+  [%u|b%"o1"]=>
   object(stdClass)#%d (1) {
-    ["o2"]=>
+    [%u|b%"o2"]=>
     object(stdClass)#%d (1) {
-      ["assigned value"]=>
+      [%u|b%"assigned value"]=>
       %string|unicode%(14) "assigned value"
     }
   }
@@ -115,9 +117,9 @@ Order with dim_list property assignment:
 in f()
 in g()
 object(stdClass)#%d (1) {
-  ["a"]=>
+  [%u|b%"a"]=>
   array(1) {
-    ["assigned value"]=>
+    [%u|b%"assigned value"]=>
     %string|unicode%(14) "assigned value"
   }
 }
@@ -133,7 +135,7 @@ Order with static array property assignment:
 in f()
 in g()
 array(1) {
-  ["name"]=>
+  [%u|b%"name"]=>
   %string|unicode%(14) "assigned value"
 }
 

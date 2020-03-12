@@ -3,7 +3,7 @@ Test rsort() function : usage variations - Pass different data types as $array_a
 --FILE--
 <?php
 /* Prototype  : bool rsort(array &$array_arg [, int $sort_flags])
- * Description: Sort an array in reverse order
+ * Description: Sort an array in reverse order 
  * Source code: ext/standard/array.c
  */
 
@@ -58,7 +58,7 @@ $inputs = array(
        false,
        TRUE,
        FALSE,
-
+       
        // empty data
 /*16*/ "",
        '',
@@ -67,7 +67,7 @@ $inputs = array(
 /*18*/ "string",
        'string',
        $heredoc,
-
+       
        // object data
 /*21*/ new classA(),
 
@@ -100,6 +100,7 @@ fclose($fp);
 
 echo "Done";
 ?>
+
 --EXPECTF--
 *** Testing rsort() : variation ***
 -- Iteration 1 --
@@ -173,87 +174,87 @@ bool(false)
 -- Iteration 5 --
 Flag = default:
 
-Warning: rsort() expects parameter 1 to be array, float given in %s on line %d
+Warning: rsort() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 Flag = SORT_REGULAR:
 
-Warning: rsort() expects parameter 1 to be array, float given in %s on line %d
+Warning: rsort() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 Flag = SORT_NUMERIC:
 
-Warning: rsort() expects parameter 1 to be array, float given in %s on line %d
+Warning: rsort() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 Flag = SORT_STRING:
 
-Warning: rsort() expects parameter 1 to be array, float given in %s on line %d
+Warning: rsort() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 -- Iteration 6 --
 Flag = default:
 
-Warning: rsort() expects parameter 1 to be array, float given in %s on line %d
+Warning: rsort() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 Flag = SORT_REGULAR:
 
-Warning: rsort() expects parameter 1 to be array, float given in %s on line %d
+Warning: rsort() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 Flag = SORT_NUMERIC:
 
-Warning: rsort() expects parameter 1 to be array, float given in %s on line %d
+Warning: rsort() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 Flag = SORT_STRING:
 
-Warning: rsort() expects parameter 1 to be array, float given in %s on line %d
+Warning: rsort() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 -- Iteration 7 --
 Flag = default:
 
-Warning: rsort() expects parameter 1 to be array, float given in %s on line %d
+Warning: rsort() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 Flag = SORT_REGULAR:
 
-Warning: rsort() expects parameter 1 to be array, float given in %s on line %d
+Warning: rsort() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 Flag = SORT_NUMERIC:
 
-Warning: rsort() expects parameter 1 to be array, float given in %s on line %d
+Warning: rsort() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 Flag = SORT_STRING:
 
-Warning: rsort() expects parameter 1 to be array, float given in %s on line %d
+Warning: rsort() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 -- Iteration 8 --
 Flag = default:
 
-Warning: rsort() expects parameter 1 to be array, float given in %s on line %d
+Warning: rsort() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 Flag = SORT_REGULAR:
 
-Warning: rsort() expects parameter 1 to be array, float given in %s on line %d
+Warning: rsort() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 Flag = SORT_NUMERIC:
 
-Warning: rsort() expects parameter 1 to be array, float given in %s on line %d
+Warning: rsort() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 Flag = SORT_STRING:
 
-Warning: rsort() expects parameter 1 to be array, float given in %s on line %d
+Warning: rsort() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 -- Iteration 9 --
 Flag = default:
 
-Warning: rsort() expects parameter 1 to be array, float given in %s on line %d
+Warning: rsort() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 Flag = SORT_REGULAR:
 
-Warning: rsort() expects parameter 1 to be array, float given in %s on line %d
+Warning: rsort() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 Flag = SORT_NUMERIC:
 
-Warning: rsort() expects parameter 1 to be array, float given in %s on line %d
+Warning: rsort() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 Flag = SORT_STRING:
 
-Warning: rsort() expects parameter 1 to be array, float given in %s on line %d
+Warning: rsort() expects parameter 1 to be array, double given in %s on line %d
 bool(false)
 -- Iteration 10 --
 Flag = default:

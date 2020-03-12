@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2018 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -33,25 +33,21 @@ const char HARDCODED_INI[] =
 	"max_execution_time=0\n"
 	"max_input_time=-1\n\0";
 
-#if defined(PHP_WIN32) && defined(ZTS)
-ZEND_TSRMLS_CACHE_DEFINE()
-#endif
-
-static char* php_embed_read_cookies(void)
+static char* php_embed_read_cookies(TSRMLS_D)
 {
 	return NULL;
 }
 
-static int php_embed_deactivate(void)
+static int php_embed_deactivate(TSRMLS_D)
 {
 	fflush(stdout);
 	return SUCCESS;
 }
 
-static inline size_t php_embed_single_write(const char *str, size_t str_length)
+static inline size_t php_embed_single_write(const char *str, uint str_length)
 {
 #ifdef PHP_WRITE_STDOUT
-	zend_long ret;
+	long ret;
 
 	ret = write(STDOUT_FILENO, str, str_length);
 	if (ret <= 0) return 0;
@@ -65,10 +61,10 @@ static inline size_t php_embed_single_write(const char *str, size_t str_length)
 }
 
 
-static size_t php_embed_ub_write(const char *str, size_t str_length)
+static int php_embed_ub_write(const char *str, uint str_length TSRMLS_DC)
 {
 	const char *ptr = str;
-	size_t remaining = str_length;
+	uint remaining = str_length;
 	size_t ret;
 
 	while (remaining > 0) {
@@ -90,18 +86,18 @@ static void php_embed_flush(void *server_context)
 	}
 }
 
-static void php_embed_send_header(sapi_header_struct *sapi_header, void *server_context)
+static void php_embed_send_header(sapi_header_struct *sapi_header, void *server_context TSRMLS_DC)
 {
 }
 
-static void php_embed_log_message(char *message, int syslog_type_int)
+static void php_embed_log_message(char *message TSRMLS_DC)
 {
 	fprintf (stderr, "%s\n", message);
 }
 
-static void php_embed_register_variables(zval *track_vars_array)
+static void php_embed_register_variables(zval *track_vars_array TSRMLS_DC)
 {
-	php_import_environment_variables(track_vars_array);
+	php_import_environment_variables(track_vars_array TSRMLS_CC);
 }
 
 static int php_embed_startup(sapi_module_struct *sapi_module)
@@ -112,35 +108,35 @@ static int php_embed_startup(sapi_module_struct *sapi_module)
 	return SUCCESS;
 }
 
-EMBED_SAPI_API sapi_module_struct php_embed_module = {
+extern EMBED_SAPI_API sapi_module_struct php_embed_module = {
 	"embed",                       /* name */
 	"PHP Embedded Library",        /* pretty name */
-
+	
 	php_embed_startup,              /* startup */
 	php_module_shutdown_wrapper,   /* shutdown */
-
+  
 	NULL,                          /* activate */
 	php_embed_deactivate,           /* deactivate */
-
+  
 	php_embed_ub_write,             /* unbuffered write */
 	php_embed_flush,                /* flush */
 	NULL,                          /* get uid */
 	NULL,                          /* getenv */
-
+  
 	php_error,                     /* error handler */
-
+  
 	NULL,                          /* header handler */
 	NULL,                          /* send headers handler */
 	php_embed_send_header,          /* send header handler */
-
+	
 	NULL,                          /* read POST data */
 	php_embed_read_cookies,         /* read Cookies */
-
+  
 	php_embed_register_variables,   /* register server variables */
 	php_embed_log_message,          /* Log message */
 	NULL,							/* Get request time */
 	NULL,							/* Child terminate */
-
+  
 	STANDARD_SAPI_MODULE_PROPERTIES
 };
 /* }}} */
@@ -156,9 +152,12 @@ static const zend_function_entry additional_functions[] = {
 	{NULL, NULL, NULL}
 };
 
-EMBED_SAPI_API int php_embed_init(int argc, char **argv)
+EMBED_SAPI_API int php_embed_init(int argc, char **argv PTSRMLS_DC)
 {
 	zend_llist global_vars;
+#ifdef ZTS
+	void ***tsrm_ls = NULL;
+#endif
 
 #ifdef HAVE_SIGNAL_H
 #if defined(SIGPIPE) && defined(SIG_IGN)
@@ -173,11 +172,9 @@ EMBED_SAPI_API int php_embed_init(int argc, char **argv)
 
 #ifdef ZTS
   tsrm_startup(1, 1, 0, NULL);
-  (void)ts_resource(0);
-  ZEND_TSRMLS_CACHE_UPDATE();
+  tsrm_ls = ts_resource(0);
+  *ptsrm_ls = tsrm_ls;
 #endif
-
-	zend_signal_startup();
 
   sapi_startup(&php_embed_module);
 
@@ -200,30 +197,30 @@ EMBED_SAPI_API int php_embed_init(int argc, char **argv)
   if (php_embed_module.startup(&php_embed_module)==FAILURE) {
 	  return FAILURE;
   }
-
-  zend_llist_init(&global_vars, sizeof(char *), NULL, 0);
+ 
+  zend_llist_init(&global_vars, sizeof(char *), NULL, 0);  
 
   /* Set some Embedded PHP defaults */
   SG(options) |= SAPI_OPTION_NO_CHDIR;
   SG(request_info).argc=argc;
   SG(request_info).argv=argv;
 
-  if (php_request_startup()==FAILURE) {
-	  php_module_shutdown();
+  if (php_request_startup(TSRMLS_C)==FAILURE) {
+	  php_module_shutdown(TSRMLS_C);
 	  return FAILURE;
   }
-
+  
   SG(headers_sent) = 1;
   SG(request_info).no_headers = 1;
-  php_register_variable("PHP_SELF", "-", NULL);
+  php_register_variable("PHP_SELF", "-", NULL TSRMLS_CC);
 
   return SUCCESS;
 }
 
-EMBED_SAPI_API void php_embed_shutdown(void)
+EMBED_SAPI_API void php_embed_shutdown(TSRMLS_D)
 {
 	php_request_shutdown((void *) 0);
-	php_module_shutdown();
+	php_module_shutdown(TSRMLS_C);
 	sapi_shutdown();
 #ifdef ZTS
     tsrm_shutdown();

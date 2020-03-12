@@ -67,59 +67,59 @@ require_once('skipifconnectfailure.inc');
 ?>
 --EXPECTF--
 object(stdClass)#%d (13) {
-  ["name"]=>
-  string(2) "ID"
-  ["orgname"]=>
-  string(2) "id"
-  ["table"]=>
-  string(4) "TEST"
-  ["orgtable"]=>
-  string(%d) "%s"
-  ["def"]=>
-  string(0) ""
-  ["db"]=>
-  string(%d) "%s"
-  ["catalog"]=>
-  string(%d) "%s"
-  ["max_length"]=>
+  [%u|b%"name"]=>
+  %unicode|string%(2) "ID"
+  [%u|b%"orgname"]=>
+  %unicode|string%(2) "id"
+  [%u|b%"table"]=>
+  %unicode|string%(4) "TEST"
+  [%u|b%"orgtable"]=>
+  %unicode|string%(%d) "%s"
+  [%u|b%"def"]=>
+  %unicode|string%(0) ""
+  [%u|b%"db"]=>
+  %unicode|string%(%d) "%s"
+  [%u|b%"catalog"]=>
+  %unicode|string%(%d) "%s"
+  [%u|b%"max_length"]=>
   int(1)
-  ["length"]=>
+  [%u|b%"length"]=>
   int(11)
-  ["charsetnr"]=>
+  [%u|b%"charsetnr"]=>
   int(63)
-  ["flags"]=>
+  [%u|b%"flags"]=>
   int(49155)
-  ["type"]=>
+  [%u|b%"type"]=>
   int(3)
-  ["decimals"]=>
+  [%u|b%"decimals"]=>
   int(0)
 }
 object(stdClass)#%d (13) {
-  ["name"]=>
-  string(5) "label"
-  ["orgname"]=>
-  string(5) "label"
-  ["table"]=>
-  string(4) "TEST"
-  ["orgtable"]=>
-  string(%d) "%s"
-  ["def"]=>
-  string(0) ""
-  ["db"]=>
-  string(%d) "%s"
-  ["catalog"]=>
-  string(%d) "%s"
-  ["max_length"]=>
+  [%u|b%"name"]=>
+  %unicode|string%(5) "label"
+  [%u|b%"orgname"]=>
+  %unicode|string%(5) "label"
+  [%u|b%"table"]=>
+  %unicode|string%(4) "TEST"
+  [%u|b%"orgtable"]=>
+  %unicode|string%(%d) "%s"
+  [%u|b%"def"]=>
+  %unicode|string%(0) ""
+  [%u|b%"db"]=>
+  %unicode|string%(%d) "%s"
+  [%u|b%"catalog"]=>
+  %unicode|string%(%d) "%s"
+  [%u|b%"max_length"]=>
   int(1)
-  ["length"]=>
+  [%u|b%"length"]=>
   int(%d)
-  ["charsetnr"]=>
+  [%u|b%"charsetnr"]=>
   int(%d)
-  ["flags"]=>
+  [%u|b%"flags"]=>
   int(0)
-  ["type"]=>
+  [%u|b%"type"]=>
   int(254)
-  ["decimals"]=>
+  [%u|b%"decimals"]=>
   int(0)
 }
 

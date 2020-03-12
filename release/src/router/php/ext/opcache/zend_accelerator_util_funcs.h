@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | Zend OPcache                                                         |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1998-2018 The PHP Group                                |
+   | Copyright (c) 1998-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -25,21 +25,20 @@
 #include "zend.h"
 #include "ZendAccelerator.h"
 
-void zend_accel_copy_internal_functions(void);
+void zend_accel_copy_internal_functions(TSRMLS_D);
 
 zend_persistent_script* create_persistent_script(void);
+int compact_persistent_script(zend_persistent_script *script);
 void free_persistent_script(zend_persistent_script *persistent_script, int destroy_elements);
 
-void zend_accel_free_user_functions(HashTable *ht);
-void zend_accel_move_user_functions(HashTable *str, HashTable *dst);
+void zend_accel_free_user_functions(HashTable *ht TSRMLS_DC);
+void zend_accel_move_user_functions(HashTable *str, HashTable *dst TSRMLS_DC);
 
-zend_op_array* zend_accel_load_script(zend_persistent_script *persistent_script, int from_shared_memory);
+zend_op_array* zend_accel_load_script(zend_persistent_script *persistent_script, int from_shared_memory TSRMLS_DC);
 
 #define ADLER32_INIT 1     /* initial Adler-32 value */
 
-unsigned int zend_adler32(unsigned int checksum, unsigned char *buf, uint32_t len);
-
-unsigned int zend_accel_script_checksum(zend_persistent_script *persistent_script);
+unsigned int zend_adler32(unsigned int checksum, signed char *buf, uint len);
 
 #endif /* ZEND_ACCELERATOR_UTIL_FUNCS_H */
 

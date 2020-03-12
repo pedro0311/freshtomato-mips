@@ -1,13 +1,13 @@
 --TEST--
-Test pclose() function : usage variation
+Test pclose() function : usage variation 
 --CREDITS--
 Dave Kelsey <d_kelsey@uk.ibm.com>
 --FILE--
 <?php
 /* Prototype  : int pclose(resource fp)
- * Description: Close a file pointer opened by popen()
+ * Description: Close a file pointer opened by popen() 
  * Source code: ext/standard/file.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing pclose() : usage variation ***\n";
@@ -130,23 +130,23 @@ Error: 2 - pclose() expects parameter 1 to be resource, integer given, %s(%d)
 bool(false)
 
 --float 10.5--
-Error: 2 - pclose() expects parameter 1 to be resource, float given, %s(%d)
+Error: 2 - pclose() expects parameter 1 to be resource, double given, %s(%d)
 bool(false)
 
 --float -10.5--
-Error: 2 - pclose() expects parameter 1 to be resource, float given, %s(%d)
+Error: 2 - pclose() expects parameter 1 to be resource, double given, %s(%d)
 bool(false)
 
 --float 12.3456789000e10--
-Error: 2 - pclose() expects parameter 1 to be resource, float given, %s(%d)
+Error: 2 - pclose() expects parameter 1 to be resource, double given, %s(%d)
 bool(false)
 
 --float -12.3456789000e10--
-Error: 2 - pclose() expects parameter 1 to be resource, float given, %s(%d)
+Error: 2 - pclose() expects parameter 1 to be resource, double given, %s(%d)
 bool(false)
 
 --float .5--
-Error: 2 - pclose() expects parameter 1 to be resource, float given, %s(%d)
+Error: 2 - pclose() expects parameter 1 to be resource, double given, %s(%d)
 bool(false)
 
 --empty array--
@@ -229,3 +229,4 @@ bool(false)
 Error: 2 - pclose() expects parameter 1 to be resource, null given, %s(%d)
 bool(false)
 ===DONE===
+

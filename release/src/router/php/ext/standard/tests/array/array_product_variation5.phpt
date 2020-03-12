@@ -1,11 +1,11 @@
 --TEST--
-Test array_product() function : usage variation
+Test array_product() function : usage variation 
 --FILE--
 <?php
 /* Prototype  : mixed array_product(array input)
- * Description: Returns the product of the array entries
+ * Description: Returns the product of the array entries 
  * Source code: ext/standard/array.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing array_product() : usage variation ***\n";
@@ -118,27 +118,27 @@ NULL
 
 --float 10.5--
 
-Warning: array_product() expects parameter 1 to be array, float given in %sarray_product_variation5.php on line %d
+Warning: array_product() expects parameter 1 to be array, double given in %sarray_product_variation5.php on line %d
 NULL
 
 --float -10.5--
 
-Warning: array_product() expects parameter 1 to be array, float given in %sarray_product_variation5.php on line %d
+Warning: array_product() expects parameter 1 to be array, double given in %sarray_product_variation5.php on line %d
 NULL
 
 --float 12.3456789000e10--
 
-Warning: array_product() expects parameter 1 to be array, float given in %sarray_product_variation5.php on line %d
+Warning: array_product() expects parameter 1 to be array, double given in %sarray_product_variation5.php on line %d
 NULL
 
 --float -12.3456789000e10--
 
-Warning: array_product() expects parameter 1 to be array, float given in %sarray_product_variation5.php on line %d
+Warning: array_product() expects parameter 1 to be array, double given in %sarray_product_variation5.php on line %d
 NULL
 
 --float .5--
 
-Warning: array_product() expects parameter 1 to be array, float given in %sarray_product_variation5.php on line %d
+Warning: array_product() expects parameter 1 to be array, double given in %sarray_product_variation5.php on line %d
 NULL
 
 --uppercase NULL--

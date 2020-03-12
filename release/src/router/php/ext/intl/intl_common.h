@@ -1,6 +1,6 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -20,9 +20,7 @@
 #define INTL_COMMON_H
 /* Auxiliary macros */
 
-BEGIN_EXTERN_C()
 #include <php.h>
-END_EXTERN_C()
 #include <unicode/utypes.h>
 
 #ifndef UBYTES
@@ -42,9 +40,5 @@ END_EXTERN_C()
 
 #define INTL_Z_STRVAL_P(str) (UChar*) Z_STRVAL_P(str)
 #define INTL_Z_STRLEN_P(str) UCHARS( Z_STRLEN_P(str) )
-
-BEGIN_EXTERN_C()
-extern zend_class_entry *IntlException_ce_ptr;
-END_EXTERN_C()
 
 #endif /* INTL_COMMON_H */

@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2018 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,	  |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -25,17 +25,14 @@
 	branch = branch->branches[!!(n)];
 
 #ifdef _Win32
-# undef pemalloc
-# undef pefree
-# define pemalloc(size, persistent) malloc(size)
-# define pefree(ptr, persistent) free(ptr)
+# define emalloc malloc
+# define efree free
 #endif
 
 /* depth in bits */
 void phpdbg_btree_init(phpdbg_btree *tree, zend_ulong depth) {
 	tree->depth = depth;
 	tree->branch = NULL;
-	tree->persistent = 0;
 	tree->count = 0;
 }
 
@@ -69,6 +66,7 @@ phpdbg_btree_result *phpdbg_btree_find(phpdbg_btree *tree, zend_ulong idx) {
 phpdbg_btree_result *phpdbg_btree_find_closest(phpdbg_btree *tree, zend_ulong idx) {
 	phpdbg_btree_branch *branch = tree->branch;
 	int i = tree->depth - 1, last_superior_i = -1;
+	zend_bool had_alternative_branch = 0;
 
 	if (branch == NULL) {
 		return NULL;
@@ -76,33 +74,30 @@ phpdbg_btree_result *phpdbg_btree_find_closest(phpdbg_btree *tree, zend_ulong id
 
 	/* find nearest watchpoint */
 	do {
-		if ((idx >> i) % 2 == 0) {
-			if (branch->branches[0]) {
-				CHOOSE_BRANCH(0);
-			/* an impossible branch was found if: */
-			} else {
-				/* there's no lower branch than idx */
-				if (last_superior_i == -1) {
-					/* failure */
-					return NULL;
-				}
-				/* reset state */
-				branch = tree->branch;
-				i = tree->depth - 1;
-				/* follow branch according to bits in idx until the last lower branch before the impossible branch */
-				do {
-					CHOOSE_BRANCH((idx >> i) % 2 == 1 && branch->branches[1]);
-				} while (--i > last_superior_i);
-				/* use now the lower branch of which we can be sure that it contains only branches lower than idx */
-				CHOOSE_BRANCH(0);
-				/* and choose the highest possible branch in the branch containing only branches lower than idx */
-				while (i--) {
-					CHOOSE_BRANCH(branch->branches[1]);
-				}
-				break;
+		/* an impossible branch was found if: */
+		if (!had_alternative_branch && (idx >> i) % 2 == 0 && !branch->branches[0]) {
+			/* there's no lower branch than idx */
+			if (last_superior_i == -1) {
+				/* failure */
+				return NULL;
 			}
+			/* reset state */
+			branch = tree->branch;
+			i = tree->depth - 1;
+			/* follow branch according to bits in idx until the last lower branch before the impossible branch */
+			do {
+				CHOOSE_BRANCH((idx >> i) % 2 == 1 && branch->branches[1]);
+			} while (--i > last_superior_i);
+			/* use now the lower branch of which we can be sure that it contains only branches lower than idx */
+			CHOOSE_BRANCH(0);
+			/* and choose the highest possible branch in the branch containing only branches lower than idx */
+			while (i--) {
+				CHOOSE_BRANCH(branch->branches[1]);
+			}
+			break;
+		}
 		/* follow branch according to bits in idx until having found an impossible branch */
-		} else {
+		if (had_alternative_branch || (idx >> i) % 2 == 1) {
 			if (branch->branches[1]) {
 				if (branch->branches[0]) {
 					last_superior_i = i;
@@ -110,11 +105,10 @@ phpdbg_btree_result *phpdbg_btree_find_closest(phpdbg_btree *tree, zend_ulong id
 				CHOOSE_BRANCH(1);
 			} else {
 				CHOOSE_BRANCH(0);
-				while (i--) {
-					CHOOSE_BRANCH(branch->branches[1]);
-				}
-				break;
+				had_alternative_branch = 1;
 			}
+		} else {
+			CHOOSE_BRANCH(0);
 		}
 	} while (i--);
 
@@ -160,7 +154,7 @@ int phpdbg_btree_insert_or_update(phpdbg_btree *tree, zend_ulong idx, void *ptr,
 		}
 
 		{
-			phpdbg_btree_branch *memory = *branch = pemalloc((i + 2) * sizeof(phpdbg_btree_branch), tree->persistent);
+			phpdbg_btree_branch *memory = *branch = emalloc((i + 2) * sizeof(phpdbg_btree_branch));
 			do {
 				(*branch)->branches[!((idx >> i) % 2)] = NULL;
 				branch = &(*branch)->branches[(idx >> i) % 2];
@@ -202,14 +196,14 @@ check_branch_existence:
 	tree->count--;
 
 	if (i_last_dual_branch == -1) {
-		pefree(tree->branch, tree->persistent);
+		efree(tree->branch);
 		tree->branch = NULL;
 	} else {
 		if (last_dual_branch->branches[last_dual_branch_branch] == last_dual_branch + 1) {
 			phpdbg_btree_branch *original_branch = last_dual_branch->branches[!last_dual_branch_branch];
 
 			memcpy(last_dual_branch + 1, last_dual_branch->branches[!last_dual_branch_branch], (i_last_dual_branch + 1) * sizeof(phpdbg_btree_branch));
-			pefree(last_dual_branch->branches[!last_dual_branch_branch], tree->persistent);
+			efree(last_dual_branch->branches[!last_dual_branch_branch]);
 			last_dual_branch->branches[!last_dual_branch_branch] = last_dual_branch + 1;
 
 			branch = last_dual_branch->branches[!last_dual_branch_branch];
@@ -217,46 +211,11 @@ check_branch_existence:
 				branch = (branch->branches[branch->branches[1] == ++original_branch] = last_dual_branch + i_last_dual_branch - i + 1);
 			}
 		} else {
-			pefree(last_dual_branch->branches[last_dual_branch_branch], tree->persistent);
+			efree(last_dual_branch->branches[last_dual_branch_branch]);
 		}
 
 		last_dual_branch->branches[last_dual_branch_branch] = NULL;
 	}
 
 	return SUCCESS;
-}
-
-void phpdbg_btree_clean_recursive(phpdbg_btree_branch *branch, zend_ulong depth, zend_bool persistent) {
-	phpdbg_btree_branch *start = branch;
-	while (depth--) {
-		zend_bool use_branch = branch + 1 == branch->branches[0];
-		if (branch->branches[use_branch]) {
-			phpdbg_btree_clean_recursive(branch->branches[use_branch], depth, persistent);
-		}
-	}
-
-	pefree(start, persistent);
-}
-
-void phpdbg_btree_clean(phpdbg_btree *tree) {
-	if (tree->branch) {
-		phpdbg_btree_clean_recursive(tree->branch, tree->depth, tree->persistent);
-		tree->branch = NULL;
-		tree->count = 0;
-	}
-}
-
-void phpdbg_btree_branch_dump(phpdbg_btree_branch *branch, zend_ulong depth) {
-	if (branch) {
-		if (depth--) {
-			phpdbg_btree_branch_dump(branch->branches[0], depth);
-			phpdbg_btree_branch_dump(branch->branches[1], depth);
-		} else {
-			fprintf(stderr, "%p: %p\n", (void *) branch->result.idx, branch->result.ptr);
-		}
-	}
-}
-
-void phpdbg_btree_dump(phpdbg_btree *tree) {
-	phpdbg_btree_branch_dump(tree->branch, tree->depth);
 }

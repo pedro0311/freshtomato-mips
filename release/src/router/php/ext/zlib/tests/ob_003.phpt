@@ -17,7 +17,7 @@ ini_set("zlib.output_compression", 1);
 echo "hi\n";
 ?>
 --EXPECTF--
-‹%a
+‹%s
 --EXPECTHEADERS--
 Content-Encoding: gzip
 Vary: Accept-Encoding

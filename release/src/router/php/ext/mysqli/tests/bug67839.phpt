@@ -6,8 +6,6 @@ mysqli_float_handling - ensure 4 byte float is handled correctly
 	require_once('skipifemb.inc');
 	require_once('skipifconnectfailure.inc');
 ?>
---INI--
-precision=5
 --FILE--
 <?php
 	require('connect.inc');

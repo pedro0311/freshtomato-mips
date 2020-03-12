@@ -8,9 +8,9 @@ function_exists('mb_strrchr') or die("skip mb_strrchr() is not available in this
 --FILE--
 <?php
 /* Prototype  : string mb_strrchr(string haystack, string needle[, bool part[, string encoding]])
- * Description: Finds the last occurrence of a character in a string within another
+ * Description: Finds the last occurrence of a character in a string within another 
  * Source code: ext/mbstring/mbstring.c
- * Alias to functions:
+ * Alias to functions: 
  */
 
 echo "*** Testing mb_strrchr() : usage variation ***\n";
@@ -25,7 +25,7 @@ function test_error_handler($err_no, $err_msg, $filename, $linenum, $vars) {
 set_error_handler('test_error_handler');
 
 // Initialise function arguments not being substituted (if any)
-$haystack = 'string_val';
+$haystack = b'string_val';
 $part = true;
 $encoding = 'utf-8';
 
@@ -37,7 +37,7 @@ unset ($unset_var);
 class classWithToString
 {
 	public function __toString() {
-		return "Class A object";
+		return b"Class A object";
 	}
 }
 
@@ -46,7 +46,7 @@ class classWithoutToString
 }
 
 // heredoc string
-$heredoc = <<<EOT
+$heredoc = b<<<EOT
 hello world
 EOT;
 
@@ -102,9 +102,9 @@ $inputs = array(
 
       // unset data
       'unset var' => @$unset_var,
-
+      
       // resource variable
-      'resource' => $fp
+      'resource' => $fp      
 );
 
 // loop through each element of the array for needle
@@ -150,19 +150,19 @@ bool(false)
 
 --empty array--
 Error: 2 - mb_strrchr() expects parameter 2 to be string, array given, %s(%d)
-NULL
+bool(false)
 
 --int indexed array--
 Error: 2 - mb_strrchr() expects parameter 2 to be string, array given, %s(%d)
-NULL
+bool(false)
 
 --associative array--
 Error: 2 - mb_strrchr() expects parameter 2 to be string, array given, %s(%d)
-NULL
+bool(false)
 
 --nested arrays--
 Error: 2 - mb_strrchr() expects parameter 2 to be string, array given, %s(%d)
-NULL
+bool(false)
 
 --uppercase NULL--
 bool(false)
@@ -193,7 +193,7 @@ bool(false)
 
 --instance of classWithoutToString--
 Error: 2 - mb_strrchr() expects parameter 2 to be string, object given, %s(%d)
-NULL
+bool(false)
 
 --undefined var--
 bool(false)
@@ -203,5 +203,5 @@ bool(false)
 
 --resource--
 Error: 2 - mb_strrchr() expects parameter 2 to be string, resource given, %s(%d)
-NULL
+bool(false)
 ===DONE===

@@ -1,22 +1,21 @@
 <?php # $Id$
 /* piece together a windows binary distro */
 
-$php_version = $argv[1];
-$build_dir = $argv[2];
-$php_build_dir = $argv[3];
-$phpdll = $argv[4];
-$sapi_targets = explode(" ", $argv[5]);
-$ext_targets = explode(" ", $argv[6]);
-$pecl_targets = explode(" ", $argv[7]);
-$snapshot_template = $argv[8];
+$build_dir = $argv[1];
+$php_build_dir = $argv[2];
+$phpdll = $argv[3];
+$sapi_targets = explode(" ", $argv[4]);
+$ext_targets = explode(" ", $argv[5]);
+$pecl_targets = explode(" ", $argv[6]);
+$snapshot_template = $argv[7];
 
 $is_debug = preg_match("/^debug/i", $build_dir);
 
 echo "Making dist for $build_dir\n";
 
-$dist_dir = $build_dir . "/php-" . $php_version;
-$test_dir = $build_dir . "/php-test-pack-" . $php_version;
-$pecl_dir = $build_dir . "/pecl-" . $php_version;
+$dist_dir = $build_dir . "/php-" . phpversion();
+$test_dir = $build_dir . "/php-test-pack-" . phpversion();
+$pecl_dir = $build_dir . "/pecl-" . phpversion();
 
 @mkdir($dist_dir);
 @mkdir("$dist_dir/ext");
@@ -37,8 +36,7 @@ function get_depends($module)
 		'odbc32.dll', 'ole32.dll', 'oleaut32.dll', 'rpcrt4.dll',
 		'shell32.dll', 'shlwapi.dll', 'user32.dll', 'ws2_32.dll', 'ws2help.dll',
 		'comctl32.dll', 'winmm.dll', 'wsock32.dll', 'winspool.drv', 'msasn1.dll',
-		'secur32.dll', 'netapi32.dll', 'dnsapi.dll', 'psapi.dll', 'normaliz.dll',
-		'iphlpapi.dll', 'bcrypt.dll',
+		'secur32.dll', 'netapi32.dll',
 
 		/* apache */
 		'apachecore.dll',
@@ -66,21 +64,16 @@ function get_depends($module)
 		 * (msvcrt7x.dll) are not */
 		'msvcrt.dll',
 		'msvcr90.dll',
-		'wldap32.dll',
-		'vcruntime140.dll',
-		'msvcp140.dll',
+		'wldap32.dll'
 		);
-	static $no_dist_re = array(
-		"api-ms-win-crt-.+\.dll",
-	);
 	global $build_dir, $extra_dll_deps, $ext_targets, $sapi_targets, $pecl_targets, $phpdll, $per_module_deps, $pecl_dll_deps;
-
+	
 	$bd = strtolower(realpath($build_dir));
 
 	$is_pecl = in_array($module, $pecl_targets);
-
+	
 	$cmd = "$GLOBALS[build_dir]\\deplister.exe \"$module\" \"$GLOBALS[build_dir]\"";
-	$proc = proc_open($cmd,
+	$proc = proc_open($cmd, 
 			array(1 => array("pipe", "w")),
 			$pipes);
 
@@ -100,19 +93,8 @@ function get_depends($module)
 		/* ignore some well-known system dlls */
 		if (in_array(basename($dep), $no_dist)) {
 			continue;
-		} else {
-			$skip = false;
-			foreach ($no_dist_re as $re) {
-				if (preg_match(",$re,", basename($dep)) > 0) {
-					$skip = true;
-					break;
-				}
-			}
-			if ($skip) {
-				continue;
-			}
 		}
-
+		
 		if ($is_pecl) {
 			if (!in_array($dep, $pecl_dll_deps)) {
 				$pecl_dll_deps[] = $dep;
@@ -123,11 +105,7 @@ function get_depends($module)
 			}
 		}
 
-		if (!isset($per_module_deps[basename($module)]) || !in_array($dep, $per_module_deps[basename($module)])) {
-			$per_module_deps[basename($module)][] = $dep;
-			//recursively check dll dependencies
-			get_depends($dep);
-		}
+		$per_module_deps[basename($module)][] = $dep;
 	}
 	fclose($pipes[1]);
 	proc_close($proc);
@@ -209,7 +187,7 @@ function extract_file_from_tarball($pkg, $filename, $dest_dir) /* {{{ */
 
 		$hdr['size'] = octdec(trim($hdr['size']));
 		echo "File: $hdr[filename] $hdr[size]\n";
-
+		
 		if ($filename == $hdr['filename']) {
 			echo "Found the file we want\n";
 			$dest = fopen($destfilename, 'wb');
@@ -218,21 +196,20 @@ function extract_file_from_tarball($pkg, $filename, $dest_dir) /* {{{ */
 			echo "Wrote $x bytes into $destfilename\n";
 			break;
 		}
-
+		
 		/* skip body of the file */
 		$size = 512 * ceil((int)$hdr['size'] / 512);
 		echo "Skipping $size bytes\n";
 		gzseek($fp, gztell($fp) + $size);
-
+		
 	} while (!$done);
-
+	
 } /* }}} */
 
 
 /* the core dll */
 copy("$build_dir/php.exe", "$dist_dir/php.exe");
-/* copy dll and its dependencies */
-copy_file_list($build_dir, "$dist_dir", [$phpdll]);
+copy("$build_dir/$phpdll", "$dist_dir/$phpdll");
 
 /* and the .lib goes into dev */
 $phplib = str_replace(".dll", ".lib", $phpdll);
@@ -281,11 +258,12 @@ foreach ($general_files as $src => $dest) {
 $branch = "HEAD"; // TODO - determine this from SVN branche name
 $fp = fopen("$dist_dir/snapshot.txt", "w");
 $now = date("r");
+$version = phpversion();
 fwrite($fp, <<<EOT
 This snapshot was automatically generated on
 $now
 
-Version: $php_version
+Version: $version
 Branch: $branch
 Build: $build_dir
 
@@ -333,12 +311,16 @@ foreach ($extra_dll_deps as $dll) {
 }
 
 /* TODO:
-add sanity check and test if all required DLLs are present, per version
+add sanity check and test if all required DLLs are present, per version 
 This version works at least for 3.6, 3.8 and 4.0 (5.3-vc6, 5.3-vc9 and HEAD).
-Add ADD_DLLS to add extra DLLs like dynamic dependencies for standard
+Add ADD_DLLS to add extra DLLs like dynamic dependencies for standard 
 deps. For example, libenchant.dll loads libenchant_myspell.dll or
 libenchant_ispell.dll
 */
+$ICU_DLLS = $php_build_dir . '/bin/icu*.dll';
+foreach (glob($ICU_DLLS) as $filename) {
+	copy($filename, "$dist_dir/" . basename($filename));
+}
 $ENCHANT_DLLS = array(
 	array('', 'glib-2.dll'),
 	array('', 'gmodule-2.dll'),
@@ -357,22 +339,6 @@ foreach ($ENCHANT_DLLS as $dll) {
 
 	if (!copy($php_build_dir . '/bin/' . $filename, "$dest/" . basename($filename))) {
 			echo "WARNING: couldn't copy $filename into the dist dir";
-	}
-}
-
-$SASL_DLLS = $php_build_dir . "/bin/sasl2/sasl*.dll";
-$fls = glob($SASL_DLLS);
-if (!empty($fls)) {
-	$sasl_dest_dir = "$dist_dir/sasl2";
-	if (!file_exists($sasl_dest_dir) || !is_dir($sasl_dest_dir)) {
-		if (!mkdir("$sasl_dest_dir", 0777, true)) {
-			echo "WARNING: couldn't create '$sasl_dest_dir' for SASL2 auth plugins ";
-		}
-	}
-	foreach ($fls as $fl) {
-		if (!copy($fl, "$sasl_dest_dir/" . basename($fl))) {
-			echo "WARNING: couldn't copy $fl into the $sasl_dest_dir";
-		}
 	}
 }
 
@@ -457,7 +423,7 @@ function copy_test_dir($directory, $dest)
 		}
 	}
 
-	closedir($directory_list);
+	closedir($directory_list); 
 }
 
 function make_phar_dot_phar($dist_dir)
@@ -516,7 +482,7 @@ if (!$use_pear_template) {
 
 	/* grab the bootstrap script */
 	echo "Downloading go-pear\n";
-	copy("https://pear.php.net/go-pear.phar", "$dist_dir/PEAR/go-pear.php");
+	copy("http://pear.php.net/go-pear", "$dist_dir/PEAR/go-pear.php");
 
 	/* import the package list -- sets $packages variable */
 	include "pear/go-pear-list.php";
@@ -543,7 +509,7 @@ if (!$use_pear_template) {
 	extract_file_from_tarball('Archive_Tar', 'Archive/Tar.php', "$dist_dir/PEAR/go-pear-bundle");
 	extract_file_from_tarball('Console_Getopt', 'Console/Getopt.php', "$dist_dir/PEAR/go-pear-bundle");
 }
-
+	
 /* add extras from the template dir */
 if (file_exists($snapshot_template)) {
 	$items = glob("$snapshot_template/*");
@@ -573,7 +539,7 @@ if (file_exists($snapshot_template)) {
 			}
 		}
 	}
-
+	
 	/* copy c++ runtime */
 	$items = glob("$snapshot_template/dlls/*.CRT");
 

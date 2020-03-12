@@ -14,3 +14,4 @@ files/frontcontroller8.phar
 Content-type: text/html; charset=UTF-8
 --EXPECT--
 hio1
+

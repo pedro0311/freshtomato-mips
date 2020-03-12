@@ -1,13 +1,13 @@
 --TEST--
-Bug #36010 (Crash when executing SQL statement with lob parameter twice)
+Bug #36010 (Crash when executing SQL statment with lob parameter twice)
 --SKIPIF--
 <?php
 $target_dbs = array('oracledb' => true, 'timesten' => false);  // test runs on these DBs
 require(dirname(__FILE__).'/skipif.inc');
-?>
+?> 
 --FILE--
 <?php
-
+	
 require dirname(__FILE__).'/connect.inc';
 
 function f($conn)

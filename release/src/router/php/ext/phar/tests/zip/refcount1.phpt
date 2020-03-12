@@ -3,6 +3,7 @@ Phar: test that refcounting avoids problems with deleting a file zip-based
 --SKIPIF--
 <?php if (!extension_loaded("phar")) die("skip"); ?>
 <?php if (!extension_loaded("spl")) die("skip SPL not available"); ?>
+<?php if (version_compare(PHP_VERSION, "5.3", "<")) die("skip requires 5.3 or later"); ?>
 --INI--
 phar.readonly=0
 phar.require_hash=0
@@ -28,7 +29,7 @@ foreach ($files as $n => $file) {
 $phar->stopBuffering();
 
 $fp = fopen($alias . '/b/c.php', 'wb');
-fwrite($fp, "extra");
+fwrite($fp, b"extra");
 fclose($fp);
 echo "===CLOSE===\n";
 $b = fopen($alias . '/b/c.php', 'rb');

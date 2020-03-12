@@ -28,7 +28,7 @@ try {
   foreach($ao as $key=>$value) {
     echo "  $key=>$value\n";
   }
-} catch (TypeError $e) {
+} catch (Exception $e) {
 	var_dump($e->getMessage());
 }
 
@@ -37,7 +37,7 @@ try {
   foreach($ao as $key=>$value) {
     echo "  $key=>$value\n";
   }
-} catch (TypeError $e) {
+} catch (Exception $e) {
 	var_dump($e->getMessage());
 }
 

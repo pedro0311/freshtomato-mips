@@ -16,3 +16,4 @@ var_dump($var);
 --EXPECT--
 string(1) "1"
 string(1) "0"
+

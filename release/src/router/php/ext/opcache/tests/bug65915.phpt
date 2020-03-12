@@ -3,7 +3,6 @@ Bug #65915 (Inconsistent results with require return value)
 --INI--
 opcache.enable=1
 opcache.enable_cli=1
-opcache.file_cache_only=0
 --SKIPIF--
 <?php require_once('skipif.inc'); ?>
 --FILE--
@@ -14,7 +13,7 @@ file_put_contents($tmp, '<?php return function(){ return "a";};');
 $f = require $tmp;
 var_dump($f());
 
-var_dump(opcache_invalidate($tmp, true));
+opcache_invalidate($tmp, true);
 
 file_put_contents($tmp, '<?php return function(){ return "b";};');
 $f = require $tmp;
@@ -24,5 +23,4 @@ var_dump($f());
 ?>
 --EXPECT--
 string(1) "a"
-bool(true)
 string(1) "b"

@@ -5,7 +5,7 @@ Test imagecolorallocate() function : usage variations  - passing different data 
 if(!extension_loaded('gd')) {
     die('skip gd extension is not loaded');
 }
-?>
+?> 
 --FILE--
 <?php
 /* Prototype  : int imagecolorallocate(resource im, int red, int green, int blue)
@@ -70,7 +70,7 @@ $values = array(
       'int indexed array' => $index_array,
       'associative array' => $assoc_array,
 	  'nested arrays' => array('foo', $index_array, $assoc_array),
-
+      
       // null data
 	  'uppercase NULL' => NULL,
       'lowercase null' => null,
@@ -100,8 +100,8 @@ $values = array(
 
       // unset data
       'unset var' => @$unset_var,
-
-      //resource
+      
+      //resource 
       "file resource" => $fp
 );
 
@@ -137,27 +137,27 @@ NULL
 
 -- float 10.5 --
 
-Warning: imagecolorallocate() expects parameter 1 to be resource, float given in %s on line %d
+Warning: imagecolorallocate() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 -- float -10.5 --
 
-Warning: imagecolorallocate() expects parameter 1 to be resource, float given in %s on line %d
+Warning: imagecolorallocate() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 -- float 10.1234567e10 --
 
-Warning: imagecolorallocate() expects parameter 1 to be resource, float given in %s on line %d
+Warning: imagecolorallocate() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 -- float 10.7654321E-10 --
 
-Warning: imagecolorallocate() expects parameter 1 to be resource, float given in %s on line %d
+Warning: imagecolorallocate() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 -- float .5 --
 
-Warning: imagecolorallocate() expects parameter 1 to be resource, float given in %s on line %d
+Warning: imagecolorallocate() expects parameter 1 to be resource, double given in %s on line %d
 NULL
 
 -- empty array --

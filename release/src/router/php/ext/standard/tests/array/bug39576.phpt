@@ -32,8 +32,8 @@ array_intersect_key (
 
 echo "Done\n";
 ?>
---EXPECTF--
-Notice: Only variables should be passed by reference in %s on line %d
+--EXPECTF--	
+Strict Standards: Only variables should be passed by reference in %s on line %d
 object(Test)#%d (4) {
   ["_table"]=>
   string(0) ""

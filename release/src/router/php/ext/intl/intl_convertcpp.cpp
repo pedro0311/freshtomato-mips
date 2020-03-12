@@ -1,6 +1,6 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
+   | PHP Version 5                                                        |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -25,16 +25,11 @@ extern "C" {
 }
 
 /* {{{ intl_stringFromChar */
-int intl_stringFromChar(UnicodeString &ret, char *str, size_t str_len, UErrorCode *status)
+int intl_stringFromChar(UnicodeString &ret, char *str, int32_t str_len, UErrorCode *status)
 {
-	if(str_len > INT32_MAX) {
-		*status = U_BUFFER_OVERFLOW_ERROR;
-		ret.setToBogus();
-		return FAILURE;
-	}
 	//the number of UTF-16 code units is not larger than that of UTF-8 code
 	//units, + 1 for the terminator
-	int32_t capacity = (int32_t)str_len + 1;
+	int32_t capacity = str_len + 1;
 
 	//no check necessary -- if NULL will fail ahead
 	UChar	*utf16 = ret.getBuffer(capacity);
@@ -53,39 +48,42 @@ int intl_stringFromChar(UnicodeString &ret, char *str, size_t str_len, UErrorCod
 /* }}} */
 
 /* {{{ intl_charFromString
- * faster than doing intl_convert_utf16_to_utf8(
+ * faster than doing intl_convert_utf16_to_utf8(&res, &res_len,
  *		from.getBuffer(), from.length(), &status),
  * but consumes more memory */
-zend_string* intl_charFromString(const UnicodeString &from, UErrorCode *status)
+int intl_charFromString(const UnicodeString &from, char **res, int *res_len, UErrorCode *status)
 {
-	zend_string *u8res;
-
 	if (from.isBogus()) {
-		return NULL;
+		return FAILURE;
 	}
 
 	//the number of UTF-8 code units is not larger than that of UTF-16 code
-	//units * 3
-	int32_t capacity = from.length() * 3;
+	//units * 3 + 1 for the terminator
+	int32_t capacity = from.length() * 3 + 1;
 
 	if (from.isEmpty()) {
-		return ZSTR_EMPTY_ALLOC();
+		*res = (char*)emalloc(1);
+		**res = '\0';
+		*res_len = 0;
+		return SUCCESS;
 	}
 
-	u8res = zend_string_alloc(capacity, 0);
+	*res = (char*)emalloc(capacity);
+	*res_len = 0; //tbd
 
 	const UChar *utf16buf = from.getBuffer();
 	int32_t actual_len;
-	u_strToUTF8WithSub(ZSTR_VAL(u8res), capacity, &actual_len, utf16buf, from.length(),
+	u_strToUTF8WithSub(*res, capacity - 1, &actual_len, utf16buf, from.length(),
 		U_SENTINEL, NULL, status);
 
 	if (U_FAILURE(*status)) {
-		zend_string_free(u8res);
-		return NULL;
+		efree(*res);
+		*res = NULL;
+		return FAILURE;
 	}
-	ZSTR_VAL(u8res)[actual_len] = '\0';
-	ZSTR_LEN(u8res) = actual_len;
-
-	return u8res;
+	(*res)[actual_len] = '\0';
+	*res_len = (int)actual_len;
+	
+	return SUCCESS;
 }
 /* }}} */

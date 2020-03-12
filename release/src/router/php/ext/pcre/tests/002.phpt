@@ -16,6 +16,7 @@ var_dump(preg_replace('/(.)/e', 'for ($', 'abc'));
 
 ?>
 --EXPECTF--
+
 Warning: preg_match() expects at least 2 parameters, 0 given in %s002.php on line 3
 bool(false)
 
@@ -33,5 +34,9 @@ string(12) "a${1b${1c${1"
 Warning: preg_replace(): Compilation failed: missing terminating ] for character class at offset 8 in %s002.php on line 11
 NULL
 
-Warning: preg_replace(): The /e modifier is no longer supported, use preg_replace_callback instead in %s on line 12
-NULL
+Deprecated: preg_replace(): The /e modifier is deprecated, use preg_replace_callback instead in %s on line 12
+
+Parse error: %s in %s002.php(12) : regexp code on line 1
+
+Fatal error: preg_replace(): Failed evaluating code: 
+for ($ in %s002.php on line 12

@@ -12,7 +12,4 @@ clone $gen;
 
 ?>
 --EXPECTF--
-Fatal error: Uncaught Error: Trying to clone an uncloneable object of class Generator in %s:%d
-Stack trace:
-#0 {main}
-  thrown in %s on line %d
+Fatal error: Trying to clone an uncloneable object of class Generator in %s on line %d
