@@ -4029,7 +4029,9 @@ static void sysinit(void)
 	}
 
 	/* load after init_nvram */
-	//load_wl(); /* see function start_lan() */
+#ifdef TCONFIG_USBAP
+	load_wl(); /* for non USBAP see function start_lan() */
+#endif
 
 	//config_loopback(); /* see function start_lan() */
 

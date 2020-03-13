@@ -769,7 +769,9 @@ void start_lan(void)
 	char *iftmp;
 	char nv[64];
 
+#ifndef TCONFIG_USBAP /* load driver at init.c for USBAP */
 	load_wl(); /* lets go! */
+#endif
 
 #ifdef CONFIG_BCMWL5
 	foreach_wif(0, NULL, set_wlmac);
@@ -1049,7 +1051,9 @@ void stop_lan(void)
 	}
 	_dprintf("%s %d\n", __FUNCTION__, __LINE__);
 
+#ifndef TCONFIG_USBAP /* do not unload driver for USBAP */
 	unload_wl(); /* stop! */
+#endif
 }
 
 static int is_sta(int idx, int unit, int subunit, void *param)
