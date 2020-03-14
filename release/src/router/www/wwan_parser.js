@@ -5,7 +5,7 @@ function createWWANTableItem(value, unit, bar) {
 	if (unit.length < 3) {	/* FIXME: db vs dBm width calculation...Crazy logic :/ */
 		calculatedMargin += (3 - unit.length) * 8;
 	}
-	retVal += '<span style="width: 34px;display:inline-block">' + value + '</span><small style="margin-right: ' + calculatedMargin + 'px;">' + unit + '</small>';
+	retVal += '<span style="width:34px;display:inline-block">' + value + '</span><small style="margin-right:' + calculatedMargin + 'px">' + unit + '</small>';
 	if (bar) {
 		var altText = getAltText(bar);
 		retVal += '<img src="' + bar + '" alt="' + altText + '" title="' + altText + '"/>';
@@ -22,11 +22,11 @@ function getAltText(bar) {
 function createWWANStatusSection(wannum, wwanstatus) {
 	var wanNumStr = 'wan'+(wannum > 1 ? wannum : '');
 	var code = '<table class="fields"><tbody>';
-	var valMap = [];
 	code += '<tr><td class="title indent1">Modem type</td>';
 	code += '<td class="content">' + nvram[wanNumStr + '_modem_type'] + '</td></tr>';
 	code += '<tr><td class="title indent1">Current Mode</td>';
 	code += '<td class="content">' + wwan_getCurrentMode(wwanstatus) + '</td></tr>';
+	var valMap = [];
 	wwan_getSignalStrengthMap(wwanstatus, valMap);
 	if (valMap['RSSI']) {
 		code += '<tr><td class="title indent1">RSSI</td>';
@@ -69,19 +69,19 @@ function createWWANStatusSection(wannum, wwanstatus) {
 	if (valMap['MCC']) {
 		code += '<tr><td class="title indent1">Location</td>';
 		code += '<td class="content">';
-		code += '<span style="width: 46px;display:inline-block">MCC:</span>' + valMap['MCC'];
-		code += '<div><span style="width: 46px;display:inline-block">MNC:</span>' + valMap['MNC'] + '</div>';
+		code += '<span class="wwan-parser">MCC:</span>' + valMap['MCC'];
+		code += '<div><span class="wwan-parser">MNC:</span>' + valMap['MNC'] + '</div>';
 			if (valMap['LAC']) {
-				code += '<div><span style="width: 46px;display:inline-block">LAC:</span>'+ valMap['LAC']['HEX'] + ' (' + valMap['LAC']['DEC'] + ')</div>';
+				code += '<div><span class="wwan-parser">LAC:</span>'+ valMap['LAC']['HEX'] + ' (' + valMap['LAC']['DEC'] + ')</div>';
 			}
 			if (valMap['CID']) {
-				code += '<div><span style="width: 46px;display:inline-block">CID:</span>'+ valMap['CID']['HEX'] + ' (' + valMap['CID']['DEC'] + ')</div>';
+				code += '<div><span class="wwan-parser">CID:</span>'+ valMap['CID']['HEX'] + ' (' + valMap['CID']['DEC'] + ')</div>';
 			}
 			if (valMap['Cell ID']) {
-				code += '<div><span style="width: 46px;display:inline-block">Cell ID:</span>'+ valMap['Cell ID']['HEX'] + ' (' + valMap['Cell ID']['DEC'] + ')</div>';
+				code += '<div><span class="wwan-parser">Cell ID:</span>'+ valMap['Cell ID']['HEX'] + ' (' + valMap['Cell ID']['DEC'] + ')</div>';
 			}
 			if (valMap['PCI']) {
-				code += '<div><span style="width: 46px;display:inline-block">PCI:</span>'+ valMap['PCI']['HEX'] + ' (' + valMap['PCI']['DEC'] + ')</div>';
+				code += '<div><span class="wwan-parser">PCI:</span>'+ valMap['PCI']['HEX'] + ' (' + valMap['PCI']['DEC'] + ')</div>';
 			}
 		code += '</td></tr>';
 	}
@@ -112,11 +112,9 @@ function createWWANStatusSection(wannum, wwanstatus) {
 	code += '</tbody>'
 	var modemType = nvram[wanNumStr + '_modem_type'];
 	var connType = nvram[wanNumStr + '_proto'];
-	if (connType == 'ppp3g' || modemType == 'non-hilink' || modemType == 'hw-ether') {
+	if (connType == 'ppp3g' || modemType == 'non-hilink' || modemType == 'huawei-non-hilink') {
 			code += '<tr><td class="title indent1"></td>';
-			code += '<td class="content"> \
-			<a href="#" onclick="showSMSForWWAN(' + wannum + ')"> \
-			Click to view SMS</a></td></tr>';
+			code += '<td class="content wwan-parser-view"><a href="#" onclick="showSMSForWWAN(' + wannum + ')">Click to view SMS</a></td></tr>';
 	}
 	code += '</table>';
 	return code;
