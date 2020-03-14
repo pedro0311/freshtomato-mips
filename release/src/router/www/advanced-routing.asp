@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <!--
 	Tomato GUI
 	Copyright (C) 2006-2010 Jonathan Zarate
@@ -7,45 +7,19 @@
 	For use with Tomato Firmware only.
 	No part of this file may be used without permission.
 -->
-<html>
+<html lang="en-GB">
 <head>
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 <meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Advanced: Routing</title>
 <link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
-<script type="text/javascript" src="tomato.js"></script>
+<script src="tomato.js"></script>
 
-<!-- / / / -->
-<style type="text/css">
-#ara-grid .co1, #ara-grid .co2, #ara-grid .co3 {
-	width: 20%;
-}
-#ara-grid .co4 {
-	width: 6%;
-}
-#ara-grid .co5 {
-	width: 34%;
-}
+<script>
 
-#ars-grid .co1, #ars-grid .co2, #ars-grid .co3  {
-	width: 20%;
-}
-#ars-grid .co4 {
-	width: 6%;
-}
-#ars-grid .co5 {
-	width: 10%;
-}
-#ars-grid .co6 {
-	width: 24%;
-}
-</style>
-
-<script type="text/javascript" src="debug.js"></script>
-
-<script type="text/javascript">
 //	<% nvram("wk_mode,dr_setting,lan_stp,routes_static,dhcp_routes,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,wan_ifname,wan_iface,wan2_ifname,wan2_iface,wan3_ifname,wan3_iface,wan4_ifname,wan4_iface,emf_enable,force_igmpv2,dr_lan_rx,dr_lan1_rx,dr_lan2_rx,dr_lan3_rx,dr_wan_rx,dr_wan2_rx,dr_wan3_rx,dr_wan4_rx,wan_proto,wan2_proto,wan3_proto,wan4_proto,mwan_num"); %>
+
 //	<% activeroutes(); %>
 
 var ara = new TomatoGrid();
@@ -58,30 +32,24 @@ ara.setup = function() {
 	for (i = 0; i < activeroutes.length; ++i) {
 		a = activeroutes[i];
 		if (a[0] == nvram.lan_ifname) a[0] += ' (LAN)';
-			else if (a[0] == nvram.lan1_ifname) a[0] += ' (LAN1)';
-			else if (a[0] == nvram.lan2_ifname) a[0] += ' (LAN2)';
-			else if (a[0] == nvram.lan3_ifname) a[0] += ' (LAN3)';
-			else if (a[0] == nvram.wan_iface) a[0] += ' (WAN)';
-			else if (a[0] == nvram.wan_ifname) a[0] += ' (MAN)';
-			else if (a[0] == nvram.wan2_iface) a[0] += ' (WAN2)';
-			else if (a[0] == nvram.wan2_ifname) a[0] += ' (MAN2)';
+		else if (a[0] == nvram.lan1_ifname) a[0] += ' (LAN1)';
+		else if (a[0] == nvram.lan2_ifname) a[0] += ' (LAN2)';
+		else if (a[0] == nvram.lan3_ifname) a[0] += ' (LAN3)';
+		else if (a[0] == nvram.wan_iface) a[0] += ' (WAN)';
+		else if (a[0] == nvram.wan_ifname) a[0] += ' (MAN)';
+		else if (a[0] == nvram.wan2_iface) a[0] += ' (WAN2)';
+		else if (a[0] == nvram.wan2_ifname) a[0] += ' (MAN2)';
 /* MULTIWAN-BEGIN */
-			else if (a[0] == nvram.wan3_iface) a[0] += ' (WAN3)';
-			else if (a[0] == nvram.wan3_ifname) a[0] += ' (MAN3)';
-			else if (a[0] == nvram.wan4_iface) a[0] += ' (WAN4)';
-			else if (a[0] == nvram.wan4_ifname) a[0] += ' (MAN4)';
+		else if (a[0] == nvram.wan3_iface) a[0] += ' (WAN3)';
+		else if (a[0] == nvram.wan3_ifname) a[0] += ' (MAN3)';
+		else if (a[0] == nvram.wan4_iface) a[0] += ' (WAN4)';
+		else if (a[0] == nvram.wan4_ifname) a[0] += ' (MAN4)';
 /* MULTIWAN-END */
 		this.insertData(-1, [a[1],a[2],a[3],a[4],a[0]]);
 	}
 }
 
 var ars = new TomatoGrid();
-
-ars.verifyFields = function(row, quiet) {
-	var f = fields.getAll(row);
-	f[5].value = f[5].value.replace('>', '_');
-	return v_ip(f[0], quiet) && v_ip(f[1], quiet) && v_netmask(f[2], quiet) && v_range(f[3], quiet, 0, 10) && v_nodelim(f[5], quiet, 'Description');
-}
 
 ars.setup = function() {
 	this.init('ars-grid', '', 20, [
@@ -109,30 +77,46 @@ ars.resetNewEditor = function() {
 
 	e = fields.getAll(this.newEditor);
 
-	if(nvram.lan_ifname.length < 1)
-		e[4].options[0].disabled=true;
+	if (nvram.lan_ifname.length < 1)
+		e[4].options[0].disabled = true;
 	else
-		e[4].options[0].disabled=false;
-	if(nvram.lan1_ifname.length < 1)
-		e[4].options[1].disabled=true;
+		e[4].options[0].disabled = false;
+
+	if (nvram.lan1_ifname.length < 1)
+		e[4].options[1].disabled = true;
 	else
-		e[4].options[1].disabled=false;
-	if(nvram.lan2_ifname.length < 1)
-		e[4].options[2].disabled=true;
+		e[4].options[1].disabled = false;
+
+	if (nvram.lan2_ifname.length < 1)
+		e[4].options[2].disabled = true;
 	else
-		e[4].options[2].disabled=false;
-	if(nvram.lan3_ifname.length < 1)
-		e[4].options[3].disabled=true;
+		e[4].options[2].disabled = false;
+
+	if (nvram.lan3_ifname.length < 1)
+		e[4].options[3].disabled = true;
 	else
-		e[4].options[3].disabled=false;
+		e[4].options[3].disabled = false;
 
 	ferror.clearAll(e);
 	for (i = 0; i < e.length; ++i) {
 		var f = e[i];
-		if (f.selectedIndex) f.selectedIndex = 0;
-			else f.value = '';
+		if (f.selectedIndex)
+			f.selectedIndex = 0;
+		else
+			f.value = '';
 	}
-	try { if (e.length) e[0].focus(); } catch (er) { }
+	try {
+		if (e.length)
+			e[0].focus();
+	}
+	catch (er) { }
+}
+
+ars.verifyFields = function(row, quiet) {
+	var f = fields.getAll(row);
+	f[5].value = f[5].value.replace('>', '_');
+
+	return v_ip(f[0], quiet) && v_ip(f[1], quiet) && v_netmask(f[2], quiet) && v_range(f[3], quiet, 0, 10) && v_nodelim(f[5], quiet, 'Description');
 }
 
 function verifyFields(focused, quiet) {
@@ -167,9 +151,10 @@ function save() {
 	var fom = E('t_fom');
 	var data = ars.getAllData();
 	var r = [];
-	for (var i = 0; i < data.length; ++i) r.push(data[i].join('<'));
-	fom.routes_static.value = r.join('>');
+	for (var i = 0; i < data.length; ++i)
+		r.push(data[i].join('<'));
 
+	fom.routes_static.value = r.join('>');
 /* ZEBRA-BEGIN */
 	fom.dr_lan_tx.value = fom.dr_lan_rx.value = (E('_f_dr_lan').checked) ? '1 2' : '0';
 	fom.dr_lan1_tx.value = fom.dr_lan1_rx.value = (E('_f_dr_lan1').checked) ? '1 2' : '0';
@@ -188,7 +173,8 @@ function save() {
 
 /* EMF-BEGIN */
 	fom.emf_enable.value = E('_f_emf').checked ? 1 : 0;
-	if (fom.emf_enable.value != nvram.emf_enable) fom._service.value = '*';
+	if (fom.emf_enable.value != nvram.emf_enable)
+		fom._service.value = '*';
 /* EMF-END */
 
 	fom.force_igmpv2.value = E('_f_force_igmpv2').checked ? 1 : 0;
@@ -211,14 +197,15 @@ function init() {
 }
 </script>
 </head>
+
 <body onload="init()">
 <form id="t_fom" method="post" action="tomato.cgi">
-<table id="container" cellspacing="0">
+<table id="container">
 <tr><td colspan="2" id="header">
-	<div class="title">Tomato</div>
-	<div class="version">Version <% version(); %></div>
+	<div class="title">FreshTomato</div>
+	<div class="version">Version <% version(); %> on <% nv("t_model_name"); %></div>
 </td></tr>
-<tr id="body"><td id="navi"><script type="text/javascript">navi()</script></td>
+<tr id="body"><td id="navi"><script>navi()</script></td>
 <td id="content">
 <div id="ident"><% ident(); %></div>
 
@@ -242,61 +229,67 @@ function init() {
 <input type="hidden" name="dr_wan_rx">
 <input type="hidden" name="dr_wan2_tx">
 <input type="hidden" name="dr_wan2_rx">
-/* MULTIWAN-BEGIN */
+<!-- MULTIWAN-BEGIN -->
 <input type="hidden" name="dr_wan3_tx">
 <input type="hidden" name="dr_wan3_rx">
 <input type="hidden" name="dr_wan4_tx">
 <input type="hidden" name="dr_wan4_rx">
-/* MULTIWAN-END */
+<!-- MULTIWAN-END -->
+
+<!-- / / / -->
 
 <div class="section-title">Current Routing Table</div>
 <div class="section">
 	<div class="tomato-grid" id="ara-grid"></div>
 </div>
 
+<!-- / / / -->
+
 <div class="section-title">Static Routing Table</div>
 <div class="section">
 	<div class="tomato-grid" id="ars-grid"></div>
 </div>
 
+<!-- / / / -->
+
 <div class="section-title">Miscellaneous</div>
 <div class="section">
-<script type="text/javascript">
-createFieldTable('', [
-	{ title: 'Mode', name: 'wk_mode', type: 'select', options: [['gateway','Gateway'],['router','Router']], value: nvram.wk_mode },
+	<script>
+		createFieldTable('', [
+			{ title: 'Mode', name: 'wk_mode', type: 'select', options: [['gateway','Gateway'],['router','Router']], value: nvram.wk_mode },
 /* ZEBRA-BEGIN */
-	{ title: 'RIPv1 &amp; v2' },
-	{ title: 'LAN', indent: 2, name: 'f_dr_lan', type: 'checkbox', value: ((nvram.dr_lan_rx != '0') && (nvram.dr_lan_rx != '')) },
-	{ title: 'LAN1', indent: 2, name: 'f_dr_lan1', type: 'checkbox', value: ((nvram.dr_lan1_rx != '0') && (nvram.dr_lan1_rx != '')) },
-	{ title: 'LAN2', indent: 2, name: 'f_dr_lan2', type: 'checkbox', value: ((nvram.dr_lan2_rx != '0') && (nvram.dr_lan2_rx != '')) },
-	{ title: 'LAN3', indent: 2, name: 'f_dr_lan3', type: 'checkbox', value: ((nvram.dr_lan3_rx != '0') && (nvram.dr_lan3_rx != '')) },
-	{ title: 'WAN', indent: 2, name: 'f_dr_wan', type: 'checkbox', value: ((nvram.dr_wan_rx != '0') && (nvram.dr_wan_rx != '')) },
-	{ title: 'WAN2', indent: 2, name: 'f_dr_wan2', type: 'checkbox', value: ((nvram.dr_wan2_rx != '0') && (nvram.dr_wan2_rx != '')) },
+			{ title: 'RIPv1 &amp; v2' },
+			{ title: 'LAN', indent: 2, name: 'f_dr_lan', type: 'checkbox', value: ((nvram.dr_lan_rx != '0') && (nvram.dr_lan_rx != '')) },
+			{ title: 'LAN1', indent: 2, name: 'f_dr_lan1', type: 'checkbox', value: ((nvram.dr_lan1_rx != '0') && (nvram.dr_lan1_rx != '')) },
+			{ title: 'LAN2', indent: 2, name: 'f_dr_lan2', type: 'checkbox', value: ((nvram.dr_lan2_rx != '0') && (nvram.dr_lan2_rx != '')) },
+			{ title: 'LAN3', indent: 2, name: 'f_dr_lan3', type: 'checkbox', value: ((nvram.dr_lan3_rx != '0') && (nvram.dr_lan3_rx != '')) },
+			{ title: 'WAN', indent: 2, name: 'f_dr_wan', type: 'checkbox', value: ((nvram.dr_wan_rx != '0') && (nvram.dr_wan_rx != '')) },
+			{ title: 'WAN2', indent: 2, name: 'f_dr_wan2', type: 'checkbox', value: ((nvram.dr_wan2_rx != '0') && (nvram.dr_wan2_rx != '')) },
 /* MULTIWAN-BEGIN */
-	{ title: 'WAN3', indent: 2, name: 'f_dr_wan3', type: 'checkbox', value: ((nvram.dr_wan3_rx != '0') && (nvram.dr_wan3_rx != '')) },
-	{ title: 'WAN4', indent: 2, name: 'f_dr_wan4', type: 'checkbox', value: ((nvram.dr_wan4_rx != '0') && (nvram.dr_wan4_rx != '')) },
+			{ title: 'WAN3', indent: 2, name: 'f_dr_wan3', type: 'checkbox', value: ((nvram.dr_wan3_rx != '0') && (nvram.dr_wan3_rx != '')) },
+			{ title: 'WAN4', indent: 2, name: 'f_dr_wan4', type: 'checkbox', value: ((nvram.dr_wan4_rx != '0') && (nvram.dr_wan4_rx != '')) },
 /* MULTIWAN-END */
 /* ZEBRA-END */
 /* EMF-BEGIN */
-	{ title: 'Efficient Multicast Forwarding (IGMP Snooping)', name: 'f_emf', type: 'checkbox', value: nvram.emf_enable != '0' },
+			{ title: 'Efficient Multicast Forwarding (IGMP Snooping)', name: 'f_emf', type: 'checkbox', value: nvram.emf_enable != '0' },
 /* EMF-END */
-	{ title: 'Force IGMPv2', name: 'f_force_igmpv2', type: 'checkbox', value: nvram.force_igmpv2 != '0' },
-	{ title: 'DHCP Routes', name: 'f_dhcp_routes', type: 'checkbox', value: nvram.dhcp_routes != '0' }
-]);
-</script>
+			{ title: 'Force IGMPv2', name: 'f_force_igmpv2', type: 'checkbox', value: nvram.force_igmpv2 != '0' },
+			{ title: 'DHCP Routes', name: 'f_dhcp_routes', type: 'checkbox', value: nvram.dhcp_routes != '0' }
+		]);
+	</script>
 </div>
-
 
 <!-- / / / -->
 
-</td></tr>
-<tr><td id="footer" colspan="2">
+<div id="footer">
 	<span id="footer-msg"></span>
 	<input type="button" value="Save" id="save-button" onclick="save()">
 	<input type="button" value="Cancel" id="cancel-button" onclick="reloadPage();">
+</div>
+
 </td></tr>
 </table>
 </form>
-<script type="text/javascript">earlyInit(); verifyFields(null, 1);</script>
+<script>earlyInit();</script>
 </body>
 </html>

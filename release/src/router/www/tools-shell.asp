@@ -1,63 +1,23 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <!--
 	Tomato GUI
 
 	For use with Tomato Firmware only.
 	No part of this file may be used without permission.
 -->
-<html>
+<html lang="en-GB">
 <head>
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 <meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Tools: System Commands</title>
 <link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
-<script type="text/javascript" src="tomato.js"></script>
-/* TERMLIB-BEGIN */
-<script type="text/javascript" src="termlib_min.js"></script>
-/* TERMLIB-END */
+<script src="tomato.js"></script>
+<!-- TERMLIB-BEGIN -->
+<script src="termlib_min.js"></script>
+<!-- TERMLIB-END -->
 
-<!-- / / / -->
-
-<style type="text/css">
-/* TERMLIB0-BEGIN */
-textarea {
-	font: 12px monospace;
-	width: 99%;
-	height: 12em;
-}
-/* TERMLIB0-END */
-/* TERMLIB-BEGIN */
-#icommandsFromMobile {
-	font-size: 32px;
-	width: 512px;
-}
-
-.helperButton{
-	font-size: 32px;
-	height:64px;
-	width:259px;
-}
-.lh15 {
-	line-height: 15px;
-}
-
-.term {
-	font-family: "Courier New",courier,fixed,monospace;
-	font-size: 12px;
-	color: #d3d3d3;
-	background: none;
-	letter-spacing: 1px;
-}
-.term .termReverse {
-	color: #232e45;
-	background: #95a9d5;
-}
-/* TERMLIB-END */
-</style>
-
-<script type="text/javascript" src="debug.js"></script>
-<script type="text/javascript">
+<script>
 
 //	<% nvram(''); %>	// http_id
 
@@ -72,7 +32,6 @@ ref.refresh = function(text) {
 	execute();
 }
 /* TERMLIB0-END */
-
 /* TERMLIB-BEGIN */
 var term;
 var working_dir = '/www';
@@ -87,26 +46,27 @@ function escapeText(s) {
 	function esc(c) {
 		return '&#' + c.charCodeAt(0) + ';';
 	}
-	return s.replace(/[&"'<>]/g, esc).replace(/ /g, '&nbsp;'.replace(/\n/g, ' <br />'));
+	return s.replace(/[&"'<>]/g, esc).replace(/ /g, '&nbsp;'.replace(/\n/g, ' <br>'));
 }
 
-function spin(x) {
-	E('execb').disabled = x;
-	E('_f_cmd').disabled = x;
-	E('wait').style.visibility = x ? 'visible' : 'hidden';
-	if (!x) cmd = null;
+function showWait(state) {
+	E('execb').disabled = state;
+	E('_f_cmd').disabled = state;
+	E('wait').style.display = (state ? 'block' : 'none');
+	E('spin').style.display = (state ? 'inline-block' : 'none');
+	if (!state) cmd = null;
 }
 
 function updateResult() {
 	E('result').innerHTML = '<tt>' + escapeText(cmdresult) + '<\/tt>';
 	cmdresult = '';
-	spin(0);
+	showWait(0);
 }
 
 function execute() {
-	// Opera 8 sometimes sends 2 clicks
+	/* Opera 8 sometimes sends 2 clicks */
 	if (cmd) return;
-	spin(1);
+	showWait(1);
 
 	cmd = new XmlHttp();
 	cmd.onCompleted = function(text, xml) {
@@ -125,7 +85,8 @@ function execute() {
 
 function init() {
 	var s;
-	if ((s = cookie.get('shellcmd')) != null) E('_f_cmd').value = unescape(s);
+	if ((s = cookie.get('shellcmd')) != null)
+		E('_f_cmd').value = unescape(s);
 }
 /* TERMLIB0-END */
 
@@ -139,7 +100,8 @@ function termOpen() {
 				mapANSI: true,
 				crsrBlinkMode: true,
 				closeOnESC: false,
-				termDiv: 'termDiv',
+				termDiv: 'term-div',
+				blinkDelay: 300,
 				handler: termHandler,
 				initHandler: initHandler,
 				wrapping: true
@@ -149,7 +111,7 @@ function termOpen() {
 	}
 	window.addEventListener("paste", function(thePasteEvent) {
 		if (term) {
-			let clipboardData, pastedData;
+			var clipboardData, pastedData;
 			thePasteEvent.stopPropagation();
 			thePasteEvent.preventDefault();
 			clipboardData = thePasteEvent.clipboardData || window.clipboardData;
@@ -164,46 +126,52 @@ function initHandler() {
 	runCommand('mymotd');
 }
 
-function showWait(state) {
-	E('wait').style.visibility = state ? 'visible' : 'hidden';
-}
-
 function termHandler() {
 	this.newLine();
 
 	this.lineBuffer = this.lineBuffer.replace(/^\s+/, '');
-	if (this.lineBuffer.startsWith("cd ")) {
-		let tmp = this.lineBuffer.slice(3);
+	if (this.lineBuffer.substring(0, 3) == 'cd ') {
+		var tmp = this.lineBuffer.slice(3);
 
 		if (tmp === ".") {
 			return; /* nothing to do here.. */
-		} else if (tmp === "..") {
+		}
+		else if (tmp === "..") {
 			workingDirUp();
 			term.write('%+r Switching to directory %+b' + working_dir + '%-b %-r \n');
 			term.prompt();
-		} else {
+		}
+		else {
 			checkDirectoryExist(tmp);
 		}
-	} else if (this.lineBuffer === "clear") {
+	}
+	else if (this.lineBuffer === "clear") {
 		term.clear();
 		term.prompt();
-	} else {
+	}
+	else {
 		runCommand(this.lineBuffer);
 	}
-	return;
+}
+
+function showWait(state) {
+	E('wait').style.display = (state ? 'block' : 'none');
+	E('spin').style.display = (state ? 'inline-block' : 'none');
 }
 
 function checkDirectoryExist(directoryToCheck) {
-	let cmd = new XmlHttp();
+	var cmd = new XmlHttp();
 	cmd.onCompleted = function(text, xml) {
 		if (text.trim() === "OK") {
-			if (!directoryToCheck.startsWith("/")) {
+			if (directoryToCheck.substring(0, 1) != '/') {
 				working_dir = working_dir + "/" + directoryToCheck;
-			} else {
+			}
+			else {
 				working_dir = directoryToCheck;
 			}
 			term.write('%+r Switching to directory %+b' + working_dir + '%-b %-r \n');
-		} else {
+		}
+		else {
 			term.write( '%+r%c(red) ERROR directory ' + directoryToCheck + ' does not exist %c(default)%-r' );
 		}
 		showWait(false);
@@ -216,14 +184,14 @@ function checkDirectoryExist(directoryToCheck) {
 	}
 
 	showWait(true);
-	if (!directoryToCheck.startsWith("/")) {
+	if (directoryToCheck.substring(0, 1) != '/') {
 		directoryToCheck = working_dir + "/" + directoryToCheck;
 	}
 	cmd.post('shell.cgi', 'action=execute&nojs=1&command=' + escapeCGI("[ -d \"" + directoryToCheck + "\" ] && echo \"OK\""));
 }
 
 function workingDirUp() {
-	let tmp = working_dir.split("/");
+	var tmp = working_dir.split("/");
 	if (tmp.length > 1) {
 		tmp.pop();
 		working_dir = tmp.join("/");
@@ -234,7 +202,7 @@ function workingDirUp() {
 }
 
 function runCommand(command) {
-	let cmd = new XmlHttp();
+	var cmd = new XmlHttp();
 	cmd.onCompleted = function(text, xml) {
 		term.write(text.split('\n'), true);
 		showWait(false);
@@ -250,13 +218,13 @@ function runCommand(command) {
 }
 
 function fakecommand() {
-	let command = E('icommandsFromMobile').value;
+	var command = E('term-helper-icommands').value;
 	for (var i=0; i<command.length; i++) {
 		Terminal.prototype.globals.keyHandler({which: command.charCodeAt(i), _remapped:true});
 	}
 	sendCR();
-	E('icommandsFromMobile').value = '';
-	E('icommandsFromMobile').focus();
+	E('term-helper-icommands').value = '';
+	E('term-helper-icommands').focus();
 }
 
 function sendSpace() {
@@ -269,27 +237,26 @@ function sendCR() {
 }
 
 function toggleHWKeyHelper() {
-	E('noHWKeyHelperDiv').style.visibility = 'visible';
-	E('noHWKeyHelperLink').style.visibility = 'hidden';
+	E('term-helper-div').style.display = 'inline-block';
+	E('term-helper-link').style.display = 'none';
 }
 /* TERMLIB-END */
 </script>
-
 </head>
 
-/* TERMLIB0-BEGIN */
+<!-- TERMLIB0-BEGIN -->
 <body onload="init()">
-/* TERMLIB0-END */
-/* TERMLIB-BEGIN */
+<!-- TERMLIB0-END -->
+<!-- TERMLIB-BEGIN -->
 <body onload="termOpen()">
-/* TERMLIB-END */
+<!-- TERMLIB-END -->
 <form action="javascript:{}">
-<table id="container" cellspacing="0">
+<table id="container">
 <tr><td colspan="2" id="header">
-	<div class="title">Tomato</div>
-	<div class="version">Version <% version(); %></div>
+	<div class="title">FreshTomato</div>
+	<div class="version">Version <% version(); %> on <% nv("t_model_name"); %></div>
 </td></tr>
-<tr id="body"><td id="navi"><script type="text/javascript">navi()</script></td>
+<tr id="body"><td id="navi"><script>navi()</script></td>
 <td id="content">
 <div id="ident"><% ident(); %></div>
 
@@ -297,34 +264,43 @@ function toggleHWKeyHelper() {
 
 <div class="section-title">Execute System Commands</div>
 <div class="section">
-/* TERMLIB0-BEGIN */
-<script type="text/javascript">
-createFieldTable('', [
-	{ title: 'Command', name: 'f_cmd', type: 'textarea', wrap: 'pre', value: '' }
-]);
-</script>
-<div style="float:left"><input type="button" value="Execute" onclick="execute()" id="execb"></div>
-<script type="text/javascript">genStdRefresh(1,5,'ref.toggle()');</script>
-/* TERMLIB0-END */
-/* TERMLIB-BEGIN */
-<div id="termDiv"></div>
-/* TERMLIB-END */
+<!-- TERMLIB0-BEGIN -->
+	<script>
+	createFieldTable('', [
+		{ title: 'Command', name: 'f_cmd', type: 'textarea', wrap: 'pre', value: '' }
+	]);
+	</script>
+	<div style="float:left"><input type="button" value="Execute" onclick="execute()" id="execb"></div>
+	<script>genStdRefresh(1,5,'ref.toggle()');</script>
+<!-- TERMLIB0-END -->
+<!-- TERMLIB-BEGIN -->
+	<div id="term-div"></div>
+
+	<div class="note-spacer"><a id="term-helper-link" href="#" onclick="toggleHWKeyHelper();">No hardware keyboard</a></div>
+
+	<div id="term-helper-div" style="display:none">
+		<input type="button" class="term-helper-button" onclick="fakecommand()" value="Enter">
+		<input type="button" class="term-helper-button" onclick="sendSpace()" value="Space"><br>
+		<input type="text" id="term-helper-icommands" name="commands" spellcheck="false" style="text-transform:none">
+	</div>
+<!-- TERMLIB-END -->
+
 </div>
-/* TERMLIB-BEGIN */
-<a href="#" onclick="toggleHWKeyHelper();" id="noHWKeyHelperLink">No hardware keyboard</a>
-<div style="visibility:hidden;text-align:left" id="noHWKeyHelperDiv">
-	<input type="button" class="helperButton" onclick="fakecommand()" value="Enter">
-	<input type="button" class="helperButton" onclick="sendSpace()" value="Space"><br>
-	<input type="text" id="icommandsFromMobile" name="commandsFromMobile" spellcheck="false" style="text-transform:none">
-</div>
-/* TERMLIB-END */
-<div style="visibility:hidden;text-align:right" id="wait">Please wait... <img src="spin.gif" alt="" style="vertical-align:top"></div>
-<pre id="result"></pre>
 
 <!-- / / / -->
 
+<div id="wait">Please wait...&nbsp; <img src="spin.gif" alt="" id="spin"></div>
+<!-- TERMLIB0-BEGIN -->
+<pre id="result"></pre>
+<!-- TERMLIB0-END -->
+
+<!-- / / / -->
+
+<div id="footer">
+	&nbsp;
+</div>
+
 </td></tr>
-<tr><td id="footer" colspan="2">&nbsp;</td></tr>
 </table>
 </form>
 </body>
