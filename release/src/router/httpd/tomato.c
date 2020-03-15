@@ -605,6 +605,9 @@ static const nvset_t nvset_list[] = {
 	{ "wan_pppoe_lef",		V_RANGE(1, 10)			},
 	{ "wan_sta",			V_LENGTH(0, 10)			},
 	{ "wan_dns",			V_LENGTH(0, 50)			},	// ip ip ip
+#ifdef TCONFIG_USB
+	{ "wan_hilink_ip",		V_IP				},
+#endif
 	{ "wan_ckmtd",			V_LENGTH(1, 2)			},	// check method: 1 - ping, 2 - traceroute, 3 - curl
 
 #ifdef TCONFIG_MULTIWAN
@@ -646,6 +649,9 @@ static const nvset_t nvset_list[] = {
 	{ "wan2_sta",			V_LENGTH(0, 10)			},
 	{ "wan2_dns",			V_LENGTH(0, 50)			},	// ip ip ip
 	{ "wan2_dns_auto",		V_01				},
+#ifdef TCONFIG_USB
+	{ "wan2_hilink_ip",		V_IP				},
+#endif
 	{ "wan2_ckmtd",			V_LENGTH(1, 2)			},	// check method: 1 - ping, 2 - traceroute, 3 - curl
 
 #ifdef TCONFIG_MULTIWAN
@@ -675,6 +681,9 @@ static const nvset_t nvset_list[] = {
 	{ "wan3_sta",			V_LENGTH(0, 10)			},
 	{ "wan3_dns",			V_LENGTH(0, 50)			},	// ip ip ip
 	{ "wan3_dns_auto",		V_01				},
+#ifdef TCONFIG_USB
+	{ "wan3_hilink_ip",		V_IP				},
+#endif
 	{ "wan3_ckmtd",			V_LENGTH(1, 2)			},	// check method: 1 - ping, 2 - traceroute, 3 - curl
 
 	{ "wan4_proto",			V_LENGTH(1, 16)			},	// disabled, dhcp, static, pppoe, pptp, l2tp
@@ -703,6 +712,9 @@ static const nvset_t nvset_list[] = {
 	{ "wan4_sta",			V_LENGTH(0, 10)			},
 	{ "wan4_dns",			V_LENGTH(0, 50)			},	// ip ip ip
 	{ "wan4_dns_auto",		V_01				},
+#ifdef TCONFIG_USB
+	{ "wan4_hilink_ip",		V_IP				},
+#endif
 	{ "wan4_ckmtd",			V_LENGTH(1, 2)			},	// check method: 1 - ping, 2 - traceroute, 3 - curl
 #endif
 
