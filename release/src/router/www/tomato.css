@@ -1437,3 +1437,44 @@ div#sptime {
 	padding: 0 3px 0 2px;
 	border-radius: 2px;
 }
+
+/* SVG */
+#svg text {
+	font: 11px monospace;
+	fill: #000;
+}
+
+.svg-line {
+	stroke: #d0d0d0;
+	stroke-width: 1px;
+}
+
+.svg-line.a {
+	stroke: #f0f0f0;
+	stroke-width: 1px;
+}
+
+.svg-tickH {
+	text-anchor: middle;
+	fill: #222;
+}
+
+.svg-textback,
+.svg-textback-vertical {
+	fill: #fff;
+	opacity: 0.8;
+}
+
+.svg-textback-vertical {
+	width: 15px;
+}
+
+.svg-rect {
+	fill: #fcfcfc;
+}
+
+#svg-crossX,
+#svg-crossY {
+	stroke: #f77;
+	stroke-width: 1px;
+}

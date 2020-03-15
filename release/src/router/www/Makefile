@@ -329,6 +329,22 @@ ifeq ($(TCONFIG_OPTIMIZE_SIZE_MORE),y)
 	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/SIZEOPTMORE-BEGIN/,/SIZEOPTMORE-END/d"
 endif
 
+# Only include Advanced Themes stuff if it is required
+ifneq ($(TCONFIG_ADVTHEMES),y)
+	rm -f $(INSTALLDIR)/www/resize-charts.js
+	rm -f $(INSTALLDIR)/www/at.css
+	rm -f $(INSTALLDIR)/www/at-blue.css
+	rm -f $(INSTALLDIR)/www/at-dark.css
+	rm -f $(INSTALLDIR)/www/at-green.css
+	rm -f $(INSTALLDIR)/www/at-red.css
+	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/ADVTHEMES-BEGIN/,/ADVTHEMES-END/d"
+	sed -i $(INSTALLDIR)/www/bwm-24.asp -e "/ADVTHEMES-BEGIN/,/ADVTHEMES-END/d"
+	sed -i $(INSTALLDIR)/www/bwm-realtime.asp -e "/ADVTHEMES-BEGIN/,/ADVTHEMES-END/d"
+	sed -i $(INSTALLDIR)/www/ipt-24.asp -e "/ADVTHEMES-BEGIN/,/ADVTHEMES-END/d"
+	sed -i $(INSTALLDIR)/www/ipt-realtime.asp -e "/ADVTHEMES-BEGIN/,/ADVTHEMES-END/d"
+	sed -i $(INSTALLDIR)/www/bwm-graph.svg -e "/ADVTHEMES-BEGIN/,/ADVTHEMES-END/d"
+endif
+
 # Clean-up compiler directives
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp *.js *.jsx *.html); do \
@@ -376,6 +392,7 @@ endif
 		-e "/OPTSIZE-BEGIN/d"	-e "/OPTSIZE-END/d" \
 		-e "/SIZEOPTMORE-BEGIN/d" -e "/SIZEOPTMORE-END/d" \
 		-e "/IPERF-BEGIN/d"	-e "/IPERF-END/d" \
+		-e "/ADVTHEMES-BEGIN/d"	-e "/ADVTHEMES-END/d" \
 		|| true; \
 	done
 

@@ -228,6 +228,10 @@ config TCONFIG_TERMLIB
 	bool "Termlib based tools-shell.asp"
 	default n
 
+config TCONFIG_ADVTHEMES
+	bool "Advanced Themes similar to AdvancedTomato"
+	default n
+
 config TCONFIG_NVRAM_32K
 	bool "NVRAM_32K"
 	default n
