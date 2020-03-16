@@ -35,12 +35,12 @@ upstream_recursive_servers:
     tls_auth_name: "dns.google"
     tls_pubkey_pinset:
       - digest: "sha256"
-        value: FuXHPmOxSiJLuSgP63bCENtRIKvPP4KJ9y5461DMWyU=
+        value: DKsuDNvcxWQM6d8hnh7pdpnpqlRS2xB0lIvQRs8ony4=
   - address_data: 8.8.4.4
     tls_auth_name: "dns.google"
     tls_pubkey_pinset:
       - digest: "sha256"
-        value: FuXHPmOxSiJLuSgP63bCENtRIKvPP4KJ9y5461DMWyU=
+        value: DKsuDNvcxWQM6d8hnh7pdpnpqlRS2xB0lIvQRs8ony4=
 # Quad 9 'secure' service - Filters, does DNSSEC, doesn't send ECS
   - address_data: 9.9.9.9
     tls_auth_name: "dns.quad9.net"
@@ -81,12 +81,12 @@ upstream_recursive_servers:
     tls_auth_name: "dns.google"
     tls_pubkey_pinset:
       - digest: "sha256"
-        value: FuXHPmOxSiJLuSgP63bCENtRIKvPP4KJ9y5461DMWyU=
+        value: DKsuDNvcxWQM6d8hnh7pdpnpqlRS2xB0lIvQRs8ony4=
   - address_data: 2001:4860:4860::8844
     tls_auth_name: "dns.google"
     tls_pubkey_pinset:
       - digest: "sha256"
-        value: FuXHPmOxSiJLuSgP63bCENtRIKvPP4KJ9y5461DMWyU=
+        value: DKsuDNvcxWQM6d8hnh7pdpnpqlRS2xB0lIvQRs8ony4=
 # Quad 9 'secure' service - Filters, does DNSSEC, doesn't send ECS
   - address_data: 2620:fe::fe
     tls_auth_name: "dns.quad9.net"
