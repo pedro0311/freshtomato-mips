@@ -52,8 +52,16 @@ for (var uidx = 1; uidx <= nvram.mwan_num; ++uidx) {
 	u = (uidx>1) ? uidx : '';
 	proto = nvram['wan'+u+'_proto'];
 	if (proto != 'disabled') show_langateway = 0;
-	show_dhcpc[uidx-1] = ((proto == 'dhcp') || (proto == 'lte') || (((proto == 'l2tp') || (proto == 'pptp')) && (nvram.pptp_dhcp == '1')));
-	show_codi[uidx-1] = ((proto == 'pppoe') || (proto == 'l2tp') || (proto == 'pptp') || (proto == 'ppp3g'));
+	show_dhcpc[uidx-1] = ((proto == 'dhcp')
+/* USB-BEGIN */
+	                       || (proto == 'lte')
+/* USB-END */
+	                       || (((proto == 'l2tp') || (proto == 'pptp')) && (nvram.pptp_dhcp == '1')));
+	show_codi[uidx-1] = ((proto == 'pppoe') || (proto == 'l2tp') || (proto == 'pptp')
+/* USB-BEGIN */
+	                     || (proto == 'ppp3g')
+/* USB-END */
+	                    );
 }
 
 show_radio = [];
@@ -129,10 +137,12 @@ function foreach_wwan(functionToDo) {
 	for (var uidx = 1; uidx <= nvram.mwan_num; uidx++) {
 		var wan_str = 'nvram.wan';
 		wan_str += uidx > 1 ? uidx : '';
-		wan_str += '_proto';
-		if (eval(wan_str) == "lte" || eval(wan_str) == "ppp3g") {
-				functionToDo(uidx);
-			}
+		var wan_proto_str = wan_str + '_proto';
+		var wan_proto = eval(wan_proto_str);
+		var wan_hilink_ip = eval(wan_str + "_hilink_ip");
+		if (wan_proto == "lte" || wan_proto == "ppp3g" || (wan_hilink_ip && wan_hilink_ip != "0.0.0.0")) {
+			functionToDo(uidx);
+		}
 	}
 }
 
@@ -164,7 +174,11 @@ function ethstates() {
 	/* WANs */
 	for (uidx = 1; uidx <= nvram.mwan_num; ++uidx) {
 		u = (uidx > 1) ? uidx : '';
-		if ((nvram['wan'+u+'_sta'] == '') && (nvram['wan'+u+'_proto'] != 'lte') && (nvram['wan'+u+'_proto'] != 'ppp3g')) {
+		if ((nvram['wan'+u+'_sta'] == '')
+/* USB-BEGIN */
+		    && (nvram['wan'+u+'_proto'] != 'lte') && (nvram['wan'+u+'_proto'] != 'ppp3g')
+/* USB-END */
+		) {
 			code += '<td class="title indent2"><b>WAN'+u+'<\/b><\/td>';
 			++v;
 		}
@@ -451,7 +465,11 @@ function init() {
 		W('<div class="section" id="sesdiv_wan'+u+'">');
 		createFieldTable('', [
 			{ title: 'MAC Address', text: nvram['wan'+u+'_hwaddr'] },
-			{ title: 'Connection Type', text: { 'dhcp':'DHCP', 'static':'Static IP', 'pppoe':'PPPoE', 'pptp':'PPTP', 'l2tp':'L2TP', 'ppp3g':'3G Modem', 'lte':'4G/LTE' }[nvram['wan'+u+'_proto']] || '-' },
+			{ title: 'Connection Type', text: { 'dhcp':'DHCP', 'static':'Static IP', 'pppoe':'PPPoE', 'pptp':'PPTP', 'l2tp':'L2TP'
+/* USB-BEGIN */
+			                                     , 'ppp3g':'3G Modem', 'lte':'4G/LTE'
+/* USB-END */
+			}[nvram['wan'+u+'_proto']] || '-' },
 			{ title: 'IP Address', rid: 'wan'+u+'ip', text: stats.wanip[uidx-1] },
 			{ title: 'Subnet Mask', rid: 'wan'+u+'netmask', text: stats.wannetmask[uidx-1] },
 			{ title: 'Gateway', rid: 'wan'+u+'gateway', text: stats.wangateway[uidx-1] },

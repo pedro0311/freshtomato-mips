@@ -20,7 +20,7 @@
 <script src="interfaces.js"></script>
 <script src="wireless.js"></script>
 <script>
-//	<% nvram("dhcp_lease,dhcp_num,dhcp_start,dhcpd_startip,dhcpd_endip,lan_gateway,lan_ipaddr,lan_netmask,lan_proto,lan_state,lan_desc,lan_invert,wl_security_mode,dnscrypt_proxy,dnscrypt_priority,dnscrypt_port,dnscrypt_resolver,dnscrypt_log,dnscrypt_manual,dnscrypt_provider_name,dnscrypt_provider_key,dnscrypt_resolver_address,dnscrypt_ephemeral_keys,stubby_proxy,stubby_priority,stubby_log,wan_wins,wl_wds_enable,wl_channel,wl_closed,wl_crypto,wl_key,wl_key1,wl_key2,wl_key3,wl_key4,wl_lazywds,wl_mode,wl_net_mode,wl_passphrase,wl_radio,wl_radius_ipaddr,wl_radius_port,wl_ssid,wl_wds,wl_wep_bit,wl_wpa_gtk_rekey,wl_wpa_psk,wl_radius_key,wl_auth,wl_hwaddr,t_features,wl_nbw_cap,wl_nctrlsb,wl_nband,wl_phytype,lan_ifname,lan_stp,lan1_ifname,lan1_ipaddr,lan1_netmask,lan1_proto,lan1_stp,dhcp1_start,dhcp1_num,dhcp1_lease,dhcpd1_startip,dhcpd1_endip,lan2_ifname,lan2_ipaddr,lan2_netmask,lan2_proto,lan2_stp,dhcp2_start,dhcp2_num,dhcp2_lease,dhcpd2_startip,dhcpd2_endip,lan3_ifname,lan3_ipaddr,lan3_netmask,lan3_proto,lan3_stp,dhcp3_start,dhcp3_num,dhcp3_lease,dhcpd3_startip,dhcpd3_endip,cstats_enable,wan_proto,wan_weight,wan_modem_type,wan_modem_pin,wan_modem_dev,wan_modem_init,wan_modem_apn,wan_modem_speed,wan_modem_band,wan_modem_roam,wan_ppp_username,wan_ppp_passwd,wan_ppp_service,wan_l2tp_server_ip,wan_pptp_dhcp,wan_ipaddr,wan_netmask,wan_gateway,wan_pptp_server_ip,wan_ppp_custom,wan_ppp_demand,wan_ppp_idletime,wan_ppp_demand_dnsip,wan_ppp_redialperiod,wan_pppoe_lei,wan_pppoe_lef,wan_mtu_enable,wan_mtu,wan_ppp_mlppp,wan_modem_ipaddr,wan_islan,wan_sta,wan_dns,wan_dns_auto,wan_ifnameX,wan_ckmtd,wan2_proto,wan2_weight,wan2_modem_type,wan2_modem_pin,wan2_modem_dev,wan2_modem_init,wan2_modem_apn,wan2_modem_speed,wan2_modem_band,wan2_modem_roam,wan2_ppp_username,wan2_ppp_passwd,wan2_ppp_service,wan2_l2tp_server_ip,wan2_pptp_dhcp,wan2_ipaddr,wan2_netmask,wan2_gateway,wan2_pptp_server_ip,wan2_ppp_custom,wan2_ppp_demand,wan2_ppp_idletime,wan2_ppp_demand_dnsip,wan2_ppp_redialperiod,wan2_pppoe_lei,wan2_pppoe_lef,wan2_mtu_enable,wan2_mtu,wan2_ppp_mlppp,wan2_modem_ipaddr,wan2_islan,wan2_sta,wan2_dns,wan2_dns_auto,wan2_ifnameX,wan2_ckmtd,wan3_proto,wan3_weight,wan3_modem_type,wan3_modem_pin,wan3_modem_dev,wan3_modem_init,wan3_modem_apn,wan3_modem_speed,wan3_modem_band,wan3_modem_roam,wan3_ppp_username,wan3_ppp_passwd,wan3_ppp_service,wan3_l2tp_server_ip,wan3_pptp_dhcp,wan3_ipaddr,wan3_netmask,wan3_gateway,wan3_pptp_server_ip,wan3_ppp_custom,wan3_ppp_demand,wan3_ppp_idletime,wan3_ppp_demand_dnsip,wan3_ppp_redialperiod,wan3_pppoe_lei,wan3_pppoe_lef,wan3_mtu_enable,wan3_mtu,wan3_ppp_mlppp,wan3_modem_ipaddr,wan3_islan,wan3_sta,wan3_dns,wan3_dns_auto,wan3_ifnameX,wan3_ckmtd,wan4_proto,wan4_weight,wan4_modem_type,wan4_modem_pin,wan4_modem_dev,wan4_modem_init,wan4_modem_apn,wan4_modem_speed,wan4_modem_band,wan4_modem_roam,wan4_ppp_username,wan4_ppp_passwd,wan4_ppp_service,wan4_l2tp_server_ip,wan4_pptp_dhcp,wan4_ipaddr,wan4_netmask,wan4_gateway,wan4_pptp_server_ip,wan4_ppp_custom,wan4_ppp_demand,wan4_ppp_idletime,wan4_ppp_demand_dnsip,wan4_ppp_redialperiod,wan4_pppoe_lei,wan4_pppoe_lef,wan4_mtu_enable,wan4_mtu,wan4_ppp_mlppp,wan4_modem_ipaddr,wan4_islan,wan4_sta,wan4_dns,wan4_dns_auto,wan4_ifnameX,wan4_ckmtd,mwan_num,mwan_cktime,mwan_ckdst,dnssec_enable"); %>
+//	<% nvram("dhcp_lease,dhcp_num,dhcp_start,dhcpd_startip,dhcpd_endip,lan_gateway,lan_ipaddr,lan_netmask,lan_proto,lan_state,lan_desc,lan_invert,wl_security_mode,dnscrypt_proxy,dnscrypt_priority,dnscrypt_port,dnscrypt_resolver,dnscrypt_log,dnscrypt_manual,dnscrypt_provider_name,dnscrypt_provider_key,dnscrypt_resolver_address,dnscrypt_ephemeral_keys,stubby_proxy,stubby_priority,stubby_log,wan_wins,wl_wds_enable,wl_channel,wl_closed,wl_crypto,wl_key,wl_key1,wl_key2,wl_key3,wl_key4,wl_lazywds,wl_mode,wl_net_mode,wl_passphrase,wl_radio,wl_radius_ipaddr,wl_radius_port,wl_ssid,wl_wds,wl_wep_bit,wl_wpa_gtk_rekey,wl_wpa_psk,wl_radius_key,wl_auth,wl_hwaddr,t_features,wl_nbw_cap,wl_nctrlsb,wl_nband,wl_phytype,lan_ifname,lan_stp,lan1_ifname,lan1_ipaddr,lan1_netmask,lan1_proto,lan1_stp,dhcp1_start,dhcp1_num,dhcp1_lease,dhcpd1_startip,dhcpd1_endip,lan2_ifname,lan2_ipaddr,lan2_netmask,lan2_proto,lan2_stp,dhcp2_start,dhcp2_num,dhcp2_lease,dhcpd2_startip,dhcpd2_endip,lan3_ifname,lan3_ipaddr,lan3_netmask,lan3_proto,lan3_stp,dhcp3_start,dhcp3_num,dhcp3_lease,dhcpd3_startip,dhcpd3_endip,cstats_enable,wan_proto,wan_weight,wan_modem_type,wan_modem_pin,wan_modem_dev,wan_modem_init,wan_modem_apn,wan_modem_speed,wan_modem_band,wan_modem_roam,wan_ppp_username,wan_ppp_passwd,wan_ppp_service,wan_l2tp_server_ip,wan_pptp_dhcp,wan_ipaddr,wan_netmask,wan_gateway,wan_pptp_server_ip,wan_ppp_custom,wan_ppp_demand,wan_ppp_idletime,wan_ppp_demand_dnsip,wan_ppp_redialperiod,wan_pppoe_lei,wan_pppoe_lef,wan_mtu_enable,wan_mtu,wan_ppp_mlppp,wan_modem_ipaddr,wan_islan,wan_sta,wan_dns,wan_dns_auto,wan_ifnameX,wan_ckmtd,wan2_proto,wan2_weight,wan2_modem_type,wan2_modem_pin,wan2_modem_dev,wan2_modem_init,wan2_modem_apn,wan2_modem_speed,wan2_modem_band,wan2_modem_roam,wan2_ppp_username,wan2_ppp_passwd,wan2_ppp_service,wan2_l2tp_server_ip,wan2_pptp_dhcp,wan2_ipaddr,wan2_netmask,wan2_gateway,wan2_pptp_server_ip,wan2_ppp_custom,wan2_ppp_demand,wan2_ppp_idletime,wan2_ppp_demand_dnsip,wan2_ppp_redialperiod,wan2_pppoe_lei,wan2_pppoe_lef,wan2_mtu_enable,wan2_mtu,wan2_ppp_mlppp,wan2_modem_ipaddr,wan2_islan,wan2_sta,wan2_dns,wan2_dns_auto,wan2_ifnameX,wan2_ckmtd,wan3_proto,wan3_weight,wan3_modem_type,wan3_modem_pin,wan3_modem_dev,wan3_modem_init,wan3_modem_apn,wan3_modem_speed,wan3_modem_band,wan3_modem_roam,wan3_ppp_username,wan3_ppp_passwd,wan3_ppp_service,wan3_l2tp_server_ip,wan3_pptp_dhcp,wan3_ipaddr,wan3_netmask,wan3_gateway,wan3_pptp_server_ip,wan3_ppp_custom,wan3_ppp_demand,wan3_ppp_idletime,wan3_ppp_demand_dnsip,wan3_ppp_redialperiod,wan3_pppoe_lei,wan3_pppoe_lef,wan3_mtu_enable,wan3_mtu,wan3_ppp_mlppp,wan3_modem_ipaddr,wan3_islan,wan3_sta,wan3_dns,wan3_dns_auto,wan3_ifnameX,wan3_ckmtd,wan4_proto,wan4_weight,wan4_modem_type,wan4_modem_pin,wan4_modem_dev,wan4_modem_init,wan4_modem_apn,wan4_modem_speed,wan4_modem_band,wan4_modem_roam,wan4_ppp_username,wan4_ppp_passwd,wan4_ppp_service,wan4_l2tp_server_ip,wan4_pptp_dhcp,wan4_ipaddr,wan4_netmask,wan4_gateway,wan4_pptp_server_ip,wan4_ppp_custom,wan4_ppp_demand,wan4_ppp_idletime,wan4_ppp_demand_dnsip,wan4_ppp_redialperiod,wan4_pppoe_lei,wan4_pppoe_lef,wan4_mtu_enable,wan4_mtu,wan4_ppp_mlppp,wan4_modem_ipaddr,wan4_islan,wan4_sta,wan4_dns,wan4_dns_auto,wan4_ifnameX,wan4_ckmtd,mwan_num,mwan_cktime,mwan_ckdst,dnssec_enable,wan_hilink_ip,wan2_hilink_ip,wan3_hilink_ip,wan4_hilink_ip"); %>
 
 /* DUALWAN-BEGIN */
 maxwan_num = 2;
@@ -479,6 +479,9 @@ function verifyFields(focused, quiet) {
 			vis['_wan'+u+'_ipaddr'] = 1;
 			vis['_wan'+u+'_netmask'] = 1;
 			vis['_wan'+u+'_gateway'] = 1;
+/* USB-BEGIN */
+			vis['_wan'+u+'_hilink_ip'] = 1;
+/* USB-END */
 			vis['_wan'+u+'_ckmtd'] = 1;
 			vis['_wan'+u+'_pptp_server_ip'] = 1;
 			vis['_f_wan'+u+'_pptp_dhcp'] = 1;
@@ -493,6 +496,7 @@ function verifyFields(focused, quiet) {
 			vis['_f_wan'+u+'_islan'] = 0;
 			vis['_f_wan'+u+'_ppp_mlppp'] = 1;
 			vis['_wan'+u+'_modem_ipaddr'] = 1;
+/* USB-BEGIN */
 			vis['_wan'+u+'_modem_pin'] = 1;
 			vis['_wan'+u+'_modem_dev'] = 1;
 			vis['_wan'+u+'_modem_init'] = 1;
@@ -500,6 +504,7 @@ function verifyFields(focused, quiet) {
 			vis['_wan'+u+'_modem_speed'] = 1;
 			vis['_wan'+u+'_modem_band'] = 1;
 			vis['_wan'+u+'_modem_roam'] = 1;
+/* USB-END */
 			vis['_wan'+u+'_sta'] = 1;
 			vis['_f_wan'+u+'_dns_1'] = 1;
 			vis['_f_wan'+u+'_dns_2'] = 1;
@@ -514,6 +519,9 @@ function verifyFields(focused, quiet) {
 			E('_wan'+u+'_ipaddr').disabled = 0;
 			E('_wan'+u+'_netmask').disabled = 0;
 			E('_wan'+u+'_gateway').disabled = 0;
+/* USB-BEGIN */
+			E('_wan'+u+'_hilink_ip').disabled = 0;
+/* USB-END */
 			E('_wan'+u+'_ckmtd').disabled = 0;
 			E('_wan'+u+'_pptp_server_ip').disabled = 0;
 			E('_f_wan'+u+'_pptp_dhcp').disabled = 0;
@@ -528,6 +536,7 @@ function verifyFields(focused, quiet) {
 			E('_f_wan'+u+'_islan').disabled = 0;
 			E('_f_wan'+u+'_ppp_mlppp').disabled = 0;
 			E('_wan'+u+'_modem_ipaddr').disabled = 0;
+/* USB-BEGIN */
 			E('_wan'+u+'_modem_pin').disabled = 0;
 			E('_wan'+u+'_modem_dev').disabled = 0;
 			E('_wan'+u+'_modem_init').disabled = 0;
@@ -535,6 +544,7 @@ function verifyFields(focused, quiet) {
 			E('_wan'+u+'_modem_speed').disabled = 0;
 			E('_wan'+u+'_modem_band').disabled = 0;
 			E('_wan'+u+'_modem_roam').disabled = 0;
+/* USB-END */
 			E('_wan'+u+'_sta').disabled = 0;
 			E('_f_wan'+u+'_dns_1').disabled = 0;
 			E('_f_wan'+u+'_dns_2').disabled = 0;
@@ -565,6 +575,7 @@ function verifyFields(focused, quiet) {
 			vis['_f_wan'+u+'_islan'] = 0;
 			vis['_f_wan'+u+'_ppp_mlppp'] = 0;
 			vis['_wan'+u+'_modem_ipaddr'] = 0;
+/* USB-BEGIN */
 			vis['_wan'+u+'_modem_pin'] = 0;
 			vis['_wan'+u+'_modem_dev'] = 0;
 			vis['_wan'+u+'_modem_init'] = 0;
@@ -572,6 +583,7 @@ function verifyFields(focused, quiet) {
 			vis['_wan'+u+'_modem_speed'] = 0;
 			vis['_wan'+u+'_modem_band'] = 0;
 			vis['_wan'+u+'_modem_roam'] = 0;
+/* USB-END */
 			vis['_wan'+u+'_sta'] = 0;
 			vis['_f_wan'+u+'_dns_1'] = 0;
 			vis['_f_wan'+u+'_dns_2'] = 0;
@@ -586,6 +598,9 @@ function verifyFields(focused, quiet) {
 			E('_wan'+u+'_ipaddr').disabled = 1;
 			E('_wan'+u+'_netmask').disabled = 1;
 			E('_wan'+u+'_gateway').disabled = 1;
+/* USB-BEGIN */
+			E('_wan'+u+'_hilink_ip').disabled = 1;
+/* USB-END */
 			E('_wan'+u+'_ckmtd').disabled = 1;
 			E('_wan'+u+'_pptp_server_ip').disabled = 1;
 			E('_f_wan'+u+'_pptp_dhcp').disabled = 1;
@@ -600,6 +615,7 @@ function verifyFields(focused, quiet) {
 			E('_f_wan'+u+'_islan').disabled = 1;
 			E('_f_wan'+u+'_ppp_mlppp').disabled = 1;
 			E('_wan'+u+'_modem_ipaddr').disabled = 1;
+/* USB-BEGIN */
 			E('_wan'+u+'_modem_pin').disabled = 1;
 			E('_wan'+u+'_modem_dev').disabled = 1;
 			E('_wan'+u+'_modem_init').disabled = 1;
@@ -607,6 +623,7 @@ function verifyFields(focused, quiet) {
 			E('_wan'+u+'_modem_speed').disabled = 1;
 			E('_wan'+u+'_modem_band').disabled = 1;
 			E('_wan'+u+'_modem_roam').disabled = 1;
+/* USB-END */
 			E('_f_wan'+u+'_dns_1').disabled = 1;
 			E('_f_wan'+u+'_dns_2').disabled = 1;
 			E('_wan'+u+'_dns_auto').disabled = 1;
@@ -698,6 +715,9 @@ function verifyFields(focused, quiet) {
 			vis['_wan'+u+'_ipaddr'] = 0;
 			vis['_wan'+u+'_netmask'] = 0;
 			vis['_wan'+u+'_gateway'] = 0;
+/* USB-BEGIN */
+			vis['_wan'+u+'_hilink_ip'] = 0;
+/* USB-END */
 			vis['_wan'+u+'_ckmtd'] = 0;
 			vis['_wan'+u+'_pptp_server_ip'] = 0;
 			vis['_f_wan'+u+'_pptp_dhcp'] = 0;
@@ -706,6 +726,7 @@ function verifyFields(focused, quiet) {
 			vis['_f_wan'+u+'_mtu'] = 0;
 			vis['_f_wan'+u+'_ppp_mlppp'] = 0;
 			vis['_wan'+u+'_modem_ipaddr'] = 0;
+/* USB-BEGIN */
 			vis['_wan'+u+'_modem_pin'] = 0;
 			vis['_wan'+u+'_modem_dev'] = 0;
 			vis['_wan'+u+'_modem_init'] = 0;
@@ -713,6 +734,7 @@ function verifyFields(focused, quiet) {
 			vis['_wan'+u+'_modem_speed'] = 0;
 			vis['_wan'+u+'_modem_band'] = 0;
 			vis['_wan'+u+'_modem_roam'] = 0;
+/* USB-END */
 			vis['_wan'+u+'_pppoe_lei'] = 0;
 			vis['_wan'+u+'_pppoe_lef'] = 0;
 			vis['_f_wan'+u+'_dns_1'] = 0;
@@ -735,7 +757,7 @@ function verifyFields(focused, quiet) {
 			vis['_wan'+u+'_netmask'] = 0;
 			vis['_f_wan'+u+'_ppp_mlppp'] = 0;
 			vis['_wan'+u+'_modem_ipaddr'] = 1;
-
+/* USB-BEGIN */
 			vis['_wan'+u+'_modem_pin'] = 0;
 			vis['_wan'+u+'_modem_dev'] = 0;
 			vis['_wan'+u+'_modem_init'] = 0;
@@ -743,6 +765,7 @@ function verifyFields(focused, quiet) {
 			vis['_wan'+u+'_modem_speed'] = 0;
 			vis['_wan'+u+'_modem_band'] = 0;
 			vis['_wan'+u+'_modem_roam'] = 0;
+/* USB-END */
 		break;
 		case 'pppoe':
 			vis['_wan'+u+'_l2tp_server_ip'] = 0;
@@ -752,7 +775,7 @@ function verifyFields(focused, quiet) {
 			vis['_wan'+u+'_ipaddr'] = 0;
 			vis['_wan'+u+'_netmask'] = 0;
 			vis['_wan'+u+'_modem_ipaddr'] = 1;
-
+/* USB-BEGIN */
 			vis['_wan'+u+'_modem_pin'] = 0;
 			vis['_wan'+u+'_modem_dev'] = 0;
 			vis['_wan'+u+'_modem_init'] = 0;
@@ -760,7 +783,9 @@ function verifyFields(focused, quiet) {
 			vis['_wan'+u+'_modem_speed'] = 0;
 			vis['_wan'+u+'_modem_band'] = 0;
 			vis['_wan'+u+'_modem_roam'] = 0;
+/* USB-END */
 		break;
+/* USB-BEGIN */
 		case 'ppp3g':
 			vis['_wan'+u+'_ppp_service'] = 0;
 			vis['_wan'+u+'_l2tp_server_ip'] = 0;
@@ -795,6 +820,7 @@ function verifyFields(focused, quiet) {
 			vis['_f_wan'+u+'_ppp_mlppp'] = 0;
 			vis['_wan'+u+'_sta'] = 0;
 		break;
+/* USB-END */
 		case 'static':
 			vis['_wan'+u+'_pppoe_lei'] = 0;
 			vis['_wan'+u+'_pppoe_lef'] = 0;
@@ -807,7 +833,7 @@ function verifyFields(focused, quiet) {
 			vis['_f_wan'+u+'_pptp_dhcp'] = 0;
 			vis['_f_wan'+u+'_ppp_mlppp'] = 0;
 			vis['_wan'+u+'_modem_ipaddr'] = 1;
-
+/* USB-BEGIN */
 			vis['_wan'+u+'_modem_pin'] = 0;
 			vis['_wan'+u+'_modem_dev'] = 0;
 			vis['_wan'+u+'_modem_init'] = 0;
@@ -815,6 +841,7 @@ function verifyFields(focused, quiet) {
 			vis['_wan'+u+'_modem_speed'] = 0;
 			vis['_wan'+u+'_modem_band'] = 0;
 			vis['_wan'+u+'_modem_roam'] = 0;
+/* USB-END */
 		break;
 		case 'pptp':
 			vis['_wan'+u+'_l2tp_server_ip'] = 0;
@@ -823,7 +850,7 @@ function verifyFields(focused, quiet) {
 			vis['_wan'+u+'_ipaddr'] = (!E('_f_wan'+u+'_pptp_dhcp').checked);
 			vis['_wan'+u+'_netmask'] = (!E('_f_wan'+u+'_pptp_dhcp').checked);
 			vis['_wan'+u+'_modem_ipaddr'] = 0;
-
+/* USB-BEGIN */
 			vis['_wan'+u+'_modem_pin'] = 0;
 			vis['_wan'+u+'_modem_dev'] = 0;
 			vis['_wan'+u+'_modem_init'] = 0;
@@ -831,6 +858,7 @@ function verifyFields(focused, quiet) {
 			vis['_wan'+u+'_modem_speed'] = 0;
 			vis['_wan'+u+'_modem_band'] = 0;
 			vis['_wan'+u+'_modem_roam'] = 0;
+/* USB-END */
 		break;
 		case 'l2tp':
 			vis['_wan'+u+'_pptp_server_ip'] = 0;
@@ -839,7 +867,7 @@ function verifyFields(focused, quiet) {
 			vis['_wan'+u+'_ipaddr'] = (!E('_f_wan'+u+'_pptp_dhcp').checked);
 			vis['_wan'+u+'_netmask'] = (!E('_f_wan'+u+'_pptp_dhcp').checked);
 			vis['_wan'+u+'_modem_ipaddr'] = 0;
-
+/* USB-BEGIN */
 			vis['_wan'+u+'_modem_pin'] = 0;
 			vis['_wan'+u+'_modem_dev'] = 0;
 			vis['_wan'+u+'_modem_init'] = 0;
@@ -847,6 +875,7 @@ function verifyFields(focused, quiet) {
 			vis['_wan'+u+'_modem_speed'] = 0;
 			vis['_wan'+u+'_modem_band'] = 0;
 			vis['_wan'+u+'_modem_roam'] = 0;
+/* USB-END */
 		break;
 		}
 		if (wanproto[uidx-1] == 'static') {
@@ -861,7 +890,9 @@ function verifyFields(focused, quiet) {
 			vis['_f_wan'+u+'_dns_2'] = 0;
 		}
 
+/* USB-BEGIN */
 		vis['_wan'+u+'_modem_band'] = (E('_wan'+u+'_modem_speed').value == '03') && vis['_wan'+u+'_modem_speed'] && (eval('nvram.wan'+u+'_modem_type') != "qmi_wwan");
+/* USB-END */
 
 		if (wanproto[uidx-1] != 'disabled' && uidx <= curr_mwan_num) {
 			vis._lan_gateway = 0;
@@ -1156,6 +1187,9 @@ REMOVE-END */
 		if ((vis['_wan'+u+'_ipaddr']) && (!v_ip('_wan'+u+'_ipaddr', quiet))) ok = 0;
 		if ((vis['_wan'+u+'_gateway']) && (!v_ip('_wan'+u+'_gateway', quiet))) ok = 0;
 		if ((vis['_wan'+u+'_modem_ipaddr']) && (!v_ip('_wan'+u+'_modem_ipaddr', quiet))) ok = 0;
+/* USB-BEGIN */
+		if ((vis['_wan'+u+'_hilink_ip']) && (!v_ip('_wan'+u+'_hilink_ip', quiet))) ok = 0;
+/* USB-END */
 		if ((vis['_wan'+u+'_ppp_demand_dnsip']) && (!v_ip('_wan'+u+'_ppp_demand_dnsip', quiet))) ok = 0;
 		/* WANx netmask */
 		if ((vis['_wan'+u+'_netmask']) && (!v_netmask('_wan'+u+'_netmask', quiet))) ok = 0;
@@ -1285,6 +1319,7 @@ REMOVE-END */
 /* MULTIWAN-END */
 	}
 
+/* USB-BEGIN */
 	var count = 0;
 	if ((E('_wan_proto').value == 'lte') || (E('_wan_proto').value == 'ppp3g')) count++;
 	if ((E('_wan2_proto').value == 'lte') || (E('_wan2_proto').value == 'ppp3g')) count++;
@@ -1300,6 +1335,7 @@ REMOVE-END */
 			ok = 0;
 		}
 	}
+/* USB-END */
 
 	return ok;
 }
@@ -1726,14 +1762,18 @@ REMOVE-END -->
 				['disabled','Disabled']],
 				value: nvram['wan'+u+'_proto'] },
 			{ title: 'Wireless Client Mode', name: 'wan'+u+'_sta', type: 'select', options: sta_list, value: nvram['wan'+u+'_sta'] },
+/* USB-BEGIN */
 			{ title: 'Modem device', name: 'wan'+u+'_modem_dev', type: 'select', options: [['/dev/ttyUSB0', '/dev/ttyUSB0'],['/dev/ttyUSB1', '/dev/ttyUSB1'],['/dev/ttyUSB2', '/dev/ttyUSB2'],['/dev/ttyUSB3', '/dev/ttyUSB3'],['/dev/ttyUSB4', '/dev/ttyUSB4'],['/dev/ttyUSB5', '/dev/ttyUSB5'],['/dev/ttyUSB6', '/dev/ttyUSB6'],['/dev/ttyACM0', '/dev/ttyACM0']], value: nvram['wan'+u+'_modem_dev'] },
+/* USB-END */
 			{ title: 'Load Balance Weight', name: 'wan'+u+'_weight', type: 'text', maxlen: 3, size: 8, value: nvram['wan'+u+'_weight'], suffix: '&nbsp; <small>Failover: 0; Load balancing: 1 - 256<\/small>' },
+/* USB-BEGIN */
 			{ title: 'PIN Code', name: 'wan'+u+'_modem_pin', type: 'text', maxlen: 6, size: 8, value: nvram['wan'+u+'_modem_pin'], suffix: '&nbsp; <small>advised to turn off PIN Code<\/small>' },
 			{ title: 'Modem init string', name: 'wan'+u+'_modem_init', type: 'text', maxlen: 25, size: 32, value: nvram['wan'+u+'_modem_init'] },
 			{ title: 'APN', name: 'wan'+u+'_modem_apn', type: 'text', maxlen: 25, size: 32, suffix: '&nbsp; <small>if empty, AT+CGDCONT will not be sent<\/small>', value: nvram['wan'+u+'_modem_apn'] },
 			{ title: 'Network Type', name: 'wan'+u+'_modem_speed', type: 'select', options: [['00', 'Auto'],['030201', '4G/3G/2G'],['0302', '4G/3G only'],['03', '4G only'],['02', '3G only']], value: nvram['wan'+u+'_modem_speed'], suffix: '&nbsp; <small>works only with non-Hilink modems<\/small>' },
 			{ title: 'Roaming', name: 'wan'+u+'_modem_roam', type: 'select', options: [['2', 'No change*'],['1', 'Supported'],['0', 'Disabled'],['3', 'Roam only']], value: nvram['wan'+u+'_modem_roam'], suffix: '&nbsp; <small>*default; works only with non-Hilink modems<\/small>' },
 			{ title: 'LTE Band', name: 'wan'+u+'_modem_band', type: 'select', options: [['7FFFFFFFFFFFFFFF', 'All supported*'],['80000', 'B20 (800 MHz)'],['80','B8 (900 MHz)'],['4', 'B3 (1800 MHz)'],['1', 'B1 (2100 MHz)'],['40', 'B7 (2600 MHz)']], value: nvram['wan'+u+'_modem_band'], suffix: '&nbsp; <small>*default; tested only on non-Hilink Huawei modems<\/small>' },
+/* USB-END */
 			{ title: 'Username', name: 'wan'+u+'_ppp_username', type: 'text', maxlen: 60, size: 64, value: nvram['wan'+u+'_ppp_username'] },
 			{ title: 'Password', name: 'wan'+u+'_ppp_passwd', type: 'password', maxlen: 60, size: 64, peekaboo: 1, value: nvram['wan'+u+'_ppp_passwd'] },
 			{ title: 'Service Name', name: 'wan'+u+'_ppp_service', type: 'text', maxlen: 50, size: 64, value: nvram['wan'+u+'_ppp_service'] },
@@ -1765,6 +1805,9 @@ REMOVE-END -->
 			{ title: 'Single Line MLPPP', name: 'f_wan'+u+'_ppp_mlppp', type: 'checkbox', value: (nvram['wan'+u+'_ppp_mlppp'] == 1) },
 
 			{ title: 'Route Modem IP', name: 'wan'+u+'_modem_ipaddr', type: 'text', maxlen: 15, size: 17, suffix: '&nbsp; <small>must be in different subnet to router, 0.0.0.0 to disable<\/small>', value: nvram['wan'+u+'_modem_ipaddr'] },
+/* USB-BEGIN */
+			{ title: 'Query HiLink Modem IP', name: 'wan'+u+'_hilink_ip', type: 'text', maxlen: 15, size: 17, suffix: '&nbsp; <small>show status of reachable hilink modem, 0.0.0.0 to disable<\/small>', value: nvram['wan'+u+'_hilink_ip'] },
+/* USB-END */
 			{ title: 'Watchdog Mode', name: 'wan'+u+'_ckmtd', type: 'select', options: [['1','Ping'],['2','Traceroute*']
 /* BBT-BEGIN */
 				,['3','Curl']

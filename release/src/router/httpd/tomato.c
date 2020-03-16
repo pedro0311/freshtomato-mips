@@ -310,7 +310,7 @@ const struct mime_handler mime_handlers[] = {
 	{ "**.png",			"image/png",				12,	wi_generic_noid,	do_file,		1 },
 	{ "**.js",			mime_javascript,			12,	wi_generic_noid,	do_file,		1 },
 	{ "**.jsx",			mime_javascript,			0,	wi_generic,		wo_asp,			1 },
-	{ "**.svg",			"image/svg+xml",			12,	wi_generic_noid,	do_file,		1 },
+	{ "**.svg",			"image/svg+xml",			0,	wi_generic_noid,	wo_asp,			1 },
 	{ "**.txt",			mime_plain,				2,	wi_generic_noid,	do_file,		1 },
 	{ "**.bin",			mime_binary,				0,	wi_generic_noid,	do_file,		1 },
 	{ "**.bino",			mime_octetstream,			0,	wi_generic_noid,	do_file,		1 },
@@ -444,14 +444,29 @@ static void asp_css(int argc, char **argv)
 {
 	const char *css = nvram_safe_get("web_css");
 	const char *ttb = nvram_safe_get("ttb_css");
+	int c = strcmp(css, "tomato") != 0;
 
-	if (nvram_match( "web_css", "online" )) {
-		web_printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"ext/%s.css\">", ttb);
-	} else {
-		if (strcmp(css, "tomato") != 0) {
-			web_printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"%s.css\">", css);
+#ifdef TCONFIG_ADVTHEMES
+	if (argc == 0) {
+#endif
+		if (nvram_match("web_css", "online")) {
+			web_printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"ext/%s.css\">", ttb);
+		} else {
+			if (c) {
+				web_printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"%s.css\">", css);
+			}
+		}
+#ifdef TCONFIG_ADVTHEMES
+	}
+	else {
+		if ((strncmp(argv[0], "svg-css", 7) == 0) && c) {
+			web_printf("<?xml-stylesheet type=\"text/css\" href=\"%s.css\" ?>", css);	/* css for bwm-graph.svg */
+		}
+		if ((strncmp(argv[0], "svg-js", 6) == 0) && (nvram_get_int("web_adv_scripts"))) {	/* special case, outer JS file for bwm-graph.svg */
+			web_printf("<script href=\"resize-charts.js\" />");
 		}
 	}
+#endif
 }
 
 // -----------------------------------------------------------------------------
@@ -590,6 +605,9 @@ static const nvset_t nvset_list[] = {
 	{ "wan_pppoe_lef",		V_RANGE(1, 10)			},
 	{ "wan_sta",			V_LENGTH(0, 10)			},
 	{ "wan_dns",			V_LENGTH(0, 50)			},	// ip ip ip
+#ifdef TCONFIG_USB
+	{ "wan_hilink_ip",		V_IP				},
+#endif
 	{ "wan_ckmtd",			V_LENGTH(1, 2)			},	// check method: 1 - ping, 2 - traceroute, 3 - curl
 
 #ifdef TCONFIG_MULTIWAN
@@ -631,6 +649,9 @@ static const nvset_t nvset_list[] = {
 	{ "wan2_sta",			V_LENGTH(0, 10)			},
 	{ "wan2_dns",			V_LENGTH(0, 50)			},	// ip ip ip
 	{ "wan2_dns_auto",		V_01				},
+#ifdef TCONFIG_USB
+	{ "wan2_hilink_ip",		V_IP				},
+#endif
 	{ "wan2_ckmtd",			V_LENGTH(1, 2)			},	// check method: 1 - ping, 2 - traceroute, 3 - curl
 
 #ifdef TCONFIG_MULTIWAN
@@ -660,6 +681,9 @@ static const nvset_t nvset_list[] = {
 	{ "wan3_sta",			V_LENGTH(0, 10)			},
 	{ "wan3_dns",			V_LENGTH(0, 50)			},	// ip ip ip
 	{ "wan3_dns_auto",		V_01				},
+#ifdef TCONFIG_USB
+	{ "wan3_hilink_ip",		V_IP				},
+#endif
 	{ "wan3_ckmtd",			V_LENGTH(1, 2)			},	// check method: 1 - ping, 2 - traceroute, 3 - curl
 
 	{ "wan4_proto",			V_LENGTH(1, 16)			},	// disabled, dhcp, static, pppoe, pptp, l2tp
@@ -688,6 +712,9 @@ static const nvset_t nvset_list[] = {
 	{ "wan4_sta",			V_LENGTH(0, 10)			},
 	{ "wan4_dns",			V_LENGTH(0, 50)			},	// ip ip ip
 	{ "wan4_dns_auto",		V_01				},
+#ifdef TCONFIG_USB
+	{ "wan4_hilink_ip",		V_IP				},
+#endif
 	{ "wan4_ckmtd",			V_LENGTH(1, 2)			},	// check method: 1 - ping, 2 - traceroute, 3 - curl
 #endif
 
@@ -1171,6 +1198,9 @@ static const nvset_t nvset_list[] = {
 	{ "http_lanport",		V_PORT				},
 	{ "web_wl_filter",		V_01				},
 	{ "web_css",			V_LENGTH(1, 32)			},
+#ifdef TCONFIG_ADVTHEMES
+	{ "web_adv_scripts",		V_01				},
+#endif
 	{ "web_dir",			V_LENGTH(1, 32)			},
 	{ "ttb_css",			V_LENGTH(0, 128)		},
 #ifdef TCONFIG_USB

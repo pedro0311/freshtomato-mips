@@ -778,6 +778,9 @@ const defaults_t defaults[] = {
 #endif
 	{ "web_wl_filter",		"0"				},	// Allow/Deny Wireless Access Web
 	{ "web_css",			"default"			},
+#ifdef TCONFIG_ADVTHEMES
+	{ "web_adv_scripts",		"0"				},	// load JS resize chart script
+#endif
 	{ "web_dir",			"default"			},	// jffs, opt, tmp or default (/www)
 	{ "ttb_css",			"example"			},	// Tomato Themes Base - default theme name
 #ifdef TCONFIG_USB
