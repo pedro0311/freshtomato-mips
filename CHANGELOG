@@ -3,6 +3,101 @@ FreshTomato-MIPS Changelog
 
 
 
+2020.2          2020.03.20
+--------------------------
+
+Note: Because of changes in GUI it is recommended to clear the browser cache, or use Ctrl+F5
+
+- Add / Extend Asus RT-N12 A1/B1/C1/D1/VP support (v1.0)
+- Add Asus RT-N12K support (almost the same like D1 Version)
+- kernel: tcp: avoid infinite loop in tcp_splice_read() Splicing from TCP socket is vulnerable when a packet with URG flag is received and stored into receive queue
+- kernel: net: don't call strlen() on the user buffer in packet_bind_spkt() KMSAN (KernelMemorySanitizer, a new error detection tool) reports use of uninitialized memory in packet_bind_spkt()
+- kernel: ipv6: do not increment mac header when it’s unset Otherwise we’ll overflow the integer. This occurs when layer 3 tunneled packets are handed off to the IPv6 layer
+- kernel: ipv6: Allow IPv4-mapped address as next-hop Made kernel accept IPv6 routes with IPv4-mapped address as next-hop
+- gmp: update to 6.2.0
+- nginx: update to 1.17.9
+- php: back to 5.X branch (5.6.40 - 2019.01.10) - newer causing problems
+- sqlite: update to 3.31.1
+- curl: update to 7.69.0
+- dnsmasq: update to 2.81rc3
+- libexif: update to 54b6f7f (2020.02.29) snapshot
+- nano: update to 4.8
+- tor: update to 0.4.2.6
+- pcre: update to 8.44
+- getdns/stubby: update to 1.6.0/0.3.0
+- pppd: fixes from upstream (pppd: Fix bounds check in EAP code; pppd: Ignore received EAP messages when not doing EAP)
+- spawn-fcgi: update to 3c1b01c (2019.08.25) snapshot; clean sources, add patch instead, cosmetic in router/Makefile
+- libcurl: update CA certificate bundle as of 2020-01-01
+- openssl11: add OpenSSL 1.1.1d to the tree
+- openssl11: add build recipes
+- openssl11: Enable OpenSSL 1.1.1 in router/Makefile
+- openssl11: add patch
+- openssl11: tor: enable OpenSSL 1.1.x support
+- openssl11: OpenVPN: enable OpenSSL 1.1.x support
+- openssl11: getdns/stubby: enable OpenSSL 1.1.x support
+- openssl11: vsftpd: enable OpenSSL 1.1.x support
+- openssl11: tinc: enable OpenSSL 1.1.x support
+- openssl11: nginx: enable OpenSSL 1.1.x support
+- openssl11: mysql: enable OpenSSL 1.1.x support
+- openssl11: don’t build test and fuzz to shorten build time
+- openssl11: enable OpenSSL 1.1.1 for httpd, mssl, mdu (if built with mssl)
+- openssl11: enable OpenSSL 1.1.x for libcurl, mdu (if built with libcurl), transmission
+- openssl11: dnsmasq: add openssl backend for DNSSEC
+- openssl11: Add OPENSSL_PREFER_CHACHA_OVER_GCM option
+- openssl11: priorize CHACHA over GCM for models with no AES acceleration
+- openssl11: first attempt to reduce size for smaller targets
+- openssl11: fix typo in commit e734e48 causing build break
+- openssl11: enable OpenSSL 1.1.x on AIO/Mega-VPN/Max/MiniVPN(USB) (z/o/m/a) targets
+- openssl11: enable OpenSSL 1.1.x on n60k target (E3000USB-Nocat-MiniVPN)
+- openssl11: enable OpenSSL 1.1.x on RT-AC targets (and r64e in RT-N)
+- openssl11: enable OpenSSL 1.1.x on: TendaN60; Belkin F5D,F7D,F9K; Netgear WNR3500LV2; Netgear WNDR3400/3700v3 VPN; Netgear WNDR3400v2/v3 VPN
+- busybox: wget: openssl11: fix ssl when built with OpenSSL-1.1.x
+- GUI: Fix Issue #15 to allow configuring remote access in router mode
+- GUI: TOR: add an option to resolve only .onion/.exit domains without having to configure anything else
+- GUI: Admin Access: fix info about default web username
+- GUI: Admin Access: delete the unnecessary http_root variable (Allow web login as “root”) - now the username is ‘root’ if it’s not entered, no need to check/uncheck something
+- GUI: overview: fix the order of the enable/disable wifi buttons for routers with three radios
+- GUI: overview: fix issue when warning about unsecured wifi appears, even if this radio is temporarily disabled by “Disable” button on this page
+- GUI: Admin Access: do not restart sshd if there are no configuration changes
+- GUI: Basic Network: fix the order in which the wifi interfaces are selected when setting Wireless Client Mode (bug similar to that on the Overview page)
+- GUI: clean-up; the first step to sorting out this mess
+- GUI: add AdvancedTomato-like themes: red, blue, green and dark for AIO/Mega-VPN/Max targets
+- GUI: support showing status of hilink modem reachable from any WAN
+- GUI: add AdvancedTomato-like themes for all RT-AC targets (and r64e in RT-N)
+- GUI: add AdvancedTomato-like themes for: TendaN60; Belkin F7D,F9K; Netgear WNR3500LV2; Netgear WNDR3400/3700v3 VPN; Netgear WNDR3400v2/v3 VPN
+- Use Cyassl only on small targets when NO_HTTPS is defined - otherwise use OpenSSL for httpd, mssl and mdu
+- MDU: disable SSL_VERIFYPEER, if built with libcurl but without local CA cert file (fix problem on non-AIO targets)
+- stubby: add different config file if target is build without CA cert
+- stubby: update Google tls_pubkey_pinset in configuration file
+- nginx: move (forgotten) changes in tree to the patch
+- build: openssl11: update libfoo.pl for OpenSSL 1.1.x
+- httpd: gencert.sh: add emailAddress attribute to generated certificate
+- httpd: gencert.sh: use openssl11 when available for certificate generation; use genpkey command for key generation
+- Makefile: add NFS Server and IPERF to target ‘o’ (Mega-VPN)
+- router: Makefile: openssl/openssl11: tweak build recipes; removed unused ciphers
+- router: Makefile: openvpn: link against zlib only if zlib is installed; clean-up
+- router: Makefile: openssl11: distinguish OPENSSL_CIPHERS depending on the OpenSSL version
+- router: Makefile: samba3: build with libiconv if available
+- router: Makefile: dnsmasq: build with NO_TFTP only for MiniVPN/MiniVPN2 (j/j2) targets; fixes #21
+- router: Makefile: add symlink to openssl
+- router: httpd: Makefile: remove pthread from LIBS
+- router: httpd: misc.c: change memory format specifiers to unsigned integer (there was an overflow in displaying memory sizes above 2GB)
+- router: others: secure adblock with lock file; better compress scripts; reformat ttb-2.0.5 help
+- router: others: mymotd: fix ‘bad number’ bug when wanX is disabled
+- router: rc: services.c: add warning to syslog when dnsmasq is skipped because of WEB mode enabled. Fixes #2
+- router: rc: init.c - Reboot automatically when the kernel panics and set waiting time (3 sec now)
+- router: rc: init.c - set overcommit_memory and overcommit_ratio
+- router: rc: blink_br.c - exit / stop blink_br for router with more than one LAN LED (we do not need blink_br in that case –> save memory/cpu load)
+- router: rc: init.c - Adjust et and wl thresh value after reset (for wifi-driver and et_linux.c)
+- router: rc: network.c - rework start and stop of emf/lan/wl - fix/correct start and stop of EMF (stop failed almost every time and also router stuck/hung sometimes at reboot via GUI!) - make EMF multi-lan aware - give feedback about start and stop EMF - rework basic start and stop of start_lan / start_lan_wl / start_wl / start_wireless
+- router: rc: init.c - remove start_nas()/stop_nas() (already done at start_services()/stop_services())
+- router: rc: network.c - bring down loopback interface if we stop lan (and some cosmetic)
+- router: rc: network.c - unload/load wifi driver only with start_lan() and stop_lan()
+- router: rc: init.c - load usb wifi driver at sysinit (keep it the “old way”)
+- router: www: vpn-tinc.asp: fix some bugs, add link to the tutorial, clean-up
+- router: www: status-overview.asp: add missing 10Mb port icons, add set of half-duplex icons, code optimization/reduce size, clean-up
+
+
 2020.1          2020.01.20
 --------------------------
 
