@@ -33,26 +33,13 @@ ANON_NOTIFY=$(nvram get tomatoanon_notify)
 ############################
 
 		#Detect Version and Buildtype
-		KERNEL=$(uname -r | cut -d "." -f1,2)
 		IS_USB=$(nvram get os_version | grep USB | wc -l)
-		[ "$KERNEL" == "2.6" ] && {
-			[ "$IS_USB" -eq 0 ] && { #if K26
-				VER=$(nvram get os_version | awk '{ print $1" "$(NF-1) }')
-			} || { #if K26USB
-				VER=$(nvram get os_version | awk '{ print $1" "$(NF-2)" "$(NF-1) }')
-			}
-		} || { #K2.4
-			[ "$IS_USB" -eq 0 ] && { #if K24
-				VER=$(nvram get os_version | awk '{ print $2" "$3 }')
-			} || { # if K24USB
-				VER=$(nvram get os_version | awk '{ print $2" "$3" "$4 }')
-			}
+		[ "$IS_USB" -eq 0 ] && { #if K26
+			VER=$(nvram get os_version | awk '{ print $1" "$(NF-1) }')
+		} || { #if K26USB
+			VER=$(nvram get os_version | awk '{ print $1" "$(NF-2)" "$(NF-1) }')
 		}
 		BUILDTYPE=$(nvram get os_version | awk '{ print $NF }')
-
-
-
-
 
 		[ "$1" == "checkver" -a "$ANON_NOTIFY" -eq 1 ] && {
 			# Tomato MIPS Update Notification Script
@@ -60,7 +47,7 @@ ANON_NOTIFY=$(nvram get tomatoanon_notify)
 			VER_MNR=$(echo $VER | awk '{print $1}' | cut -d "." -f2 | sed 's/[^0-9]*//g')
 
 			RESCHK="/tmp/anon.check"
-			wget -O $RESCHK "https://exotic.se/version.txt"
+			wget -O $RESCHK "http://freshtomato.org/version.txt"
 
 			CHKVER_MAJ=$(cat $RESCHK | awk '{print $1}' | cut -d "." -f1 | sed 's/[^0-9]*//g')
 			ISMNR=$(cat $RESCHK | grep "\." | wc -l)
