@@ -92,6 +92,9 @@ const defaults_t defaults[] = {
 	{ "wan_gateway_get",		"0.0.0.0"			},	// default gateway for PPP
 	{ "wan_dns",			""				},	// x.x.x.x x.x.x.x ...
 	{ "wan_weight",			"1"				},
+#ifdef TCONFIG_USB
+	{ "wan_hilink_ip",		"0.0.0.0"			},
+#endif
 	{ "wan_ckmtd",			"2"				},
 
 	{ "wan2_proto",			"dhcp"				},	// [static|dhcp|pppoe|disabled]
@@ -103,6 +106,9 @@ const defaults_t defaults[] = {
 	{ "wan2_hwname",		""				},	// WAN driver name (e.g. et1)
 	{ "wan2_hwaddr",		""				},	// WAN interface MAC address
 	{ "wan2_ifnameX",		NULL				},	// real wan if; see wan.c:start_wan
+#ifdef TCONFIG_USB
+	{ "wan2_hilink_ip",		"0.0.0.0"			},
+#endif
 	{ "wan2_ckmtd",			"2"				},
 
 #ifdef TCONFIG_MULTIWAN
@@ -115,6 +121,9 @@ const defaults_t defaults[] = {
 	{ "wan3_hwname",		""				},	// WAN driver name (e.g. et1)
 	{ "wan3_hwaddr",		""				},	// WAN interface MAC address
 	{ "wan3_ifnameX",		NULL				},	// real wan if; see wan.c:start_wan
+#ifdef TCONFIG_USB
+	{ "wan3_hilink_ip",		"0.0.0.0"			},
+#endif
 	{ "wan3_ckmtd",			"2"				},
 
 	{ "wan4_proto",			"dhcp"				},	// [static|dhcp|pppoe|disabled]
@@ -126,6 +135,9 @@ const defaults_t defaults[] = {
 	{ "wan4_hwname",		""				},	// WAN driver name (e.g. et1)
 	{ "wan4_hwaddr",		""				},	// WAN interface MAC address
 	{ "wan4_ifnameX",		NULL				},	// real wan if; see wan.c:start_wan
+#ifdef TCONFIG_USB
+	{ "wan4_hilink_ip",		"0.0.0.0"			},
+#endif
 	{ "wan4_ckmtd",			"2"				},
 #endif
 
