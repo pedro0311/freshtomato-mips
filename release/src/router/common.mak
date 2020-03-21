@@ -23,7 +23,7 @@ export HOSTCONFIG := linux-mipsel
 export ARCH := mips
 export HOST := mipsel-linux
 
-export TOOLCHAIN := $(shell cd $(dir $(shell which $(CROSS_COMPILE)gcc))/.. && pwd -P)
+export TOOLCHAIN := $(shell cd $(dir $(shell which $(CROSS_COMPILE)strip))/.. && pwd -P)
 
 export CC := $(CROSS_COMPILE)gcc
 export AR := $(CROSS_COMPILE)ar
