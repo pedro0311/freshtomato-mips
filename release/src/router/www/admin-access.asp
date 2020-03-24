@@ -250,7 +250,7 @@ function save() {
 /* SIZEOPTMORE-BEGIN */
 	    (fom.sshd_forwarding.value == nvram.sshd_forwarding) &&
 /* SIZEOPTMORE-END */
-	    (E('_sshd_rport').value == nvram.sshd_rport) && (E('_sshd_port').value == nvram.sshd_port) && (E('_sshd_authkeys').value == nvram.sshd_authkeys)) {
+	    (E('_set_password_1').value == "**********") && (E('_sshd_rport').value == nvram.sshd_rport) && (E('_sshd_port').value == nvram.sshd_port) && (E('_sshd_authkeys').value == nvram.sshd_authkeys)) {
 		fom._service.value = 'adminnosshd-restart';
 	}
 
