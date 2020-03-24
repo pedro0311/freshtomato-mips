@@ -206,12 +206,10 @@ extern void start_cron(void);
 extern void stop_cron(void);
 extern void start_adblock(int update);
 extern void stop_adblock(void);
-
 #ifdef TCONFIG_ZEBRA
 extern void start_zebra(void);
 extern void stop_zebra(void);
 #endif
-
 extern void start_upnp(void);
 extern void stop_upnp(void);
 extern void start_syslog(void);
@@ -238,16 +236,15 @@ extern void restart_service(const char *name);
 extern void start_services(void);
 extern void stop_services(void);
 /* !!TB - USB and NAS */
-
 #ifdef TCONFIG_USB
 extern void restart_nas_services(int stop, int start);
+extern void start_wsdd(void);
+extern void stop_wsdd(void);
 #else
 #define restart_nas_services(args...) do { } while(0)
 #endif
-
 extern void start_hotplug2();
 extern void stop_hotplug2(void);
-
 #ifdef TCONFIG_IPV6
 extern void start_ipv6_tunnel(void);
 extern void stop_ipv6_tunnel(void);
