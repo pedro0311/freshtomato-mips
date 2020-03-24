@@ -212,6 +212,7 @@ export CFLAG_OPTIMIZE = -Os
 endif
 
 obj-$(NEED_SAMBA3) += samba3
+obj-$(NEED_SAMBA3) += wsdd2
 
 ifeq ($(CONFIG_BCMWL6),y)
 ifeq ($(TCONFIG_UFSD),y)
@@ -741,11 +742,11 @@ oldconfig oldconf: koldconf roldconf dependconf bboldconf
 
 busybox: dummy
 	@$(SEP)
-	@$(MAKE) -C busybox EXTRA_CFLAGS="-fPIC $(EXTRACFLAGS) $(if $(TCONFIG_OPENSSL11),-DOPENSSL11,)" $(PARALLEL_BUILD)
+	@$(MAKE) -C busybox EXTRA_CFLAGS="-fPIC $(EXTRACFLAGS)" $(PARALLEL_BUILD)
 
 busybox-install:
 	rm -rf $(INSTALLDIR)/busybox
-	$(MAKE) -C busybox install EXTRA_CFLAGS="-fPIC $(EXTRACFLAGS) $(if $(TCONFIG_OPENSSL11),-DOPENSSL11,)" CONFIG_PREFIX=$(INSTALLDIR)/busybox
+	$(MAKE) -C busybox install EXTRA_CFLAGS="-fPIC $(EXTRACFLAGS)" CONFIG_PREFIX=$(INSTALLDIR)/busybox
 
 busybox-clean:
 	-@$(MAKE) -C busybox distclean
@@ -1197,6 +1198,19 @@ dhcpv6-install:
 dhcpv6-clean:
 	-@$(MAKE) -C dhcpv6 clean
 	@rm -f dhcpv6/Makefile dhcpv6/stamp-h1
+
+wsdd2: shared
+	$(call patch_files,wsdd2)
+	@$(SEP)
+	@$(MAKE) CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -DTOMATO -I$(TOP)/shared" LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" -C $@
+
+wsdd2-install:
+	install -D wsdd2/wsdd2 $(INSTALLDIR)/wsdd2/usr/sbin/wsdd2
+	$(STRIP) $(INSTALLDIR)/wsdd2/usr/sbin/wsdd2
+
+wsdd2-clean:
+	@$(MAKE) -C wsdd2 clean
+	$(call unpatch_files,wsdd2)
 
 p910nd:
 
@@ -2556,6 +2570,7 @@ snmp-install:
 	$(STRIP) $(INSTALLDIR)/snmp/usr/sbin/snmpd
 
 apcupsd/stamp-h1:
+	$(call patch_files,apcupsd)
 	cd apcupsd && touch autoconf/variables.mak && \
 	$(MAKE) configure && \
 	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
@@ -2574,6 +2589,7 @@ apcupsd-clean:
 	-@$(MAKE) -C apcupsd clean
 	@rm -f apcupsd/stamp-h1
 	@rm -f apcupsd/config*
+	$(call unpatch_files,apcupsd)
 
 apcupsd-install:
 	$(MAKE) -C apcupsd DESTDIR=$(INSTALLDIR)/apcupsd install
