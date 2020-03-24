@@ -209,6 +209,7 @@ export CFLAG_OPTIMIZE = -Os
 endif
 
 obj-$(NEED_SAMBA3) += samba3
+obj-$(NEED_SAMBA3) += wsdd2
 obj-$(TCONFIG_NTFS) += ntfs-3g
 obj-$(TCONFIG_EBTABLES) += ebtables
 obj-$(TCONFIG_IPV6) += dhcpv6
@@ -1170,6 +1171,19 @@ dhcpv6-install:
 dhcpv6-clean:
 	-@$(MAKE) -C dhcpv6 clean
 	@rm -f dhcpv6/Makefile dhcpv6/stamp-h1
+
+wsdd2: shared
+	$(call patch_files,wsdd2)
+	@$(SEP)
+	@$(MAKE) CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -DTOMATO -I$(TOP)/shared" LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" -C $@
+
+wsdd2-install:
+	install -D wsdd2/wsdd2 $(INSTALLDIR)/wsdd2/usr/sbin/wsdd2
+	$(STRIP) $(INSTALLDIR)/wsdd2/usr/sbin/wsdd2
+
+wsdd2-clean:
+	@$(MAKE) -C wsdd2 clean
+	$(call unpatch_files,wsdd2)
 
 p910nd:
 
