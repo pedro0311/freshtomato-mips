@@ -38,6 +38,7 @@ enc = {'tkip':'TKIP','aes':'AES','tkip+aes':'TKIP / AES'};
 bgmo = {'disabled':'-','mixed':'Auto','b-only':'B Only','g-only':'G Only','bg-mixed':'B/G Mixed','lrs':'LRS','n-only':'N Only'};
 
 updateWWANTimers = [];
+customStatusTimers = [];
 </script>
 
 <script src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
@@ -156,6 +157,27 @@ foreach_wwan(function(i) {
 		}
 	}
 });
+
+for (var uidx = 1; uidx <= nvram.mwan_num; uidx++) {
+	var wan_suffix = uidx > 1 ? uidx : '';
+	var wan_str = 'nvram.wan';
+	wan_str += wan_suffix;
+	var use_wan_status_script = eval(wan_str + '_status_script') == '1';
+	if (use_wan_status_script) {
+		var wan_status_script_url = '/user/cgi-bin/wan' + wan_suffix + '_status.sh';
+		customStatusTimers[uidx-1] = new TomatoRefresh(wan_status_script_url, null, 30, 'wan_custom_status');
+		customStatusTimers[uidx-1].refresh = (function(wan_suffix) {
+			return function(text) {
+				try {
+					var element = document.querySelector("#WanCustomStatus" + wan_suffix + " > td");
+					element.innerHTML = text;
+				}
+				catch (ex) {
+				}
+			};
+		})(wan_suffix);
+	}
+}
 /* USB-END */
 
 function c(id, htm) {
@@ -381,7 +403,16 @@ function init() {
 		var timer = updateWWANTimers[wwan_number - 1];
 		timer.initPage(3000, 3);
 	});
+
+	for (var uidx = 1; uidx <= nvram.mwan_num; uidx++) {
+		if (!customStatusTimers[uidx - 1]) {
+			continue;
+		}
+		var timer = customStatusTimers[uidx - 1];
+		timer.initPage(3000, 3);
+	}
 /* USB-END */
+
 	ref.initPage(3000, 3);
 
 	var elements = document.getElementsByClassName("new_window");
@@ -482,6 +513,9 @@ function init() {
 			{ title: 'Status', rid: 'wan'+u+'status', text: stats.wanstatus[uidx-1] },
 			{ title: 'Connection Uptime', rid: 'wan'+u+'uptime', text: stats.wanuptime[uidx-1] },
 			{ title: 'Remaining Lease Time', rid: 'wan'+u+'lease', text: stats.wanlease[uidx-1], ignore: !show_dhcpc[uidx-1] }
+/* USB-BEGIN */
+			, { text: 'Please wait... Initial refresh... &nbsp; <img src="spin.gif" alt="" style="vertical-align:middle">', rid: "WanCustomStatus"+u, ignore: !customStatusTimers[uidx-1] }
+/* USB-END */
 		]);
 		W('<span id="b'+u+'_dhcpc" style="display:none">');
 		W('<input type="button" class="status-controls" onclick="dhcpc(\'renew\',\'wan'+u+'\')" value="Renew"> &nbsp;');
