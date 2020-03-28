@@ -202,7 +202,7 @@ int mtd_unlock(const char *mtdname)
 
 int mtd_erase(const char *mtdname)
 {
-	return _unlock_erase(mtdname, 1);
+	return !_unlock_erase(mtdname, 1);
 }
 
 int mtd_unlock_erase_main(int argc, char *argv[])
