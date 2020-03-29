@@ -490,7 +490,7 @@
  	/* At the end */
 --- dnsmasq/src/dnsmasq.c
 +++ dnsmasq/src/dnsmasq.c
-@@ -1869,11 +1869,11 @@ static void check_dns_listeners(time_t n
+@@ -1873,11 +1873,11 @@ static void check_dns_listeners(time_t n
  		  indextoname(listener->tcpfd, if_index, intr_name))
  		{
  		  union all_addr addr;
@@ -517,7 +517,7 @@
  #include <netinet/ip_icmp.h>
  #include <netinet/tcp.h>
  #include <sys/uio.h>
-@@ -159,8 +161,6 @@ extern int capget(cap_user_header_t head
+@@ -160,8 +162,6 @@ extern int capget(cap_user_header_t head
  /* daemon is function in the C library.... */
  #define daemon dnsmasq_daemon
  
@@ -526,7 +526,7 @@
  /* Async event queue */
  struct event_desc {
    int event, data, msg_sz;
-@@ -286,6 +286,8 @@ struct event_desc {
+@@ -287,6 +287,8 @@ struct event_desc {
  union all_addr {
    struct in_addr addr4;
 +#ifdef HAVE_IPV6
@@ -535,7 +535,7 @@
    struct {
      union {
        struct crec *cache;
-@@ -414,7 +416,9 @@ struct host_record {
+@@ -415,7 +417,9 @@ struct host_record {
      struct name_list *next;
    } *names;
    struct in_addr addr;
@@ -545,7 +545,7 @@
    struct host_record *next;
  };
  
-@@ -498,7 +502,9 @@ struct crec {
+@@ -499,7 +503,9 @@ struct crec {
  union mysockaddr {
    struct sockaddr sa;
    struct sockaddr_in in;
@@ -555,7 +555,7 @@
  };
  
  /* bits in flag param to IPv6 callbacks from iface_enumerate() */
-@@ -661,7 +667,9 @@ struct frec {
+@@ -662,7 +668,9 @@ struct frec {
    union all_addr dest;
    struct server *sentto; /* NULL means free */
    struct randfd *rfd4;
@@ -565,7 +565,7 @@
    unsigned int iface;
    unsigned short orig_id, new_id;
    int log_id, fd, forwardall, flags;
-@@ -878,7 +886,9 @@ struct dhcp_bridge {
+@@ -879,7 +887,9 @@ struct dhcp_bridge {
  struct cond_domain {
    char *domain, *prefix;
    struct in_addr start, end;
@@ -575,7 +575,7 @@
    int is6, indexed;
    struct cond_domain *next;
  }; 
-@@ -1188,7 +1198,9 @@ void blockdata_free(struct blockdata *bl
+@@ -1189,7 +1199,9 @@ void blockdata_free(struct blockdata *bl
  
  /* domain.c */
  char *get_domain(struct in_addr addr);
@@ -585,7 +585,7 @@
  int is_name_synthetic(int flags, char *name, union all_addr *addr);
  int is_rev_synth(int flag, union all_addr *addr, char *name);
  
-@@ -1273,9 +1285,11 @@ int hostname_issubdomain(char *a, char *
+@@ -1274,9 +1286,11 @@ int hostname_issubdomain(char *a, char *
  time_t dnsmasq_time(void);
  int netmask_length(struct in_addr mask);
  int is_same_net(struct in_addr a, struct in_addr b, struct in_addr mask);
@@ -597,7 +597,7 @@
  int retry_send(ssize_t rc);
  void prettyprint_time(char *buf, unsigned int t);
  int prettyprint_addr(union mysockaddr *addr, char *buf);
-@@ -1354,7 +1368,9 @@ int loopback_exception(int fd, int famil
+@@ -1358,7 +1372,9 @@ int loopback_exception(int fd, int famil
  int label_exception(int index, int family, union all_addr *addr);
  int fix_fd(int fd);
  int tcp_interface(int fd, int af);
@@ -1224,7 +1224,7 @@
    
 --- dnsmasq/src/ipset.c
 +++ dnsmasq/src/ipset.c
-@@ -120,8 +120,13 @@ static int new_add_to_ipset(const char *
+@@ -105,8 +105,13 @@ static int new_add_to_ipset(const char *
    struct my_nfgenmsg *nfg;
    struct my_nlattr *nested[2];
    uint8_t proto;
@@ -1239,7 +1239,7 @@
    if (strlen(setname) >= IPSET_MAXNAMELEN) 
      {
        errno = ENAMETOOLONG;
-@@ -208,6 +213,7 @@ int add_to_ipset(const char *setname, co
+@@ -193,6 +198,7 @@ int add_to_ipset(const char *setname, co
  {
    int ret = 0, af = AF_INET;
  
@@ -1247,7 +1247,7 @@
    if (flags & F_IPV6)
      {
        af = AF_INET6;
-@@ -218,6 +224,7 @@ int add_to_ipset(const char *setname, co
+@@ -203,6 +209,7 @@ int add_to_ipset(const char *setname, co
  	  ret = -1;
  	}
      }
@@ -1257,7 +1257,7 @@
      ret = old_kernel ? old_add_to_ipset(setname, ipaddr, remove) : new_add_to_ipset(setname, ipaddr, af, remove);
 --- dnsmasq/src/netlink.c
 +++ dnsmasq/src/netlink.c
-@@ -51,10 +51,11 @@ void netlink_init(void)
+@@ -61,10 +61,11 @@ void netlink_init(void)
    addr.nl_groups = RTMGRP_IPV4_ROUTE;
    if (option_bool(OPT_CLEVERBIND))
      addr.nl_groups |= RTMGRP_IPV4_IFADDR;  
@@ -1270,7 +1270,7 @@
  #ifdef HAVE_DHCP6
    if (daemon->doing_ra || daemon->doing_dhcp6)
      addr.nl_groups |= RTMGRP_IPV6_IFADDR;
-@@ -234,6 +235,7 @@ int iface_enumerate(int family, void *pa
+@@ -246,6 +247,7 @@ int iface_enumerate(int family, void *pa
  		      if (!((*callback)(addr, ifa->ifa_index, label,  netmask, broadcast, parm)))
  			callback_ok = 0;
  		  }
@@ -1278,7 +1278,7 @@
  		else if (ifa->ifa_family == AF_INET6)
  		  {
  		    struct in6_addr *addrp = NULL;
-@@ -268,6 +270,7 @@ int iface_enumerate(int family, void *pa
+@@ -280,6 +282,7 @@ int iface_enumerate(int family, void *pa
  					(int) preferred, (int)valid, parm)))
  			callback_ok = 0;
  		  }
@@ -1856,20 +1856,20 @@
 @@ -844,6 +851,7 @@ int extract_addresses(struct dns_header
  				  private_net(addr.addr4, !option_bool(OPT_LOCAL_REBIND)))
  				return 1;
- 			      
+ 
 +#ifdef HAVE_IPV6
- 			      if ((flags & F_IPV6) &&
- 				  IN6_IS_ADDR_V4MAPPED(&addr.addr6))
+ 			      /* Block IPv4-mapped IPv6 addresses in private IPv4 address space */
+ 			      if (flags & F_IPV6)
  				{
-@@ -852,6 +860,7 @@ int extract_addresses(struct dns_header
- 				  if (private_net(v4, !option_bool(OPT_LOCAL_REBIND)))
+@@ -866,6 +874,7 @@ int extract_addresses(struct dns_header
+ 				      IN6_IS_ADDR_LOOPBACK(&addr.addr6))
  				    return 1;
  				}
 +#endif
  			    }
- 			  
+ 
  #ifdef HAVE_IPSET
-@@ -998,6 +1007,7 @@ size_t setup_reply(struct dns_header *he
+@@ -1012,6 +1021,7 @@ size_t setup_reply(struct dns_header *he
  	  add_resource_record(header, NULL, NULL, sizeof(struct dns_header), &p, ttl, NULL, T_A, C_IN, "4", addrp);
  	}
        
@@ -1877,7 +1877,7 @@
        if (flags & F_IPV6)
  	{
  	  SET_RCODE(header, NOERROR);
-@@ -1005,6 +1015,7 @@ size_t setup_reply(struct dns_header *he
+@@ -1019,6 +1029,7 @@ size_t setup_reply(struct dns_header *he
  	  header->hb3 |= HB3_AA;
  	  add_resource_record(header, NULL, NULL, sizeof(struct dns_header), &p, ttl, NULL, T_AAAA, C_IN, "6", addrp);
  	}
@@ -1885,7 +1885,7 @@
      }
    else /* nowhere to forward to */
      {
-@@ -1194,12 +1205,14 @@ int add_resource_record(struct dns_heade
+@@ -1208,12 +1219,14 @@ int add_resource_record(struct dns_heade
    for (; *format; format++)
      switch (*format)
        {
@@ -1900,7 +1900,7 @@
  	
        case '4':
          CHECK_LIMIT(INADDRSZ);
-@@ -1495,6 +1508,7 @@ size_t answer_request(struct dns_header
+@@ -1509,6 +1522,7 @@ size_t answer_request(struct dns_header
  		      while (intr->next && strcmp(intr->intr, intr->next->intr) == 0)
  			intr = intr->next;
  		  }
@@ -1908,7 +1908,7 @@
  	      else if (is_arpa == F_IPV6)
  		for (intr = daemon->int_names; intr; intr = intr->next)
  		  {
-@@ -1510,6 +1524,7 @@ size_t answer_request(struct dns_header
+@@ -1524,6 +1538,7 @@ size_t answer_request(struct dns_header
  		      while (intr->next && strcmp(intr->intr, intr->next->intr) == 0)
  			intr = intr->next;
  		  }
@@ -1916,7 +1916,7 @@
  	      
  	      if (intr)
  		{
-@@ -1600,7 +1615,9 @@ size_t answer_request(struct dns_header
+@@ -1614,7 +1629,9 @@ size_t answer_request(struct dns_header
  		    }
  		}
  	      else if (option_bool(OPT_BOGUSPRIV) && (
@@ -1926,7 +1926,7 @@
  		       (is_arpa == F_IPV4 && private_net(addr.addr4, 1))))
  		{
  		  struct server *serv;
-@@ -1641,9 +1658,16 @@ size_t answer_request(struct dns_header
+@@ -1655,9 +1672,16 @@ size_t answer_request(struct dns_header
  
  	  for (flag = F_IPV4; flag; flag = (flag == F_IPV4) ? F_IPV6 : 0)
  	    {
@@ -1944,7 +1944,7 @@
  	      if (qtype != type && qtype != T_ANY)
  		continue;
  	      
-@@ -1665,26 +1689,31 @@ size_t answer_request(struct dns_header
+@@ -1679,26 +1703,31 @@ size_t answer_request(struct dns_header
  		    for (intr = daemon->int_names; intr; intr = intr->next)
  		      if (hostname_isequal(name, intr->name))
  			for (addrlist = intr->addr; addrlist; addrlist = addrlist->next)
@@ -1983,7 +1983,7 @@
  			      ans = 1;	
  			      sec_data = 0;
  			      if (!dryrun)
-@@ -1964,8 +1993,11 @@ size_t answer_request(struct dns_header
+@@ -1978,8 +2007,11 @@ size_t answer_request(struct dns_header
  	crecp = NULL;
  	while ((crecp = cache_find_by_name(crecp, rec->target, now, F_IPV4 | F_IPV6)))
  	  {
@@ -2093,7 +2093,7 @@
  	      my_syslog(MS_TFTP | LOG_ERR, _("unable to get free port for TFTP"));
 --- dnsmasq/src/util.c
 +++ dnsmasq/src/util.c
-@@ -320,12 +320,13 @@ int sockaddr_isequal(union mysockaddr *s
+@@ -324,12 +324,13 @@ int sockaddr_isequal(union mysockaddr *s
  	  s1->in.sin_port == s2->in.sin_port &&
  	  s1->in.sin_addr.s_addr == s2->in.sin_addr.s_addr)
  	return 1;
@@ -2108,7 +2108,7 @@
      }
    return 0;
  }
-@@ -335,9 +336,11 @@ int sa_len(union mysockaddr *addr)
+@@ -339,9 +340,11 @@ int sa_len(union mysockaddr *addr)
  #ifdef HAVE_SOCKADDR_SA_LEN
    return addr->sa.sa_len;
  #else
@@ -2120,7 +2120,7 @@
      return sizeof(addr->in); 
  #endif
  }
-@@ -434,6 +437,7 @@ int is_same_net(struct in_addr a, struct
+@@ -438,6 +441,7 @@ int is_same_net(struct in_addr a, struct
    return (a.s_addr & mask.s_addr) == (b.s_addr & mask.s_addr);
  } 
  
@@ -2128,7 +2128,7 @@
  int is_same_net6(struct in6_addr *a, struct in6_addr *b, int prefixlen)
  {
    int pfbytes = prefixlen >> 3;
-@@ -472,12 +476,15 @@ void setaddr6part(struct in6_addr *addr,
+@@ -476,12 +480,15 @@ void setaddr6part(struct in6_addr *addr,
      }
  }
  
@@ -2144,7 +2144,7 @@
    if (addr->sa.sa_family == AF_INET)
      {
        inet_ntop(AF_INET, &addr->in.sin_addr, buf, ADDRSTRLEN);
-@@ -496,6 +503,10 @@ int prettyprint_addr(union mysockaddr *a
+@@ -500,6 +507,10 @@ int prettyprint_addr(union mysockaddr *a
  	}
        port = ntohs(addr->in6.sin6_port);
      }

@@ -94,6 +94,7 @@ const defaults_t defaults[] = {
 	{ "wan_weight",			"1"				},
 #ifdef TCONFIG_USB
 	{ "wan_hilink_ip",		"0.0.0.0"			},
+	{ "wan_status_script",		"0"				},
 #endif
 	{ "wan_ckmtd",			"2"				},
 
@@ -108,6 +109,7 @@ const defaults_t defaults[] = {
 	{ "wan2_ifnameX",		NULL				},	// real wan if; see wan.c:start_wan
 #ifdef TCONFIG_USB
 	{ "wan2_hilink_ip",		"0.0.0.0"			},
+	{ "wan2_status_script",		"0"				},
 #endif
 	{ "wan2_ckmtd",			"2"				},
 
@@ -123,6 +125,7 @@ const defaults_t defaults[] = {
 	{ "wan3_ifnameX",		NULL				},	// real wan if; see wan.c:start_wan
 #ifdef TCONFIG_USB
 	{ "wan3_hilink_ip",		"0.0.0.0"			},
+	{ "wan3_status_script",		"0"				},
 #endif
 	{ "wan3_ckmtd",			"2"				},
 
@@ -137,6 +140,7 @@ const defaults_t defaults[] = {
 	{ "wan4_ifnameX",		NULL				},	// real wan if; see wan.c:start_wan
 #ifdef TCONFIG_USB
 	{ "wan4_hilink_ip",		"0.0.0.0"			},
+	{ "wan4_status_script",		"0"				},
 #endif
 	{ "wan4_ckmtd",			"2"				},
 #endif

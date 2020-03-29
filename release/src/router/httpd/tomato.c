@@ -607,6 +607,7 @@ static const nvset_t nvset_list[] = {
 	{ "wan_dns",			V_LENGTH(0, 50)			},	// ip ip ip
 #ifdef TCONFIG_USB
 	{ "wan_hilink_ip",		V_IP				},
+	{ "wan_status_script",		V_01				},
 #endif
 	{ "wan_ckmtd",			V_LENGTH(1, 2)			},	// check method: 1 - ping, 2 - traceroute, 3 - curl
 
@@ -651,6 +652,7 @@ static const nvset_t nvset_list[] = {
 	{ "wan2_dns_auto",		V_01				},
 #ifdef TCONFIG_USB
 	{ "wan2_hilink_ip",		V_IP				},
+	{ "wan2_status_script",		V_01				},
 #endif
 	{ "wan2_ckmtd",			V_LENGTH(1, 2)			},	// check method: 1 - ping, 2 - traceroute, 3 - curl
 
@@ -683,6 +685,7 @@ static const nvset_t nvset_list[] = {
 	{ "wan3_dns_auto",		V_01				},
 #ifdef TCONFIG_USB
 	{ "wan3_hilink_ip",		V_IP				},
+	{ "wan3_status_script",		V_01				},
 #endif
 	{ "wan3_ckmtd",			V_LENGTH(1, 2)			},	// check method: 1 - ping, 2 - traceroute, 3 - curl
 
@@ -714,6 +717,7 @@ static const nvset_t nvset_list[] = {
 	{ "wan4_dns_auto",		V_01				},
 #ifdef TCONFIG_USB
 	{ "wan4_hilink_ip",		V_IP				},
+	{ "wan4_status_script",		V_01				},
 #endif
 	{ "wan4_ckmtd",			V_LENGTH(1, 2)			},	// check method: 1 - ping, 2 - traceroute, 3 - curl
 #endif
