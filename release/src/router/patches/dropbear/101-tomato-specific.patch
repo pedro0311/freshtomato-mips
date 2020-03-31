@@ -1,7 +1,8 @@
 --- dropbear/localoptions.h
 +++ dropbear/localoptions.h
-@@ -0,0 +1,18 @@
+@@ -0,0 +1,22 @@
 +#define DROPBEAR_X11FWD 0
++#define INETD_MODE 0
 +#define DROPBEAR_CLI_LOCALTCPFWD 0
 +#define DROPBEAR_CLI_REMOTETCPFWD 0
 +#ifndef NO_OPTSIZE
@@ -15,6 +16,9 @@
 +#define DROPBEAR_DSS 0
 +#define DROPBEAR_ECDSA 0
 +#else
++#define DROPBEAR_3DES 0
++#define DROPBEAR_ENABLE_CBC_MODE 0
++#define DROPBEAR_SHA1_96_HMAC 0
 +#define XAUTH_COMMAND "/opt/X11R6/X11/xauth -q"
 +#define SFTPSERVER_PATH "/opt/libexec/sftp-server"
 +#endif
