@@ -153,7 +153,7 @@
  	}
        
        /* handle NS and SOA in auth section or for explicit queries */
-@@ -741,12 +754,14 @@ size_t answer_auth(struct dns_header *he
+@@ -745,12 +758,14 @@ size_t answer_auth(struct dns_header *he
  					  daemon->auth_ttl, NULL, T_A, C_IN, "4", cut ? intr->name : NULL, &addrlist->addr))
  		    anscount++;
  		
@@ -168,7 +168,7 @@
  		
  		/* restore config data */
  		if (cut)
-@@ -783,11 +798,18 @@ size_t answer_auth(struct dns_header *he
+@@ -787,11 +802,18 @@ size_t answer_auth(struct dns_header *he
  		    {
  		      char *cache_name = cache_get_name(crecp);
  		      if (!strchr(cache_name, '.') && 
@@ -192,7 +192,7 @@
  		    }
  		  
  		  if ((crecp->flags & F_HOSTS) || (((crecp->flags & F_DHCP) && option_bool(OPT_DHCP_FQDN))))
-@@ -796,13 +818,18 @@ size_t answer_auth(struct dns_header *he
+@@ -800,13 +822,18 @@ size_t answer_auth(struct dns_header *he
  		      if (in_zone(zone, name, &cut) && 
  			  (local_query || filter_zone(zone, (crecp->flags & (F_IPV6 | F_IPV4)), &(crecp->addr))))
  			{
@@ -382,7 +382,7 @@
      dest = arg;
 --- dnsmasq/src/config.h
 +++ dnsmasq/src/config.h
-@@ -135,6 +135,7 @@ HAVE_INOTIFY
+@@ -136,6 +136,7 @@ HAVE_INOTIFY
  
  NO_ID
     Don't report *.bind CHAOS info to clients, forward such requests upstream instead.
@@ -390,7 +390,7 @@
  NO_TFTP
  NO_DHCP
  NO_DHCP6
-@@ -144,8 +145,8 @@ NO_AUTH
+@@ -145,8 +146,8 @@ NO_AUTH
  NO_DUMPFILE
  NO_INOTIFY
     these are available to explicitly disable compile time options which would 
@@ -401,7 +401,7 @@
     with something like "make COPTS=-DNO_SCRIPT" will do the trick.
  NO_GMP
     Don't use and link against libgmp, Useful if nettle is built with --enable-mini-gmp.
-@@ -306,9 +307,29 @@ HAVE_SOCKADDR_SA_LEN
+@@ -307,9 +308,29 @@ HAVE_SOCKADDR_SA_LEN
   
  #endif
  
@@ -431,7 +431,7 @@
  #ifdef NO_TFTP
  #undef HAVE_TFTP
  #endif
-@@ -318,7 +339,7 @@ HAVE_SOCKADDR_SA_LEN
+@@ -319,7 +340,7 @@ HAVE_SOCKADDR_SA_LEN
  #undef HAVE_DHCP6
  #endif
  
@@ -440,7 +440,7 @@
  #undef HAVE_DHCP6
  #endif
  
-@@ -367,6 +388,9 @@ HAVE_SOCKADDR_SA_LEN
+@@ -368,6 +389,9 @@ HAVE_SOCKADDR_SA_LEN
  #ifdef DNSMASQ_COMPILE_OPTS
  
  static char *compile_opts = 
@@ -575,7 +575,7 @@
    int is6, indexed;
    struct cond_domain *next;
  }; 
-@@ -1189,7 +1199,9 @@ void blockdata_free(struct blockdata *bl
+@@ -1190,7 +1200,9 @@ void blockdata_free(struct blockdata *bl
  
  /* domain.c */
  char *get_domain(struct in_addr addr);
@@ -585,7 +585,7 @@
  int is_name_synthetic(int flags, char *name, union all_addr *addr);
  int is_rev_synth(int flag, union all_addr *addr, char *name);
  
-@@ -1274,9 +1286,11 @@ int hostname_issubdomain(char *a, char *
+@@ -1275,9 +1287,11 @@ int hostname_issubdomain(char *a, char *
  time_t dnsmasq_time(void);
  int netmask_length(struct in_addr mask);
  int is_same_net(struct in_addr a, struct in_addr b, struct in_addr mask);
@@ -597,7 +597,7 @@
  int retry_send(ssize_t rc);
  void prettyprint_time(char *buf, unsigned int t);
  int prettyprint_addr(union mysockaddr *addr, char *buf);
-@@ -1358,7 +1372,9 @@ int loopback_exception(int fd, int famil
+@@ -1359,7 +1373,9 @@ int loopback_exception(int fd, int famil
  int label_exception(int index, int family, union all_addr *addr);
  int fix_fd(int fd);
  int tcp_interface(int fd, int af);
@@ -970,7 +970,7 @@
  	  
  	  return;
  	}
-@@ -1085,7 +1111,9 @@ void reply_query(int fd, int family, tim
+@@ -1087,7 +1113,9 @@ void reply_query(int fd, int family, tim
  		      
  		      new->sentto = server;
  		      new->rfd4 = NULL;
@@ -980,7 +980,7 @@
  		      new->flags &= ~(FREC_DNSKEY_QUERY | FREC_DS_QUERY | FREC_HAS_EXTRADATA);
  		      new->forwardall = 0;
  		      
-@@ -1109,9 +1137,11 @@ void reply_query(int fd, int family, tim
+@@ -1111,9 +1139,11 @@ void reply_query(int fd, int family, tim
  		      if (server->addr.sa.sa_family == AF_INET) 
  			log_query(F_NOEXTRA | F_DNSSEC | F_IPV4, daemon->keyname, (union all_addr *)&(server->addr.in.sin_addr),
  				  querystr("dnssec-query", querytype));
@@ -992,7 +992,7 @@
    
  		      if ((hash = hash_questions(header, nn, daemon->namebuff)))
  			memcpy(new->hash, hash, HASH_SIZE);
-@@ -1129,12 +1159,14 @@ void reply_query(int fd, int family, tim
+@@ -1131,12 +1161,14 @@ void reply_query(int fd, int family, tim
  		      else
  			{
  			  fd = -1;
@@ -1007,7 +1007,7 @@
  			    {
  			      if (new->rfd4 || (new->rfd4 = allocate_rfd(AF_INET)))
  				fd = new->rfd4->fd;
-@@ -1271,7 +1303,9 @@ void receive_query(struct listener *list
+@@ -1273,7 +1305,9 @@ void receive_query(struct listener *list
    struct cmsghdr *cmptr;
    union {
      struct cmsghdr align; /* this ensures alignment */
@@ -1017,7 +1017,7 @@
  #if defined(HAVE_LINUX_NETWORK)
      char control[CMSG_SPACE(sizeof(struct in_pktinfo))];
  #elif defined(IP_RECVDSTADDR) && defined(HAVE_SOLARIS_NETWORK)
-@@ -1282,8 +1316,12 @@ void receive_query(struct listener *list
+@@ -1284,8 +1318,12 @@ void receive_query(struct listener *list
  		 CMSG_SPACE(sizeof(struct sockaddr_dl))];
  #endif
    } control_u;
@@ -1030,7 +1030,7 @@
  
    /* packet buffer overwritten */
    daemon->srv_save = NULL;
-@@ -1334,6 +1372,7 @@ void receive_query(struct listener *list
+@@ -1336,6 +1374,7 @@ void receive_query(struct listener *list
        if (source_addr.in.sin_port == 0)
  	return;
      }
@@ -1038,7 +1038,7 @@
    else
      {
        /* Source-port == 0 is an error, we can't send back to that. */
-@@ -1341,12 +1380,13 @@ void receive_query(struct listener *list
+@@ -1343,12 +1382,13 @@ void receive_query(struct listener *list
  	return;
        source_addr.in6.sin6_flowinfo = 0;
      }
@@ -1053,7 +1053,7 @@
        if (listen->family == AF_INET6) 
  	{
  	  for (addr = daemon->interface_addrs; addr; addr = addr->next)
-@@ -1355,6 +1395,7 @@ void receive_query(struct listener *list
+@@ -1357,6 +1397,7 @@ void receive_query(struct listener *list
  	      break;
  	}
        else
@@ -1061,7 +1061,7 @@
  	{
  	  struct in_addr netmask;
  	  for (addr = daemon->interface_addrs; addr; addr = addr->next)
-@@ -1423,6 +1464,7 @@ void receive_query(struct listener *list
+@@ -1425,6 +1466,7 @@ void receive_query(struct listener *list
  	}
  #endif
        
@@ -1069,7 +1069,7 @@
        if (listen->family == AF_INET6)
  	{
  	  for (cmptr = CMSG_FIRSTHDR(&msg); cmptr; cmptr = CMSG_NXTHDR(&msg, cmptr))
-@@ -1438,6 +1480,7 @@ void receive_query(struct listener *list
+@@ -1440,6 +1482,7 @@ void receive_query(struct listener *list
  		if_index = p.p->ipi6_ifindex;
  	      }
  	}
@@ -1077,7 +1077,7 @@
        
        /* enforce available interface configuration */
        
-@@ -1501,9 +1544,11 @@ void receive_query(struct listener *list
+@@ -1503,9 +1546,11 @@ void receive_query(struct listener *list
        if (listen->family == AF_INET) 
  	log_query(F_QUERY | F_IPV4 | F_FORWARD, daemon->namebuff, 
  		  (union all_addr *)&source_addr.in.sin_addr, types);
@@ -1089,7 +1089,7 @@
  
  #ifdef HAVE_AUTH
        /* find queries for zones we're authoritative for, and answer them directly */
-@@ -1728,9 +1773,11 @@ static int tcp_key_recurse(time_t now, i
+@@ -1730,9 +1775,11 @@ static int tcp_key_recurse(time_t now, i
  	  if (server->addr.sa.sa_family == AF_INET) 
  	    log_query(F_NOEXTRA | F_DNSSEC | F_IPV4, keyname, (union all_addr *)&(server->addr.in.sin_addr),
  		      querystr("dnssec-query", new_status == STAT_NEED_KEY ? T_DNSKEY : T_DS));
@@ -1101,7 +1101,7 @@
  	  
  	  server->flags |= SERV_GOT_TCP;
  	  
-@@ -1795,10 +1842,11 @@ unsigned char *tcp_request(int confd, ti
+@@ -1797,10 +1844,11 @@ unsigned char *tcp_request(int confd, ti
    if (option_bool(OPT_CONNTRACK))
      {
        union all_addr local;
@@ -1114,7 +1114,7 @@
  	local.addr4 = local_addr->in.sin_addr;
        
        have_mark = get_incoming_mark(&peer_addr, &local, 1, &mark);
-@@ -1809,7 +1857,7 @@ unsigned char *tcp_request(int confd, ti
+@@ -1811,7 +1859,7 @@ unsigned char *tcp_request(int confd, ti
    if (option_bool(OPT_LOCAL_SERVICE))
      {
        struct addrlist *addr;
@@ -1123,7 +1123,7 @@
        if (peer_addr.sa.sa_family == AF_INET6) 
  	{
  	  for (addr = daemon->interface_addrs; addr; addr = addr->next)
-@@ -1818,6 +1866,7 @@ unsigned char *tcp_request(int confd, ti
+@@ -1820,6 +1868,7 @@ unsigned char *tcp_request(int confd, ti
  	      break;
  	}
        else
@@ -1131,7 +1131,7 @@
  	{
  	  struct in_addr netmask;
  	  for (addr = daemon->interface_addrs; addr; addr = addr->next)
-@@ -1872,9 +1921,11 @@ unsigned char *tcp_request(int confd, ti
+@@ -1874,9 +1923,11 @@ unsigned char *tcp_request(int confd, ti
  	  if (peer_addr.sa.sa_family == AF_INET) 
  	    log_query(F_QUERY | F_IPV4 | F_FORWARD, daemon->namebuff, 
  		      (union all_addr *)&peer_addr.in.sin_addr, types);
@@ -1143,7 +1143,7 @@
  	  
  #ifdef HAVE_AUTH
  	  /* find queries for zones we're authoritative for, and answer them directly */
-@@ -2066,9 +2117,11 @@ unsigned char *tcp_request(int confd, ti
+@@ -2068,9 +2119,11 @@ unsigned char *tcp_request(int confd, ti
  		      if (last_server->addr.sa.sa_family == AF_INET)
  			log_query(F_SERVER | F_IPV4 | F_FORWARD, daemon->namebuff, 
  				  (union all_addr *)&last_server->addr.in.sin_addr, NULL); 
@@ -1155,7 +1155,7 @@
  
  #ifdef HAVE_DNSSEC
  		      if (option_bool(OPT_DNSSEC_VALID) && !checking_disabled && (last_server->flags & SERV_DO_DNSSEC))
-@@ -2167,7 +2220,9 @@ static struct frec *allocate_frec(time_t
+@@ -2169,7 +2222,9 @@ static struct frec *allocate_frec(time_t
        f->sentto = NULL;
        f->rfd4 = NULL;
        f->flags = 0;
@@ -1165,7 +1165,7 @@
  #ifdef HAVE_DNSSEC
        f->dependent = NULL;
        f->blocking_query = NULL;
-@@ -2227,8 +2282,11 @@ static void free_frec(struct frec *f)
+@@ -2229,8 +2284,11 @@ static void free_frec(struct frec *f)
    f->rfd4 = NULL;
    f->sentto = NULL;
    f->flags = 0;
@@ -1640,7 +1640,7 @@
    else
      return _("bad address");
  
-@@ -2059,8 +2067,10 @@ static int one_opt(int option, char *arg
+@@ -2067,8 +2075,10 @@ static int one_opt(int option, char *arg
  	  unhide_metas(arg);
  	  if (inet_pton(AF_INET, arg, &new->addr.in.sin_addr) > 0)
  	    new->addr.sa.sa_family = AF_INET;
@@ -1651,7 +1651,7 @@
  	  else
  	    {
  	      char *fam = split_chr(arg, '/');
-@@ -2070,8 +2080,10 @@ static int one_opt(int option, char *arg
+@@ -2078,8 +2088,10 @@ static int one_opt(int option, char *arg
  		{
  		  if (strcmp(fam, "4") == 0)
  		    new->addr.sa.sa_family = AF_INET;
@@ -1662,7 +1662,7 @@
  		  else
  		  {
  		    free(new->name);
-@@ -2140,12 +2152,14 @@ static int one_opt(int option, char *arg
+@@ -2148,12 +2160,14 @@ static int one_opt(int option, char *arg
  		subnet->prefixlen = (prefixlen == 0) ? 24 : prefixlen;
  		subnet->flags = ADDRLIST_LITERAL;
  	      }
@@ -1677,7 +1677,7 @@
  	    else 
  	      {
  		struct auth_name_list *name =  opt_malloc(sizeof(struct auth_name_list));
-@@ -2157,8 +2171,10 @@ static int one_opt(int option, char *arg
+@@ -2165,8 +2179,10 @@ static int one_opt(int option, char *arg
  		  {
  		    if (prefixlen == 4)
  		      name->flags &= ~AUTH6;
@@ -1688,7 +1688,7 @@
  		    else
  		      ret_err(gen_err);
  		  }
-@@ -2279,6 +2295,7 @@ static int one_opt(int option, char *arg
+@@ -2287,6 +2303,7 @@ static int one_opt(int option, char *arg
  				}
  			    }
  			}
@@ -1696,7 +1696,7 @@
  		      else if (inet_pton(AF_INET6, comma, &new->start6))
  			{
  			  u64 mask = (1LLU << (128 - msize)) - 1LLU;
-@@ -2322,6 +2339,7 @@ static int one_opt(int option, char *arg
+@@ -2330,6 +2347,7 @@ static int one_opt(int option, char *arg
  				}
  			    }
  			}
@@ -1704,7 +1704,7 @@
  		      else
  			ret_err_free(gen_err, new);
  		    }
-@@ -2339,6 +2357,7 @@ static int one_opt(int option, char *arg
+@@ -2347,6 +2365,7 @@ static int one_opt(int option, char *arg
  			  else if (!inet_pton(AF_INET, arg, &new->end))
  			    ret_err_free(gen_err, new);
  			}
@@ -1712,7 +1712,7 @@
  		      else if (inet_pton(AF_INET6, comma, &new->start6))
  			{
  			  new->is6 = 1;
-@@ -2347,6 +2366,7 @@ static int one_opt(int option, char *arg
+@@ -2355,6 +2374,7 @@ static int one_opt(int option, char *arg
  			  else if (!inet_pton(AF_INET6, arg, &new->end6))
  			    ret_err_free(gen_err, new);
  			}
@@ -1720,7 +1720,7 @@
  		      else 
  			ret_err_free(gen_err, new);
  
-@@ -2505,6 +2525,7 @@ static int one_opt(int option, char *arg
+@@ -2513,6 +2533,7 @@ static int one_opt(int option, char *arg
  	    new->addr.in.sin_len = sizeof(new->addr.in);
  #endif
  	  }
@@ -1728,7 +1728,7 @@
  	else if (arg && inet_pton(AF_INET6, arg, &new->addr.in6.sin6_addr) > 0)
  	  {
  	    new->addr.sa.sa_family = AF_INET6;
-@@ -2515,6 +2536,7 @@ static int one_opt(int option, char *arg
+@@ -2523,6 +2544,7 @@ static int one_opt(int option, char *arg
  	    new->addr.in6.sin6_len = sizeof(new->addr.in6);
  #endif
  	  }
@@ -1736,7 +1736,7 @@
  	else
  	  ret_err_free(gen_err, new);
  
-@@ -2633,7 +2655,9 @@ static int one_opt(int option, char *arg
+@@ -2641,7 +2663,9 @@ static int one_opt(int option, char *arg
  	int size;
  	struct server *serv;
  	struct in_addr addr4;
@@ -1746,7 +1746,7 @@
   
  	unhide_metas(arg);
  	if (!arg)
-@@ -2650,8 +2674,10 @@ static int one_opt(int option, char *arg
+@@ -2658,8 +2682,10 @@ static int one_opt(int option, char *arg
  	    if (!serv)
  	      ret_err(_("bad prefix"));
  	  }
@@ -1757,7 +1757,7 @@
  	else
  	  ret_err(gen_err);
   
-@@ -4069,8 +4095,10 @@ err:
+@@ -4077,8 +4103,10 @@ err:
  	  {
  	    if (strcmp(arg, "4") == 0)
  	      new->family = AF_INET;
@@ -1768,7 +1768,7 @@
  	    else
  	      ret_err_free(gen_err, new);
  	  } 
-@@ -4394,11 +4422,13 @@ err:
+@@ -4402,11 +4430,13 @@ err:
  		new->addr = addr.addr4;
  		new->flags |= HR_4;
  	      }
@@ -1782,7 +1782,7 @@
  	    else
  	      {
  		int nomem;
-@@ -5125,8 +5155,10 @@ void read_opts(int argc, char **argv, ch
+@@ -5133,8 +5163,10 @@ void read_opts(int argc, char **argv, ch
  	  {
  	    if (tmp->source_addr.sa.sa_family == AF_INET)
  	      tmp->source_addr.in.sin_port = htons(daemon->query_port);
@@ -1793,7 +1793,7 @@
  	  }
      } 
    
-@@ -5187,8 +5219,10 @@ void read_opts(int argc, char **argv, ch
+@@ -5195,8 +5227,10 @@ void read_opts(int argc, char **argv, ch
        for(tmp = daemon->if_addrs; tmp; tmp = tmp->next)
  	if (tmp->addr.sa.sa_family == AF_INET)
  	  tmp->addr.in.sin_port = htons(daemon->port);
