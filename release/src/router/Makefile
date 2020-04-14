@@ -2245,7 +2245,7 @@ nano-install:
 	install -D nano/src/nano $(INSTALLDIR)/nano/usr/sbin/nano
 	$(STRIP) -s $(INSTALLDIR)/nano/usr/sbin/nano
 
-ifeq ($(TCONFIG_AIO),y)
+ifeq ($(TCONFIG_STUBBY),y)
 CACERT:=--with-ca-bundle=/rom/cacert.pem
 else
 CACERT:=
