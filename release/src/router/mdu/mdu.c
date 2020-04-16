@@ -298,7 +298,7 @@ static void curl_setup()
 	if (curl_global_init(CURL_GLOBAL_ALL) || !(curl_handle = curl_easy_init()))
 		error("libcurl initialization failure.");
 
-#ifndef TCONFIG_AIO
+#ifndef TCONFIG_STUBBY
 	curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0);
 #endif
 	curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1);

@@ -109,15 +109,8 @@ else
 	done
 endif
 
+# Used by Curl/Stubby
 ifeq ($(TCONFIG_STUBBY),y)
-ifeq ($(TCONFIG_AIO),y)
-	cp -f rom/etc/stubby.yml $(INSTALLDIR)/rom/etc/stubby.yml
-else
-	cp -f rom/etc/stubby-no-CA.yml $(INSTALLDIR)/rom/etc/stubby.yml
-endif
-endif
-
-# Used by Curl
-ifeq ($(TCONFIG_AIO),y)
 	cp -f others/cacert.pem $(INSTALLDIR)/rom/cacert.pem
+	cp -f rom/etc/stubby.yml $(INSTALLDIR)/rom/etc/stubby.yml
 endif
