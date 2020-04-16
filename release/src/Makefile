@@ -74,14 +74,13 @@ tomato_ver:
 ifeq ($(TOMATO_BUILD),)
 
 all:
-	$(MAKE) a
+	$(MAKE) z
 
 else
 
 all: tomato_ver
 	@echo ""
 	@echo "Building FreshTomato $(ND) $(current_BUILD_USB)-$(mips_rev) $(current_TOMATO_VER)$(beta)$(V2) $(current_BUILD_DESC) $(current_BUILD_NAME) with $(TOMATO_PROFILE_NAME) Profile"
-
 	@echo ""
 	@echo ""
 
@@ -91,9 +90,10 @@ all: tomato_ver
 	@$(MAKE) -C btools
 
 	@echo "\033[41;1m   Creating image \033[0m\033]2;Creating image\007"
+
 	@rm -f image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).trx
 	@rm -f image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).bin
-ifeq ($(LINKSYS_E),$(filter $(LINKSYS_E),1 2))
+ifeq ($(LINKSYS_E),1)
 	@rm -f image/freshtomato-E??00$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).bin
 endif
 ifeq ($(BELKIN),y)
@@ -102,11 +102,13 @@ ifneq ($(NVRAM_SIZE),60)
 	@rm -f image/freshtomato-F5D8235v3$(current_BUILD_USB)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).bin
 endif
 endif
+
 	@echo "" >>fpkg.log
 	@echo "***********************" `date` "************************" >>fpkg.log
 	@cat router/shared/tomato_version >>fpkg.log
 	@echo "" >>fpkg.log
 	@cat router/target.info >>fpkg.log
+
 ifeq ($(wildcard include/bcm20xx.h),)
 	@btools/fpkg -i lzma-loader/loader.gz -i $(LINUXDIR)/arch/mips/brcm-boards/bcm947xx/compressed/vmlinuz -a 1024 -i router/mipsel-uclibc/target.image \
 		-t image/freshtomato.trx \
@@ -126,12 +128,6 @@ ifeq ($(LINKSYS_E),1)
 		-l 32XN,image/freshtomato-E2000$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).bin \
 		| tee -a fpkg.log
 else
-ifeq ($(LINKSYS_E),2)
-	# Linksys E-3000 build w/o minidlna
-	@btools/fpkg -i lzma-loader/loader.gz -i $(LINUXDIR)/arch/mips/brcm-boards/bcm947xx/compressed/vmlinuz -a 1024 -i router/mipsel-uclibc/target.image \
-		-l 61XN,image/freshtomato-E3000$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).bin \
-		| tee -a fpkg.log
-else
 ifeq ($(BELKIN),y)
 ifneq ($(NVRAM_SIZE),60)
 	# Create Belkin images
@@ -148,7 +144,6 @@ else
 	@btools/fpkg -i lzma-loader/loader.gz -i $(LINUXDIR)/arch/mips/brcm-boards/bcm947xx/compressed/vmlinuz -a 1024 -i router/mipsel-uclibc/target.image \
 		-t image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).trx \
 		| tee -a fpkg.log
-endif
 endif
 endif
 endif
@@ -735,12 +730,6 @@ c:
 	    BBEXTRAS=y BTGUI=y STUBBY=y ADVTHEMES=y OPENSSL11=y DONT_OPTIMIZE_SIZE=y BUILD_DESC="BTgui-VPN"
 
 
-## miniVPN (small BTgui-VPN) for routers with 8MB flash like Netgear 3500L, RT-N10u or RT-N15U
-a:
-	@$(MAKE) bin USB="USB" B=M NTFS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y USBEXTRAS=y BCMNAT=y OPENVPN=y KEYGEN=y PPTPD=y \
-	    BBEXTRAS=y BTGUI=y STUBBY=y ADVTHEMES=y OPENSSL11=y DONT_OPTIMIZE_SIZE=y BUILD_DESC="MiniVPN"
-
-
 ## Nocat-VPN
 d:
 	@$(MAKE) bin USB="USB" B=M NTFS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y USBEXTRAS=y BCMNAT=y OPENVPN=y KEYGEN=y PPTPD=y \
@@ -823,9 +812,6 @@ r2z:
 r2e:
 	@$(MAKE) e MIPS32=r2 NVRAM_SIZE=32
 
-r2a:
-	@$(MAKE) a MIPS32=r2 NVRAM_SIZE=32
-
 r2c:
 	@$(MAKE) c MIPS32=r2 NVRAM_SIZE=32
 
@@ -866,9 +852,6 @@ r2m:
 ## Linksys
 n60e:
 	@$(MAKE) e MIPS32=r2 NVRAM_SIZE=60 LINKSYS_E=1
-
-n60a:
-	@$(MAKE) a MIPS32=r2 NVRAM_SIZE=60 LINKSYS_E=2
 
 n60c:
 	@$(MAKE) c MIPS32=r2 NVRAM_SIZE=60 LINKSYS_E=1
@@ -957,7 +940,6 @@ help:
 	@echo "i            MiniIPv6 - (IPv6 with no USB support minus CIFS and RIPv1/2)"
 	@echo "j            MiniVPN - (OpenVPN with no USB support minus CIFS and RIPv1/2)"
 	@echo "j2           MiniVPN - (PPTPD with no USB support minus CIFS and RIPv1/2)"
-	@echo "a            MiniVPN - (with USB support)"
 	@echo "f            Mini - (no USB support minus CIFS and RIPv1/2)"
 	@echo "v            IPv6-VPN (no usb) - (VPN with no USB support)"
 	@echo "m            Max (no usb) - (Max with IPv6 support and no USB)"
@@ -970,7 +952,6 @@ help:
 	@echo "r2b          MIPS Release 2 Big-VPN"
 	@echo "r2o          MIPS Release 2 Mega-VPN (for routers +8MB flash)"
 	@echo "r2z          MIPS Release 2 AIO (for routers +8MB flash)"
-	@echo "r2a          MIPS Release 2 MiniVPN (USB support)"
 	@echo "r2v          MIPS Release 2 IPv6-VPN (no usb)"
 	@echo "r2m          MIPS Release 2 Max (no usb)"
 	@echo "r2i          MIPS Release 2 MiniIPv6 (for 4MB flash)"
@@ -984,7 +965,6 @@ help:
 	@echo "n60t         Linksys E-series build BT-VPN"
 	@echo "n60b         Linksys E-series build Big-VPN"
 	@echo "n60o         Linksys E-series build Mega-VPN"
-	@echo "n60a         Linksys E-series build MiniVPN for E3000"
 	@echo "n60v         Linksys E-series build IPv6-VPN for E2000"
 	@echo "n60m         Linksys E-series build Max for E2000"
 	@echo ""
