@@ -793,7 +793,7 @@ j2:
 
 ## IPv6-VPN with no USB support
 v:
-	@$(MAKE) bin USB="" B=V MULTIWAN=y NO_JFFS=y IPV6SUPP=y OPENVPN=y PPTPD=y BUILD_DESC="IPv6-$(VPN)"
+	@$(MAKE) bin USB="" B=V MULTIWAN=y NO_JFFS=y IPV6SUPP=y OPENVPN=y PPTPD=y OPTIMIZE_SIZE_MORE=y KERN_SIZE_OPT_MORE=y BUILD_DESC="IPv6-$(VPN)"
 
 
 ## Max build for router with 8MB flash without USB Support (like WRT54GS v1)
