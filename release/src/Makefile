@@ -738,19 +738,13 @@ c:
 ## miniVPN (small BTgui-VPN) for routers with 8MB flash like Netgear 3500L, RT-N10u or RT-N15U
 a:
 	@$(MAKE) bin USB="USB" B=M NTFS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y USBEXTRAS=y BCMNAT=y OPENVPN=y KEYGEN=y PPTPD=y \
-	    BBEXTRAS=y BTGUI=y STUBBY=y KEYGEN=y ADVTHEMES=y OPENSSL11=y DONT_OPTIMIZE_SIZE=y BUILD_DESC="MiniVPN"
+	    BBEXTRAS=y BTGUI=y STUBBY=y ADVTHEMES=y OPENSSL11=y DONT_OPTIMIZE_SIZE=y BUILD_DESC="MiniVPN"
 
 
 ## Nocat-VPN
 d:
 	@$(MAKE) bin USB="USB" B=M NTFS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y USBEXTRAS=y BCMNAT=y OPENVPN=y KEYGEN=y PPTPD=y \
 	    BBEXTRAS=y BTGUI=y STUBBY=y NOCAT=y ADVTHEMES=y OPENSSL11=y DONT_OPTIMIZE_SIZE=y BUILD_DESC="Nocat-VPN"
-
-
-## Nocat-MiniVPN w/o mediaserver
-k:
-	@$(MAKE) bin USB="USB" B=M NTFS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y USBEXTRAS=y BCMNAT=y OPENVPN=y KEYGEN=y PPTPD=y \
-	    BBEXTRAS=y BTGUI=y STUBBY=y NOCAT=y ADVTHEMES=y OPENSSL11=y DONT_OPTIMIZE_SIZE=y BUILD_DESC="Nocat-MiniVPN"
 
 
 ## BT
@@ -777,7 +771,7 @@ o:
 	    BBEXTRAS=y MEDIASRV=y DNSCRYPT=y STUBBY=y NOCAT=y TOR=y BTCLIENT=y NFS=y SNMP=y UPS=y TR_EXTRAS=y IPSEC=y DNSSEC=y TINC=y NANO=y IPERF=y TERMLIB=y ADVTHEMES=y OPENSSL11=y DONT_OPTIMIZE_SIZE=y BUILD_DESC="Mega-VPN"
 
 
-## All-In-One (AIO) MIPS1 - only for router with more than 8MB flash!! ZTE H618B
+## All-In-One (AIO) - 8MB+
 z:
 	@$(MAKE) bin USB="USB" B=E NTFS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y USBEXTRAS=y BCMNAT=y OPENVPN=y KEYGEN=y PPTPD=y \
 	    BBEXTRAS=y MEDIASRV=y DNSCRYPT=y STUBBY=y NOCAT=y TOR=y BTCLIENT=y NFS=y SNMP=y UPS=y TR_EXTRAS=y IPSEC=y DNSSEC=y TINC=y NANO=y HFS=y NGINX=y IPERF=y TERMLIB=y ADVTHEMES=y OPENSSL11=y DONT_OPTIMIZE_SIZE=y BUILD_DESC="AIO"
@@ -844,9 +838,6 @@ r2t:
 r2d:
 	@$(MAKE) d MIPS32=r2 NVRAM_SIZE=32
 
-r2k:
-	@$(MAKE) k MIPS32=r2 NVRAM_SIZE=32
-
 r2b:
 	@$(MAKE) b MIPS32=r2 NVRAM_SIZE=32
 
@@ -893,9 +884,6 @@ n60b:
 
 n60d:
 	@$(MAKE) d MIPS32=r2 NVRAM_SIZE=60 LINKSYS_E=1
-
-n60k:
-	@$(MAKE) k MIPS32=r2 NVRAM_SIZE=60 LINKSYS_E=2 KEYGEN=y OPENSSL11=y
 
 n60o:
 	@$(MAKE) o MIPS32=r2 NVRAM_SIZE=60 LINKSYS_E=1
@@ -992,12 +980,11 @@ help:
 	@echo ""
 	@echo "n60e         Linksys E-series build VPN"
 	@echo "n60c         Linksys E-series build BTGui-VPN"
-	@echo "n60d         Linksys E-series build BTGui-VPN plus Nocat"
+	@echo "n60d         Linksys E-series build Nocat-VPN"
 	@echo "n60t         Linksys E-series build BT-VPN"
 	@echo "n60b         Linksys E-series build Big-VPN"
 	@echo "n60o         Linksys E-series build Mega-VPN"
 	@echo "n60a         Linksys E-series build MiniVPN for E3000"
-	@echo "n60k         Linksys E-series build Nocat-MiniVPN for E3000"
 	@echo "n60v         Linksys E-series build IPv6-VPN for E2000"
 	@echo "n60m         Linksys E-series build Max for E2000"
 	@echo ""
