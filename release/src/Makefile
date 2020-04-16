@@ -753,12 +753,6 @@ k:
 	    BBEXTRAS=y BTGUI=y STUBBY=y NOCAT=y ADVTHEMES=y OPENSSL11=y DONT_OPTIMIZE_SIZE=y BUILD_DESC="Nocat-MiniVPN"
 
 
-## TOR-VPN
-g:
-	@$(MAKE) bin USB="USB" B=M NTFS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y USBEXTRAS=y BCMNAT=y OPENVPN=y KEYGEN=y PPTPD=y \
-	    BBEXTRAS=y BTGUI=y TOR=y NO_CIFS=y NO_JFFS=y ADVTHEMES=y OPENSSL11=y DONT_OPTIMIZE_SIZE=y BUILD_DESC="Tor-VPN"
-
-
 ## BT
 u:
 	@$(MAKE) bin USB="USB" B=M NTFS=y EBTABLES=y MULTIWAN=y IPV6SUPP=y USBEXTRAS=y BCMNAT=y \
@@ -853,9 +847,6 @@ r2d:
 r2k:
 	@$(MAKE) k MIPS32=r2 NVRAM_SIZE=32
 
-r2g:
-	@$(MAKE) g MIPS32=r2 NVRAM_SIZE=32
-
 r2b:
 	@$(MAKE) b MIPS32=r2 NVRAM_SIZE=32
 
@@ -905,9 +896,6 @@ n60d:
 
 n60k:
 	@$(MAKE) k MIPS32=r2 NVRAM_SIZE=60 LINKSYS_E=2 KEYGEN=y OPENSSL11=y
-
-n60g:
-	@$(MAKE) g MIPS32=r2 NVRAM_SIZE=60 LINKSYS_E=1
 
 n60o:
 	@$(MAKE) o MIPS32=r2 NVRAM_SIZE=60 LINKSYS_E=1
@@ -973,7 +961,6 @@ help:
 	@echo "e            VPN - (standard plus VPN, extra utilities and NTFS support)"
 	@echo "c            BTgui-VPN - (Ext plus BT gui)"
 	@echo "d            Nocat-VPN - (BTgui plus VPN plus Nocat)"
-	@echo "g            Tor-VPN - (BTgui plus VPN plus TOR Project)"
 	@echo "u            BT"
 	@echo "t            BT-VPN - (BT plus VPN)"
 	@echo "b            Big-VPN - (Big plus VPN)"
@@ -990,7 +977,6 @@ help:
 	@echo "r2e          MIPS Release 2 VPN"
 	@echo "r2c          MIPS Release 2 BTgui-VPN"
 	@echo "r2d          MIPS Release 2 Nocat-VPN"
-	@echo "r2g          MIPS Release 2 Tor-VPN"
 	@echo "r2u          MIPS Release 2 BT"
 	@echo "r2t          MIPS Release 2 BT-VPN"
 	@echo "r2b          MIPS Release 2 Big-VPN"
@@ -1007,7 +993,6 @@ help:
 	@echo "n60e         Linksys E-series build VPN"
 	@echo "n60c         Linksys E-series build BTGui-VPN"
 	@echo "n60d         Linksys E-series build BTGui-VPN plus Nocat"
-	@echo "n60g         Linksys E-series build BTGui-VPN plus TOR Project"
 	@echo "n60t         Linksys E-series build BT-VPN"
 	@echo "n60b         Linksys E-series build Big-VPN"
 	@echo "n60o         Linksys E-series build Mega-VPN"
