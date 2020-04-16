@@ -1084,7 +1084,7 @@ z:
 
 ## Mini - targeted for Netgear routers
 f:
-	@$(MAKE) bin USB="" B=F MULTIWAN=y NO_CIFS=y NO_JFFS=y NO_ZEBRA=y BCMNAT=y KERN_SIZE_OPT=y BUILD_DESC="Mini"
+	@$(MAKE) bin USB="" B=F MULTIWAN=y NO_CIFS=y NO_JFFS=y NO_ZEBRA=y BCMNAT=y OPTIMIZE_SIZE_MORE=y KERN_SIZE_OPT=y KERN_SIZE_OPT_MORE=y BUILD_DESC="Mini"
 
 
 ## MiniIPv6 - for 4MB routers
