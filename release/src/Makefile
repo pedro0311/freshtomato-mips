@@ -1200,7 +1200,7 @@ n60v:
 	@$(MAKE) v MIPS32=r2 NVRAM_SIZE=60 LINKSYS_E=y
 
 n60m:
-	@$(MAKE) m MIPS32=r2 NVRAM_SIZE=60 LINKSYS_E=y
+	@$(MAKE) m MIPS32=r2 NVRAM_SIZE=60 NO_KEYGEN=y LINKSYS_E=y
 
 
 ## Linksys E-Series with 64K Nvram Builds
