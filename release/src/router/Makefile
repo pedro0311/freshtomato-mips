@@ -98,7 +98,6 @@ obj-y += busybox
 obj-y += httpd
 obj-y += www
 obj-y += bridge
-obj-$(TCONFIG_DNSSEC) += nettle
 obj-y += dnsmasq
 obj-y += etc
 obj-y += pppd
@@ -125,6 +124,20 @@ export OPENSSLDIR = openssl
 endif
 else
 obj-y += cyassl
+endif
+
+DNSSEC_BACKEND :=
+DNSSEC_OPENSSL :=
+DNSSEC_NETTLE :=
+ifeq ($(TCONFIG_DNSSEC),y)
+ifneq ($(TCONFIG_HTTPS)$(TCONFIG_OPENSSL11),)
+DNSSEC_BACKEND := $(OPENSSLDIR)
+DNSSEC_OPENSSL := y
+else
+obj-y += nettle
+DNSSEC_BACKEND := nettle
+DNSSEC_NETTLE := y
+endif
 endif
 
 ifneq ($(TCONFIG_TOR)$(TCONFIG_NFS)$(TCONFIG_BBT),)
@@ -897,19 +910,6 @@ bridge-install:
 bridge-clean:
 	-@$(MAKE) -C bridge clean
 	@rm -f bridge/Makefile
-
-DNSSEC_BACKEND :=
-DNSSEC_OPENSSL :=
-DNSSEC_NETTLE :=
-ifeq ($(TCONFIG_DNSSEC),y)
-ifneq ($(TCONFIG_HTTPS)$(TCONFIG_BBT)$(TCONFIG_NGINX)$(TCONFIG_OPENSSL11),)
-DNSSEC_BACKEND := $(OPENSSLDIR)
-DNSSEC_OPENSSL := y
-else
-DNSSEC_BACKEND := nettle
-DNSSEC_NETTLE := y
-endif
-endif
 
 dnsmasq: $(DNSSEC_BACKEND)
 	@$(SEP)
