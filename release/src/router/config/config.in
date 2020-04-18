@@ -225,7 +225,6 @@ config TCONFIG_IPERF
 
 config TCONFIG_KEYGEN
 	bool "TLS keys generator in GUI for VPN Server"
-	depends on TCONFIG_OPENVPN
 	default n
 
 config TCONFIG_TERMLIB
