@@ -693,7 +693,7 @@ define RouterOptions
 		sed -i "/TCONFIG_IPERF/d" $(1); \
 		echo "TCONFIG_IPERF=y" >>$(1); \
 	fi; \
-	if [ "$(KEYGEN)" = "y"  ] && [ "$(NO_KEYGEN)" = "" ]; then \
+	if [ "$(KEYGEN)" = "y" ] && [ "$(NO_KEYGEN)" = "" ]; then \
 		sed -i "/TCONFIG_KEYGEN/d" $(1); \
 		echo "TCONFIG_KEYGEN=y" >>$(1); \
 	fi; \
@@ -1188,7 +1188,7 @@ n60d:
 	@$(MAKE) d MIPS32=r2 NVRAM_SIZE=60 NO_KEYGEN=y LINKSYS_E=y
 
 n60o:
-	@$(MAKE) o MIPS32=r2 NVRAM_SIZE=60 NO_KEYGEN=y LINKSYS_E=y
+	@$(MAKE) o MIPS32=r2 NVRAM_SIZE=60 LINKSYS_E=y
 
 n60i:
 	@$(MAKE) i MIPS32=r2 NVRAM_SIZE=60 LINKSYS_E=y
