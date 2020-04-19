@@ -3,7 +3,6 @@
 
 #ifndef PORTABLE_ENDIAN_H__
 #define PORTABLE_ENDIAN_H__
-#define HAVE_ENDIAN_H
 
 #if (defined(_WIN16) || defined(_WIN32) || defined(_WIN64)) && !defined(__WINDOWS__)
 
