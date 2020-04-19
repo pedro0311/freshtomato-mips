@@ -114,6 +114,9 @@ ifneq ($(TCONFIG_TOR)$(TCONFIG_MEDIA_SERVER)$(TCONFIG_BBT),)
 obj-y += zlib
 endif
 
+obj-$(TCONFIG_BBT) += libcurl
+obj-$(TCONFIG_BBT) += transmission
+
 ifneq ($(TCONFIG_HTTPS),)
 ifeq ($(TCONFIG_OPENSSL11),y)
 obj-y += openssl-1.1
@@ -282,9 +285,6 @@ obj-$(TCONFIG_NGINX) += php
 obj-$(TCONFIG_NGINX) += nginx
 
 obj-$(TCONFIG_NANO) += nano
-
-obj-$(TCONFIG_BBT) += libcurl
-obj-$(TCONFIG_BBT) += transmission
 
 obj-y += hotplug2
 obj-y += udevtrigger
@@ -887,7 +887,7 @@ openssl-1.1-install:
 mssl: $(if $(TCONFIG_HTTPS),$(OPENSSLDIR),cyassl)
 
 ifneq ($(TCONFIG_BBT)$(TCONFIG_NGINX),)
-mdu: shared libcurl
+mdu: shared
 else
 mdu: shared mssl
 endif
