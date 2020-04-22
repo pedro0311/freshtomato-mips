@@ -845,7 +845,7 @@ openssl-1.1/stamp-h1:
 ifeq ($(TCONFIG_KEYGEN),y)
 	mv patches/openssl-1.1/104-reduce-size-for-smaller-targets.patch patches/openssl/104-reduce-size-for-smaller-targets.patch.tmp || true
 else
-	mv patches/openssl-1.1/104-reduce-size-for-smaller-targets.patch.tmp patches/openssl/104-reduce-size-for-smaller-targets.patch.patch || true
+	mv patches/openssl-1.1/104-reduce-size-for-smaller-targets.patch.tmp patches/openssl/104-reduce-size-for-smaller-targets.patch || true
 endif
 	$(call patch_files,openssl-1.1)
 	cd openssl-1.1 && \
