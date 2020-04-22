@@ -2751,19 +2751,26 @@ ipset-install:
 ipset-clean:
 	-@$(MAKE) -C ipset clean
 
-libjson-c/stamp-h1:
-	cd libjson-c && \
-	./autogen.sh && \
-	$(CONFIGURE) --prefix=/usr
-	@touch $@
+libjson-c/build/Makefile:
+	@rm -rf libjson-c/build && mkdir -p libjson-c/build
+	cd libjson-c/build && \
+	$(call CMAKE_CrossOptions, crosscompiled.cmake) && \
+	cmake -DCMAKE_TOOLCHAIN_FILE=crosscompiled.cmake \
+		-DCMAKE_INSTALL_PREFIX:PATH=/usr \
+		-DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_SKIP_RPATH=TRUE \
+		-DCMAKE_C_FLAGS="-Os -DNDEBUG -ffunction-sections -fdata-sections $(EXTRACFLAGS)" \
+		-DCMAKE_EXE_LINKER_FLAGS="-Wl,--gc-sections" \
+		-DBUILD_TESTING=FALSE \
+		-DDISABLE_WERROR=TRUE \
+		..
 
-libjson-c: libjson-c/stamp-h1
+libjson-c: libjson-c/build/Makefile
 	@$(SEP)
-	$(MAKE) -C libjson-c $(PARALLEL_BUILD)
+	$(MAKE) -C libjson-c/build all
+	cd libjson-c && ln -sf build/json_config.h json_config.h
 
 libjson-c-clean:
-	-@$(MAKE) -C libjson-c clean
-	@rm -rf libjson-c/stamp-h1
+	@rm -rf libjson-c/build
 
 uqmi: libjson-c
 	@$(SEP)
