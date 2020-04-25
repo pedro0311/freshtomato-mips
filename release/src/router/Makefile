@@ -1353,7 +1353,7 @@ dropbear-clean:
 
 dropbear/config.h:
 	$(call patch_files,dropbear)
-	cd dropbear && \
+	cd dropbear && autoreconf -fsi && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -DARGTYPE=3 -ffunction-sections -fdata-sections $(OPTSIZE_MORE_FLAG)" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
 		ac_cv_func_logout=no ac_cv_func_logwtmp=no \
