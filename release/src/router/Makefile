@@ -2286,11 +2286,11 @@ libcurl-clean:
 	@rm -rf libcurl/staged
 
 libevent/stamp-h1:
-	cd libevent && CC=$(CC) \
+	cd libevent && ./autogen.sh && CC=$(CC) \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
 		$(CONFIGURE)
-		touch libevent/stamp-h1
+	@touch $@
 
 libevent: libevent/stamp-h1
 	@$(SEP)
@@ -2667,7 +2667,7 @@ getdns/build/Makefile:
 		-DCMAKE_DISABLE_FIND_PACKAGE_Libsystemd=TRUE \
 		-DUSE_LIBIDN2=FALSE \
 		-DSTRPTIME_WORKS_EXITCODE=0 \
-		-DTHREADS_PTHREAD_ARG=0 \
+		-DSTRPTIME_WORKS_EXITCODE__TRYRUN_OUTPUT=1 \
 		..
 
 getdns: $(OPENSSLDIR) libyaml getdns/build/Makefile
