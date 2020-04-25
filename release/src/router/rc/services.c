@@ -651,6 +651,7 @@ void start_adblock(int update)
 {
 	if (nvram_match("adblock_enable", "1")) {
 		killall("adblock", SIGTERM);
+		sleep(1);
 		if (update) {
 			xstart("/usr/sbin/adblock", "update");
 		} else {
@@ -661,7 +662,7 @@ void start_adblock(int update)
 
 void stop_adblock()
 {
-	eval("/usr/sbin/adblock", "stop");
+	xstart("/usr/sbin/adblock", "stop");
 }
 
 #ifdef TCONFIG_IPV6
