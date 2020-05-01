@@ -77,7 +77,7 @@
  static void usage(void) __attribute__((noreturn));
  
  static void usage(void)
-@@ -79,7 +80,10 @@ static void usage(void)
+@@ -79,6 +80,9 @@ static void usage(void)
  
  	exit(-1);
  }
@@ -87,7 +87,6 @@
  
  void print_link_flags(FILE *fp, unsigned flags, unsigned mdown)
  {
- 	fprintf(fp, "<");
 @@ -278,7 +282,9 @@ int print_linkinfo(const struct sockaddr
  static int flush_update(void)
  {
@@ -543,7 +542,7 @@
  		exit(1);
  	}
  	close(fd);
-@@ -337,8 +349,10 @@ int multiaddr_modify(int cmd, int argc,
+@@ -337,8 +349,10 @@ int do_multiaddr(int argc, char **argv)
  	if (matches(*argv, "list") == 0 || matches(*argv, "show") == 0
  	    || matches(*argv, "lst") == 0)
  		return multiaddr_list(argc-1, argv+1);
@@ -639,7 +638,26 @@
  		return -1;
  	}
  
-@@ -329,7 +339,9 @@ int do_show_or_flush(int argc, char **ar
+@@ -194,14 +204,18 @@ int print_neigh(const struct sockaddr_nl
+ 	char abuf[256];
+ 
+ 	if (n->nlmsg_type != RTM_NEWNEIGH && n->nlmsg_type != RTM_DELNEIGH) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "Not RTM_NEWNEIGH: %08x %08x %08x\n",
+ 			n->nlmsg_len, n->nlmsg_type, n->nlmsg_flags);
++#endif
+ 
+ 		return 0;
+ 	}
+ 	len -= NLMSG_LENGTH(sizeof(*r));
+ 	if (len < 0) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "BUG: wrong nlmsg len %d\n", len);
++#endif
+ 		return -1;
+ 	}
+ 
+@@ -329,7 +343,9 @@ int do_show_or_flush(int argc, char **ar
  
  	if (flush) {
  		if (argc <= 0) {
@@ -649,7 +667,7 @@
  			return -1;
  		}
  		filter.state = ~(NUD_PERMANENT|NUD_NOARP);
-@@ -378,7 +390,9 @@ int do_show_or_flush(int argc, char **ar
+@@ -378,7 +394,9 @@ int do_show_or_flush(int argc, char **ar
  
  	if (filter_dev) {
  		if ((filter.index = ll_name_to_index(filter_dev)) == 0) {
@@ -659,7 +677,7 @@
  			return -1;
  		}
  	}
-@@ -394,17 +408,23 @@ int do_show_or_flush(int argc, char **ar
+@@ -394,17 +412,23 @@ int do_show_or_flush(int argc, char **ar
  
  		while (round < MAX_ROUNDS) {
  			if (rtnl_wilddump_request(&rth, filter.family, RTM_GETNEIGH) < 0) {
@@ -683,7 +701,17 @@
  				} else if (show_stats)
  					printf("*** Flush is complete after %d round%s ***\n", round, round>1?"s":"");
  				fflush(stdout);
-@@ -449,20 +469,26 @@ int do_ipneigh(int argc, char **argv)
+@@ -429,7 +453,9 @@ int do_show_or_flush(int argc, char **ar
+ 	}
+ 
+ 	if (rtnl_dump_filter(&rth, print_neigh, stdout, NULL, NULL) < 0) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "Dump terminated\n");
++#endif
+ 		exit(1);
+ 	}
+ 
+@@ -449,7 +475,9 @@ int do_ipneigh(int argc, char **argv)
  		if (matches(*argv, "delete") == 0)
  			return ipneigh_modify(RTM_DELNEIGH, 0, argc-1, argv+1);
  		if (matches(*argv, "get") == 0) {
@@ -693,8 +721,7 @@
  			return -1;
  		}
  		if (matches(*argv, "show") == 0 ||
- 		    matches(*argv, "lst") == 0 ||
- 		    matches(*argv, "list") == 0)
+@@ -458,11 +486,15 @@ int do_ipneigh(int argc, char **argv)
  			return do_show_or_flush(argc-1, argv+1, 0);
  		if (matches(*argv, "flush") == 0)
  			return do_show_or_flush(argc-1, argv+1, 1);
@@ -811,9 +838,46 @@
 +#endif
  	exit(-1);
  }
+--- iproute2/ip/ipprefix.c
++++ iproute2/ip/ipprefix.c
+@@ -42,14 +42,18 @@ int print_prefix(const struct sockaddr_n
+ 	int family = preferred_family;
+ 
+ 	if (n->nlmsg_type != RTM_NEWPREFIX) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "Not a prefix: %08x %08x %08x\n",
+ 			n->nlmsg_len, n->nlmsg_type, n->nlmsg_flags);
++#endif
+ 		return 0;
+ 	}
+ 
+ 	len -= NLMSG_LENGTH(sizeof(*prefix));
+ 	if (len < 0) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "BUG: wrong nlmsg len %d\n", len);
++#endif
+ 		return -1;
+ 	}
+ 
+@@ -59,11 +63,15 @@ int print_prefix(const struct sockaddr_n
+ 		return 0;
+ 
+ 	if (prefix->prefix_family != AF_INET6) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "wrong family %d\n", prefix->prefix_family);
++#endif
+ 		return 0;
+ 	}
+ 	if (prefix->prefix_type != ND_OPT_PREFIX_INFORMATION) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "wrong ND type %d\n", prefix->prefix_type);
++#endif
+ 		return 0;
+ 	}
+ 
 --- iproute2/ip/iproute.c
 +++ iproute2/ip/iproute.c
-@@ -52,6 +52,8 @@
+@@ -52,6 +52,8 @@ static const char *mx_names[RTAX_MAX+1]
  	[RTAX_INITCWND] = "initcwnd",
  	[RTAX_FEATURES] = "features",
  };
@@ -843,7 +907,27 @@
  		return -1;
  	}
  	filter.flushp = 0;
-@@ -613,7 +619,9 @@ int parse_one_nh(struct rtattr *rta, str
+@@ -145,15 +151,19 @@ int print_route(const struct sockaddr_nl
+ 	static int hz;
+ 
+ 	if (n->nlmsg_type != RTM_NEWROUTE && n->nlmsg_type != RTM_DELROUTE) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "Not a route: %08x %08x %08x\n",
+ 			n->nlmsg_len, n->nlmsg_type, n->nlmsg_flags);
++#endif
+ 		return 0;
+ 	}
+ 	if (filter.flushb && n->nlmsg_type != RTM_NEWROUTE)
+ 		return 0;
+ 	len -= NLMSG_LENGTH(sizeof(*r));
+ 	if (len < 0) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "BUG: wrong nlmsg len %d\n", len);
++#endif
+ 		return -1;
+ 	}
+ 
+@@ -613,7 +623,9 @@ int parse_one_nh(struct rtattr *rta, str
  		} else if (strcmp(*argv, "dev") == 0) {
  			NEXT_ARG();
  			if ((rtnh->rtnh_ifindex = ll_name_to_index(*argv)) == 0) {
@@ -853,7 +937,7 @@
  				exit(1);
  			}
  		} else if (strcmp(*argv, "weight") == 0) {
-@@ -651,11 +659,15 @@ int parse_nexthops(struct nlmsghdr *n, s
+@@ -651,11 +663,15 @@ int parse_nexthops(struct nlmsghdr *n, s
  
  	while (argc > 0) {
  		if (strcmp(*argv, "nexthop") != 0) {
@@ -869,7 +953,7 @@
  			exit(-1);
  		}
  		memset(rtnh, 0, sizeof(*rtnh));
-@@ -934,7 +946,9 @@ int iproute_modify(int cmd, unsigned fla
+@@ -934,7 +950,9 @@ int iproute_modify(int cmd, unsigned fla
  
  		if (d) {
  			if ((idx = ll_name_to_index(d)) == 0) {
@@ -879,7 +963,7 @@
  				return -1;
  			}
  			addattr32(&req.n, sizeof(req), RTA_OIF, idx);
-@@ -1015,14 +1029,18 @@ static int iproute_flush_cache(void)
+@@ -1015,14 +1033,18 @@ static int iproute_flush_cache(void)
  	char *buffer = "-1";
  
  	if (flush_fd < 0) {
@@ -898,7 +982,7 @@
  		return -1;
  	}
  	close(flush_fd);
-@@ -1040,7 +1058,9 @@ static int iproute_list_or_flush(int arg
+@@ -1040,7 +1062,9 @@ static int iproute_list_or_flush(int arg
  	filter.tb = RT_TABLE_MAIN;
  
  	if (flush && argc <= 0) {
@@ -908,7 +992,7 @@
  		return -1;
  	}
  
-@@ -1173,7 +1193,9 @@ static int iproute_list_or_flush(int arg
+@@ -1173,7 +1197,9 @@ static int iproute_list_or_flush(int arg
  
  		if (id) {
  			if ((idx = ll_name_to_index(id)) == 0) {
@@ -918,7 +1002,7 @@
  				return -1;
  			}
  			filter.iif = idx;
-@@ -1181,7 +1203,9 @@ static int iproute_list_or_flush(int arg
+@@ -1181,7 +1207,9 @@ static int iproute_list_or_flush(int arg
  		}
  		if (od) {
  			if ((idx = ll_name_to_index(od)) == 0) {
@@ -928,7 +1012,7 @@
  				return -1;
  			}
  			filter.oif = idx;
-@@ -1210,18 +1234,22 @@ static int iproute_list_or_flush(int arg
+@@ -1210,18 +1238,24 @@ static int iproute_list_or_flush(int arg
  
  		for (;;) {
  			if (rtnl_wilddump_request(&rth, do_ipv6, RTM_GETROUTE) < 0) {
@@ -939,7 +1023,9 @@
  			}
  			filter.flushed = 0;
  			if (rtnl_dump_filter(&rth, print_route, stdout, NULL, NULL) < 0) {
++#ifdef NO_OPTSIZE
  				fprintf(stderr, "Flush terminated\n");
++#endif
  				exit(1);
  			}
  			if (filter.flushed == 0) {
@@ -951,7 +1037,17 @@
  				} else if (show_stats)
  					printf("*** Flush is complete after %d round%s ***\n", round, round>1?"s":"");
  				fflush(stdout);
-@@ -1342,7 +1370,9 @@ int iproute_get(int argc, char **argv)
+@@ -1257,7 +1291,9 @@ static int iproute_list_or_flush(int arg
+ 	}
+ 
+ 	if (rtnl_dump_filter(&rth, print_route, stdout, NULL, NULL) < 0) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "Dump terminated\n");
++#endif
+ 		exit(1);
+ 	}
+ 
+@@ -1342,7 +1378,9 @@ int iproute_get(int argc, char **argv)
  	}
  
  	if (req.r.rtm_dst_len == 0) {
@@ -961,7 +1057,7 @@
  		exit(1);
  	}
  
-@@ -1353,14 +1383,18 @@ int iproute_get(int argc, char **argv)
+@@ -1353,14 +1391,18 @@ int iproute_get(int argc, char **argv)
  
  		if (idev) {
  			if ((idx = ll_name_to_index(idev)) == 0) {
@@ -980,7 +1076,7 @@
  				return -1;
  			}
  			addattr32(&req.n, sizeof(req), RTA_OIF, idx);
-@@ -1379,17 +1413,23 @@ int iproute_get(int argc, char **argv)
+@@ -1379,17 +1421,23 @@ int iproute_get(int argc, char **argv)
  		struct rtattr * tb[RTA_MAX+1];
  
  		if (print_route(NULL, &req.n, (void*)stdout) < 0) {
@@ -1004,7 +1100,7 @@
  			return -1;
  		}
  
-@@ -1399,7 +1439,9 @@ int iproute_get(int argc, char **argv)
+@@ -1399,7 +1447,9 @@ int iproute_get(int argc, char **argv)
  			tb[RTA_PREFSRC]->rta_type = RTA_SRC;
  			r->rtm_src_len = 8*RTA_PAYLOAD(tb[RTA_PREFSRC]);
  		} else if (!tb[RTA_SRC]) {
@@ -1014,7 +1110,17 @@
  			return -1;
  		}
  		if (!odev && tb[RTA_OIF])
-@@ -1463,9 +1505,11 @@ int do_iproute(int argc, char **argv)
+@@ -1416,7 +1466,9 @@ int iproute_get(int argc, char **argv)
+ 	}
+ 
+ 	if (print_route(NULL, &req.n, (void*)stdout) < 0) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "An error :-)\n");
++#endif
+ 		exit(1);
+ 	}
+ 
+@@ -1463,9 +1515,11 @@ int do_iproute(int argc, char **argv)
  		return iproute_get(argc-1, argv+1);
  	if (matches(*argv, "flush") == 0)
  		return iproute_list_or_flush(argc-1, argv+1, 1);
@@ -1046,7 +1152,31 @@
  
  int print_rule(const struct sockaddr_nl *who, struct nlmsghdr *n, void *arg)
  {
-@@ -313,7 +317,9 @@ static int iprule_modify(int cmd, int ar
+@@ -200,17 +204,23 @@ static int iprule_list(int argc, char **
+ 		af = AF_INET;
+ 
+ 	if (argc > 0) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "\"ip rule show\" does not take any arguments.\n");
++#endif
+ 		return -1;
+ 	}
+ 
+ 	if (rtnl_wilddump_request(&rth, af, RTM_GETRULE) < 0) {
++#ifdef NO_OPTSIZE
+ 		perror("Cannot send dump request");
++#endif
+ 		return 1;
+ 	}
+ 
+ 	if (rtnl_dump_filter(&rth, print_rule, stdout, NULL, NULL) < 0) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "Dump terminated\n");
++#endif
+ 		return 1;
+ 	}
+ 
+@@ -313,7 +323,9 @@ static int iprule_modify(int cmd, int ar
  		} else if (strcmp(*argv, "nat") == 0 ||
  			   matches(*argv, "map-to") == 0) {
  			NEXT_ARG();
@@ -1056,7 +1186,7 @@
  			addattr32(&req.n, sizeof(req), RTA_GATEWAY, get_addr32(*argv));
  			req.r.rtm_type = RTN_NAT;
  		} else {
-@@ -392,17 +398,23 @@ static int iprule_flush(int argc, char *
+@@ -392,17 +404,23 @@ static int iprule_flush(int argc, char *
  		af = AF_INET;
  
  	if (argc > 0) {
@@ -1080,7 +1210,7 @@
  		return 1;
  	}
  
-@@ -423,10 +435,13 @@ static int iprule_flush(int argc, char *
+@@ -423,10 +441,13 @@ int do_iprule(int argc, char **argv)
  		return iprule_modify(RTM_DELRULE, argc-1, argv+1);
  	} else if (matches(argv[0], "flush") == 0) {
  		return iprule_flush(argc-1, argv+1);
@@ -1220,7 +1350,37 @@
  		return -1;
  	}
  	return -1;
-@@ -464,7 +490,9 @@ int do_iptunnel(int argc, char **argv)
+@@ -364,7 +390,9 @@ static int do_tunnels_list(struct ip_tun
+ 	char buf[512];
+ 	FILE *fp = fopen("/proc/net/dev", "r");
+ 	if (fp == NULL) {
++#ifdef NO_OPTSIZE
+ 		perror("fopen");
++#endif
+ 		return -1;
+ 	}
+ 
+@@ -376,7 +404,9 @@ static int do_tunnels_list(struct ip_tun
+ 		buf[sizeof(buf) - 1] = 0;
+ 		if ((ptr = strchr(buf, ':')) == NULL ||
+ 		    (*ptr++ = 0, sscanf(buf, "%s", name) != 1)) {
++#ifdef NO_OPTSIZE
+ 			fprintf(stderr, "Wrong format of /proc/net/dev. Sorry.\n");
++#endif
+ 			return -1;
+ 		}
+ 		if (sscanf(ptr, "%ld%ld%ld%ld%ld%ld%ld%*d%ld%ld%ld%ld%ld%ld%ld",
+@@ -389,7 +419,9 @@ static int do_tunnels_list(struct ip_tun
+ 			continue;
+ 		type = tnl_ioctl_get_iftype(name);
+ 		if (type == -1) {
++#ifdef NO_OPTSIZE
+ 			fprintf(stderr, "Failed to get type of [%s]\n", name);
++#endif
+ 			continue;
+ 		}
+ 		if (type != ARPHRD_TUNNEL && type != ARPHRD_IPGRE && type != ARPHRD_SIT)
+@@ -464,7 +496,9 @@ int do_iptunnel(int argc, char **argv)
  	case AF_INET6:
  		return do_ip6tunnel(argc, argv);
  	default:
@@ -1230,7 +1390,7 @@
  		exit(-1);
  	}
  
-@@ -479,11 +507,16 @@ int do_iptunnel(int argc, char **argv)
+@@ -479,11 +513,16 @@ int do_iptunnel(int argc, char **argv)
  		    matches(*argv, "lst") == 0 ||
  		    matches(*argv, "list") == 0)
  			return do_show(argc-1, argv+1);
@@ -1345,6 +1505,70 @@
  		return 1;
  	}
  
+--- iproute2/ip/tunnel.c
++++ iproute2/ip/tunnel.c
+@@ -69,7 +69,9 @@ int tnl_ioctl_get_ifindex(const char *de
+ 	fd = socket(preferred_family, SOCK_DGRAM, 0);
+ 	err = ioctl(fd, SIOCGIFINDEX, &ifr);
+ 	if (err) {
++#ifdef NO_OPTSIZE
+ 		perror("ioctl");
++#endif
+ 		return 0;
+ 	}
+ 	close(fd);
+@@ -86,7 +88,9 @@ int tnl_ioctl_get_iftype(const char *dev
+ 	fd = socket(preferred_family, SOCK_DGRAM, 0);
+ 	err = ioctl(fd, SIOCGIFHWADDR, &ifr);
+ 	if (err) {
++#ifdef NO_OPTSIZE
+ 		perror("ioctl");
++#endif
+ 		return -1;
+ 	}
+ 	close(fd);
+@@ -104,7 +108,9 @@ char * tnl_ioctl_get_ifname(int idx)
+ 	fd = socket(preferred_family, SOCK_DGRAM, 0);
+ 	err = ioctl(fd, SIOCGIFNAME, &ifr);
+ 	if (err) {
++#ifdef NO_OPTSIZE
+ 		perror("ioctl");
++#endif
+ 		return NULL;
+ 	}
+ 	close(fd);
+@@ -122,7 +128,9 @@ int tnl_get_ioctl(const char *basedev, v
+ 	fd = socket(preferred_family, SOCK_DGRAM, 0);
+ 	err = ioctl(fd, SIOCGETTUNNEL, &ifr);
+ 	if (err)
++#ifdef NO_OPTSIZE
+ 		perror("ioctl");
++#endif
+ 	close(fd);
+ 	return err;
+ }
+@@ -140,8 +148,10 @@ int tnl_add_ioctl(int cmd, const char *b
+ 	ifr.ifr_ifru.ifru_data = p;
+ 	fd = socket(preferred_family, SOCK_DGRAM, 0);
+ 	err = ioctl(fd, cmd, &ifr);
++#ifdef NO_OPTSIZE
+ 	if (err)
+ 		perror("ioctl");
++#endif
+ 	close(fd);
+ 	return err;
+ }
+@@ -159,8 +169,10 @@ int tnl_del_ioctl(const char *basedev, c
+ 	ifr.ifr_ifru.ifru_data = p;
+ 	fd = socket(preferred_family, SOCK_DGRAM, 0);
+ 	err = ioctl(fd, SIOCDELTUNNEL, &ifr);
++#ifdef NO_OPTSIZE
+ 	if (err)
+ 		perror("ioctl");
++#endif
+ 	close(fd);
+ 	return err;
+ }
 --- iproute2/lib/libnetlink.c
 +++ iproute2/lib/libnetlink.c
 @@ -44,17 +44,23 @@ int rtnl_open_byproto(struct rtnl_handle
@@ -3158,37 +3382,19 @@
  void
  exit_tryhelp(int status)
  {
-@@ -74,6 +77,9 @@ exit_tryhelp(int status)
- 		pname, pname);
+@@ -92,6 +95,11 @@ exit_error(enum exittype status, char *m
+ 			"Perhaps iptables or your kernel needs to be upgraded.\n");
  	exit(status);
  }
 +#else
 +#define exit_tryhelp(status) exit(status)
++#define exit_error(status, msg, ...) exit(status)
 +#endif /* NO_OPTSIZE */
++
  
- void
- exit_error(enum exittype status, char *msg, ...)
-@@ -81,15 +87,19 @@ exit_error(enum exittype status, char *m
- 	va_list args;
- 
- 	va_start(args, msg);
-+#ifdef NO_OPTSIZE
- 	fprintf(stderr, "%s v%s: ", pname, pversion);
- 	vfprintf(stderr, msg, args);
-+#endif
- 	va_end(args);
- 	fprintf(stderr, "\n");
- 	if (status == PARAMETER_PROBLEM)
- 		exit_tryhelp(status);
-+#ifdef NO_OPTSIZE
- 	if (status == VERSION_PROBLEM)
- 		fprintf(stderr,
- 			"Perhaps iptables or your kernel needs to be upgraded.\n");
-+#endif
- 	exit(status);
- }
- 
-@@ -191,7 +201,9 @@ fw_calloc(size_t count, size_t size)
+ /* stolen from iptables 1.2.11
+ They should really have them as a library so i can link to them
+@@ -191,7 +199,9 @@ fw_calloc(size_t count, size_t size)
  	void *p;
  
  	if ((p = (void *) calloc(count, size)) == NULL) {
@@ -3198,7 +3404,7 @@
  		exit(1);
  	}
  	return p;
-@@ -267,8 +279,10 @@ get_target_name(const char *name)
+@@ -267,8 +277,10 @@ get_target_name(const char *name)
  			if (NULL == m) {
  				m = find_t(lname);
  				if (NULL == m) {
@@ -3209,7 +3415,7 @@
  					dlclose(handle);
  					return NULL;
  				}
-@@ -386,7 +400,9 @@ static int parse_ipt(struct action_util
+@@ -386,7 +398,9 @@ static int parse_ipt(struct action_util
  	}
  
  	if (argc <= 2) {
@@ -3219,7 +3425,7 @@
  		return -1;
  	}
  
-@@ -407,7 +423,9 @@ static int parse_ipt(struct action_util
+@@ -407,7 +421,9 @@ static int parse_ipt(struct action_util
  				    merge_options(opts, m->extra_opts,
  						  &m->option_offset);
  			} else {
@@ -3229,7 +3435,7 @@
  				return -1;
  			}
  			ok++;
-@@ -419,7 +437,9 @@ static int parse_ipt(struct action_util
+@@ -419,7 +435,9 @@ static int parse_ipt(struct action_util
  				m->parse(c - m->option_offset, argv, 0,
  					 &m->tflags, NULL, &m->t);
  			} else {
@@ -3239,7 +3445,7 @@
  				return -1;
  
  			}
-@@ -432,7 +452,9 @@ static int parse_ipt(struct action_util
+@@ -432,7 +450,9 @@ static int parse_ipt(struct action_util
  	if (iargc > optind) {
  		if (matches(argv[optind], "index") == 0) {
  			if (get_u32(&index, argv[optind + 1], 10)) {
@@ -3249,7 +3455,7 @@
  				free_opts(opts);
  				return -1;
  			}
-@@ -443,7 +465,9 @@ static int parse_ipt(struct action_util
+@@ -443,7 +463,9 @@ static int parse_ipt(struct action_util
  	}
  
  	if (!ok && !iok) {
@@ -3259,7 +3465,7 @@
  		return -1;
  	}
  
-@@ -537,7 +561,9 @@ print_ipt(struct action_util *au,FILE *
+@@ -537,7 +559,9 @@ print_ipt(struct action_util *au,FILE *
  		m = get_target_name(t->u.user.name);
  		if (NULL != m) {
  			if (0 > build_st(m, t)) {
@@ -3269,7 +3475,7 @@
  				return -1;
  			}
  
-@@ -545,8 +571,10 @@ print_ipt(struct action_util *au,FILE *
+@@ -545,8 +569,10 @@ print_ipt(struct action_util *au,FILE *
  			    merge_options(opts, m->extra_opts,
  					  &m->option_offset);
  		} else {
@@ -5527,6 +5733,38 @@
  	return -1;
  }
  
+--- iproute2/tc/tc_monitor.c
++++ iproute2/tc/tc_monitor.c
+@@ -30,7 +30,9 @@ static void usage(void) __attribute__((n
+ 
+ static void usage(void)
+ {
++#ifdef NO_OPTSIZE
+ 	fprintf(stderr, "Usage: tc monitor\n");
++#endif
+ 	exit(-1);
+ }
+ 
+@@ -78,7 +80,9 @@ int do_tcmonitor(int argc, char **argv)
+ 			if (matches(*argv, "help") == 0) {
+ 				usage();
+ 			} else {
++#ifdef NO_OPTSIZE
+ 				fprintf(stderr, "Argument \"%s\" is unknown, try \"tc monitor help\".\n", *argv);
++#endif
+ 				exit(-1);
+ 			}
+ 		}
+@@ -89,7 +93,9 @@ int do_tcmonitor(int argc, char **argv)
+ 		FILE *fp;
+ 		fp = fopen(file, "r");
+ 		if (fp == NULL) {
++#ifdef NO_OPTSIZE
+ 			perror("Cannot fopen");
++#endif
+ 			exit(-1);
+ 		}
+ 		return rtnl_from_file(fp, accept_tcmsg, (void*)stdout);
 --- iproute2/tc/tc_qdisc.c
 +++ iproute2/tc/tc_qdisc.c
 @@ -25,6 +25,7 @@
