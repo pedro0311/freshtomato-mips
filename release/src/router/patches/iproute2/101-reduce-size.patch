@@ -69,15 +69,15 @@
  }
 --- iproute2/ip/ipaddress.c
 +++ iproute2/ip/ipaddress.c
-@@ -51,6 +51,7 @@ static struct
- 	int flushe;
- } filter;
+@@ -53,6 +53,7 @@ static struct
  
-+#ifdef NO_OPTSIZE
  static int do_link;
  
++#ifdef NO_OPTSIZE
  static void usage(void) __attribute__((noreturn));
-@@ -79,7 +80,11 @@ static void usage(void)
+ 
+ static void usage(void)
+@@ -79,6 +80,9 @@ static void usage(void)
  
  	exit(-1);
  }
@@ -85,16 +85,9 @@
 +#define usage(a) exit(-1)
 +#endif /* NO_OPTSIZE */
  
-+#ifdef NO_OPTSIZE
  void print_link_flags(FILE *fp, unsigned flags, unsigned mdown)
  {
- 	fprintf(fp, "<");
-@@ -274,11 +279,14 @@ int print_linkinfo(const struct sockaddr
- 	fflush(fp);
- 	return 0;
- }
-+#endif /* NO_OPTSIZE */
- 
+@@ -278,7 +282,9 @@ int print_linkinfo(const struct sockaddr
  static int flush_update(void)
  {
  	if (rtnl_send(&rth, filter.flushb, filter.flushp) < 0) {
@@ -104,62 +97,7 @@
  		return -1;
  	}
  	filter.flushp = 0;
-@@ -295,6 +303,7 @@ static int set_lifetime(unsigned int *li
- 	return 0;
- }
- 
-+#ifdef NO_OPTSIZE
- int print_addrinfo(const struct sockaddr_nl *who, struct nlmsghdr *n,
- 		   void *arg)
- {
-@@ -467,7 +476,13 @@ int print_addrinfo(const struct sockaddr
- 	fflush(fp);
- 	return 0;
- }
--
-+#else
-+int print_addrinfo(const struct sockaddr_nl *who, struct nlmsghdr *n,
-+		   void *arg)
-+{
-+	return 0;
-+}
-+#endif /* NO_OPTSIZE */
- 
- struct nlmsg_list
- {
-@@ -475,6 +490,7 @@ struct nlmsg_list
- 	struct nlmsghdr	  h;
- };
- 
-+#ifdef NO_OPTSIZE
- int print_selected_addrinfo(int ifindex, struct nlmsg_list *ainfo, FILE *fp)
- {
- 	for ( ;ainfo ;  ainfo = ainfo->next) {
-@@ -495,7 +511,7 @@ int print_selected_addrinfo(int ifindex,
- 	}
- 	return 0;
- }
--
-+#endif /* NO_OPTSIZE */
- 
- static int store_nlmsg(const struct sockaddr_nl *who, struct nlmsghdr *n,
- 		       void *arg)
-@@ -521,10 +537,12 @@ static int store_nlmsg(const struct sock
- int ipaddr_list_or_flush(int argc, char **argv, int flush)
- {
- 	struct nlmsg_list *linfo = NULL;
--	struct nlmsg_list *ainfo = NULL;
--	struct nlmsg_list *l, *n;
- 	char *filter_dev = NULL;
-+#ifdef NO_OPTSIZE
-+	struct nlmsg_list *ainfo = NULL;
-+	struct nlmsg_list *l, *n;;
- 	int no_link = 0;
-+#endif
- 
- 	ipaddr_reset_filter(oneline);
- 	filter.showqueue = 1;
-@@ -534,11 +552,15 @@ int ipaddr_list_or_flush(int argc, char
+@@ -534,11 +540,15 @@ int ipaddr_list_or_flush(int argc, char
  
  	if (flush) {
  		if (argc <= 0) {
@@ -175,7 +113,7 @@
  			return -1;
  		}
  	}
-@@ -603,19 +625,25 @@ int ipaddr_list_or_flush(int argc, char
+@@ -603,19 +613,25 @@ int ipaddr_list_or_flush(int argc, char
  	}
  
  	if (rtnl_wilddump_request(&rth, preferred_family, RTM_GETLINK) < 0) {
@@ -201,7 +139,7 @@
  			return -1;
  		}
  	}
-@@ -630,17 +658,23 @@ int ipaddr_list_or_flush(int argc, char
+@@ -630,17 +646,23 @@ int ipaddr_list_or_flush(int argc, char
  
  		for (;;) {
  			if (rtnl_wilddump_request(&rth, filter.family, RTM_GETADDR) < 0) {
@@ -225,35 +163,7 @@
  				} else if (show_stats)
  					printf("*** Flush is complete after %d round%s ***\n", round, round>1?"s":"");
  				fflush(stdout);
-@@ -657,6 +691,7 @@ int ipaddr_list_or_flush(int argc, char
- 		}
- 	}
- 
-+#ifdef NO_OPTSIZE
- 	if (filter.family != AF_PACKET) {
- 		if (rtnl_wilddump_request(&rth, filter.family, RTM_GETADDR) < 0) {
- 			perror("Cannot send dump request");
-@@ -739,16 +774,19 @@ int ipaddr_list_or_flush(int argc, char
- 		fflush(stdout);
- 		free(l);
- 	}
-+#endif /* NO_OPTSIZE */
- 
- 	return 0;
- }
- 
-+#ifdef NO_OPTSIZE
- int ipaddr_list_link(int argc, char **argv)
- {
- 	preferred_family = AF_PACKET;
- 	do_link = 1;
- 	return ipaddr_list_or_flush(argc, argv, 0);
- }
-+#endif /* NO_OPTSIZE */
- 
- void ipaddr_reset_filter(int oneline)
- {
-@@ -885,21 +923,27 @@ int ipaddr_modify(int cmd, int flags, in
+@@ -885,21 +907,27 @@ int ipaddr_modify(int cmd, int flags, in
  		argc--; argv++;
  	}
  	if (d == NULL) {
@@ -281,7 +191,7 @@
  		} else {
  			peer = lcl;
  			addattr_l(&req.n, sizeof(req), IFA_ADDRESS, &lcl.data, lcl.bytelen);
-@@ -912,7 +956,9 @@ int ipaddr_modify(int cmd, int flags, in
+@@ -912,7 +940,9 @@ int ipaddr_modify(int cmd, int flags, in
  		inet_prefix brd;
  		int i;
  		if (req.ifa.ifa_family != AF_INET) {
@@ -291,7 +201,7 @@
  			return -1;
  		}
  		brd = peer;
-@@ -933,17 +979,23 @@ int ipaddr_modify(int cmd, int flags, in
+@@ -933,17 +963,23 @@ int ipaddr_modify(int cmd, int flags, in
  	ll_init_map(&rth);
  
  	if ((req.ifa.ifa_index = ll_name_to_index(d)) == 0) {
@@ -315,27 +225,8 @@
  			return -1;
  		}
  
-@@ -963,7 +1015,11 @@ int ipaddr_modify(int cmd, int flags, in
- int do_ipaddr(int argc, char **argv)
- {
- 	if (argc < 1)
-+#ifdef NO_OPTSIZE
- 		return ipaddr_list_or_flush(0, NULL, 0);
-+#else
-+		return 0;
-+#endif
- 	if (matches(*argv, "add") == 0)
- 		return ipaddr_modify(RTM_NEWADDR, NLM_F_CREATE|NLM_F_EXCL, argc-1, argv+1);
- 	if (matches(*argv, "change") == 0 ||
-@@ -973,14 +1029,18 @@ int do_ipaddr(int argc, char **argv)
- 		return ipaddr_modify(RTM_NEWADDR, NLM_F_CREATE|NLM_F_REPLACE, argc-1, argv+1);
- 	if (matches(*argv, "delete") == 0)
- 		return ipaddr_modify(RTM_DELADDR, 0, argc-1, argv+1);
-+#ifdef NO_OPTSIZE
- 	if (matches(*argv, "list") == 0 || matches(*argv, "show") == 0
- 	    || matches(*argv, "lst") == 0)
+@@ -978,9 +1014,11 @@ int do_ipaddr(int argc, char **argv)
  		return ipaddr_list_or_flush(argc-1, argv+1, 0);
-+#endif
  	if (matches(*argv, "flush") == 0)
  		return ipaddr_list_or_flush(argc-1, argv+1, 1);
 +#ifdef NO_OPTSIZE
@@ -372,8 +263,8 @@
  	{ "tunl",	do_iptunnel },
 +#ifdef NO_OPTSIZE
  	{ "monitor",	do_ipmonitor },
-+#endif
  	{ "xfrm",	do_xfrm },
++#endif
  	{ "mroute",	do_multiroute },
 +#ifdef NO_OPTSIZE
  	{ "help",	do_help },
@@ -582,23 +473,17 @@
  		exit(-1);
  	}
  
-@@ -416,15 +447,20 @@ int do_iplink(int argc, char **argv)
- 	if (argc > 0) {
- 		if (matches(*argv, "set") == 0)
- 			return do_set(argc-1, argv+1);
-+#ifdef NO_OPTSIZE
- 		if (matches(*argv, "show") == 0 ||
+@@ -420,11 +451,15 @@ int do_iplink(int argc, char **argv)
  		    matches(*argv, "lst") == 0 ||
  		    matches(*argv, "list") == 0)
  			return ipaddr_list_link(argc-1, argv+1);
++#ifdef NO_OPTSIZE
  		if (matches(*argv, "help") == 0)
  			usage();
--	} else
 +#endif
-+	}
-+#ifdef NO_OPTSIZE
-+	else
+ 	} else
  		return ipaddr_list_link(0, NULL);
++#ifdef NO_OPTSIZE
  
  	fprintf(stderr, "Command \"%s\" is unknown, try \"ip link help\".\n", *argv);
 +#endif
@@ -624,23 +509,7 @@
  
  static int parse_hex(char *str, unsigned char *addr)
  {
-@@ -190,6 +194,7 @@ void read_igmp6(struct ma_info **result_
- 	fclose(fp);
- }
- 
-+#ifdef NO_OPTSIZE
- static void print_maddr(FILE *fp, struct ma_info *list)
- {
- 	fprintf(fp, "\t");
-@@ -271,6 +276,7 @@ static int multiaddr_list(int argc, char
- 	print_mlist(stdout, list);
- 	return 0;
- }
-+#endif /* NO_OPTSIZE */
- 
- int multiaddr_modify(int cmd, int argc, char **argv)
- {
-@@ -300,24 +306,32 @@ int multiaddr_modify(int cmd, int argc,
+@@ -300,24 +304,32 @@ int multiaddr_modify(int cmd, int argc,
  				duparg("address", *argv);
  			if (ll_addr_a2n(ifr.ifr_hwaddr.sa_data,
  					14, *argv) < 0) {
@@ -673,78 +542,25 @@
  		exit(1);
  	}
  	close(fd);
-@@ -329,16 +343,22 @@ int multiaddr_modify(int cmd, int argc,
- int do_multiaddr(int argc, char **argv)
- {
- 	if (argc < 1)
-+#ifdef NO_OPTSIZE
- 		return multiaddr_list(0, NULL);
-+#else
-+		return 0;
-+#endif
- 	if (matches(*argv, "add") == 0)
- 		return multiaddr_modify(RTM_NEWADDR, argc-1, argv+1);
- 	if (matches(*argv, "delete") == 0)
- 		return multiaddr_modify(RTM_DELADDR, argc-1, argv+1);
-+#ifdef NO_OPTSIZE
+@@ -337,8 +349,10 @@ int do_multiaddr(int argc, char **argv)
  	if (matches(*argv, "list") == 0 || matches(*argv, "show") == 0
  	    || matches(*argv, "lst") == 0)
  		return multiaddr_list(argc-1, argv+1);
++#ifdef NO_OPTSIZE
  	if (matches(*argv, "help") == 0)
  		usage();
  	fprintf(stderr, "Command \"%s\" is unknown, try \"ip maddr help\".\n", *argv);
 +#endif
  	exit(-1);
  }
---- iproute2/ip/ipmonitor.c
-+++ iproute2/ip/ipmonitor.c
-@@ -24,6 +24,7 @@
- #include "utils.h"
- #include "ip_common.h"
- 
-+#ifdef NO_OPTSIZE
- static void usage(void) __attribute__((noreturn));
- 
- static void usage(void)
-@@ -31,7 +32,9 @@ static void usage(void)
- 	fprintf(stderr, "Usage: ip monitor [ all | LISTofOBJECTS ]\n");
- 	exit(-1);
- }
--
-+#else
-+#define usage() exit(-1)
-+#endif /* NO_OPTSIZE */
- 
- int accept_msg(const struct sockaddr_nl *who,
- 	       struct nlmsghdr *n, void *arg)
-@@ -125,7 +128,9 @@ int do_ipmonitor(int argc, char **argv)
- 		} else if (matches(*argv, "help") == 0) {
- 			usage();
- 		} else {
-+#ifdef NO_OPTSIZE
- 			fprintf(stderr, "Argument \"%s\" is unknown, try \"ip monitor help\".\n", *argv);
-+#endif
- 			exit(-1);
- 		}
- 		argc--;	argv++;
-@@ -154,7 +159,9 @@ int do_ipmonitor(int argc, char **argv)
- 		FILE *fp;
- 		fp = fopen(file, "r");
- 		if (fp == NULL) {
-+#ifdef NO_OPTSIZE
- 			perror("Cannot fopen");
-+#endif
- 			exit(-1);
- 		}
- 		return rtnl_from_file(fp, accept_msg, stdout);
 --- iproute2/ip/ipmroute.c
 +++ iproute2/ip/ipmroute.c
 @@ -31,6 +31,9 @@
  char filter_dev[16];
  int  filter_family;
  
-+#ifdef NO_OPTSIZE
 +static char *viftable[32];
++#ifdef NO_OPTSIZE
 +
  static void usage(void) __attribute__((noreturn));
  
@@ -761,39 +577,11 @@
  
  struct rtfilter
  {
-@@ -50,6 +54,7 @@ struct rtfilter
- 	inet_prefix msrc;
- } filter;
- 
-+#ifdef NO_OPTSIZE
- static void read_viftable(void)
- {
- 	char buf[256];
-@@ -182,11 +187,16 @@ static int mroute_list(int argc, char **
- 	read_mroute_list(stdout);
- 	return 0;
- }
-+#endif
- 
- int do_multiroute(int argc, char **argv)
- {
- 	if (argc < 1)
-+#ifdef NO_OPTSIZE
- 		return mroute_list(0, NULL);
-+#else
-+		return 0;
-+#endif
- #if 0
- 	if (matches(*argv, "add") == 0)
- 		return mroute_modify(RTM_NEWADDR, argc-1, argv+1);
-@@ -195,11 +205,13 @@ int do_multiroute(int argc, char **argv)
- 	if (matches(*argv, "get") == 0)
- 		return mroute_get(argc-1, argv+1);
- #endif
-+#ifdef NO_OPTSIZE
+@@ -198,8 +202,10 @@ int do_multiroute(int argc, char **argv)
  	if (matches(*argv, "list") == 0 || matches(*argv, "show") == 0
  	    || matches(*argv, "lst") == 0)
  		return mroute_list(argc-1, argv+1);
++#ifdef NO_OPTSIZE
  	if (matches(*argv, "help") == 0)
  		usage();
  	fprintf(stderr, "Command \"%s\" is unknown, try \"ip mroute help\".\n", *argv);
@@ -850,29 +638,26 @@
  		return -1;
  	}
  
-@@ -184,7 +194,7 @@ static int ipneigh_modify(int cmd, int f
- 	return 0;
- }
+@@ -194,14 +204,18 @@ int print_neigh(const struct sockaddr_nl
+ 	char abuf[256];
  
--
+ 	if (n->nlmsg_type != RTM_NEWNEIGH && n->nlmsg_type != RTM_DELNEIGH) {
 +#ifdef NO_OPTSIZE
- int print_neigh(const struct sockaddr_nl *who, struct nlmsghdr *n, void *arg)
- {
- 	FILE *fp = (FILE*)arg;
-@@ -310,6 +320,12 @@ int print_neigh(const struct sockaddr_nl
- 	fflush(fp);
- 	return 0;
- }
-+#else
-+int print_neigh(const struct sockaddr_nl *who, struct nlmsghdr *n, void *arg)
-+{
-+	return 0;
-+}
-+#endif /* NO_OPTSIZE */
+ 		fprintf(stderr, "Not RTM_NEWNEIGH: %08x %08x %08x\n",
+ 			n->nlmsg_len, n->nlmsg_type, n->nlmsg_flags);
++#endif
  
- void ipneigh_reset_filter()
- {
-@@ -329,7 +345,9 @@ int do_show_or_flush(int argc, char **ar
+ 		return 0;
+ 	}
+ 	len -= NLMSG_LENGTH(sizeof(*r));
+ 	if (len < 0) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "BUG: wrong nlmsg len %d\n", len);
++#endif
+ 		return -1;
+ 	}
+ 
+@@ -329,7 +343,9 @@ int do_show_or_flush(int argc, char **ar
  
  	if (flush) {
  		if (argc <= 0) {
@@ -882,7 +667,7 @@
  			return -1;
  		}
  		filter.state = ~(NUD_PERMANENT|NUD_NOARP);
-@@ -378,7 +396,9 @@ int do_show_or_flush(int argc, char **ar
+@@ -378,7 +394,9 @@ int do_show_or_flush(int argc, char **ar
  
  	if (filter_dev) {
  		if ((filter.index = ll_name_to_index(filter_dev)) == 0) {
@@ -892,7 +677,7 @@
  			return -1;
  		}
  	}
-@@ -394,17 +414,23 @@ int do_show_or_flush(int argc, char **ar
+@@ -394,17 +412,23 @@ int do_show_or_flush(int argc, char **ar
  
  		while (round < MAX_ROUNDS) {
  			if (rtnl_wilddump_request(&rth, filter.family, RTM_GETNEIGH) < 0) {
@@ -916,23 +701,17 @@
  				} else if (show_stats)
  					printf("*** Flush is complete after %d round%s ***\n", round, round>1?"s":"");
  				fflush(stdout);
-@@ -423,6 +449,7 @@ int do_show_or_flush(int argc, char **ar
- 		return 1;
+@@ -429,7 +453,9 @@ int do_show_or_flush(int argc, char **ar
  	}
  
+ 	if (rtnl_dump_filter(&rth, print_neigh, stdout, NULL, NULL) < 0) {
 +#ifdef NO_OPTSIZE
- 	if (rtnl_wilddump_request(&rth, filter.family, RTM_GETNEIGH) < 0) {
- 		perror("Cannot send dump request");
- 		exit(1);
-@@ -432,6 +459,7 @@ int do_show_or_flush(int argc, char **ar
  		fprintf(stderr, "Dump terminated\n");
++#endif
  		exit(1);
  	}
-+#endif /* NO_OPTSIZE */
  
- 	return 0;
- }
-@@ -449,20 +477,29 @@ int do_ipneigh(int argc, char **argv)
+@@ -449,7 +475,9 @@ int do_ipneigh(int argc, char **argv)
  		if (matches(*argv, "delete") == 0)
  			return ipneigh_modify(RTM_DELNEIGH, 0, argc-1, argv+1);
  		if (matches(*argv, "get") == 0) {
@@ -941,24 +720,19 @@
 +#endif
  			return -1;
  		}
-+#ifdef NO_OPTSIZE
  		if (matches(*argv, "show") == 0 ||
- 		    matches(*argv, "lst") == 0 ||
- 		    matches(*argv, "list") == 0)
+@@ -458,11 +486,15 @@ int do_ipneigh(int argc, char **argv)
  			return do_show_or_flush(argc-1, argv+1, 0);
-+#endif
  		if (matches(*argv, "flush") == 0)
  			return do_show_or_flush(argc-1, argv+1, 1);
 +#ifdef NO_OPTSIZE
  		if (matches(*argv, "help") == 0)
  			usage();
--	} else
 +#endif
-+	}
-+#ifdef NO_OPTSIZE
-+	else
+ 	} else
  		return do_show_or_flush(0, NULL, 0);
  
++#ifdef NO_OPTSIZE
  	fprintf(stderr, "Command \"%s\" is unknown, try \"ip neigh help\".\n", *argv);
 +#endif
  	exit(-1);
@@ -1066,35 +840,49 @@
  }
 --- iproute2/ip/ipprefix.c
 +++ iproute2/ip/ipprefix.c
-@@ -33,6 +33,7 @@
- #define IF_PREFIX_ONLINK	0x01
- #define IF_PREFIX_AUTOCONF	0x02
+@@ -42,14 +42,18 @@ int print_prefix(const struct sockaddr_n
+ 	int family = preferred_family;
  
+ 	if (n->nlmsg_type != RTM_NEWPREFIX) {
 +#ifdef NO_OPTSIZE
- int print_prefix(const struct sockaddr_nl *who, struct nlmsghdr *n, void *arg)
- {
- 	FILE *fp = (FILE*)arg;
-@@ -103,4 +104,4 @@ int print_prefix(const struct sockaddr_n
+ 		fprintf(stderr, "Not a prefix: %08x %08x %08x\n",
+ 			n->nlmsg_len, n->nlmsg_type, n->nlmsg_flags);
++#endif
+ 		return 0;
+ 	}
  
- 	return 0;
- }
--
-+#endif /* NO_OPTSIZE */
+ 	len -= NLMSG_LENGTH(sizeof(*prefix));
+ 	if (len < 0) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "BUG: wrong nlmsg len %d\n", len);
++#endif
+ 		return -1;
+ 	}
+ 
+@@ -59,11 +63,15 @@ int print_prefix(const struct sockaddr_n
+ 		return 0;
+ 
+ 	if (prefix->prefix_family != AF_INET6) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "wrong family %d\n", prefix->prefix_family);
++#endif
+ 		return 0;
+ 	}
+ 	if (prefix->prefix_type != ND_OPT_PREFIX_INFORMATION) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "wrong ND type %d\n", prefix->prefix_type);
++#endif
+ 		return 0;
+ 	}
+ 
 --- iproute2/ip/iproute.c
 +++ iproute2/ip/iproute.c
-@@ -39,6 +39,7 @@
- #endif
- 
- 
-+#ifdef NO_OPTSIZE
- static const char *mx_names[RTAX_MAX+1] = {
- 	[RTAX_MTU]	= "mtu",
- 	[RTAX_WINDOW]	= "window",
-@@ -52,6 +53,7 @@ static const char *mx_names[RTAX_MAX+1]
+@@ -52,6 +52,8 @@ static const char *mx_names[RTAX_MAX+1]
  	[RTAX_INITCWND] = "initcwnd",
  	[RTAX_FEATURES] = "features",
  };
 +
++#ifdef NO_OPTSIZE
  static void usage(void) __attribute__((noreturn));
  
  static void usage(void)
@@ -1109,7 +897,7 @@
  
  static struct
  {
-@@ -120,13 +124,16 @@ static char *mp_alg_names[IP_MP_ALG_MAX+
+@@ -120,7 +124,9 @@ static char *mp_alg_names[IP_MP_ALG_MAX+
  static int flush_update(void)
  {
  	if (rtnl_send(&rth, filter.flushb, filter.flushp) < 0) {
@@ -1119,28 +907,27 @@
  		return -1;
  	}
  	filter.flushp = 0;
- 	return 0;
- }
+@@ -145,15 +151,19 @@ int print_route(const struct sockaddr_nl
+ 	static int hz;
  
+ 	if (n->nlmsg_type != RTM_NEWROUTE && n->nlmsg_type != RTM_DELROUTE) {
 +#ifdef NO_OPTSIZE
- int print_route(const struct sockaddr_nl *who, struct nlmsghdr *n, void *arg)
- {
- 	FILE *fp = (FILE*)arg;
-@@ -598,7 +605,12 @@ int print_route(const struct sockaddr_nl
- 	fflush(fp);
- 	return 0;
- }
--
-+#else
-+int print_route(const struct sockaddr_nl *who, struct nlmsghdr *n, void *arg)
-+{
-+	return 0;
-+}
-+#endif /* NO_OPTSIZE */
+ 		fprintf(stderr, "Not a route: %08x %08x %08x\n",
+ 			n->nlmsg_len, n->nlmsg_type, n->nlmsg_flags);
++#endif
+ 		return 0;
+ 	}
+ 	if (filter.flushb && n->nlmsg_type != RTM_NEWROUTE)
+ 		return 0;
+ 	len -= NLMSG_LENGTH(sizeof(*r));
+ 	if (len < 0) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "BUG: wrong nlmsg len %d\n", len);
++#endif
+ 		return -1;
+ 	}
  
- int parse_one_nh(struct rtattr *rta, struct rtnexthop *rtnh, int *argcp, char ***argvp)
- {
-@@ -613,7 +625,9 @@ int parse_one_nh(struct rtattr *rta, str
+@@ -613,7 +623,9 @@ int parse_one_nh(struct rtattr *rta, str
  		} else if (strcmp(*argv, "dev") == 0) {
  			NEXT_ARG();
  			if ((rtnh->rtnh_ifindex = ll_name_to_index(*argv)) == 0) {
@@ -1150,7 +937,7 @@
  				exit(1);
  			}
  		} else if (strcmp(*argv, "weight") == 0) {
-@@ -651,11 +665,15 @@ int parse_nexthops(struct nlmsghdr *n, s
+@@ -651,11 +663,15 @@ int parse_nexthops(struct nlmsghdr *n, s
  
  	while (argc > 0) {
  		if (strcmp(*argv, "nexthop") != 0) {
@@ -1166,7 +953,7 @@
  			exit(-1);
  		}
  		memset(rtnh, 0, sizeof(*rtnh));
-@@ -934,7 +952,9 @@ int iproute_modify(int cmd, unsigned fla
+@@ -934,7 +950,9 @@ int iproute_modify(int cmd, unsigned fla
  
  		if (d) {
  			if ((idx = ll_name_to_index(d)) == 0) {
@@ -1176,23 +963,7 @@
  				return -1;
  			}
  			addattr32(&req.n, sizeof(req), RTA_OIF, idx);
-@@ -983,6 +1003,7 @@ int iproute_modify(int cmd, unsigned fla
- 	return 0;
- }
- 
-+#ifdef NO_OPTSIZE
- static int rtnl_rtcache_request(struct rtnl_handle *rth, int family)
- {
- 	struct {
-@@ -1005,6 +1026,7 @@ static int rtnl_rtcache_request(struct r
- 
- 	return sendto(rth->fd, (void*)&req, sizeof(req), 0, (struct sockaddr*)&nladdr, sizeof(nladdr));
- }
-+#endif
- 
- static int iproute_flush_cache(void)
- {
-@@ -1015,14 +1037,18 @@ static int iproute_flush_cache(void)
+@@ -1015,14 +1033,18 @@ static int iproute_flush_cache(void)
  	char *buffer = "-1";
  
  	if (flush_fd < 0) {
@@ -1211,7 +982,7 @@
  		return -1;
  	}
  	close(flush_fd);
-@@ -1040,7 +1066,9 @@ static int iproute_list_or_flush(int arg
+@@ -1040,7 +1062,9 @@ static int iproute_list_or_flush(int arg
  	filter.tb = RT_TABLE_MAIN;
  
  	if (flush && argc <= 0) {
@@ -1221,7 +992,7 @@
  		return -1;
  	}
  
-@@ -1173,7 +1201,9 @@ static int iproute_list_or_flush(int arg
+@@ -1173,7 +1197,9 @@ static int iproute_list_or_flush(int arg
  
  		if (id) {
  			if ((idx = ll_name_to_index(id)) == 0) {
@@ -1231,7 +1002,7 @@
  				return -1;
  			}
  			filter.iif = idx;
-@@ -1181,7 +1211,9 @@ static int iproute_list_or_flush(int arg
+@@ -1181,7 +1207,9 @@ static int iproute_list_or_flush(int arg
  		}
  		if (od) {
  			if ((idx = ll_name_to_index(od)) == 0) {
@@ -1241,7 +1012,7 @@
  				return -1;
  			}
  			filter.oif = idx;
-@@ -1210,18 +1242,24 @@ static int iproute_list_or_flush(int arg
+@@ -1210,18 +1238,24 @@ static int iproute_list_or_flush(int arg
  
  		for (;;) {
  			if (rtnl_wilddump_request(&rth, do_ipv6, RTM_GETROUTE) < 0) {
@@ -1251,12 +1022,12 @@
  				exit(1);
  			}
  			filter.flushed = 0;
-+#ifdef NO_OPTSIZE
  			if (rtnl_dump_filter(&rth, print_route, stdout, NULL, NULL) < 0) {
++#ifdef NO_OPTSIZE
  				fprintf(stderr, "Flush terminated\n");
++#endif
  				exit(1);
  			}
-+#endif
  			if (filter.flushed == 0) {
  				if (round == 0) {
 +#ifdef NO_OPTSIZE
@@ -1266,23 +1037,17 @@
  				} else if (show_stats)
  					printf("*** Flush is complete after %d round%s ***\n", round, round>1?"s":"");
  				fflush(stdout);
-@@ -1244,6 +1282,7 @@ static int iproute_list_or_flush(int arg
- 		}
+@@ -1257,7 +1291,9 @@ static int iproute_list_or_flush(int arg
  	}
  
+ 	if (rtnl_dump_filter(&rth, print_route, stdout, NULL, NULL) < 0) {
 +#ifdef NO_OPTSIZE
- 	if (!filter.cloned) {
- 		if (rtnl_wilddump_request(&rth, do_ipv6, RTM_GETROUTE) < 0) {
- 			perror("Cannot send dump request");
-@@ -1260,6 +1299,7 @@ static int iproute_list_or_flush(int arg
  		fprintf(stderr, "Dump terminated\n");
++#endif
  		exit(1);
  	}
-+#endif
  
- 	exit(0);
- }
-@@ -1342,7 +1382,9 @@ int iproute_get(int argc, char **argv)
+@@ -1342,7 +1378,9 @@ int iproute_get(int argc, char **argv)
  	}
  
  	if (req.r.rtm_dst_len == 0) {
@@ -1292,7 +1057,7 @@
  		exit(1);
  	}
  
-@@ -1353,14 +1395,18 @@ int iproute_get(int argc, char **argv)
+@@ -1353,14 +1391,18 @@ int iproute_get(int argc, char **argv)
  
  		if (idev) {
  			if ((idx = ll_name_to_index(idev)) == 0) {
@@ -1311,7 +1076,7 @@
  				return -1;
  			}
  			addattr32(&req.n, sizeof(req), RTA_OIF, idx);
-@@ -1379,17 +1425,23 @@ int iproute_get(int argc, char **argv)
+@@ -1379,17 +1421,23 @@ int iproute_get(int argc, char **argv)
  		struct rtattr * tb[RTA_MAX+1];
  
  		if (print_route(NULL, &req.n, (void*)stdout) < 0) {
@@ -1335,7 +1100,7 @@
  			return -1;
  		}
  
-@@ -1399,7 +1451,9 @@ int iproute_get(int argc, char **argv)
+@@ -1399,7 +1447,9 @@ int iproute_get(int argc, char **argv)
  			tb[RTA_PREFSRC]->rta_type = RTA_SRC;
  			r->rtm_src_len = 8*RTA_PAYLOAD(tb[RTA_PREFSRC]);
  		} else if (!tb[RTA_SRC]) {
@@ -1345,41 +1110,17 @@
  			return -1;
  		}
  		if (!odev && tb[RTA_OIF])
-@@ -1415,10 +1469,12 @@ int iproute_get(int argc, char **argv)
- 			exit(2);
+@@ -1416,7 +1466,9 @@ int iproute_get(int argc, char **argv)
  	}
  
-+#ifdef NO_OPTSIZE
  	if (print_route(NULL, &req.n, (void*)stdout) < 0) {
++#ifdef NO_OPTSIZE
  		fprintf(stderr, "An error :-)\n");
++#endif
  		exit(1);
  	}
-+#endif
  
- 	exit(0);
- }
-@@ -1433,7 +1489,11 @@ void iproute_reset_filter()
- int do_iproute(int argc, char **argv)
- {
- 	if (argc < 1)
-+#ifdef NO_OPTSIZE
- 		return iproute_list_or_flush(0, NULL, 0);
-+#else
-+		return 0;
-+#endif
- 
- 	if (matches(*argv, "add") == 0)
- 		return iproute_modify(RTM_NEWROUTE, NLM_F_CREATE|NLM_F_EXCL,
-@@ -1456,16 +1516,20 @@ int do_iproute(int argc, char **argv)
- 	if (matches(*argv, "delete") == 0)
- 		return iproute_modify(RTM_DELROUTE, 0,
- 				      argc-1, argv+1);
-+#ifdef NO_OPTSIZE
- 	if (matches(*argv, "list") == 0 || matches(*argv, "show") == 0
- 	    || matches(*argv, "lst") == 0)
- 		return iproute_list_or_flush(argc-1, argv+1, 0);
-+#endif
- 	if (matches(*argv, "get") == 0)
+@@ -1463,9 +1515,11 @@ int do_iproute(int argc, char **argv)
  		return iproute_get(argc-1, argv+1);
  	if (matches(*argv, "flush") == 0)
  		return iproute_list_or_flush(argc-1, argv+1, 1);
@@ -1401,7 +1142,7 @@
  static void usage(void) __attribute__((noreturn));
  
  static void usage(void)
-@@ -46,7 +47,11 @@ static void usage(void)
+@@ -46,6 +47,9 @@ static void usage(void)
  	fprintf(stderr, "TABLE_ID := [ local | main | default | NUMBER ]\n");
  	exit(-1);
  }
@@ -1409,20 +1150,33 @@
 +#define usage() exit(-1)
 +#endif /* NO_OPTSIZE */
  
-+#ifdef NO_OPTSIZE
  int print_rule(const struct sockaddr_nl *who, struct nlmsghdr *n, void *arg)
  {
- 	FILE *fp = (FILE*)arg;
-@@ -216,7 +221,7 @@ static int iprule_list(int argc, char **
+@@ -200,17 +204,23 @@ static int iprule_list(int argc, char **
+ 		af = AF_INET;
  
- 	return 0;
- }
--
-+#endif /* NO_OPTSIZE */
+ 	if (argc > 0) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "\"ip rule show\" does not take any arguments.\n");
++#endif
+ 		return -1;
+ 	}
  
- static int iprule_modify(int cmd, int argc, char **argv)
- {
-@@ -313,7 +318,9 @@ static int iprule_modify(int cmd, int ar
+ 	if (rtnl_wilddump_request(&rth, af, RTM_GETRULE) < 0) {
++#ifdef NO_OPTSIZE
+ 		perror("Cannot send dump request");
++#endif
+ 		return 1;
+ 	}
+ 
+ 	if (rtnl_dump_filter(&rth, print_rule, stdout, NULL, NULL) < 0) {
++#ifdef NO_OPTSIZE
+ 		fprintf(stderr, "Dump terminated\n");
++#endif
+ 		return 1;
+ 	}
+ 
+@@ -313,7 +323,9 @@ static int iprule_modify(int cmd, int ar
  		} else if (strcmp(*argv, "nat") == 0 ||
  			   matches(*argv, "map-to") == 0) {
  			NEXT_ARG();
@@ -1432,7 +1186,7 @@
  			addattr32(&req.n, sizeof(req), RTA_GATEWAY, get_addr32(*argv));
  			req.r.rtm_type = RTN_NAT;
  		} else {
-@@ -392,17 +399,23 @@ static int iprule_flush(int argc, char *
+@@ -392,17 +404,23 @@ static int iprule_flush(int argc, char *
  		af = AF_INET;
  
  	if (argc > 0) {
@@ -1456,20 +1210,7 @@
  		return 1;
  	}
  
-@@ -412,21 +425,26 @@ static int iprule_flush(int argc, char *
- int do_iprule(int argc, char **argv)
- {
- 	if (argc < 1) {
-+#ifdef NO_OPTSIZE
- 		return iprule_list(0, NULL);
- 	} else if (matches(argv[0], "list") == 0 ||
- 		   matches(argv[0], "lst") == 0 ||
- 		   matches(argv[0], "show") == 0) {
- 		return iprule_list(argc-1, argv+1);
-+#endif
- 	} else if (matches(argv[0], "add") == 0) {
- 		return iprule_modify(RTM_NEWRULE, argc-1, argv+1);
- 	} else if (matches(argv[0], "delete") == 0) {
+@@ -423,10 +441,13 @@ int do_iprule(int argc, char **argv)
  		return iprule_modify(RTM_DELRULE, argc-1, argv+1);
  	} else if (matches(argv[0], "flush") == 0) {
  		return iprule_flush(argc-1, argv+1);
@@ -1609,23 +1350,37 @@
  		return -1;
  	}
  	return -1;
-@@ -289,6 +315,7 @@ static int do_del(int argc, char **argv)
- 	return -1;
- }
- 
+@@ -364,7 +390,9 @@ static int do_tunnels_list(struct ip_tun
+ 	char buf[512];
+ 	FILE *fp = fopen("/proc/net/dev", "r");
+ 	if (fp == NULL) {
 +#ifdef NO_OPTSIZE
- static void print_tunnel(struct ip_tunnel_parm *p)
- {
- 	char s1[1024];
-@@ -447,6 +474,7 @@ static int do_show(int argc, char **argv
- 	printf("\n");
- 	return 0;
- }
-+#endif /* NO_OPTSIZE */
+ 		perror("fopen");
++#endif
+ 		return -1;
+ 	}
  
- int do_iptunnel(int argc, char **argv)
- {
-@@ -464,7 +492,9 @@ int do_iptunnel(int argc, char **argv)
+@@ -376,7 +404,9 @@ static int do_tunnels_list(struct ip_tun
+ 		buf[sizeof(buf) - 1] = 0;
+ 		if ((ptr = strchr(buf, ':')) == NULL ||
+ 		    (*ptr++ = 0, sscanf(buf, "%s", name) != 1)) {
++#ifdef NO_OPTSIZE
+ 			fprintf(stderr, "Wrong format of /proc/net/dev. Sorry.\n");
++#endif
+ 			return -1;
+ 		}
+ 		if (sscanf(ptr, "%ld%ld%ld%ld%ld%ld%ld%*d%ld%ld%ld%ld%ld%ld%ld",
+@@ -389,7 +419,9 @@ static int do_tunnels_list(struct ip_tun
+ 			continue;
+ 		type = tnl_ioctl_get_iftype(name);
+ 		if (type == -1) {
++#ifdef NO_OPTSIZE
+ 			fprintf(stderr, "Failed to get type of [%s]\n", name);
++#endif
+ 			continue;
+ 		}
+ 		if (type != ARPHRD_TUNNEL && type != ARPHRD_IPGRE && type != ARPHRD_SIT)
+@@ -464,7 +496,9 @@ int do_iptunnel(int argc, char **argv)
  	case AF_INET6:
  		return do_ip6tunnel(argc, argv);
  	default:
@@ -1635,15 +1390,11 @@
  		exit(-1);
  	}
  
-@@ -475,15 +505,20 @@ int do_iptunnel(int argc, char **argv)
- 			return do_add(SIOCCHGTUNNEL, argc-1, argv+1);
- 		if (matches(*argv, "del") == 0)
- 			return do_del(argc-1, argv+1);
-+#ifdef NO_OPTSIZE
- 		if (matches(*argv, "show") == 0 ||
+@@ -479,11 +513,16 @@ int do_iptunnel(int argc, char **argv)
  		    matches(*argv, "lst") == 0 ||
  		    matches(*argv, "list") == 0)
  			return do_show(argc-1, argv+1);
++#ifdef NO_OPTSIZE
  		if (matches(*argv, "help") == 0)
  			usage();
 -	} else
@@ -1657,94 +1408,22 @@
 +#endif
  	exit(-1);
  }
---- iproute2/ip/ipxfrm.c
-+++ iproute2/ip/ipxfrm.c
-@@ -54,6 +54,7 @@
- 
- struct xfrm_filter filter;
- 
-+#ifdef NO_OPTSIZE
- static void usage(void) __attribute__((noreturn));
- 
- static void usage(void)
-@@ -63,6 +64,9 @@ static void usage(void)
- 		"where  XFRM_OBJECT := { state | policy | monitor }\n");
- 	exit(-1);
- }
-+#else
-+#define usage() exit(-1)
-+#endif
- 
- /* This is based on utils.c(inet_addr_match) */
- int xfrm_addr_match(xfrm_address_t *x1, xfrm_address_t *x2, int bits)
-@@ -251,6 +255,7 @@ const char *strxf_proto(__u8 proto)
- 	return p;
- }
- 
-+#ifdef NO_OPTSIZE
- void xfrm_id_info_print(xfrm_address_t *saddr, struct xfrm_id *id,
- 			__u8 mode, __u32 reqid, __u16 family, int force_spi,
- 			FILE *fp, const char *prefix, const char *title)
-@@ -856,6 +861,7 @@ void xfrm_policy_info_print(struct xfrm_
- 
- 	xfrm_xfrma_print(tb, xpinfo->sel.family, fp, buf);
- }
-+#endif /* NO_OPTSIZE */
- 
- int xfrm_id_parse(xfrm_address_t *saddr, struct xfrm_id *id, __u16 *family,
- 		  int loose, int *argcp, char ***argvp)
-@@ -1105,7 +1111,9 @@ static int xfrm_selector_upspec_parse(st
- 		case IPPROTO_DCCP:
- 			break;
- 		default:
-+#ifdef NO_OPTSIZE
- 			fprintf(stderr, "\"sport\" and \"dport\" are invalid with proto=%s\n", strxf_proto(sel->proto));
-+#endif
- 			exit(1);
- 		}
- 	}
-@@ -1116,7 +1124,9 @@ static int xfrm_selector_upspec_parse(st
- 		case IPPROTO_MH:
- 			break;
- 		default:
-+#ifdef NO_OPTSIZE
- 			fprintf(stderr, "\"type\" and \"code\" are invalid with proto=%s\n", strxf_proto(sel->proto));
-+#endif
- 			exit(1);
- 		}
- 	}
-@@ -1277,6 +1287,7 @@ int do_xfrm(int argc, char **argv)
- 		return do_xfrm_state(argc-1, argv+1);
- 	else if (matches(*argv, "policy") == 0)
- 		return do_xfrm_policy(argc-1, argv+1);
-+#ifdef NO_OPTSIZE
- 	else if (matches(*argv, "monitor") == 0)
- 		return do_xfrm_monitor(argc-1, argv+1);
- 	else if (matches(*argv, "help") == 0) {
-@@ -1284,5 +1295,6 @@ int do_xfrm(int argc, char **argv)
- 		fprintf(stderr, "xfrm Object \"%s\" is unknown.\n", *argv);
- 		exit(-1);
- 	}
-+#endif
- 	usage();
- }
 --- iproute2/ip/Makefile
 +++ iproute2/ip/Makefile
-@@ -1,10 +1,16 @@
+@@ -1,10 +1,15 @@
  IPOBJ=ip.o ipaddress.o iproute.o iprule.o \
      rtm_map.o iptunnel.o ip6tunnel.o tunnel.o ipneigh.o ipntable.o iplink.o \
 -    ipmaddr.o ipmonitor.o ipmroute.o ipprefix.o \
 -    ipxfrm.o xfrm_state.o xfrm_policy.o xfrm_monitor.o
 +    ipmaddr.o ipmroute.o ipprefix.o \
-+    ipxfrm.o xfrm_state.o xfrm_policy.o
 +
 +ifdef OPTSIZE_FLAG
-+IPOBJ+=ipmonitor.o xfrm_monitor.o
++IPOBJ+=ipmonitor.o xfrm_monitor.o ipxfrm.o xfrm_state.o xfrm_policy.o
 +endif
  
  RTMONOBJ=rtmon.o
  
-+LDFLAGS= -ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC
++LDFLAGS= -ffunction-sections -fdata-sections -Wl,--gc-sections
 +
  ALLOBJ=$(IPOBJ) $(RTMONOBJ)
  SCRIPTS=ifcfg rtpr routel routef
@@ -1826,669 +1505,69 @@
  		return 1;
  	}
  
---- iproute2/ip/xfrm_monitor.c
-+++ iproute2/ip/xfrm_monitor.c
-@@ -33,6 +33,7 @@
- #include "xfrm.h"
- #include "ip_common.h"
- 
+--- iproute2/ip/tunnel.c
++++ iproute2/ip/tunnel.c
+@@ -69,7 +69,9 @@ int tnl_ioctl_get_ifindex(const char *de
+ 	fd = socket(preferred_family, SOCK_DGRAM, 0);
+ 	err = ioctl(fd, SIOCGIFINDEX, &ifr);
+ 	if (err) {
 +#ifdef NO_OPTSIZE
- static void usage(void) __attribute__((noreturn));
- 
- static void usage(void)
-@@ -40,7 +41,11 @@ static void usage(void)
- 	fprintf(stderr, "Usage: ip xfrm monitor [ all | LISTofOBJECTS ]\n");
- 	exit(-1);
- }
-+#else
-+#define usage() exit(-1)
-+#endif /* NO_OPTSIZE */
- 
-+#ifdef NO_OPTSIZE
- static int xfrm_acquire_print(const struct sockaddr_nl *who,
- 			      struct nlmsghdr *n, void *arg)
- {
-@@ -192,6 +197,7 @@ static int xfrm_ae_print(const struct so
- 
- 	return 0;
- }
-+#endif /* NO_OPTSIZE */
- 
- static int xfrm_accept_msg(const struct sockaddr_nl *who,
- 			   struct nlmsghdr *n, void *arg)
-@@ -285,7 +291,9 @@ int do_xfrm_monitor(int argc, char **arg
- 		} else if (matches(*argv, "help") == 0) {
- 			usage();
- 		} else {
-+#ifdef NO_OPTSIZE
- 			fprintf(stderr, "Argument \"%s\" is unknown, try \"ip xfrm monitor help\".\n", *argv);
-+#endif
- 			exit(-1);
- 		}
- 		argc--;	argv++;
-@@ -308,7 +316,9 @@ int do_xfrm_monitor(int argc, char **arg
- 		FILE *fp;
- 		fp = fopen(file, "r");
- 		if (fp == NULL) {
-+#ifdef NO_OPTSIZE
- 			perror("Cannot fopen");
-+#endif
- 			exit(-1);
- 		}
- 		return rtnl_from_file(fp, xfrm_accept_msg, (void*)stdout);
---- iproute2/ip/xfrm_policy.c
-+++ iproute2/ip/xfrm_policy.c
-@@ -49,6 +49,7 @@
- #define RTA_BUF_SIZE 2048
- #define XFRM_TMPLS_BUF_SIZE 1024
- 
-+#ifdef NO_OPTSIZE
- static void usage(void) __attribute__((noreturn));
- 
- static void usage(void)
-@@ -96,6 +97,9 @@ static void usage(void)
- 
- 	exit(-1);
- }
-+#else
-+#define usage() exit(-1)
-+#endif /* NO_OPTSIZE */
- 
- static int xfrm_policy_dir_parse(__u8 *dir, int *argcp, char ***argvp)
- {
-@@ -267,7 +271,9 @@ static int xfrm_policy_modify(int cmd, u
- 			struct xfrm_user_tmpl *tmpl;
- 
- 			if (tmpls_len + sizeof(*tmpl) > sizeof(tmpls_buf)) {
-+#ifdef NO_OPTSIZE
- 				fprintf(stderr, "Too many tmpls: buffer overflow\n");
-+#endif
- 				exit(1);
- 			}
- 			tmpl = (struct xfrm_user_tmpl *)((char *)tmpls_buf + tmpls_len);
-@@ -295,7 +301,9 @@ static int xfrm_policy_modify(int cmd, u
- 	}
- 
- 	if (!dirp) {
-+#ifdef NO_OPTSIZE
- 		fprintf(stderr, "Not enough information: \"DIR\" is required.\n");
-+#endif
- 		exit(1);
- 	}
- 
-@@ -375,6 +383,7 @@ static int xfrm_policy_filter_match(stru
- 	return 1;
- }
- 
-+#ifdef NO_OPTSIZE
- int xfrm_policy_print(const struct sockaddr_nl *who, struct nlmsghdr *n,
- 		      void *arg)
- {
-@@ -471,6 +480,7 @@ int xfrm_policy_print(const struct socka
- 
- 	return 0;
- }
-+#endif /* NO_OPTSIZE */
- 
- static int xfrm_policy_get_or_delete(int argc, char **argv, int delete,
- 				     void *res_nlbuf)
-@@ -535,7 +545,9 @@ static int xfrm_policy_get_or_delete(int
- 	}
- 
- 	if (!dirp) {
-+#ifdef NO_OPTSIZE
- 		fprintf(stderr, "Not enough information: \"DIR\" is required.\n");
-+#endif
- 		exit(1);
- 	}
- 	if (ptypep) {
-@@ -543,7 +555,9 @@ static int xfrm_policy_get_or_delete(int
- 			  (void *)&upt, sizeof(upt));
- 	}
- 	if (!selp && !indexp) {
-+#ifdef NO_OPTSIZE
- 		fprintf(stderr, "Not enough information: either \"SELECTOR\" or \"INDEX\" is required.\n");
-+#endif
- 		exit(1);
- 	}
- 	if (selp && indexp)
-@@ -568,6 +582,7 @@ static int xfrm_policy_delete(int argc,
- 	return xfrm_policy_get_or_delete(argc, argv, 1, NULL);
- }
- 
-+#ifdef NO_OPTSIZE
- static int xfrm_policy_get(int argc, char **argv)
- {
- 	char buf[NLMSG_BUF_SIZE];
-@@ -584,6 +599,7 @@ static int xfrm_policy_get(int argc, cha
- 
- 	return 0;
- }
-+#endif /* NO_OPTSIZE */
- 
- /*
-  * With an existing policy of nlmsg, make new nlmsg for deleting the policy
-@@ -603,14 +619,18 @@ static int xfrm_policy_keep(const struct
- 	struct xfrm_userpolicy_id *xpid;
- 
- 	if (n->nlmsg_type != XFRM_MSG_NEWPOLICY) {
-+#ifdef NO_OPTSIZE
- 		fprintf(stderr, "Not a policy: %08x %08x %08x\n",
- 			n->nlmsg_len, n->nlmsg_type, n->nlmsg_flags);
+ 		perror("ioctl");
 +#endif
  		return 0;
  	}
- 
- 	len -= NLMSG_LENGTH(sizeof(*xpinfo));
- 	if (len < 0) {
+ 	close(fd);
+@@ -86,7 +88,9 @@ int tnl_ioctl_get_iftype(const char *dev
+ 	fd = socket(preferred_family, SOCK_DGRAM, 0);
+ 	err = ioctl(fd, SIOCGIFHWADDR, &ifr);
+ 	if (err) {
 +#ifdef NO_OPTSIZE
- 		fprintf(stderr, "BUG: wrong nlmsg len %d\n", len);
+ 		perror("ioctl");
 +#endif
  		return -1;
  	}
- 
-@@ -620,7 +640,9 @@ static int xfrm_policy_keep(const struct
- 		struct xfrm_userpolicy_type *upt;
- 
- 		if (RTA_PAYLOAD(tb[XFRMA_POLICY_TYPE]) < sizeof(*upt)) {
+ 	close(fd);
+@@ -104,7 +108,9 @@ char * tnl_ioctl_get_ifname(int idx)
+ 	fd = socket(preferred_family, SOCK_DGRAM, 0);
+ 	err = ioctl(fd, SIOCGIFNAME, &ifr);
+ 	if (err) {
 +#ifdef NO_OPTSIZE
- 			fprintf(stderr, "too short XFRMA_POLICY_TYPE len\n");
+ 		perror("ioctl");
 +#endif
- 			return -1;
- 		}
- 		upt = (struct xfrm_userpolicy_type *)RTA_DATA(tb[XFRMA_POLICY_TYPE]);
-@@ -631,7 +653,9 @@ static int xfrm_policy_keep(const struct
- 		return 0;
- 
- 	if (xb->offset > xb->size) {
-+#ifdef NO_OPTSIZE
- 		fprintf(stderr, "Policy buffer overflow\n");
-+#endif
- 		return -1;
+ 		return NULL;
  	}
- 
-@@ -729,35 +753,49 @@ static int xfrm_policy_list_or_deleteall
- 			xb.offset = 0;
- 			xb.nlmsg_count = 0;
- 
+ 	close(fd);
+@@ -122,7 +128,9 @@ int tnl_get_ioctl(const char *basedev, v
+ 	fd = socket(preferred_family, SOCK_DGRAM, 0);
+ 	err = ioctl(fd, SIOCGETTUNNEL, &ifr);
+ 	if (err)
 +#ifdef NO_OPTSIZE
- 			if (show_stats > 1)
- 				fprintf(stderr, "Delete-all round = %d\n", i);
+ 		perror("ioctl");
 +#endif
- 
- 			if (rtnl_wilddump_request(&rth, preferred_family, XFRM_MSG_GETPOLICY) < 0) {
-+#ifdef NO_OPTSIZE
- 				perror("Cannot send dump request");
-+#endif
- 				exit(1);
- 			}
- 
- 			if (rtnl_dump_filter(&rth, xfrm_policy_keep, &xb, NULL, NULL) < 0) {
-+#ifdef NO_OPTSIZE
- 				fprintf(stderr, "Delete-all terminated\n");
-+#endif
- 				exit(1);
- 			}
- 			if (xb.nlmsg_count == 0) {
-+#ifdef NO_OPTSIZE
- 				if (show_stats > 1)
- 					fprintf(stderr, "Delete-all completed\n");
-+#endif
- 				break;
- 			}
- 
- 			if (rtnl_send(&rth, xb.buf, xb.offset) < 0) {
-+#ifdef NO_OPTSIZE
- 				perror("Failed to send delete-all request\n");
-+#endif
- 				exit(1);
- 			}
-+#ifdef NO_OPTSIZE
- 			if (show_stats > 1)
- 				fprintf(stderr, "Delete-all nlmsg count = %d\n", xb.nlmsg_count);
-+#endif
- 
- 			xb.offset = 0;
- 			xb.nlmsg_count = 0;
- 		}
--	} else {
-+	}
-+#ifdef NO_OPTSIZE
-+	else {
- 		if (rtnl_wilddump_request(&rth, preferred_family, XFRM_MSG_GETPOLICY) < 0) {
- 			perror("Cannot send dump request");
- 			exit(1);
-@@ -768,6 +806,7 @@ static int xfrm_policy_list_or_deleteall
- 			exit(1);
- 		}
- 	}
-+#endif
- 
- 	rtnl_close(&rth);
- 
-@@ -785,7 +824,9 @@ int print_spdinfo( struct nlmsghdr *n, v
- 
- 	len -= NLMSG_LENGTH(sizeof(__u32));
- 	if (len < 0) {
-+#ifdef NO_OPTSIZE
- 		fprintf(stderr, "SPDinfo: Wrong len %d\n", len);
-+#endif
- 		return -1;
- 	}
- 
-@@ -797,7 +838,9 @@ int print_spdinfo( struct nlmsghdr *n, v
- 		struct xfrmu_spdinfo *si;
- 
- 		if (RTA_PAYLOAD(tb[XFRMA_SPD_INFO]) < sizeof(*si)) {
-+#ifdef NO_OPTSIZE
- 			fprintf(stderr, "SPDinfo: Wrong len %d\n", len);
-+#endif
- 			return -1;
- 		}
- 		si = RTA_DATA(tb[XFRMA_SPD_INFO]);
-@@ -820,7 +863,9 @@ int print_spdinfo( struct nlmsghdr *n, v
- 
- 		if (tb[XFRMA_SPD_HINFO]) {
- 			if (RTA_PAYLOAD(tb[XFRMA_SPD_HINFO]) < sizeof(*sh)) {
-+#ifdef NO_OPTSIZE
- 				fprintf(stderr, "SPDinfo: Wrong len %d\n", len);
-+#endif
- 				return -1;
- 			}
- 			sh = RTA_DATA(tb[XFRMA_SPD_HINFO]);
-@@ -904,8 +949,10 @@ static int xfrm_policy_flush(int argc, c
- 	if (rtnl_open_byproto(&rth, 0, NETLINK_XFRM) < 0)
- 		exit(1);
- 
-+#ifdef NO_OPTSIZE
- 	if (show_stats > 1)
- 		fprintf(stderr, "Flush policy\n");
-+#endif
- 
- 	if (rtnl_talk(&rth, &req.n, 0, 0, NULL, NULL, NULL) < 0)
- 		exit(2);
-@@ -917,8 +964,10 @@ static int xfrm_policy_flush(int argc, c
- 
- int do_xfrm_policy(int argc, char **argv)
- {
-+#ifdef NO_OPTSIZE
- 	if (argc < 1)
- 		return xfrm_policy_list_or_deleteall(0, NULL, 0);
-+#endif
- 
- 	if (matches(*argv, "add") == 0)
- 		return xfrm_policy_modify(XFRM_MSG_NEWPOLICY, 0,
-@@ -930,17 +979,21 @@ int do_xfrm_policy(int argc, char **argv
- 		return xfrm_policy_delete(argc-1, argv+1);
- 	if (matches(*argv, "deleteall") == 0 || matches(*argv, "delall") == 0)
- 		return xfrm_policy_list_or_deleteall(argc-1, argv+1, 1);
-+#ifdef NO_OPTSIZE
- 	if (matches(*argv, "list") == 0 || matches(*argv, "show") == 0
- 	    || matches(*argv, "lst") == 0)
- 		return xfrm_policy_list_or_deleteall(argc-1, argv+1, 0);
- 	if (matches(*argv, "get") == 0)
- 		return xfrm_policy_get(argc-1, argv+1);
-+#endif
- 	if (matches(*argv, "flush") == 0)
- 		return xfrm_policy_flush(argc-1, argv+1);
- 	if (matches(*argv, "count") == 0)
- 		return xfrm_spd_getinfo(argc, argv);
-+#ifdef NO_OPTSIZE
- 	if (matches(*argv, "help") == 0)
- 		usage();
- 	fprintf(stderr, "Command \"%s\" is unknown, try \"ip xfrm policy help\".\n", *argv);
-+#endif
- 	exit(-1);
+ 	close(fd);
+ 	return err;
  }
---- iproute2/ip/xfrm_state.c
-+++ iproute2/ip/xfrm_state.c
-@@ -51,6 +51,7 @@
- #define RTA_BUF_SIZE 2048
- #define XFRM_ALGO_KEY_BUF_SIZE 512
- 
+@@ -140,8 +148,10 @@ int tnl_add_ioctl(int cmd, const char *b
+ 	ifr.ifr_ifru.ifru_data = p;
+ 	fd = socket(preferred_family, SOCK_DGRAM, 0);
+ 	err = ioctl(fd, cmd, &ifr);
 +#ifdef NO_OPTSIZE
- static void usage(void) __attribute__((noreturn));
- 
- static void usage(void)
-@@ -110,6 +111,9 @@ static void usage(void)
- 	fprintf(stderr, "         [ [byte-soft|byte-hard] SIZE ] | [ [packet-soft|packet-hard] COUNT ]\n");
- 	exit(-1);
+ 	if (err)
+ 		perror("ioctl");
++#endif
+ 	close(fd);
+ 	return err;
  }
-+#else
-+#define usage() exit(-1)
-+#endif /* NO_OPTSIZE */
- 
- static int xfrm_algo_parse(struct xfrm_algo *alg, enum xfrm_attr_type_t type,
- 			   char *name, char *key, int max)
-@@ -387,7 +391,9 @@ static int xfrm_state_modify(int cmd, un
- 	}
- 
- 	if (!idp) {
+@@ -159,8 +169,10 @@ int tnl_del_ioctl(const char *basedev, c
+ 	ifr.ifr_ifru.ifru_data = p;
+ 	fd = socket(preferred_family, SOCK_DGRAM, 0);
+ 	err = ioctl(fd, SIOCDELTUNNEL, &ifr);
 +#ifdef NO_OPTSIZE
- 		fprintf(stderr, "Not enough information: \"ID\" is required\n");
+ 	if (err)
+ 		perror("ioctl");
 +#endif
- 		exit(1);
- 	}
- 
-@@ -395,21 +401,27 @@ static int xfrm_state_modify(int cmd, un
- 	case XFRM_MODE_TRANSPORT:
- 	case XFRM_MODE_TUNNEL:
- 		if (!xfrm_xfrmproto_is_ipsec(req.xsinfo.id.proto)) {
-+#ifdef NO_OPTSIZE
- 			fprintf(stderr, "\"mode\" is invalid with proto=%s\n",
- 				strxf_xfrmproto(req.xsinfo.id.proto));
-+#endif
- 			exit(1);
- 		}
- 		break;
- 	case XFRM_MODE_ROUTEOPTIMIZATION:
- 	case XFRM_MODE_IN_TRIGGER:
- 		if (!xfrm_xfrmproto_is_ro(req.xsinfo.id.proto)) {
-+#ifdef NO_OPTSIZE
- 			fprintf(stderr, "\"mode\" is invalid with proto=%s\n",
- 				strxf_xfrmproto(req.xsinfo.id.proto));
-+#endif
- 			exit(1);
- 		}
- 		if (req.xsinfo.id.spi != 0) {
-+#ifdef NO_OPTSIZE
- 			fprintf(stderr, "\"spi\" must be 0 with proto=%s\n",
- 				strxf_xfrmproto(req.xsinfo.id.proto));
-+#endif
- 			exit(1);
- 		}
- 		break;
-@@ -419,28 +431,36 @@ static int xfrm_state_modify(int cmd, un
- 
- 	if (ealgop || aalgop || calgop) {
- 		if (!xfrm_xfrmproto_is_ipsec(req.xsinfo.id.proto)) {
-+#ifdef NO_OPTSIZE
- 			fprintf(stderr, "\"ALGO\" is invalid with proto=%s\n",
- 				strxf_xfrmproto(req.xsinfo.id.proto));
-+#endif
- 			exit(1);
- 		}
- 	} else {
- 		if (xfrm_xfrmproto_is_ipsec(req.xsinfo.id.proto)) {
-+#ifdef NO_OPTSIZE
- 			fprintf(stderr, "\"ALGO\" is required with proto=%s\n",
- 				strxf_xfrmproto(req.xsinfo.id.proto));
-+#endif
- 			exit (1);
- 		}
- 	}
- 
- 	if (coap) {
- 		if (!xfrm_xfrmproto_is_ro(req.xsinfo.id.proto)) {
-+#ifdef NO_OPTSIZE
- 			fprintf(stderr, "\"coa\" is invalid with proto=%s\n",
- 				strxf_xfrmproto(req.xsinfo.id.proto));
-+#endif
- 			exit(1);
- 		}
- 	} else {
- 		if (xfrm_xfrmproto_is_ro(req.xsinfo.id.proto)) {
-+#ifdef NO_OPTSIZE
- 			fprintf(stderr, "\"coa\" is required with proto=%s\n",
- 				strxf_xfrmproto(req.xsinfo.id.proto));
-+#endif
- 			exit (1);
- 		}
- 	}
-@@ -527,7 +547,9 @@ static int xfrm_state_allocspi(int argc,
- 			xfrm_id_parse(&req.xspi.info.saddr, &req.xspi.info.id,
- 				      &req.xspi.info.family, 0, &argc, &argv);
- 			if (req.xspi.info.id.spi) {
-+#ifdef NO_OPTSIZE
- 				fprintf(stderr, "\"SPI\" must be zero\n");
-+#endif
- 				exit(1);
- 			}
- 			if (preferred_family == AF_UNSPEC)
-@@ -537,22 +559,30 @@ static int xfrm_state_allocspi(int argc,
- 	}
- 
- 	if (!idp) {
-+#ifdef NO_OPTSIZE
- 		fprintf(stderr, "Not enough information: \"ID\" is required\n");
-+#endif
- 		exit(1);
- 	}
- 
- 	if (minp) {
- 		if (!maxp) {
-+#ifdef NO_OPTSIZE
- 			fprintf(stderr, "\"max\" is missing\n");
-+#endif
- 			exit(1);
- 		}
- 		if (req.xspi.min > req.xspi.max) {
-+#ifdef NO_OPTSIZE
- 			fprintf(stderr, "\"min\" valie is larger than \"max\" one\n");
-+#endif
- 			exit(1);
- 		}
- 	} else {
- 		if (maxp) {
-+#ifdef NO_OPTSIZE
- 			fprintf(stderr, "\"min\" is missing\n");
-+#endif
- 			exit(1);
- 		}
- 
-@@ -579,10 +609,12 @@ static int xfrm_state_allocspi(int argc,
- 	if (rtnl_talk(&rth, &req.n, 0, 0, res_n, NULL, NULL) < 0)
- 		exit(2);
- 
-+#ifdef NO_OPTSIZE
- 	if (xfrm_state_print(NULL, res_n, (void*)stdout) < 0) {
- 		fprintf(stderr, "An error :-)\n");
- 		exit(1);
- 	}
-+#endif
- 
- 	rtnl_close(&rth);
- 
-@@ -617,6 +649,7 @@ static int xfrm_state_filter_match(struc
- 	return 1;
- }
- 
-+#ifdef NO_OPTSIZE
- int xfrm_state_print(const struct sockaddr_nl *who, struct nlmsghdr *n,
- 		     void *arg)
- {
-@@ -703,6 +736,7 @@ int xfrm_state_print(const struct sockad
- 
- 	return 0;
- }
-+#endif /* NO_OPTSIZE */
- 
- static int xfrm_state_get_or_delete(int argc, char **argv, int delete)
- {
-@@ -754,7 +788,9 @@ static int xfrm_state_get_or_delete(int
- 	if (delete) {
- 		if (rtnl_talk(&rth, &req.n, 0, 0, NULL, NULL, NULL) < 0)
- 			exit(2);
--	} else {
-+	}
-+#ifdef NO_OPTSIZE
-+	else {
- 		char buf[NLMSG_BUF_SIZE];
- 		struct nlmsghdr *res_n = (struct nlmsghdr *)buf;
- 
-@@ -768,6 +804,7 @@ static int xfrm_state_get_or_delete(int
- 			exit(1);
- 		}
- 	}
-+#endif
- 
- 	rtnl_close(&rth);
- 
-@@ -790,14 +827,18 @@ static int xfrm_state_keep(const struct
- 	struct xfrm_usersa_id *xsid;
- 
- 	if (n->nlmsg_type != XFRM_MSG_NEWSA) {
-+#ifdef NO_OPTSIZE
- 		fprintf(stderr, "Not a state: %08x %08x %08x\n",
- 			n->nlmsg_len, n->nlmsg_type, n->nlmsg_flags);
-+#endif
- 		return 0;
- 	}
- 
- 	len -= NLMSG_LENGTH(sizeof(*xsinfo));
- 	if (len < 0) {
-+#ifdef NO_OPTSIZE
- 		fprintf(stderr, "BUG: wrong nlmsg len %d\n", len);
-+#endif
- 		return -1;
- 	}
- 
-@@ -805,7 +846,9 @@ static int xfrm_state_keep(const struct
- 		return 0;
- 
- 	if (xb->offset > xb->size) {
-+#ifdef NO_OPTSIZE
- 		fprintf(stderr, "State buffer overflow\n");
-+#endif
- 		return -1;
- 	}
- 
-@@ -888,36 +931,50 @@ static int xfrm_state_list_or_deleteall(
- 			xb.offset = 0;
- 			xb.nlmsg_count = 0;
- 
-+#ifdef NO_OPTSIZE
- 			if (show_stats > 1)
- 				fprintf(stderr, "Delete-all round = %d\n", i);
-+#endif
- 
- 			if (rtnl_wilddump_request(&rth, preferred_family, XFRM_MSG_GETSA) < 0) {
-+#ifdef NO_OPTSIZE
- 				perror("Cannot send dump request");
-+#endif
- 				exit(1);
- 			}
- 
- 			if (rtnl_dump_filter(&rth, xfrm_state_keep, &xb, NULL, NULL) < 0) {
-+#ifdef NO_OPTSIZE
- 				fprintf(stderr, "Delete-all terminated\n");
-+#endif
- 				exit(1);
- 			}
- 			if (xb.nlmsg_count == 0) {
-+#ifdef NO_OPTSIZE
- 				if (show_stats > 1)
- 					fprintf(stderr, "Delete-all completed\n");
-+#endif
- 				break;
- 			}
- 
- 			if (rtnl_send(&rth, xb.buf, xb.offset) < 0) {
-+#ifdef NO_OPTSIZE
- 				perror("Failed to send delete-all request\n");
-+#endif
- 				exit(1);
- 			}
-+#ifdef NO_OPTSIZE
- 			if (show_stats > 1)
- 				fprintf(stderr, "Delete-all nlmsg count = %d\n", xb.nlmsg_count);
-+#endif
- 
- 			xb.offset = 0;
- 			xb.nlmsg_count = 0;
- 		}
- 
--	} else {
-+	}
-+#ifdef NO_OPTSIZE
-+	else {
- 		if (rtnl_wilddump_request(&rth, preferred_family, XFRM_MSG_GETSA) < 0) {
- 			perror("Cannot send dump request");
- 			exit(1);
-@@ -928,6 +985,7 @@ static int xfrm_state_list_or_deleteall(
- 			exit(1);
- 		}
- 	}
-+#endif
- 
- 	rtnl_close(&rth);
- 
-@@ -946,7 +1004,9 @@ int print_sadinfo(struct nlmsghdr *n, vo
- 
- 	len -= NLMSG_LENGTH(sizeof(__u32));
- 	if (len < 0) {
-+#ifdef NO_OPTSIZE
- 		fprintf(stderr, "SADinfo: Wrong len %d\n", len);
-+#endif
- 		return -1;
- 	}
- 
-@@ -958,7 +1018,9 @@ int print_sadinfo(struct nlmsghdr *n, vo
- 		cnt = (__u32 *)RTA_DATA(tb[XFRMA_SAD_CNT]);
- 		fprintf(fp," count %d", *cnt);
- 	} else {
-+#ifdef NO_OPTSIZE
- 		fprintf(fp,"BAD SAD info returned\n");
-+#endif
- 		return -1;
- 	}
- 
-@@ -967,7 +1029,9 @@ int print_sadinfo(struct nlmsghdr *n, vo
- 			struct xfrmu_sadhinfo *si;
- 
- 			if (RTA_PAYLOAD(tb[XFRMA_SAD_HINFO]) < sizeof(*si)) {
-+#ifdef NO_OPTSIZE
- 				fprintf(fp,"BAD SAD length returned\n");
-+#endif
- 				return -1;
- 			}
- 				
-@@ -1051,10 +1115,12 @@ static int xfrm_state_flush(int argc, ch
- 	if (rtnl_open_byproto(&rth, 0, NETLINK_XFRM) < 0)
- 		exit(1);
- 
-+#ifdef NO_OPTSIZE
- 	if (show_stats > 1)
- 		fprintf(stderr, "Flush state proto=%s\n",
- 			(req.xsf.proto == IPSEC_PROTO_ANY) ? "any" :
- 			strxf_xfrmproto(req.xsf.proto));
-+#endif
- 
- 	if (rtnl_talk(&rth, &req.n, 0, 0, NULL, NULL, NULL) < 0)
- 		exit(2);
-@@ -1066,8 +1132,10 @@ static int xfrm_state_flush(int argc, ch
- 
- int do_xfrm_state(int argc, char **argv)
- {
-+#ifdef NO_OPTSIZE
- 	if (argc < 1)
- 		return xfrm_state_list_or_deleteall(0, NULL, 0);
-+#endif
- 
- 	if (matches(*argv, "add") == 0)
- 		return xfrm_state_modify(XFRM_MSG_NEWSA, 0,
-@@ -1081,18 +1149,22 @@ int do_xfrm_state(int argc, char **argv)
- 		return xfrm_state_get_or_delete(argc-1, argv+1, 1);
- 	if (matches(*argv, "deleteall") == 0 || matches(*argv, "delall") == 0)
- 		return xfrm_state_list_or_deleteall(argc-1, argv+1, 1);
-+#ifdef NO_OPTSIZE
- 	if (matches(*argv, "list") == 0 || matches(*argv, "show") == 0
- 	    || matches(*argv, "lst") == 0)
- 		return xfrm_state_list_or_deleteall(argc-1, argv+1, 0);
- 	if (matches(*argv, "get") == 0)
- 		return xfrm_state_get_or_delete(argc-1, argv+1, 0);
-+#endif
- 	if (matches(*argv, "flush") == 0)
- 		return xfrm_state_flush(argc-1, argv+1);
- 	if (matches(*argv, "count") == 0) {
- 		return xfrm_sad_getinfo(argc, argv);
- 	}
-+#ifdef NO_OPTSIZE
- 	if (matches(*argv, "help") == 0)
- 		usage();
- 	fprintf(stderr, "Command \"%s\" is unknown, try \"ip xfrm state help\".\n", *argv);
-+#endif
- 	exit(-1);
+ 	close(fd);
+ 	return err;
  }
 --- iproute2/lib/libnetlink.c
 +++ iproute2/lib/libnetlink.c
@@ -2897,7 +1976,7 @@
  
  NLOBJ=ll_map.o libnetlink.o
  
-+LDFLAGS= -ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC
++LDFLAGS= -ffunction-sections -fdata-sections -Wl,--gc-sections
 +
  all: libnetlink.a libutil.a
  
@@ -4303,37 +3382,19 @@
  void
  exit_tryhelp(int status)
  {
-@@ -74,6 +77,9 @@ exit_tryhelp(int status)
- 		pname, pname);
+@@ -92,6 +95,11 @@ exit_error(enum exittype status, char *m
+ 			"Perhaps iptables or your kernel needs to be upgraded.\n");
  	exit(status);
  }
 +#else
 +#define exit_tryhelp(status) exit(status)
++#define exit_error(status, msg, ...) exit(status)
 +#endif /* NO_OPTSIZE */
++
  
- void
- exit_error(enum exittype status, char *msg, ...)
-@@ -81,15 +87,19 @@ exit_error(enum exittype status, char *m
- 	va_list args;
- 
- 	va_start(args, msg);
-+#ifdef NO_OPTSIZE
- 	fprintf(stderr, "%s v%s: ", pname, pversion);
- 	vfprintf(stderr, msg, args);
-+#endif
- 	va_end(args);
- 	fprintf(stderr, "\n");
- 	if (status == PARAMETER_PROBLEM)
- 		exit_tryhelp(status);
-+#ifdef NO_OPTSIZE
- 	if (status == VERSION_PROBLEM)
- 		fprintf(stderr,
- 			"Perhaps iptables or your kernel needs to be upgraded.\n");
-+#endif
- 	exit(status);
- }
- 
-@@ -191,7 +201,9 @@ fw_calloc(size_t count, size_t size)
+ /* stolen from iptables 1.2.11
+ They should really have them as a library so i can link to them
+@@ -191,7 +199,9 @@ fw_calloc(size_t count, size_t size)
  	void *p;
  
  	if ((p = (void *) calloc(count, size)) == NULL) {
@@ -4343,7 +3404,7 @@
  		exit(1);
  	}
  	return p;
-@@ -267,8 +279,10 @@ get_target_name(const char *name)
+@@ -267,8 +277,10 @@ get_target_name(const char *name)
  			if (NULL == m) {
  				m = find_t(lname);
  				if (NULL == m) {
@@ -4354,7 +3415,7 @@
  					dlclose(handle);
  					return NULL;
  				}
-@@ -386,7 +400,9 @@ static int parse_ipt(struct action_util
+@@ -386,7 +398,9 @@ static int parse_ipt(struct action_util
  	}
  
  	if (argc <= 2) {
@@ -4364,7 +3425,7 @@
  		return -1;
  	}
  
-@@ -407,7 +423,9 @@ static int parse_ipt(struct action_util
+@@ -407,7 +421,9 @@ static int parse_ipt(struct action_util
  				    merge_options(opts, m->extra_opts,
  						  &m->option_offset);
  			} else {
@@ -4374,7 +3435,7 @@
  				return -1;
  			}
  			ok++;
-@@ -419,7 +437,9 @@ static int parse_ipt(struct action_util
+@@ -419,7 +435,9 @@ static int parse_ipt(struct action_util
  				m->parse(c - m->option_offset, argv, 0,
  					 &m->tflags, NULL, &m->t);
  			} else {
@@ -4384,7 +3445,7 @@
  				return -1;
  
  			}
-@@ -432,7 +452,9 @@ static int parse_ipt(struct action_util
+@@ -432,7 +450,9 @@ static int parse_ipt(struct action_util
  	if (iargc > optind) {
  		if (matches(argv[optind], "index") == 0) {
  			if (get_u32(&index, argv[optind + 1], 10)) {
@@ -4394,7 +3455,7 @@
  				free_opts(opts);
  				return -1;
  			}
-@@ -443,7 +465,9 @@ static int parse_ipt(struct action_util
+@@ -443,7 +463,9 @@ static int parse_ipt(struct action_util
  	}
  
  	if (!ok && !iok) {
@@ -4404,7 +3465,7 @@
  		return -1;
  	}
  
-@@ -537,7 +561,9 @@ print_ipt(struct action_util *au,FILE *
+@@ -537,7 +559,9 @@ print_ipt(struct action_util *au,FILE *
  		m = get_target_name(t->u.user.name);
  		if (NULL != m) {
  			if (0 > build_st(m, t)) {
@@ -4414,7 +3475,7 @@
  				return -1;
  			}
  
-@@ -545,8 +571,10 @@ print_ipt(struct action_util *au,FILE *
+@@ -545,8 +569,10 @@ print_ipt(struct action_util *au,FILE *
  			    merge_options(opts, m->extra_opts,
  					  &m->option_offset);
  		} else {
@@ -6672,6 +5733,38 @@
  	return -1;
  }
  
+--- iproute2/tc/tc_monitor.c
++++ iproute2/tc/tc_monitor.c
+@@ -30,7 +30,9 @@ static void usage(void) __attribute__((n
+ 
+ static void usage(void)
+ {
++#ifdef NO_OPTSIZE
+ 	fprintf(stderr, "Usage: tc monitor\n");
++#endif
+ 	exit(-1);
+ }
+ 
+@@ -78,7 +80,9 @@ int do_tcmonitor(int argc, char **argv)
+ 			if (matches(*argv, "help") == 0) {
+ 				usage();
+ 			} else {
++#ifdef NO_OPTSIZE
+ 				fprintf(stderr, "Argument \"%s\" is unknown, try \"tc monitor help\".\n", *argv);
++#endif
+ 				exit(-1);
+ 			}
+ 		}
+@@ -89,7 +93,9 @@ int do_tcmonitor(int argc, char **argv)
+ 		FILE *fp;
+ 		fp = fopen(file, "r");
+ 		if (fp == NULL) {
++#ifdef NO_OPTSIZE
+ 			perror("Cannot fopen");
++#endif
+ 			exit(-1);
+ 		}
+ 		return rtnl_from_file(fp, accept_tcmsg, (void*)stdout);
 --- iproute2/tc/tc_qdisc.c
 +++ iproute2/tc/tc_qdisc.c
 @@ -25,6 +25,7 @@
