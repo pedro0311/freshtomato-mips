@@ -1,29 +1,27 @@
 include ../common.mak
 
-CFLAGS = -Os -Wall $(EXTRACFLAGS) -fPIC
+CFLAGS = -Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC
 CFLAGS += -I. -I$(SRCBASE)/include -I$(SRCBASE)/
 
-LDFLAGS =
+LDFLAGS = --gc-sections -fPIC
 
-OBJS = shutils.o wl.o wl_linux.o linux_timer.o defaults.o id.o
-OBJS += misc.o led.o version.o base64.o files.o strings.o process.o
+OBJS = shutils.o wl.o wl_linux.o linux_timer.o defaults.o id.o misc.o \
+       led.o version.o base64.o files.o strings.o process.o ifaddrs.o
 
 ifeq ($(TCONFIG_USB),y)
-OBJS += usb.o
-OBJS += $(TOP)/busybox/util-linux/volume_id/ext.o
-OBJS += $(TOP)/busybox/util-linux/volume_id/util2.o
-OBJS += $(TOP)/busybox/util-linux/volume_id/fat.o
-OBJS += $(TOP)/busybox/util-linux/volume_id/ntfs.o
-OBJS += $(TOP)/busybox/util-linux/volume_id/linux_swap.o
+OBJS += usb.o \
+        $(TOP)/busybox/util-linux/volume_id/ext.o \
+        $(TOP)/busybox/util-linux/volume_id/util2.o \
+        $(TOP)/busybox/util-linux/volume_id/fat.o \
+        $(TOP)/busybox/util-linux/volume_id/ntfs.o \
+        $(TOP)/busybox/util-linux/volume_id/linux_swap.o
 endif
-
-OBJS += ifaddrs.o
-
-all: libshared.so libshared.a
 
 ifeq ($(CONFIG_BCMWL5),y)
 OBJS += wlif_utils.o UdpLib.o
 endif
+
+all: libshared.so libshared.a
 
 libshared.so: $(OBJS)
 	@echo " [shared] LD $@"
@@ -37,13 +35,11 @@ libshared.a: $(OBJS)
 	@rm -f $@
 	@$(AR) cruv $@ $^
 
-
 install: all
 	@echo " [shared] Installing as $(INSTALLDIR)/usr/lib/libshared.so"
 	@install -d $(INSTALLDIR)/usr/lib
 	@install -m 755 libshared.so $(INSTALLDIR)/usr/lib
 	@$(STRIP) $(INSTALLDIR)/usr/lib/libshared.so
-
 
 clean:
 	rm -f *.o *.so *.a .*.depend
@@ -59,4 +55,3 @@ clean:
 	@$(CC) $(CFLAGS) -M $< > $@
 
 -include $(OBJS:%.o=.%.depend)
-
