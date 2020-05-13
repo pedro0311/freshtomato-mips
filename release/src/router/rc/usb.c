@@ -664,7 +664,7 @@ int dir_is_mountpoint(const char *root, const char *dir)
 {
 	char path[256];
 	struct stat sb;
-	int thisdev;
+	unsigned int thisdev;
 
 	snprintf(path, sizeof(path), "%s%s%s", root ? : "", root ? "/" : "", dir);
 
