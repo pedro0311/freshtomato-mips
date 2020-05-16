@@ -1094,10 +1094,10 @@ vsftpd-clean:
 
 ntfs-3g/Makefile:
 	$(call patch_files,ntfs-3g)
-	cd $(TOP)/ntfs-3g && \
-	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC $(OPTSIZE_FLAG)" \
-	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
-	$(CONFIGURE) --enable-shared=no --enable-static=no \
+	cd ntfs-3g && \
+		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC $(OPTSIZE_FLAG)" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
+		$(CONFIGURE) --enable-shared=no --enable-static=no \
 		--disable-library --disable-ldconfig --disable-mount-helper --with-fuse=internal \
 		--disable-ntfsprogs --disable-crypto --without-uuid \
 		--disable-posix-acls --disable-nfconv --disable-dependency-tracking
@@ -1165,7 +1165,7 @@ dhcpv6/stamp-h1:
 	ac_cv_func_setpgrp_void=yes \
 	$(CONFIGURE) --prefix= --with-localdbdir=/var
 	@$(MAKE) -C dhcpv6 clean
-	@touch dhcpv6/stamp-h1
+	@touch $@
 
 dhcpv6: dhcpv6/stamp-h1
 	@$(SEP)
@@ -1500,7 +1500,7 @@ endif
 	@true
 
 jpeg/stamp-h1:
-	cd $(TOP)/jpeg && \
+	cd jpeg && \
 	CFLAGS="-Os $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections" \
 	LDFLAGS="-fPIC -ffunction-sections -fdata-sections" \
 	AR2="touch" \
@@ -1557,7 +1557,7 @@ endif
 	@true
 
 zlib/stamp-h1:
-	cd $(TOP)/zlib && \
+	cd zlib && \
 	CFLAGS="-Os -Wall $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections" \
 	CPPLAGS="-Os -Wall -fPIC -ffunction-sections -fdata-sections" \
 	LDFLAGS="-fPIC -ffunction-sections -fdata-sections -Wl,--gc-sections" \
@@ -1585,13 +1585,13 @@ endif
 
 libid3tag/stamp-h1: zlib
 	$(call patch_files,libid3tag)
-	cd $(TOP)/libid3tag && autoreconf -fsi && \
+	cd libid3tag && autoreconf -fsi && \
 	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC" \
 	CPPFLAGS="-Os -Wall -ffunction-sections -fdata-sections -fPIC -I$(TOP)/zlib" \
 	LDFLAGS="-L$(TOP)/zlib -fPIC -ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	$(CONFIGURE) --enable-shared --enable-static --prefix='' \
 		--disable-debugging --disable-profiling --disable-dependency-tracking
-	touch libid3tag/stamp-h1
+	touch $@
 
 libid3tag: libid3tag/stamp-h1 zlib
 	@$(SEP)
@@ -1656,7 +1656,6 @@ igmpproxy/src/Makefile: igmpproxy/src/Makefile.in
 igmpproxy: igmpproxy/src/Makefile
 	@$(SEP)
 	@$(MAKE) -C igmpproxy/src \
-	CC=$(CC) \
 	CFLAGS="-Os -g -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	$(PARALLEL_BUILD)
@@ -1671,7 +1670,8 @@ igmpproxy-clean:
 
 hotplug2:
 	@$(SEP)
-	$(MAKE) -C $@ CROSS_COMPILE=$(CROSS_COMPILE) CC=$(CC) EXTRACFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+	$(MAKE) -C $@ CROSS_COMPILE=$(CROSS_COMPILE) \
+		EXTRACFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections"
 
 hotplug2-install:
@@ -1785,7 +1785,8 @@ glib-install: glib
 
 nocat/stamp-h1: glib-install
 	@cd nocat && \
-	NC_CONF_PATH="/" CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
+	NC_CONF_PATH="/" \
+	CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
 	$(CONFIGURE) --with-firewall=iptables --with-glib-prefix="$(INSTALLDIR)/glib/usr" --localstatedir=/var --sysconfdir=/etc
 	@$(MAKE) -C nocat
 
@@ -1811,15 +1812,13 @@ nocat-install:
 	install -D nocat/libexec/iptables/* $(INSTALLDIR)/nocat/usr/libexec/nocat
 	rm -rf $(INSTALLDIR)/glib/*
 
-#Tomato RAF
 pcre/stamp-h1:
 	$(call patch_files,pcre)
-	cd pcre && \
-	autoreconf -fsi && \
-	CC=$(CC) CXX=$(HOST)-g++ AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
-	$(CONFIGURE) --prefix=/usr --disable-dependency-tracking --enable-utf8 --enable-unicode-properties --disable-cpp
+	cd pcre && autoreconf -fsi && \
+		CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
+		$(CONFIGURE) --prefix=/usr --disable-dependency-tracking --enable-utf8 --enable-unicode-properties --disable-cpp
 	[ -d pcre/m4 ] || mkdir pcre/m4
-	@touch pcre/stamp-h1
+	@touch $@
 
 pcre: pcre/stamp-h1
 	@$(SEP)
@@ -1844,11 +1843,11 @@ pcre-clean:
 	$(call unpatch_files,pcre)
 
 libxml2/stamp-h1:
-	cd libxml2 && \
-	autoreconf -fsi && \
-	CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) CFLAGS="-Os -Wall -I$(TOP)/zlib $(EXTRACFLAGS)" LDFLAGS="-L$(TOP)/zlib" \
-	$(CONFIGURE) --prefix=/usr --without-python --enable-static --enable-shared \
-		--includedir="$(TOP)/libxml2/include" --without-lzma --disable-dependency-tracking
+	cd libxml2 && autoreconf -fsi && \
+		CFLAGS="-Os -Wall -I$(TOP)/zlib $(EXTRACFLAGS)" \
+		LDFLAGS="-L$(TOP)/zlib" \
+		$(CONFIGURE) --prefix=/usr --without-python --enable-static --enable-shared \
+			--includedir="$(TOP)/libxml2/include" --without-lzma --disable-dependency-tracking
 	touch $@
 
 libxml2: libxml2/stamp-h1
@@ -1870,8 +1869,9 @@ libxml2-clean:
 
 libpng/stamp-h1:
 	cd libpng && \
-	CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) CFLAGS="-Os -Wall -I$(TOP)/zlib $(EXTRACFLAGS)" LDFLAGS="-L$(TOP)/zlib" \
-	$(CONFIGURE) --prefix=/usr --enable-static --enable-shared
+		CFLAGS="-Os -Wall -I$(TOP)/zlib $(EXTRACFLAGS)" \
+		LDFLAGS="-L$(TOP)/zlib" \
+		$(CONFIGURE) --prefix=/usr --enable-static --enable-shared
 	touch $@
 
 libpng: libpng/stamp-h1
@@ -1897,10 +1897,9 @@ libpng-clean:
 	@rm -rf libpng/staged
 
 libatomic_ops/stamp-h1:
-	cd libatomic_ops && \
-	./autogen.sh && \
-	CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
-	$(CONFIGURE) --prefix=/usr --enable-static --enable-shared
+	cd libatomic_ops && ./autogen.sh && \
+		CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
+		$(CONFIGURE) --prefix=/usr --enable-static --enable-shared
 	touch $@
 
 libatomic_ops: libatomic_ops/stamp-h1
@@ -1917,7 +1916,7 @@ libatomic_ops-clean:
 
 php/stamp-h1: pcre zlib libiconv sqlite libxml2 libpng jpeg libcurl
 	$(call patch_files,php)
-	cd php && CC=$(CC) CXX=$(ARCH)-g++ AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) \
+	cd php && \
 	CFLAGS="-Os -Wall -I$(TOP)/zlib -I$(TOP)/libxml2/include/libxml -I$(TOP)/libxml2/include -I$(TOP)/pcre -I$(TOP)/libiconv/include \
 		-I$(TOP)/libpng/staged/usr/include -I$(TOP)/libcurl/staged/usr/include" \
 	LDFLAGS="-L$(TOP)/pcre/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/zlib -L$(TOP)/libxml2/.libs -L$(TOP)/libiconv/lib/.libs \
@@ -2172,7 +2171,7 @@ mysql-install:
 	cp -arfpu $(TOP)/mysql/staged/usr/share/mysql/mysql_system_tables_data.sql .
 
 lzo/stamp-h1:
-	cd $(TOP)/lzo && \
+	cd lzo && \
 	CFLAGS="$(CFLAG_OPTIMIZE) -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC" \
 	CPPFLAGS="$(CFLAG_OPTIMIZE) -Wall -ffunction-sections -fdata-sections -fPIC" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
@@ -2338,7 +2337,7 @@ libiconv-install:
 
 transmission/stamp-h1: $(OPENSSLDIR) libcurl libevent zlib
 	$(call patch_files,transmission)
-	cd $(TOP)/transmission && autoreconf -f && \
+	cd transmission && autoreconf -f && \
 		CFLAGS="-Os -Wall -pipe -mtune=mips32 -mips32 -fno-delete-null-pointer-checks -funit-at-a-time \
 			--param large-function-growth=800 --param max-inline-insns-single=3000 \
 			-ffunction-sections -fdata-sections -fPIC" \
@@ -2526,7 +2525,7 @@ sd-idle-install: sd-idle/stamp-h1
 
 snmp/stamp-h1:
 	$(call patch_files,snmp)
-	cd $(TOP)/snmp && autoreconf -fsi && \
+	cd snmp && autoreconf -fsi && \
 	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections $(OPTSIZE_FLAG)" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	$(CONFIGURE) --prefix=/usr --with-endianness=little --enable-mini-agent --disable-debugging \
