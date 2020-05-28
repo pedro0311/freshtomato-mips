@@ -1009,12 +1009,12 @@ ppp-%:
 	$(MAKE) -C ppp/pppoecd $* INSTALLDIR=$(INSTALLDIR)/ppp $(if $(TCONFIG_IPV6),HAVE_INET6=y,)
 
 rp-pppoe/src/stamp-h1: rp-pppoe/src/Makefile.in
-	$(call patch_files,rp-pppoe)
-	cd rp-pppoe/src && CFLAGS="-g -Os $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
-	CPPFLAGS="-Os -ffunction-sections -fdata-sections" \
-	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
-	$(CONFIGURE) --prefix=/usr --enable-plugin=$(TOP)/pppd \
-	ac_cv_linux_kernel_pppoe=yes rpppoe_cv_pack_bitfields=rev
+	cd rp-pppoe/src && \
+		CFLAGS="-g -Os $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+		CPPFLAGS="-Os -ffunction-sections -fdata-sections" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
+		$(CONFIGURE) --prefix=/usr --enable-plugin=$(TOP)/pppd --disable-debugging  \
+			ac_cv_linux_kernel_pppoe=yes rpppoe_cv_pack_bitfields=rev ac_cv_path_PPPD=$(TOP)/pppd
 	@touch $@
 
 rp-pppoe: pppd rp-pppoe/src/stamp-h1
