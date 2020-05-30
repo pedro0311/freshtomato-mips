@@ -32,6 +32,7 @@ export HOST := mipsel-linux
 export TOOLCHAIN := $(shell cd $(dir $(shell which $(CROSS_COMPILE)strip))/.. && pwd -P)
 
 export CC := $(CROSS_COMPILE)gcc
+export CXX := $(CROSS_COMPILE)g++
 export AR := $(CROSS_COMPILE)ar
 export AS := $(CROSS_COMPILE)as
 export LD := $(CROSS_COMPILE)ld
