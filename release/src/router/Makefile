@@ -2308,8 +2308,8 @@ libevent-clean:
 
 libevent-install:
 	install -d $(INSTALLDIR)/libevent/usr/lib
-	install libevent/.libs/libevent-2.0.so.5.1.11 $(INSTALLDIR)/libevent/usr/lib/libevent-2.0.so.5
-	$(STRIP) -s $(INSTALLDIR)/libevent/usr/lib/libevent-2.0.so.5
+	install libevent/.libs/libevent-2.1.so.7.0.0 $(INSTALLDIR)/libevent/usr/lib/libevent-2.1.so.7
+	$(STRIP) -s $(INSTALLDIR)/libevent/usr/lib/libevent-2.1.so.7
 
 libiconv/stamp-h1:
 	cd libiconv && \
