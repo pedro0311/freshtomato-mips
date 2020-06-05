@@ -1331,6 +1331,17 @@ iproute2-clean:
 	-@$(MAKE) -C iproute2 clean
 	$(call unpatch_files,iproute2)
 
+dropbear/config.h:
+	$(call patch_files,dropbear)
+	cd dropbear && autoreconf -fsi && \
+		CFLAGS="-Os -Wall $(EXTRACFLAGS) -DARGTYPE=3 -ffunction-sections -fdata-sections $(OPTSIZE_MORE_FLAG)" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
+		ac_cv_func_logout=no ac_cv_func_logwtmp=no \
+		$(CONFIGURE) --disable-zlib --enable-syslog --disable-lastlog --disable-utmp \
+			--disable-utmpx --disable-wtmp --disable-wtmpx --disable-pututline --disable-pututxline \
+			--disable-loginfunc --disable-pam --enable-openpty --enable-bundled-libtom
+	@$(MAKE) -C dropbear clean
+
 dropbear: dropbear/config.h
 	@$(SEP)
 ifeq ($(TCONFIG_ZEBRA),y)
@@ -1353,19 +1364,6 @@ dropbear-clean:
 	-@$(MAKE) -C dropbear clean
 	@rm -f dropbear/config.h
 	$(call unpatch_files,dropbear)
-
-dropbear/config.h:
-	$(call patch_files,dropbear)
-	cd dropbear && autoreconf -fsi && \
-		CFLAGS="-Os -Wall $(EXTRACFLAGS) -DARGTYPE=3 -ffunction-sections -fdata-sections $(OPTSIZE_MORE_FLAG)" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
-		ac_cv_func_logout=no ac_cv_func_logwtmp=no \
-		$(CONFIGURE) --disable-zlib --enable-syslog --disable-lastlog --disable-utmp \
-		--disable-utmpx --disable-wtmp --disable-wtmpx --disable-pututline \
-		--disable-pututxline --disable-loginfunc --disable-pam --enable-openpty --enable-bundled-libtom
-	@$(MAKE) -C dropbear clean
-
-# Media libraries
 
 sqlite/stamp-h1:
 	cd sqlite && \
