@@ -2497,23 +2497,6 @@ tinc-install:
 	$(STRIP) $(INSTALLDIR)/tinc/usr/sbin/tinc
 	$(STRIP) $(INSTALLDIR)/tinc/usr/sbin/tincd
 
-sd-idle/stamp-h1:
-	@$(SEP)
-	cd sd-idle \
-	CFLAGS="-Os -Wall --host=$(HOST) --target=$(HOST) $(EXTRACFLAGS)" \
-	$(MAKE) -C sd-idle
-	chmod 0755 sd-idle/sd-idle
-	@touch $@
-
-sd-idle-clean:
-	-@$(MAKE) -C sd-idle clean
-	@rm -f sd-idle/stamp-h1
-
-sd-idle-install: sd-idle/stamp-h1
-	install -d $(INSTALLDIR)/sd-idle/usr/bin
-	install -D sd-idle/sd-idle $(INSTALLDIR)/sd-idle/usr/bin/sd-idle
-	$(STRIP) -s $(INSTALLDIR)/sd-idle/usr/bin/sd-idle
-
 snmp/stamp-h1:
 	$(call patch_files,snmp)
 	cd snmp && autoreconf -fsi && \
@@ -2806,6 +2789,18 @@ comgt-install:
 comgt-clean:
 	-@$(MAKE) -C comgt clean
 	$(call unpatch_files,comgt)
+
+sd-idle:
+	@$(SEP)
+	$(MAKE) -C sd-idle CFLAGS="-Os -Wall $(EXTRACFLAGS)"
+
+sd-idle-install:
+	install -d $(INSTALLDIR)/sd-idle/usr/bin
+	install -D -m 0755 sd-idle/sd-idle $(INSTALLDIR)/sd-idle/usr/bin/sd-idle
+	$(STRIP) -s $(INSTALLDIR)/sd-idle/usr/bin/sd-idle
+
+sd-idle-clean:
+	-@$(MAKE) -C sd-idle clean
 
 iperf/stamp-h1:
 	cd iperf && autoreconf -fsi && \
