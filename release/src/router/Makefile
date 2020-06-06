@@ -2378,7 +2378,7 @@ ifneq ($(TCONFIG_TR_EXTRAS),y)
 endif
 
 libnfsidmap/stamp-h1:
-	cd libnfsidmap && autoreconf -fsi && \
+	cd libnfsidmap && ./autogen.sh && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
 		ac_cv_func_malloc_0_nonnull=yes \
 		ac_cv_func_realloc_0_nonnull=yes \
@@ -2389,14 +2389,14 @@ libnfsidmap: libnfsidmap/stamp-h1
 	@$(SEP)
 	$(MAKE) -C libnfsidmap $(PARALLEL_BUILD)
 
+libnfsidmap-install:
+	install -d $(TOP)/libnfsidmap/staged
+	$(MAKE) -C libnfsidmap DESTDIR=$(TOP)/libnfsidmap/staged install
+
 libnfsidmap-clean:
 	-@$(MAKE) -C libnfsidmap clean
 	@rm -f libnfsidmap/stamp-h1
 	@rm -rf libnfsidmap/staged
-
-libnfsidmap-install:
-	install -d $(TOP)/libnfsidmap/staged
-	$(MAKE) -C libnfsidmap DESTDIR=$(TOP)/libnfsidmap/staged install
 
 portmap:
 	@$(SEP)
