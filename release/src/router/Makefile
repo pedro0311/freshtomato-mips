@@ -15,6 +15,7 @@ include common.mak
 #TOMATO_EXPERIMENTAL=0
 
 export PARALLEL_BUILD := -j`grep -c '^processor' /proc/cpuinfo`
+export HAVE_TOMATO := y
 
 
 define patch_files
@@ -866,9 +867,9 @@ openssl-install:
 
 openssl-1.1/stamp-h1:
 ifeq ($(TCONFIG_KEYGEN),y)
-	mv patches/openssl-1.1/104-reduce-size-for-smaller-targets.patch patches/openssl/104-reduce-size-for-smaller-targets.patch.tmp || true
+	mv patches/openssl-1.1/104-reduce-size-for-smaller-targets.patch patches/openssl-1.1/104-reduce-size-for-smaller-targets.patch.tmp || true
 else
-	mv patches/openssl-1.1/104-reduce-size-for-smaller-targets.patch.tmp patches/openssl/104-reduce-size-for-smaller-targets.patch || true
+	mv patches/openssl-1.1/104-reduce-size-for-smaller-targets.patch.tmp patches/openssl-1.1/104-reduce-size-for-smaller-targets.patch || true
 endif
 	$(call patch_files,openssl-1.1)
 	cd openssl-1.1 && \
@@ -877,7 +878,7 @@ endif
 	NM=$(NM:$(CROSS_COMPILE)%=%) \
 	RANLIB=$(RANLIB:$(CROSS_COMPILE)%=%) \
 	./Configure $(HOSTCONFIG) --prefix=/usr --openssldir=/etc/ssl \
-	-Os -ffunction-sections -fdata-sections -Wl,--gc-sections -fomit-frame-pointer \
+	$(CFLAG_OPTIMIZE) -ffunction-sections -fdata-sections -Wl,--gc-sections -fomit-frame-pointer \
 	shared $(OPENSSL_CIPHERS) no-ssl3 no-err no-async --api=1.0.0 \
 	no-aria no-sm2 no-sm3 no-sm4 $(if $(TCONFIG_BBT),,no-rc4) \
 	-DOPENSSL_PREFER_CHACHA_OVER_GCM
@@ -1167,9 +1168,10 @@ libusb10-clean:
 
 usbmodeswitch: libusb10
 	@$(SEP)
-	$(MAKE) -C $@ CC=$(CC) CFLAGS="-Os $(EXTRACFLAGS) -DLIBUSB10 \
-	    -Wl,-R/lib:/usr/lib:/opt/usr/lib:/usr/local/share -lpthread \
-	    -I$(TOP)/libusb10/libusb -L$(TOP)/libusb10/libusb/.libs -lusb-1.0"
+	$(MAKE) -C $@ \
+	CFLAGS="-Os $(EXTRACFLAGS) -DLIBUSB10 -Wl,-R/lib:/usr/lib:/opt/usr/lib -I$(TOP)/libusb10/libusb" \
+	LDFLAGS="-L$(TOP)/libusb10/libusb/.libs" \
+	LIBS="-lpthread -lusb-1.0"
 
 usbmodeswitchdb-install:
 	@mkdir -p $(TARGETDIR)/rom/etc/usb_modeswitch.d
@@ -1357,6 +1359,17 @@ iproute2-clean:
 	-@$(MAKE) -C iproute2 clean
 	$(call unpatch_files,iproute2)
 
+dropbear/config.h:
+	$(call patch_files,dropbear)
+	cd dropbear && autoreconf -fsi && \
+		CFLAGS="-Os -Wall $(EXTRACFLAGS) -DARGTYPE=3 -ffunction-sections -fdata-sections $(OPTSIZE_MORE_FLAG)" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
+		ac_cv_func_logout=no ac_cv_func_logwtmp=no \
+		$(CONFIGURE) --disable-zlib --enable-syslog --disable-lastlog --disable-utmp \
+			--disable-utmpx --disable-wtmp --disable-wtmpx --disable-pututline --disable-pututxline \
+			--disable-loginfunc --disable-pam --enable-openpty --enable-bundled-libtom
+	@$(MAKE) -C dropbear clean
+
 dropbear: dropbear/config.h
 	@$(SEP)
 ifeq ($(TCONFIG_ZEBRA),y)
@@ -1379,19 +1392,6 @@ dropbear-clean:
 	-@$(MAKE) -C dropbear clean
 	@rm -f dropbear/config.h
 	$(call unpatch_files,dropbear)
-
-dropbear/config.h:
-	$(call patch_files,dropbear)
-	cd dropbear && autoreconf -fsi && \
-		CFLAGS="-Os -Wall $(EXTRACFLAGS) -DARGTYPE=3 -ffunction-sections -fdata-sections $(OPTSIZE_MORE_FLAG)" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
-		ac_cv_func_logout=no ac_cv_func_logwtmp=no \
-		$(CONFIGURE) --disable-zlib --enable-syslog --disable-lastlog --disable-utmp \
-		--disable-utmpx --disable-wtmp --disable-wtmpx --disable-pututline \
-		--disable-pututxline --disable-loginfunc --disable-pam --enable-openpty --enable-bundled-libtom
-	@$(MAKE) -C dropbear clean
-
-# Media libraries
 
 sqlite/stamp-h1:
 	cd sqlite && \
@@ -2280,6 +2280,7 @@ CACERT:=
 endif
 
 libcurl/stamp-h1: zlib $(OPENSSLDIR)
+	$(call patch_files,libcurl)
 	cd libcurl && ./buildconf && \
 		CFLAGS="-Os -Wall -pipe -funit-at-a-time -Wno-pointer-sign -mtune=mips32 -mips32 -ffunction-sections -fdata-sections -fPIC" \
 		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC -I$(TOP)/$(OPENSSLDIR)/include" \
@@ -2312,6 +2313,7 @@ libcurl-clean:
 	-@$(MAKE) -C libcurl clean
 	@rm -f libcurl/stamp-h1 libcurl/Makefile
 	@rm -rf libcurl/staged
+	$(call unpatch_files,libcurl)
 
 libevent/stamp-h1:
 	cd libevent && ./autogen.sh && CC=$(CC) \
@@ -2332,8 +2334,8 @@ libevent-clean:
 
 libevent-install:
 	install -d $(INSTALLDIR)/libevent/usr/lib
-	install libevent/.libs/libevent-2.0.so.5.1.11 $(INSTALLDIR)/libevent/usr/lib/libevent-2.0.so.5
-	$(STRIP) -s $(INSTALLDIR)/libevent/usr/lib/libevent-2.0.so.5
+	install libevent/.libs/libevent-2.1.so.7.0.0 $(INSTALLDIR)/libevent/usr/lib/libevent-2.1.so.7
+	$(STRIP) -s $(INSTALLDIR)/libevent/usr/lib/libevent-2.1.so.7
 
 libiconv/stamp-h1:
 	cd libiconv && \
@@ -2404,7 +2406,7 @@ ifneq ($(TCONFIG_TR_EXTRAS),y)
 endif
 
 libnfsidmap/stamp-h1:
-	cd libnfsidmap && autoreconf -fsi && \
+	cd libnfsidmap && ./autogen.sh && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
 		ac_cv_func_malloc_0_nonnull=yes \
 		ac_cv_func_realloc_0_nonnull=yes \
@@ -2415,24 +2417,18 @@ libnfsidmap: libnfsidmap/stamp-h1
 	@$(SEP)
 	$(MAKE) -C libnfsidmap $(PARALLEL_BUILD)
 
+libnfsidmap-install:
+	install -d $(TOP)/libnfsidmap/staged
+	$(MAKE) -C libnfsidmap DESTDIR=$(TOP)/libnfsidmap/staged install
+
 libnfsidmap-clean:
 	-@$(MAKE) -C libnfsidmap clean
 	@rm -f libnfsidmap/stamp-h1
 	@rm -rf libnfsidmap/staged
 
-libnfsidmap-install:
-	install -d $(TOP)/libnfsidmap/staged
-	$(MAKE) -C libnfsidmap DESTDIR=$(TOP)/libnfsidmap/staged install
-
-portmap/stamp-h1:
-	$(call patch_files,portmap)
-	cd portmap \
-	$(MAKE) -C portmap
-	@touch $@
-
-portmap: portmap/stamp-h1
+portmap:
 	@$(SEP)
-	$(MAKE) -C portmap CFLAGS="-Os -Wall $(EXTRACFLAGS)" NO_TCP_WRAPPER=y RPCUSER=nobody $(PARALLEL_BUILD)
+	$(MAKE) -C portmap CFLAGS="-Os -Wall $(EXTRACFLAGS)" NO_TCP_WRAPPER=y NO_PIE=y RPCUSER=nobody $(PARALLEL_BUILD)
 
 portmap-install:
 	install -D portmap/portmap $(INSTALLDIR)/portmap/usr/sbin/portmap
@@ -2440,8 +2436,6 @@ portmap-install:
 
 portmap-clean:
 	-@$(MAKE) -C portmap clean
-	@rm -f portmap/stamp-h1
-	$(call unpatch_files,portmap)
 
 e2fsprogs/stamp-h1:
 	cd e2fsprogs && \
@@ -2530,23 +2524,6 @@ tinc-install:
 	install -D tinc/src/tincd $(INSTALLDIR)/tinc/usr/sbin/tincd
 	$(STRIP) $(INSTALLDIR)/tinc/usr/sbin/tinc
 	$(STRIP) $(INSTALLDIR)/tinc/usr/sbin/tincd
-
-sd-idle/stamp-h1:
-	@$(SEP)
-	cd sd-idle \
-	CFLAGS="-Os -Wall --host=$(HOST) --target=$(HOST) $(EXTRACFLAGS)" \
-	$(MAKE) -C sd-idle
-	chmod 0755 sd-idle/sd-idle
-	@touch $@
-
-sd-idle-clean:
-	-@$(MAKE) -C sd-idle clean
-	@rm -f sd-idle/stamp-h1
-
-sd-idle-install: sd-idle/stamp-h1
-	install -d $(INSTALLDIR)/sd-idle/usr/bin
-	install -D sd-idle/sd-idle $(INSTALLDIR)/sd-idle/usr/bin/sd-idle
-	$(STRIP) -s $(INSTALLDIR)/sd-idle/usr/bin/sd-idle
 
 snmp/stamp-h1:
 	$(call patch_files,snmp)
@@ -2773,7 +2750,7 @@ mdadm-clean:
 
 ipset:
 	@$(SEP)
-	$(MAKE) -C ipset binaries COPT_FLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections"
+	$(MAKE) -C ipset binaries COPT_FLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections --param large-function-growth=800 --param max-inline-insns-single=3000"
 
 ipset-install:
 	install -D ipset/ipset $(INSTALLDIR)/ipset/usr/sbin/ipset
@@ -2786,6 +2763,7 @@ ipset-clean:
 	-@$(MAKE) -C ipset clean
 
 libjson-c/build/Makefile:
+	$(call patch_files,libjson-c)
 	@rm -rf libjson-c/build && mkdir -p libjson-c/build
 	cd libjson-c/build && \
 	$(call CMAKE_CrossOptions, crosscompiled.cmake) && \
@@ -2796,6 +2774,7 @@ libjson-c/build/Makefile:
 		-DCMAKE_EXE_LINKER_FLAGS="-Wl,--gc-sections" \
 		-DBUILD_TESTING=FALSE \
 		-DDISABLE_WERROR=TRUE \
+		-DBUILD_STATIC_LIBS=FALSE \
 		..
 
 libjson-c: libjson-c/build/Makefile
@@ -2805,6 +2784,7 @@ libjson-c: libjson-c/build/Makefile
 
 libjson-c-clean:
 	@rm -rf libjson-c/build
+	$(call unpatch_files,libjson-c)
 
 uqmi: libjson-c
 	@$(SEP)
@@ -2837,6 +2817,18 @@ comgt-install:
 comgt-clean:
 	-@$(MAKE) -C comgt clean
 	$(call unpatch_files,comgt)
+
+sd-idle:
+	@$(SEP)
+	$(MAKE) -C sd-idle CFLAGS="-Os -Wall $(EXTRACFLAGS)"
+
+sd-idle-install:
+	install -d $(INSTALLDIR)/sd-idle/usr/bin
+	install -D -m 0755 sd-idle/sd-idle $(INSTALLDIR)/sd-idle/usr/bin/sd-idle
+	$(STRIP) -s $(INSTALLDIR)/sd-idle/usr/bin/sd-idle
+
+sd-idle-clean:
+	-@$(MAKE) -C sd-idle clean
 
 iperf/stamp-h1:
 	cd iperf && autoreconf -fsi && \
