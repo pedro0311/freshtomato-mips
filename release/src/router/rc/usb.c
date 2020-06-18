@@ -341,6 +341,7 @@ int mount_r(char *mnt_dev, char *mnt_dir, char *type)
 				f_write(flagfn, NULL, 0, 0, 0);
 			}
 
+			/* mount at last */
 			ret = mount(mnt_dev, mnt_dir, type, flags, options[0] ? options : "");
 
 #ifdef TCONFIG_NTFS
@@ -353,10 +354,6 @@ int mount_r(char *mnt_dev, char *mnt_dir, char *type)
 
 #ifdef TCONFIG_HFS
 			if (ret != 0 && strncmp(type, "hfs", 3) == 0) {
-				ret = eval("mount", "-o", "noatime,nodev", mnt_dev, mnt_dir);
-			}
-
-			if (ret != 0 && strncmp(type, "hfsplus", 7) == 0) {
 				ret = eval("mount", "-o", "noatime,nodev", mnt_dev, mnt_dir);
 			}
 #endif /* TCONFIG_HFS */
