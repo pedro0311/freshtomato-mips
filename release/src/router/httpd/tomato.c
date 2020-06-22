@@ -1415,6 +1415,7 @@ static const nvset_t nvset_list[] = {
 	{ "smbd_user",			V_LENGTH(0, 50)			},
 	{ "smbd_passwd",		V_LENGTH(0, 50)			},
 	{ "smbd_ifnames",		V_LENGTH(0, 50)			},
+	{ "smbd_protocol",		V_RANGE(0, 2)			},
 #endif
 
 #ifdef TCONFIG_MEDIA_SERVER
