@@ -629,6 +629,9 @@ void stop_ovpn_client(int clientNum)
 	vpnlog(VPN_LOG_EXTRA, "VPN device removed.");
 #endif
 
+	/* Don't remove tunnel interface in case of multiple servers/clients */
+	//modprobe_r("tun");
+
 	/* Remove firewall rules after VPN exit */
 #ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(VPN_LOG_EXTRA, "Removing firewall rules.");
@@ -647,9 +650,6 @@ void stop_ovpn_client(int clientNum)
 #ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(VPN_LOG_EXTRA, "Done removing firewall rules.");
 #endif
-
-	/* Don't remove tunnel interface in case of multiple servers/clients */
-	//modprobe_r("tun");
 
 	if (nvram_get_int("vpn_debug") <= VPN_LOG_EXTRA) {
 #ifndef TCONFIG_OPTIMIZE_SIZE
@@ -1167,21 +1167,6 @@ void start_ovpn_server(int serverNum)
 	vpnlog(VPN_LOG_EXTRA, "Done writing certs/keys");
 #endif
 
-	/* Start the VPN server */
-	sprintf(buffer, "/etc/openvpn/vpnserver%d --cd /etc/openvpn/server%d --config config.ovpn", serverNum, serverNum);
-
-	vpnlog(VPN_LOG_INFO, "Starting OpenVPN: %d", serverNum);
-
-	for (argv[argc=0] = strtok(buffer, " "); argv[argc] != NULL; argv[++argc] = strtok(NULL, " "));
-	if (_eval(argv, NULL, 0, &pid)) {
-		vpnlog(VPN_LOG_ERROR, "Starting VPN instance failed...");
-		stop_ovpn_server(serverNum);
-		return;
-	}
-#ifndef TCONFIG_OPTIMIZE_SIZE
-	vpnlog(VPN_LOG_EXTRA, "Done starting openvpn");
-#endif
-
 	/* Handle firewall rules if appropriate */
 	sprintf(buffer, "vpn_server%d_firewall", serverNum);
 	if (!nvram_contains_word(buffer, "custom")) {
@@ -1250,6 +1235,21 @@ void start_ovpn_server(int serverNum)
 #endif
 	}
 
+	/* Start the VPN server */
+	sprintf(buffer, "/etc/openvpn/vpnserver%d --cd /etc/openvpn/server%d --config config.ovpn", serverNum, serverNum);
+
+	vpnlog(VPN_LOG_INFO, "Starting OpenVPN: %d", serverNum);
+
+	for (argv[argc=0] = strtok(buffer, " "); argv[argc] != NULL; argv[++argc] = strtok(NULL, " "));
+	if (_eval(argv, NULL, 0, &pid)) {
+		vpnlog(VPN_LOG_ERROR, "Starting VPN instance failed...");
+		stop_ovpn_server(serverNum);
+		return;
+	}
+#ifndef TCONFIG_OPTIMIZE_SIZE
+	vpnlog(VPN_LOG_EXTRA, "Done starting openvpn");
+#endif
+
 	/* Set up cron job */
 	sprintf(buffer, "vpn_server%d_poll", serverNum);
 	if ((nvi = nvram_get_int(buffer)) > 0) {
@@ -1309,26 +1309,6 @@ void stop_ovpn_server(int serverNum)
 	vpnlog(VPN_LOG_EXTRA, "Done removing cron job");
 #endif
 
-	/* Remove firewall rules */
-#ifndef TCONFIG_OPTIMIZE_SIZE
-	vpnlog(VPN_LOG_EXTRA, "Removing firewall rules.");
-#endif
-	sprintf(buffer, "/etc/openvpn/fw/server%d-fw.sh", serverNum);
-	argv[0] = "sed";
-	argv[1] = "-i";
-	argv[2] = "s/-A/-D/g;s/-I/-D/g;s/INPUT\\ [0-9]\\ /INPUT\\ /g;s/FORWARD\\ [0-9]\\ /FORWARD\\ /g;s/PREROUTING\\ [0-9]\\ /PREROUTING\\g;s/POSTROUTING\\ [0-9]\\ /POSTROUTING\\g";
-	argv[3] = buffer;
-	argv[4] = NULL;
-	if (!_eval(argv, NULL, 0, NULL))
-	{
-		argv[0] = buffer;
-		argv[1] = NULL;
-		_eval(argv, NULL, 0, NULL);
-	}
-#ifndef TCONFIG_OPTIMIZE_SIZE
-	vpnlog(VPN_LOG_EXTRA, "Done removing firewall rules.");
-#endif
-
 	/* Stop the VPN server */
 #ifndef TCONFIG_OPTIMIZE_SIZE
 	vpnlog(VPN_LOG_EXTRA, "Stopping OpenVPN server.");
@@ -1356,6 +1336,26 @@ void stop_ovpn_server(int serverNum)
 
 	/* Don't remove tunnel interface in case of multiple servers/clients */
 	//modprobe_r("tun");
+
+	/* Remove firewall rules */
+#ifndef TCONFIG_OPTIMIZE_SIZE
+	vpnlog(VPN_LOG_EXTRA, "Removing firewall rules.");
+#endif
+	sprintf(buffer, "/etc/openvpn/fw/server%d-fw.sh", serverNum);
+	argv[0] = "sed";
+	argv[1] = "-i";
+	argv[2] = "s/-A/-D/g;s/-I/-D/g;s/INPUT\\ [0-9]\\ /INPUT\\ /g;s/FORWARD\\ [0-9]\\ /FORWARD\\ /g;s/PREROUTING\\ [0-9]\\ /PREROUTING\\g;s/POSTROUTING\\ [0-9]\\ /POSTROUTING\\g";
+	argv[3] = buffer;
+	argv[4] = NULL;
+	if (!_eval(argv, NULL, 0, NULL))
+	{
+		argv[0] = buffer;
+		argv[1] = NULL;
+		_eval(argv, NULL, 0, NULL);
+	}
+#ifndef TCONFIG_OPTIMIZE_SIZE
+	vpnlog(VPN_LOG_EXTRA, "Done removing firewall rules.");
+#endif
 
 	if (nvram_get_int("vpn_debug") <= VPN_LOG_EXTRA) {
 #ifndef TCONFIG_OPTIMIZE_SIZE
