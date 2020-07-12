@@ -323,14 +323,13 @@ kernel: $(LINUXDIR)/.config
 	if grep -q "CONFIG_MODULES=y" $(LINUXDIR)/.config ; then \
 	    $(MAKE) -C $(LINUXDIR) modules CC=$(KERNELCC) $(PARALLEL_BUILD); \
 	fi
-	$(MAKE) -C $(LINUXDIR)/arch/mips/brcm-boards/bcm947xx/compressed srctree=$(LINUXDIR) $(PARALLEL_BUILD)
-
+	$(MAKE) -C $(LINUXDIR)/arch/mips/brcm-boards/bcm947xx/compressed srctree=$(LINUXDIR) TCONFIG_MIPSR2=$(TCONFIG_MIPSR2) $(PARALLEL_BUILD)
 
 lzma-loader:
 	@$(SEP)
-	$(MAKE) -C $(SRCBASE)/lzma-loader CROSS_COMPILE=$(CROSS_COMPILE) LD=$(LD) $(PARALLEL_BUILD)
+	$(MAKE) -C $(SRCBASE)/lzma-loader CROSS_COMPILE=$(CROSS_COMPILE) TCONFIG_MIPSR2=$(TCONFIG_MIPSR2) $(PARALLEL_BUILD)
 
-lzma-loader-install: lzma-loader
+lzma-loader-install:
 
 kmod: dummy
 	@$(SEP)
@@ -2258,7 +2257,7 @@ endif
 libcurl/stamp-h1: zlib $(OPENSSLDIR)
 	$(call patch_files,libcurl)
 	cd libcurl && ./buildconf && \
-		CFLAGS="-Os -Wall -pipe -funit-at-a-time -Wno-pointer-sign -mtune=mips32 -mips32 -ffunction-sections -fdata-sections -fPIC" \
+		CFLAGS="-Os -Wall -pipe -funit-at-a-time -Wno-pointer-sign $(if $(TCONFIG_MIPSR2),-march=mips32r2 -mips32r2 -mtune=mips32r2,-march=mips32 -mips32 -mtune=mips32) -ffunction-sections -fdata-sections -fPIC" \
 		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC -I$(TOP)/$(OPENSSLDIR)/include" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC -L$(TOP)/$(OPENSSLDIR) -Wl,-rpath,$(TOP)/$(OPENSSLDIR)" \
 		LIBS="-lpthread" \
@@ -2341,14 +2340,14 @@ libiconv-install:
 transmission/stamp-h1: $(OPENSSLDIR) libcurl libevent zlib
 	$(call patch_files,transmission)
 	cd transmission && autoreconf -f && \
-		CFLAGS="-Os -Wall -pipe -mtune=mips32 -mips32 -fno-delete-null-pointer-checks -funit-at-a-time \
+		CFLAGS="-Os -Wall -pipe $(if $(TCONFIG_MIPSR2),-march=mips32r2 -mips32r2 -mtune=mips32r2,-march=mips32 -mips32 -mtune=mips32) -fno-delete-null-pointer-checks -funit-at-a-time \
 			--param large-function-growth=800 --param max-inline-insns-single=3000 \
 			-ffunction-sections -fdata-sections -fPIC" \
 		CPPFLAGS="--param large-function-growth=800 --param max-inline-insns-single=3000 -fPIC" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC \
 			-L$(TOP)/zlib -L$(TOP)/$(OPENSSLDIR) -L$(TOP)/libcurl/lib/.libs -L$(TOP)/libevent/.libs" \
 		HAVE_CXX=yes \
-		CXXFLAGS="-Os -Wall -pipe -mtune=mips32 -mips32 -ffunction-sections -fdata-sections" \
+		CXXFLAGS="-Os -Wall -pipe $(if $(TCONFIG_MIPSR2),-march=mips32r2 -mips32r2 -mtune=mips32r2,-march=mips32 -mips32 -mtune=mips32) -ffunction-sections -fdata-sections" \
 		$(CONFIGURE) --target=$(HOST) --host=$(HOST) --build=x86_64-linux-gnu --prefix=/usr --disable-nls \
 			--enable-lightweight --enable-largefile --enable-utp --without-gtk --disable-cli --without-systemd-daemon \
 			LIBCURL_CFLAGS="-I$(TOP)/libcurl/include" \
@@ -2436,7 +2435,7 @@ nfs-utils/stamp-h1: libevent-install e2fsprogs portmap libnfsidmap-install
 	$(call patch_files,nfs-utils)
 	cd nfs-utils && ./autogen.sh && \
 	CPPFLAGS="-Os $(EXTRACFLAGS)" \
-	CFLAGS="-Os -Wall -fno-delete-null-pointer-checks -funit-at-a-time -pipe -mtune=mips32 -mips32 -ffunction-sections -fdata-sections \
+	CFLAGS="-Os -Wall -fno-delete-null-pointer-checks -funit-at-a-time -pipe $(if $(TCONFIG_MIPSR2),-march=mips32r2 -mips32r2 -mtune=mips32r2,-march=mips32 -mips32 -mtune=mips32) -ffunction-sections -fdata-sections \
 		-I$(TOP)/libevent/staged/usr/local/include -I$(TOP)/e2fsprogs/lib \
 		-I$(TOP)/libnfsidmap/staged/usr/include -ffunction-sections -fdata-sections" \
 	LDFLAGS="-L$(TOP)/libevent/staged/usr/local/lib -L$(TOP)/e2fsprogs/lib \
