@@ -4354,7 +4354,7 @@
  
  static struct option opts[] = {
  	{ "host", 1, 0, '1' },
-@@ -147,7 +149,9 @@
+@@ -165,7 +167,9 @@
  		IPTABLES_VERSION,
  		IPT_ALIGN(sizeof(struct ipt_webstr_info)),
  		IPT_ALIGN(sizeof(struct ipt_webstr_info)),
