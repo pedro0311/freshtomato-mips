@@ -434,7 +434,10 @@ Ignore IPT_F_NO_DEF_MATCH flag when comparing rule in libip4tc.c
  	}
 --- iptables/extensions/libipt_LOG.c
 +++ iptables/extensions/libipt_LOG.c
-@@ -17,6 +17,12 @@
+@@ -14,12 +14,18 @@
+ #ifndef IPT_LOG_UID /* Old kernel */
+ #define IPT_LOG_UID	0x08	/* Log UID owning local socket */
+ #undef  IPT_LOG_MASK
  #define IPT_LOG_MASK	0x0f
  #endif
  
@@ -447,6 +450,9 @@ Ignore IPT_F_NO_DEF_MATCH flag when comparing rule in libip4tc.c
  /* Function which prints out usage message. */
  static void
  help(void)
+ {
+ 	printf(
+ "LOG v%s options:\n"
 @@ -28,7 +34,8 @@ help(void)
  " --log-tcp-sequence		Log TCP sequence numbers.\n\n"
  " --log-tcp-options		Log TCP options.\n\n"
@@ -457,7 +463,9 @@ Ignore IPT_F_NO_DEF_MATCH flag when comparing rule in libip4tc.c
  IPTABLES_VERSION);
  }
  
-@@ -39,6 +46,7 @@ static struct option opts[] = {
+@@ -37,10 +44,11 @@ static struct option opts[] = {
+ 	{ .name = "log-prefix",       .has_arg = 1, .flag = 0, .val = '#' },
+ 	{ .name = "log-tcp-sequence", .has_arg = 0, .flag = 0, .val = '1' },
  	{ .name = "log-tcp-options",  .has_arg = 0, .flag = 0, .val = '2' },
  	{ .name = "log-ip-options",   .has_arg = 0, .flag = 0, .val = '3' },
  	{ .name = "log-uid",          .has_arg = 0, .flag = 0, .val = '4' },
@@ -465,6 +473,8 @@ Ignore IPT_F_NO_DEF_MATCH flag when comparing rule in libip4tc.c
  	{ .name = 0 }
  };
  
+ /* Initialize the target. */
+ static void
 @@ -105,6 +113,7 @@ parse_level(const char *level)
  #define IPT_LOG_OPT_TCPOPT 0x08
  #define IPT_LOG_OPT_IPOPT 0x10
@@ -473,7 +483,10 @@ Ignore IPT_F_NO_DEF_MATCH flag when comparing rule in libip4tc.c
  
  /* Function which parses command options; returns true if it
     ate an option */
-@@ -192,6 +201,15 @@ parse(int c, char **argv, int invert, un
+@@ -189,12 +198,21 @@ parse(int c, char **argv, int invert, un
+ 				   "Can't specify --log-uid twice");
+ 
+ 		loginfo->logflags |= IPT_LOG_UID;
  		*flags |= IPT_LOG_OPT_UID;
  		break;
  
@@ -489,6 +502,9 @@ Ignore IPT_F_NO_DEF_MATCH flag when comparing rule in libip4tc.c
  	default:
  		return 0;
  	}
+ 
+ 	return 1;
+ }
 @@ -237,6 +255,8 @@ print(const struct ipt_ip *ip,
  			printf("ip-options ");
  		if (loginfo->logflags & IPT_LOG_UID)
@@ -498,13 +514,19 @@ Ignore IPT_F_NO_DEF_MATCH flag when comparing rule in libip4tc.c
  		if (loginfo->logflags & ~(IPT_LOG_MASK))
  			printf("unknown-flags ");
  	}
-@@ -249,6 +269,7 @@ print(const struct ipt_ip *ip,
+@@ -246,12 +266,13 @@ print(const struct ipt_ip *ip,
+ }
+ 
+ /* Saves the union ipt_targinfo in parsable form to stdout. */
  static void
  save(const struct ipt_ip *ip, const struct ipt_entry_target *target)
  {
 +#ifdef IPTABLES_SAVE
  	const struct ipt_log_info *loginfo
  		= (const struct ipt_log_info *)target->data;
+ 
+ 	if (strcmp(loginfo->prefix, "") != 0)
+ 		printf("--log-prefix \"%s\" ", loginfo->prefix);
  
 @@ -266,6 +287,9 @@ save(const struct ipt_ip *ip, const stru
  		printf("--log-ip-options ");
@@ -853,7 +875,7 @@ Ignore IPT_F_NO_DEF_MATCH flag when comparing rule in libip4tc.c
  "  --match	-m match\n"
  "				extended match (may load extension)\n"
  "  --numeric	-n		numeric output of addresses and ports\n"
-@@ -546,15 +546,15 @@ host_to_addr(const char *name, unsigned
+@@ -546,15 +551,15 @@ host_to_addr(const char *name, unsigned
  {
  	struct addrinfo hints;
          struct addrinfo *res;
@@ -872,7 +894,7 @@ Ignore IPT_F_NO_DEF_MATCH flag when comparing rule in libip4tc.c
  
  	*naddr = 0;
          if ( (err=getaddrinfo(name, NULL, &hints, &res)) != 0 ){
-@@ -563,20 +563,19 @@ host_to_addr(const char *name, unsigned
+@@ -563,20 +568,19 @@ host_to_addr(const char *name, unsigned
  #endif
                  return (struct in6_addr *) NULL;
          } else {
