@@ -1239,7 +1239,7 @@ wndr64:
 wndr64-vpn:
 	@$(MAKE) bin MIPS32=r2 B=E USB="USB" NO_ZEBRA=y BBEXTRAS=y USBEXTRAS=y EBTABLES=y NO_CIFS=y IPV6SUPP=y NTFS=y OPENVPN=y PPTPD=y STUBBY=y NO_SAMBA=y NVRAM_SIZE=64 WNDR=y BCMNAT=y ADVTHEMES=y KEYGEN=y OPENSSL11=y BUILD_DESC="$(VPN)"
 
-## Builds with wl_high module
+## Builds with 5Ghz USB Radio (wl_high module)
 rtn53:
 	@$(MAKE) bin MIPS32=r2 B=E USB="USB" BBEXTRAS=y EBTABLES=y NO_LIBOPT=y IPV6SUPP=y OPENVPN=y PPTPD=y STUBBY=y TOR=y NOCAT=y USBAP=y NO_USBAPP=y BCMNAT=y ADVTHEMES=y OPENSSL11=y BUILD_DESC="RT-N53"
 
@@ -1453,15 +1453,19 @@ help:
 	@echo "n64v         Linksys E-series(64k Nvram) build IPv6-VPN"
 	@echo "n64m         Linksys E-series(64k Nvram) build Max"
 	@echo ""
-	@echo "       Routers with wl_high module"
-	@echo "rtn53        Asus RT-N53 with wl_high module (dualband support)"
-	@echo "f9k          Belkin F9K1102 (v1/v3) with wl_high module (dualband support)"
-	@echo "e2500        Linksys E2500 with wl_high module (dualband support)"
-	@echo "e3200        Linksys E3200/E2500v3 with wl_high module (dualband support) / max 16MB"
-	@echo "n6           Tenda N6 with wl_high module (dualband support)"
-	@echo "n60          Tenda N60 with wl_high module (dualband support) w/o minidlna"
-	@echo "wndr3400v2     Netgear WNDR3400v2/v3 miniIPv6 with wl_high module (dualband support) w/o minidlna"
-	@echo "wndr3400v2-vpn Netgear WNDR3400v2/v3 VPN with wl_high module (dualband support) w/o Samba"
+	@echo "       Routers with 5Ghz USB Radio (wl_high module)"
+	@echo "       Before compilation you have to revert patch to the kernel:"
+	@echo "       $ cd release/src-rt/linux"
+	@echo "       $ patch -R -p4 < fix4usbap.patch"
+	@echo ""
+	@echo "rtn53        Asus RT-N53"
+	@echo "f9k          Belkin F9K1102 (v1/v3)"
+	@echo "e2500        Linksys E2500"
+	@echo "e3200        Linksys E3200/E2500v3 / max 16MB"
+	@echo "n6           Tenda N6"
+	@echo "n60          Tenda N60 w/o minidlna"
+	@echo "wndr3400v2     Netgear WNDR3400v2/v3 miniIPv6 w/o minidlna"
+	@echo "wndr3400v2-vpn Netgear WNDR3400v2/v3 VPN w/o Samba"
 #	@echo "l600n        Rosewill L600N Build with wl_high module (dualband support)"
 	@echo ""
 	@echo "       Netgear WNDR3400/3700v3/4000 builds"
