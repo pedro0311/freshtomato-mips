@@ -326,6 +326,12 @@ ifeq ($(WNDR),y)
 	-b U12H208T00_NETGEAR -r 2 2>&1 | tee -a fpkg.log
 	@$(MAKE) netgear-check MAXFSIZE=7274496 NG_FNAME=image/freshtomato-WNDR3400v3-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).chk
  else
+	# Make WNDR4000, Checksum starts at 0x6FFFF8 => Max size (to not touch the last 64kB block) = 7274496
+	@$(SRCBASE)/wnrtool/mkchkimg -o image/freshtomato-WNDR4000-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).chk \
+	-k image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).trx \
+	-b U12H181T00_NETGEAR -r 2 2>&1 | tee -a fpkg.log
+	@$(MAKE) netgear-check MAXFSIZE=7274496 NG_FNAME=image/freshtomato-WNDR4000-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).chk
+
 	# Make WNDR3700v3, Checksum starts at 0x6FFFF8 => Max size (to not touch the last 64kB block) = 7274496
 	@$(SRCBASE)/wnrtool/mkchkimg -o image/freshtomato-WNDR3700v3-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).chk \
 	-k image/freshtomato-$(ND)$(current_BUILD_USB)$(if $(filter $(NVRAM_SIZE),0),,-NVRAM$(NVRAM_SIZE)K)$(RT_SUFFIX)-$(mips_rev)-$(current_TOMATO_VER)$(beta)$(V2)-$(current_BUILD_DESC).trx \
@@ -1226,7 +1232,7 @@ v2z:
 v2e:
 	@$(MAKE) e MIPS32=r2 WNR3500LV2=1 NVRAM_SIZE=32 NO_JFFS=y MEDIASRV=y
 
-## Builds for Netgear WNDR3400/3700v3
+## Builds for Netgear WNDR3400/3700v3/4000
 wndr64:
 	@$(MAKE) bin MIPS32=r2 B=E USB="USB" NO_ZEBRA=y NO_HTTPS=y BBEXTRAS=y USBEXTRAS=y EBTABLES=y NO_CIFS=y IPV6SUPP=y NTFS=y NVRAM_SIZE=64 WNDR=y NO_XXTP=y BCMNAT=y ADVTHEMES=y BUILD_DESC="MiniIPv6"
 
@@ -1458,9 +1464,9 @@ help:
 	@echo "wndr3400v2-vpn Netgear WNDR3400v2/v3 VPN with wl_high module (dualband support) w/o Samba"
 #	@echo "l600n        Rosewill L600N Build with wl_high module (dualband support)"
 	@echo ""
-	@echo "       Netgear WNDR3400/3700v3 builds"
-	@echo "wndr64       Netgear WNDR3400/3700v3 miniIPv6 w/o miniDLNA"
-	@echo "wndr64-vpn   Netgear WNDR3400/3700v3 VPN w/o Samba"
+	@echo "       Netgear WNDR3400/3700v3/4000 builds"
+	@echo "wndr64       Netgear WNDR3400/3700v3/4000 miniIPv6 w/o miniDLNA"
+	@echo "wndr64-vpn   Netgear WNDR3400/3700v3/4000 VPN w/o Samba"
 	@echo ""
 	@echo "       Netgear WNR3500L v2 builds (128MB Flash)"
 	@echo "v2e          Netgear WNR3500Lv2 build VPN"
