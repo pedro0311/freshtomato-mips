@@ -706,6 +706,9 @@ static int get_wlnoise(int client, int unit)
 		v = read_noise(unit);
 	}
 	else {
+		// RMo - added read_noise here, does not take AP down (just reads from register inside Broadcom ASIC).
+		//		 Read keeps value current.
+		v = read_noise(unit);
 		v = nvram_get_int(wl_nvname("tnoise", unit, 0));
 		if ((v >= 0) || (v < -100)) v = -99;
 	}
