@@ -728,34 +728,6 @@ void asp_wlnoise(int argc, char **argv)
 	web_puts(" ];\n");
 }
 
-void wo_wlmnoise(char *url)
-{
-	int ap;
-	int i;
-	char *wif;
-
-	check_wl_unit(NULL);
-
-	parse_asp("mnoise.asp");
-	web_close();
-	sleep(3);
-
-	int radio = get_radio(unit);
-
-	wif = nvram_safe_get(wl_nvname("ifname", unit, 0));
-	if (wl_ioctl(wif, WLC_GET_AP, &ap, sizeof(ap)) < 0) return;
-
-	i = 0;
-	wl_ioctl(wif, WLC_SET_AP, &i, sizeof(i));
-
-	for (i = 10; i > 0; --i) {
-		sleep(1);
-		read_noise(unit);
-	}
-
-	wl_restore(wif, unit, ap, radio, 0);
-}
-
 static int wl_chanfreq(uint ch, int band)
 {
 	if ((band == WLC_BAND_2G && (ch < 1 || ch > 14)) || (ch > 200))
