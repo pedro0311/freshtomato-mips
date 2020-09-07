@@ -402,9 +402,8 @@ int dhcpc_release_main(int argc, char **argv)
 #endif
 
 	TRACE_PT("begin\n");
-#ifdef TCONFIG_MULTIWAN
-	mwan_table_del(prefix);
-#endif
+
+	mwan_table_del(prefix); /* for dual WAN and multi WAN */
 
 	if (!using_dhcpc(prefix)) return 1;
 
