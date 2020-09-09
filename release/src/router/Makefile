@@ -2198,7 +2198,7 @@ lzo-install:
 
 openvpn/Makefile:
 	$(call patch_files,openvpn)
-	cd openvpn && autoreconf && \
+	cd openvpn && autoreconf -fsi && \
 	OPENSSL_CFLAGS="-I$(TOP)/$(OPENSSLDIR)/include" \
 	OPENSSL_LIBS="-L$(TOP)/$(OPENSSLDIR) -lcrypto -lssl" \
 	CFLAGS="$(CFLAG_OPTIMIZE) -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
@@ -2224,7 +2224,7 @@ openvpn-install:
 	$(STRIP) -s $(INSTALLDIR)/openvpn/usr/sbin/openvpn
 	chmod 0500 $(INSTALLDIR)/openvpn/usr/sbin/openvpn
 
-openvpn_plugin_auth_nvram:nvram
+openvpn_plugin_auth_nvram: nvram
 
 nano/stamp-h1: libncurses
 	cd nano && autoreconf && \
