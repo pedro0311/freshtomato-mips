@@ -756,17 +756,19 @@ oldconfig oldconf: koldconf roldconf dependconf bboldconf
 
 busybox: dummy
 	@$(SEP)
+	$(call patch_files,busybox)
 	@$(MAKE) -C busybox EXTRA_CFLAGS="-fPIC $(EXTRACFLAGS)" $(PARALLEL_BUILD)
 
 busybox-install:
 	rm -rf $(INSTALLDIR)/busybox
 	$(MAKE) -C busybox install EXTRA_CFLAGS="-fPIC $(EXTRACFLAGS)" CONFIG_PREFIX=$(INSTALLDIR)/busybox
 
-busybox-clean:
-	-@$(MAKE) -C busybox distclean
-
 busybox-config:
 	$(MAKE) -C busybox menuconfig
+
+busybox-clean:
+	-@$(MAKE) -C busybox distclean
+	$(call unpatch_files,busybox)
 
 httpd: shared nvram $(if $(TCONFIG_HTTPS),mssl,)
 	@$(SEP)
@@ -1511,7 +1513,8 @@ flac/stamp-h1: libogg
 	LDFLAGS="-L$(TOP)/libogg/src/.libs -fPIC -ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	$(CONFIGURE) --enable-shared --enable-static --prefix='' --disable-rpath \
 		--disable-doxygen-docs --disable-xmms-plugin --disable-cpplibs --disable-thorough-tests \
-		--without-libiconv-prefix --disable-altivec --disable-sse --disable-dependency-tracking
+		--without-libiconv-prefix --disable-altivec --disable-sse --disable-dependency-tracking \
+		--with-ogg=$(TOP)/libogg/src/.libs
 	@touch $@
 
 flac: flac/stamp-h1 libogg

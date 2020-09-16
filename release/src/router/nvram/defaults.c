@@ -1073,7 +1073,11 @@ const defaults_t defaults[] = {
 	{ "vpn_server1_comp",		"adaptive"			},
 	{ "vpn_server1_cipher",		"AES-128-CBC"			},
 	{ "vpn_server1_ncp_enable",	"1"				},
+#if 0
 	{ "vpn_server1_ncp_ciphers",	"AES-256-GCM:AES-128-GCM:AES-256-CBC:AES-128-CBC"},
+#else
+	{ "vpn_server1_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC"},
+#endif
 	{ "vpn_server1_digest",		"default"			},
 	{ "vpn_server1_dhcp",		"1"				},
 	{ "vpn_server1_r1",		"192.168.1.50"			},
@@ -1113,7 +1117,11 @@ const defaults_t defaults[] = {
 	{ "vpn_server2_comp",		"adaptive"			},
 	{ "vpn_server2_cipher",		"AES-128-CBC"			},
 	{ "vpn_server2_ncp_enable",	"1"				},
+#if 0
 	{ "vpn_server2_ncp_ciphers",	"AES-256-GCM:AES-128-GCM:AES-256-CBC:AES-128-CBC"},
+#else
+	{ "vpn_server2_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC"},
+#endif
 	{ "vpn_server2_digest",		"default"			},
 	{ "vpn_server2_dhcp",		"1"				},
 	{ "vpn_server2_r1",		"192.168.1.50"			},
