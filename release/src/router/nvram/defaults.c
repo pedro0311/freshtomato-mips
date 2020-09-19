@@ -1073,7 +1073,7 @@ const defaults_t defaults[] = {
 #if 0
 	{ "vpn_server1_ncp_ciphers",	"AES-256-GCM:AES-128-GCM:AES-256-CBC:AES-128-CBC"},
 #else
-	{ "vpn_server1_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC"},
+	{ "vpn_server1_ncp_ciphers",	"CHACHA20-POLY1305:AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC"},
 #endif
 	{ "vpn_server1_digest",		"default"			},
 	{ "vpn_server1_dhcp",		"1"				},
@@ -1117,7 +1117,7 @@ const defaults_t defaults[] = {
 #if 0
 	{ "vpn_server2_ncp_ciphers",	"AES-256-GCM:AES-128-GCM:AES-256-CBC:AES-128-CBC"},
 #else
-	{ "vpn_server2_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC"},
+	{ "vpn_server2_ncp_ciphers",	"CHACHA20-POLY1305:AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC"},
 #endif
 	{ "vpn_server2_digest",		"default"			},
 	{ "vpn_server2_dhcp",		"1"				},
@@ -1167,7 +1167,7 @@ const defaults_t defaults[] = {
 #if 0
 	{ "vpn_client1_ncp_ciphers",	"AES-256-GCM:AES-128-GCM:AES-256-CBC:AES-128-CBC"},
 #else
-	{ "vpn_client1_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC"},
+	{ "vpn_client1_ncp_ciphers",	"CHACHA20-POLY1305:AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC"},
 #endif
 	{ "vpn_client1_digest",		"default"			},
 	{ "vpn_client1_local",		"10.8.0.2"			},
@@ -1204,7 +1204,7 @@ const defaults_t defaults[] = {
 #if 0
 	{ "vpn_client2_ncp_ciphers",	"AES-256-GCM:AES-128-GCM:AES-256-CBC:AES-128-CBC"},
 #else
-	{ "vpn_client2_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC"},
+	{ "vpn_client2_ncp_ciphers",	"CHACHA20-POLY1305:AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC"},
 #endif
 	{ "vpn_client2_digest",		"default"			},
 	{ "vpn_client2_local",		"10.9.0.2"			},
