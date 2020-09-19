@@ -1164,7 +1164,11 @@ const defaults_t defaults[] = {
 	{ "vpn_client1_comp",		"adaptive"			},
 	{ "vpn_client1_cipher",		"default"			},
 	{ "vpn_client1_ncp_enable",	"1"				},
+#if 0
 	{ "vpn_client1_ncp_ciphers",	"AES-256-GCM:AES-128-GCM:AES-256-CBC:AES-128-CBC"},
+#else
+	{ "vpn_client1_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC"},
+#endif
 	{ "vpn_client1_digest",		"default"			},
 	{ "vpn_client1_local",		"10.8.0.2"			},
 	{ "vpn_client1_remote",		"10.8.0.1"			},
@@ -1197,7 +1201,11 @@ const defaults_t defaults[] = {
 	{ "vpn_client2_comp",		"adaptive"			},
 	{ "vpn_client2_cipher",		"default"			},
 	{ "vpn_client2_ncp_enable",	"1"				},
+#if 0
 	{ "vpn_client2_ncp_ciphers",	"AES-256-GCM:AES-128-GCM:AES-256-CBC:AES-128-CBC"},
+#else
+	{ "vpn_client2_ncp_ciphers",	"AES-128-GCM:AES-256-GCM:AES-128-CBC:AES-256-CBC"},
+#endif
 	{ "vpn_client2_digest",		"default"			},
 	{ "vpn_client2_local",		"10.9.0.2"			},
 	{ "vpn_client2_remote",		"10.9.0.1"			},
