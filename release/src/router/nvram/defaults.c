@@ -1067,7 +1067,7 @@ const defaults_t defaults[] = {
 	{ "vpn_server1_port",		"1194"				},
 	{ "vpn_server1_firewall",	"auto"				},
 	{ "vpn_server1_crypt",		"tls"				},
-	{ "vpn_server1_comp",		"adaptive"			},
+	{ "vpn_server1_comp",		"-1"				},
 	{ "vpn_server1_cipher",		"AES-128-CBC"			},
 	{ "vpn_server1_ncp_enable",	"1"				},
 #if 0
@@ -1111,7 +1111,7 @@ const defaults_t defaults[] = {
 	{ "vpn_server2_port",		"1195"				},
 	{ "vpn_server2_firewall",	"auto"				},
 	{ "vpn_server2_crypt",		"tls"				},
-	{ "vpn_server2_comp",		"adaptive"			},
+	{ "vpn_server2_comp",		"-1"				},
 	{ "vpn_server2_cipher",		"AES-128-CBC"			},
 	{ "vpn_server2_ncp_enable",	"1"				},
 #if 0
@@ -1161,7 +1161,7 @@ const defaults_t defaults[] = {
 	{ "vpn_client1_rg",		"0"				},
 	{ "vpn_client1_firewall",	"auto"				},
 	{ "vpn_client1_crypt",		"tls"				},
-	{ "vpn_client1_comp",		"adaptive"			},
+	{ "vpn_client1_comp",		"-1"				},
 	{ "vpn_client1_cipher",		"default"			},
 	{ "vpn_client1_ncp_enable",	"1"				},
 #if 0
@@ -1198,7 +1198,7 @@ const defaults_t defaults[] = {
 	{ "vpn_client2_rg",		"0"				},
 	{ "vpn_client2_firewall",	"auto"				},
 	{ "vpn_client2_crypt",		"tls"				},
-	{ "vpn_client2_comp",		"adaptive"			},
+	{ "vpn_client2_comp",		"-1"				},
 	{ "vpn_client2_cipher",		"default"			},
 	{ "vpn_client2_ncp_enable",	"1"				},
 #if 0
