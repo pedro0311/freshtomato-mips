@@ -2442,14 +2442,14 @@ nfs-utils/stamp-h1: libevent-install e2fsprogs portmap libnfsidmap-install
 	cd nfs-utils && ./autogen.sh && \
 	CPPFLAGS="-Os $(EXTRACFLAGS)" \
 	CFLAGS="-Os -Wall -fno-delete-null-pointer-checks -funit-at-a-time -pipe $(if $(TCONFIG_MIPSR2),-march=mips32r2 -mips32r2 -mtune=mips32r2,-march=mips32 -mips32 -mtune=mips32) -ffunction-sections -fdata-sections \
-		-I$(TOP)/libevent/staged/usr/local/include -I$(TOP)/e2fsprogs/lib \
+		-I$(TOP)/libevent/staged/usr/local/include \
 		-I$(TOP)/libnfsidmap/staged/usr/include -ffunction-sections -fdata-sections" \
-	LDFLAGS="-L$(TOP)/libevent/staged/usr/local/lib -L$(TOP)/e2fsprogs/lib \
+	LDFLAGS="-L$(TOP)/libevent/staged/usr/local/lib \
 		-L$(TOP)/libnfsidmap/staged/usr/lib -ffunction-sections -fdata-sections -Wl,--gc-sections" \
 		knfsd_cv_bsd_signals=no \
 	CC_FOR_BUILD=$(CC) $(CONFIGURE) --disable-gss --without-tcp-wrappers \
 		--disable-nfsv4 --disable-ipv6 \
-		--disable-uuid --disable-tirpc --disable-dependency-tracking
+		--disable-uuid --disable-mount --disable-tirpc --disable-dependency-tracking
 	@touch $@
 
 nfs-utils: nfs-utils/stamp-h1
@@ -2458,7 +2458,6 @@ nfs-utils: nfs-utils/stamp-h1
 
 nfs-utils-install:
 	install -d $(INSTALLDIR)/nfs-utils/usr/sbin
-	install -D nfs-utils/utils/mount/mount.nfs $(INSTALLDIR)/nfs-utils/usr/sbin/mount.nfs
 	install -D nfs-utils/utils/nfsd/nfsd $(INSTALLDIR)/nfs-utils/usr/sbin/nfsd
 	install -D nfs-utils/utils/showmount/showmount $(INSTALLDIR)/nfs-utils/usr/sbin/showmount
 	install -D nfs-utils/utils/exportfs/exportfs $(INSTALLDIR)/nfs-utils/usr/sbin/exportfs
