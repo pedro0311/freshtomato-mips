@@ -2420,15 +2420,18 @@ portmap-clean:
 
 e2fsprogs/stamp-h1:
 	cd e2fsprogs && \
-	CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
-	$(CONFIGURE) --prefix=$(TOP)/e2fsprogs/staged --disable-debugfs --disable-imager --disable-resizer --disable-uuidd --disable-nls
+		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
+		$(CONFIGURE) --prefix=$(TOP)/e2fsprogs/staged --enable-elf-shlibs --disable-tls --disable-defrag \
+			--disable-jbd-debug --disable-blkid-debug --disable-testio-debug --disable-backtrace --disable-e2initrd-helper \
+			--disable-nls --disable-debugfs --disable-imager --disable-resizer --disable-uuidd --disable-rpath
 	@touch $@
 
 e2fsprogs: e2fsprogs/stamp-h1
 	@$(SEP)
 	$(MAKE) -C e2fsprogs libs $(PARALLEL_BUILD)
 
-e2fsprogs-install: e2fsprogs
+e2fsprogs-install:
 	$(MAKE) -C e2fsprogs install-libs
 
 e2fsprogs-clean:
