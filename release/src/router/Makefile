@@ -259,7 +259,11 @@ obj-$(TCONFIG_PPTPD) += pptpd
 obj-$(TCONFIG_SSH) += dropbear
 obj-$(TCONFIG_ZEBRA) += zebra
 obj-$(TCONFIG_LZO) += lzo
+ifeq ($(TCONFIG_OPTIMIZE_SIZE_MORE),y)
+obj-$(TCONFIG_OPENVPN) += openvpn-2.4
+else
 obj-$(TCONFIG_OPENVPN) += openvpn
+endif
 obj-$(TCONFIG_OPENVPN) += openvpn_plugin_auth_nvram
 obj-$(TCONFIG_TINC) += tinc
 obj-$(TCONFIG_EMF) += emf
@@ -2199,6 +2203,34 @@ lzo-install:
 		ln -sf liblzo2.so.2.0.0 liblzo2.so.2 && \
 		ln -sf liblzo2.so.2.0.0 liblzo2.so
 
+openvpn-2.4/Makefile:
+	$(call patch_files,openvpn-2.4)
+	cd openvpn-2.4 && autoreconf -fsi && \
+	OPENSSL_CFLAGS="-I$(TOP)/$(OPENSSLDIR)/include" \
+	OPENSSL_LIBS="-L$(TOP)/$(OPENSSLDIR) -lcrypto -lssl" \
+	CFLAGS="$(CFLAG_OPTIMIZE) -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+	LDFLAGS="-L$(TOP)/$(OPENSSLDIR) $(if $(INSTALL_ZLIB),-L$(TOP)/zlib -lz,) -lpthread -ldl -L$(TOP)/lzo/src/.libs -ffunction-sections -fdata-sections -Wl,--gc-sections" \
+	CPPFLAGS="-I$(TOP)/lzo/include -I$(TOP)/$(OPENSSLDIR)/include" \
+	PLUGINDIR="/lib" IFCONFIG="/sbin/ifconfig" IPROUTE="/usr/sbin/ip" ROUTE="/sbin/route" \
+	$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib \
+		--enable-management --disable-debug --disable-plugin-auth-pam --disable-plugin-down-root --disable-dependency-tracking \
+		--disable-lz4 --enable-small --disable-server --enable-iproute2 ac_cv_lib_resolv_gethostbyname=no
+	@touch openvpn-2.4/.conf
+
+openvpn-2.4: $(OPENSSLDIR) lzo $(if $(INSTALL_ZLIB),zlib,) openvpn-2.4/Makefile
+	@$(SEP)
+	@$(MAKE) -C openvpn-2.4 $(PARALLEL_BUILD)
+
+openvpn-2.4-clean:
+	[ ! -f openvpn-2.4/Makefile ] || $(MAKE) -C openvpn-2.4 clean
+	@rm -f openvpn-2.4/Makefile
+	$(call unpatch_files,openvpn-2.4)
+
+openvpn-2.4-install:
+	install -D openvpn-2.4/src/openvpn/.libs/openvpn $(INSTALLDIR)/openvpn-2.4/usr/sbin/openvpn
+	$(STRIP) -s $(INSTALLDIR)/openvpn-2.4/usr/sbin/openvpn
+	chmod 0500 $(INSTALLDIR)/openvpn-2.4/usr/sbin/openvpn
+
 openvpn/Makefile:
 	$(call patch_files,openvpn)
 	cd openvpn && autoreconf -fsi && \
@@ -2210,7 +2242,7 @@ openvpn/Makefile:
 	PLUGINDIR="/lib" IFCONFIG="/sbin/ifconfig" IPROUTE="/usr/sbin/ip" ROUTE="/sbin/route" \
 	$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib \
 		--enable-management --disable-debug --disable-plugin-auth-pam --disable-plugin-down-root --disable-dependency-tracking \
-		$(if $(TCONFIG_OPTIMIZE_SIZE_MORE),--disable-lz4 --enable-small --disable-server) --enable-iproute2 ac_cv_lib_resolv_gethostbyname=no
+		--enable-iproute2 ac_cv_lib_resolv_gethostbyname=no
 	@touch openvpn/.conf
 
 openvpn: $(OPENSSLDIR) lzo $(if $(INSTALL_ZLIB),zlib,) openvpn/Makefile
