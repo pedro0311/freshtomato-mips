@@ -5,7 +5,7 @@ FreshTomato-MIPS Changelog
 
 
 
-2020.7-001-beta 2020.10.01
+2020.7          2020.10.01
 --------------------------
 
 Note: fix the critical bug for RT-AC branch (when using webmonitor) with iptables not working, therefore no firewall. This release only includes images for RT-AC branch.
