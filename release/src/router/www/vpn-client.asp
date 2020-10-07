@@ -463,7 +463,7 @@ function init() {
 				{ title: 'Cipher', name: 'vpn_'+t+'_cipher', type: 'select', options: ciphers, value: eval('nvram.vpn_'+t+'_cipher') },
 				{ title: 'Compression', name: 'vpn_'+t+'_comp', type: 'select', options: [ ['-1', 'Disabled'], ['no', 'None'], ['yes', 'LZO'], ['adaptive', 'LZO Adaptive']
 /* SIZEOPTMORE-BEGIN */
-				          , ['lz4', 'LZ4'], ['lz4-v2', 'LZ4-V2']
+				          , ['lz4', 'LZ4'], ['lz4-v2', 'LZ4-V2'], ['stub', 'Stub'], ['stub-v2', 'Stub-V2']
 /* SIZEOPTMORE-END */
 				          ], value: eval( 'nvram.vpn_'+t+'_comp' ) },
 				{ title: 'TLS Renegotiation Time', name: 'vpn_'+t+'_reneg', type: 'text', maxlen: 10, size: 7, value: eval( 'nvram.vpn_'+t+'_reneg' ),
