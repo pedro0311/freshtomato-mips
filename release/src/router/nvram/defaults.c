@@ -1188,6 +1188,7 @@ const defaults_t defaults[] = {
 	{ "vpn_client1_nobind",		"1"				},
 	{ "vpn_client1_routing_val",	""				},
 	{ "vpn_client1_fw",		"1"				},
+	{ "vpn_client1_tlsvername",	"0"				},
 	{ "vpn_client2_poll",		"0"				},
 	{ "vpn_client2_if",		"tun"				},
 	{ "vpn_client2_bridge",		"1"				},
@@ -1224,6 +1225,7 @@ const defaults_t defaults[] = {
 	{ "vpn_client2_nobind",		"1"				},
 	{ "vpn_client2_routing_val",	""				},
 	{ "vpn_client2_fw",		"1"				},
+	{ "vpn_client2_tlsvername",	"0"				},
 #endif
 
 #ifdef TCONFIG_PPTPD
