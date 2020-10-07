@@ -87,9 +87,9 @@ static void print_generated_ca_to_user()
 	web_puts("';");
 }
 
-static void generateKey(const char *prefix)
+static void generateKey(const char *prefix, const char *serial)
 {
-	char subj_buf[512];
+	char subj_buf[256];
 	char buffer[512];
 	char *str;
 
@@ -102,7 +102,8 @@ static void generateKey(const char *prefix)
 		syslog(LOG_WARNING, "Building Certs for Client");
 	}
 
-	put_to_file(OPENSSL_TMP_DIR"/serial", "00");
+	put_to_file(OPENSSL_TMP_DIR"/serial", serial);
+
 	sprintf(subj_buf, "\"/C=GB/ST=Yorks/L=York/O=FreshTomato/OU=IT/CN=%s.%s\"", prefix, nvram_safe_get("wan_domain"));
 	sprintf(buffer, "openssl req -nodes -new -keyout "OPENSSL_TMP_DIR"/%s.key -out "OPENSSL_TMP_DIR"/%s.csr %s -subj %s >>"OPENSSL_TMP_DIR"/openssl.log 2>&1", prefix, prefix, str, subj_buf);
 	syslog(LOG_WARNING, buffer);
@@ -128,8 +129,8 @@ static void print_generated_keys_to_user(const char *prefix)
 	web_putfile(buffer, WOF_JAVASCRIPT);
 	web_puts("';");
 }
-#endif
-#endif
+#endif /* TCONFIG_KEYGEN */
+#endif /* TCONFIG_OPENVPN */
 
 void wo_ovpn_status(char *url)
 {
@@ -166,7 +167,7 @@ void wo_ovpn_status(char *url)
 			}
 		}
 	}
-#endif
+#endif /* TCONFIG_OPENVPN */
 }
 
 void wo_ovpn_genkey(char *url)
@@ -210,7 +211,7 @@ void wo_ovpn_genkey(char *url)
 		web_pipecmd("openssl dhparam -out /tmp/dh1024.pem 1024 >/dev/null 2>&1 && cat /tmp/dh1024.pem && rm /tmp/dh1024.pem", WOF_NONE);
 	else {
 		prepareCAGeneration(server);
-		generateKey("server");
+		generateKey("server", "00");
 		print_generated_ca_to_user();
 		print_generated_keys_to_user("server");
 	}
@@ -336,7 +337,7 @@ void wo_ovpn_genclientconfig(char *url)
 
 		put_to_file(OVPN_CLIENT_DIR"/ca.pem", getNVRAMVar("vpn_server%d_ca", server));
 		prepareCAGeneration(server);
-		generateKey("client");
+		generateKey("client", getNVRAMVar("vpn_server%d_serial", server));
 		eval("cp", OPENSSL_TMP_DIR"/client.crt", OVPN_CLIENT_DIR);
 		eval("cp", OPENSSL_TMP_DIR"/client.key", OVPN_CLIENT_DIR);
 	}
