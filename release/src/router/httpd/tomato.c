@@ -1661,6 +1661,7 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_server1_ca",		V_NONE				},
 	{ "vpn_server1_ca_key",		V_NONE				},
 	{ "vpn_server1_crt",		V_NONE				},
+	{ "vpn_server1_crl",		V_NONE				},	/* certificate revocation list */
 	{ "vpn_server1_key",		V_NONE				},
 	{ "vpn_server1_dh",		V_NONE				},
 	{ "vpn_server1_br",		V_LENGTH(0, 50)			},
@@ -1702,6 +1703,7 @@ static const nvset_t nvset_list[] = {
 	{ "vpn_server2_ca",		V_NONE				},
 	{ "vpn_server2_ca_key",		V_NONE				},
 	{ "vpn_server2_crt",		V_NONE				},
+	{ "vpn_server2_crl",		V_NONE				},	/* certificate revocation list */
 	{ "vpn_server2_key",		V_NONE				},
 	{ "vpn_server2_dh",		V_NONE				},
 	{ "vpn_server2_br",		V_LENGTH(0, 50)			},
