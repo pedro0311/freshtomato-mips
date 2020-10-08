@@ -2238,7 +2238,7 @@ openvpn-2.4/Makefile:
 	CFLAGS="$(CFLAG_OPTIMIZE) -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 	LDFLAGS="-L$(TOP)/$(OPENSSLDIR) $(if $(INSTALL_ZLIB),-L$(TOP)/zlib -lz,) -lpthread -ldl -L$(TOP)/lzo/src/.libs -ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	CPPFLAGS="-I$(TOP)/lzo/include -I$(TOP)/$(OPENSSLDIR)/include" \
-	PLUGINDIR="/lib" IFCONFIG="/sbin/ifconfig" IPROUTE="/usr/sbin/ip" ROUTE="/sbin/route" \
+	PLUGINDIR="/lib" IPROUTE="/usr/sbin/ip" \
 	$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib \
 		--enable-management --disable-debug --disable-plugin-auth-pam --disable-plugin-down-root --disable-dependency-tracking \
 		--disable-lz4 --enable-small --disable-server --enable-iproute2 ac_cv_lib_resolv_gethostbyname=no
@@ -2266,10 +2266,10 @@ openvpn/Makefile:
 	CFLAGS="$(CFLAG_OPTIMIZE) -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 	LDFLAGS="-L$(TOP)/$(OPENSSLDIR) $(if $(INSTALL_ZLIB),-L$(TOP)/zlib -lz,) -lpthread -ldl -L$(TOP)/lzo/src/.libs -ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	CPPFLAGS="-I$(TOP)/lzo/include -I$(TOP)/$(OPENSSLDIR)/include" \
-	PLUGINDIR="/lib" IFCONFIG="/sbin/ifconfig" IPROUTE="/usr/sbin/ip" ROUTE="/sbin/route" \
+	PLUGINDIR="/lib" \
 	$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib \
 		--enable-management --disable-debug --disable-plugin-auth-pam --disable-plugin-down-root --disable-dependency-tracking \
-		--enable-iproute2 ac_cv_lib_resolv_gethostbyname=no
+		ac_cv_lib_resolv_gethostbyname=no
 	@touch openvpn/.conf
 
 openvpn: $(OPENSSLDIR) lzo $(if $(INSTALL_ZLIB),zlib,) openvpn/Makefile
