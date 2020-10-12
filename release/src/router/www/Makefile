@@ -85,7 +85,7 @@ endif
 
 # Only include EMF options if EMF is configured in.
 ifneq ($(TCONFIG_EMF),y)
-	sed -i $(INSTALLDIR)/www/advanced-routing.asp -e "/EMF-BEGIN/,/EMF-END/d"
+	sed -i $(INSTALLDIR)/www/advanced-firewall.asp -e "/EMF-BEGIN/,/EMF-END/d"
 endif
 
 # Only include NTFS settings if NTFS support is configured in.
