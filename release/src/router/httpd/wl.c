@@ -512,8 +512,8 @@ static int get_scan_results(int idx, int unit, int subunit, void *param)
 
 		apinfos[0].NetworkType = NetWorkType;
 
-		ie = (struct bss_ie_hdr *) ((unsigned char *) bssi + sizeof(*bssi));
-			for (left = bssi->ie_length; left > 0; // look for RSN IE first
+		ie = (struct bss_ie_hdr *) ((unsigned char *) bssi + bssi->ie_offset);
+			for (left = bssi->ie_length; left > 0; /* look for RSN IE first */
 				left -= (ie->len + 2), ie = (struct bss_ie_hdr *) ((unsigned char *) ie + 2 + ie->len))
 				{
 					if (ie->elem_id != DOT11_MNG_RSN_ID)
@@ -526,8 +526,8 @@ static int get_scan_results(int idx, int unit, int subunit, void *param)
 					}
 		}
 
-		ie = (struct bss_ie_hdr *) ((unsigned char *) bssi + sizeof(*bssi));
-			for (left = bssi->ie_length; left > 0; // then look for WPA IE
+		ie = (struct bss_ie_hdr *) ((unsigned char *) bssi + bssi->ie_offset);
+			for (left = bssi->ie_length; left > 0; /* then look for WPA IE */
 				left -= (ie->len + 2), ie = (struct bss_ie_hdr *) ((unsigned char *) ie + 2 + ie->len))
 				{
 				if (ie->elem_id != DOT11_MNG_WPA_ID)
