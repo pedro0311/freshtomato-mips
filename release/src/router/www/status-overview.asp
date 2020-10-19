@@ -157,6 +157,7 @@ foreach_wwan(function(i) {
 		}
 	}
 });
+/* USB-END */
 
 for (var uidx = 1; uidx <= nvram.mwan_num; uidx++) {
 	var wan_suffix = uidx > 1 ? uidx : '';
@@ -178,7 +179,6 @@ for (var uidx = 1; uidx <= nvram.mwan_num; uidx++) {
 		})(wan_suffix);
 	}
 }
-/* USB-END */
 
 function c(id, htm) {
 	E(id).cells[1].innerHTML = htm;
@@ -224,33 +224,33 @@ function ethstates() {
 		}
 		else if (port == "1000FD") {
 			fn = 'eth_1000_fd';
-			state1 = port.replace("HD","M Half");
-			state2 = state1.replace("FD","M Full");
+			state1 = port.replace("HD","Mbps Half");
+			state2 = state1.replace("FD","Mbps Full");
 		}
 		else if (port == "1000HD") {
 			fn = 'eth_1000_hd';
-			state1 = port.replace("HD","M Half");
-			state2 = state1.replace("FD","M Full");
+			state1 = port.replace("HD","Mbps Half");
+			state2 = state1.replace("FD","Mbps Full");
 		}
 		else if (port == "100FD") {
 			fn = 'eth_100_fd';
-			state1 = port.replace("HD","M Half");
-			state2 = state1.replace("FD","M Full");
+			state1 = port.replace("HD","Mbps Half");
+			state2 = state1.replace("FD","Mbps Full");
 		}
 		else if (port == "100HD") {
 			fn = 'eth_100_hd';
-			state1 = port.replace("HD","M Half");
-			state2 = state1.replace("FD","M Full");
+			state1 = port.replace("HD","Mbps Half");
+			state2 = state1.replace("FD","Mbps Full");
 		}
 		else if (port == "10FD") {
 			fn = 'eth_10_fd';
-			state1 = port.replace("HD","M Half");
-			state2 = state1.replace("FD","M Full");
+			state1 = port.replace("HD","Mbps Half");
+			state2 = state1.replace("FD","Mbps Full");
 		}
 		else if (port == "10HD") {
 			fn = 'eth_10_hd';
-			state1 = port.replace("HD","M Half");
-			state2 = state1.replace("FD","M Full");
+			state1 = port.replace("HD","Mbps Half");
+			state2 = state1.replace("FD","Mbps Full");
 		}
 		else {
 			fn = 'eth_1000_fd';
@@ -407,7 +407,7 @@ function init() {
 		var timer = updateWWANTimers[wwan_number - 1];
 		timer.initPage(3000, 3);
 	});
-
+/* USB-END */
 	for (var uidx = 1; uidx <= nvram.mwan_num; uidx++) {
 		if (!customStatusTimers[uidx - 1]) {
 			continue;
@@ -415,7 +415,6 @@ function init() {
 		var timer = customStatusTimers[uidx - 1];
 		timer.initPage(3000, 3);
 	}
-/* USB-END */
 
 	ref.initPage(3000, 3);
 
