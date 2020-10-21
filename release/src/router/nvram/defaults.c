@@ -764,15 +764,6 @@ const defaults_t defaults[] = {
 #endif
 	{ "rrulewp",			"80,8080"			},
 
-#if TOMATO_SL
-/* samba */
-	{ "smbd_on",			"0"				},
-	{ "nmbd_on",			"0"				},
-	{ "smbd_wgroup",		"WORKGROUP"			},
-	{ "smbd_nbname",		"TOMATO"			},
-	{ "smbd_adminpass",		"admin"				},
-#endif
-
 /* admin-access */
 	{ "http_username",		""				},	// Username
 	{ "http_passwd",		"admin"				},	// Password
