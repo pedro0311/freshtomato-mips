@@ -263,7 +263,7 @@ function init() {
 			{ title: 'WAN4', indent: 2, name: 'f_dr_wan4', type: 'checkbox', value: ((nvram.dr_wan4_rx != '0') && (nvram.dr_wan4_rx != '')) },
 /* MULTIWAN-END */
 /* ZEBRA-END */
-			{ title: 'DHCP Routes', name: 'f_dhcp_routes', type: 'checkbox', value: nvram.dhcp_routes != '0' }
+			{ title: 'Accept DHCP Routes<br>on WAN interface', name: 'f_dhcp_routes', type: 'checkbox', value: nvram.dhcp_routes != '0' }
 		]);
 	</script>
 </div>
