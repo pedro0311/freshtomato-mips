@@ -269,7 +269,8 @@ enum {
 	MODEL_TDN80,
 	MODEL_R6300V1,
 	MODEL_WNDR4500,
-	MODEL_WNDR4500V2
+	MODEL_WNDR4500V2,
+	MODEL_DIR865L
 };
 
 /* NOTE: Do not insert new entries in the middle of this enum,
