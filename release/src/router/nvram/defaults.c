@@ -551,6 +551,8 @@ const defaults_t defaults[] = {
 	{ "tm_dst",			"1" 				},
 	{ "ntp_updates",		"1"				},
 	{ "ntp_server",			"0.europe.pool.ntp.org 1.europe.pool.ntp.org 2.europe.pool.ntp.org" },
+	{ "ntpd_enable",		"0"				},
+	{ "ntpd_server_redir",		"0"				},
 
 /* basic-static */
 	{ "dhcpd_static",		""				},
@@ -917,6 +919,9 @@ const defaults_t defaults[] = {
 	{ "usb_uhci",			"0"				},
 	{ "usb_ohci",			"0"				},
 	{ "usb_usb2",			"1"				},
+#ifdef TCONFIG_MICROSD
+	{ "usb_mmc",			"-1"				},
+#endif
 	{ "usb_irq_thresh",		"0"				},
 	{ "usb_storage",		"1"				},
 	{ "usb_printer",		"0"				},
