@@ -661,7 +661,7 @@ static void check_bootnv(void)
 	int hardware;
 	int model;
 	char mac[18];
-	int i;
+	unsigned int i;
 
 	model = get_model();
 	dirty = check_nv("wl0_leddc", "0x640000") | check_nv("wl1_leddc", "0x640000");
@@ -1823,8 +1823,10 @@ static int init_nvram(void)
 			// fix WL mac`s
 			strcpy(s, nvram_safe_get("et0macaddr"));
 			trimstr(s);
-			int i;
-			for (i = 0; i < strlen(s); i ++) if ( s[i] == '-') s[i] = ':';
+			unsigned int i;
+			for (i = 0; i < strlen(s); i ++)
+				if (s[i] == '-')
+					s[i] = ':';
 			nvram_set("et0macaddr",s);
 			inc_mac(s, +2);
 			nvram_set("wl0_hwaddr", s);
