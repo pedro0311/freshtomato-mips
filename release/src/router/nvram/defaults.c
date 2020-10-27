@@ -551,6 +551,8 @@ const defaults_t defaults[] = {
 	{ "tm_dst",			"1" 				},
 	{ "ntp_updates",		"1"				},
 	{ "ntp_server",			"0.europe.pool.ntp.org 1.europe.pool.ntp.org 2.europe.pool.ntp.org" },
+	{ "ntpd_enable",		"0"				},
+	{ "ntpd_server_redir",		"0"				},
 
 /* basic-static */
 	{ "dhcpd_static",		""				},
@@ -917,7 +919,7 @@ const defaults_t defaults[] = {
 	{ "usb_uhci",			"0"				},
 	{ "usb_ohci",			"0"				},
 	{ "usb_usb2",			"1"				},
-#if defined(LINUX26) && defined(TCONFIG_MICROSD)
+#ifdef TCONFIG_MICROSD
 	{ "usb_mmc",			"-1"				},
 #endif
 	{ "usb_irq_thresh",		"0"				},
@@ -968,6 +970,7 @@ const defaults_t defaults[] = {
 	{ "ftp_custom",			""				},
 	{ "ftp_sip",			""				},	// wan ftp access: source ip address(es)
 	{ "ftp_limit",			"0,3,60"			},
+	{ "ftp_tls",			"0"				},
 	{ "log_ftp",			"0"				},
 #endif
 
