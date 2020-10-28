@@ -116,7 +116,7 @@ static char *defenv[] = {
 };
 
 /* set pci/#/#/ccode,regrev, wl#_country_code,regrev, bwq518 */
-static void set_regulation(int card, char *code, char *rev)
+static inline void set_regulation(int card, char *code, char *rev)
 {
 	char path[32];
 	sprintf(path, "pci/%d/1/regrev", card + 1);
@@ -1590,7 +1590,7 @@ static int init_nvram(void)
 		mfr = "Asus";
 		name = nvram_match("boardrev", "0x1446") ? "RT-N53 A1" : "RT-N53";
 		features = SUP_SES | SUP_80211N;
-#if defined(LINUX26) && defined(TCONFIG_USBAP)
+#ifdef TCONFIG_USBAP
 		if (nvram_get_int("usb_storage") == 1) nvram_set("usb_storage", "-1");
 #endif
 		if (!nvram_match("t_fix1", (char *)name)) {
@@ -1626,7 +1626,7 @@ static int init_nvram(void)
 #else
 		name = "RT-N66U";
 		features = SUP_SES | SUP_80211N | SUP_1000ET;
-#if defined(LINUX26) && defined(TCONFIG_MICROSD)
+#ifdef TCONFIG_MICROSD
 		if (nvram_get_int("usb_mmc") == -1) nvram_set("usb_mmc", "1");
 #endif
 #endif
@@ -1646,7 +1646,7 @@ static int init_nvram(void)
 			nvram_set("landevs", "vlan1 wl0 wl1");
 			nvram_set("wandevs", "vlan2");
 #ifndef TCONFIG_AC66U
-#if defined(LINUX26) && defined(TCONFIG_USB)
+#ifdef TCONFIG_USB
 			nvram_set("usb_noled", "1-1.4"); /* SD/MMC Card */
 #endif
 #else
