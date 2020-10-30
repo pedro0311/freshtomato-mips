@@ -2874,7 +2874,7 @@ iperf-clean:
 %-distclean:
 	@-[ ! -d $* ] || $(MAKE) -C $* distclean
 
-%-install: %
+%-install:
 	@[ ! -d $* ] || $(MAKE) -C $* install INSTALLDIR=$(INSTALLDIR)/$*
 
 %-build:
