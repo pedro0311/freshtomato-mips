@@ -20,7 +20,7 @@
 	June 2014 Tvlz
 	https://bitbucket.org/tvlz/tvlz-advanced-vlan/
 
-	** Last Updated - May 6 2020 - Tvlz **
+	** Last Updated - Oct 31 2020 - pedro **
 
 	For use with Tomato Firmware only.
 	No part of this file may be used without permission.
@@ -108,6 +108,7 @@ switch (nvram['t_model_name']) {
 	case 'Tenda N6':
 /*	case 'Tenda N80': */
 	case 'Tenda W1800R':
+	case 'D-link DIR-865L':
 		COL_P0N = '1';
 		COL_P1N = '2';
 		COL_P2N = '3';
