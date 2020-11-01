@@ -1762,7 +1762,7 @@ static int init_nvram(void)
 
 #ifdef CONFIG_BCMWL6
 	case MODEL_DIR865L:
-		mfr = "D-link";
+		mfr = "D-Link";
 		name = "DIR-865L";
 		features = SUP_SES | SUP_80211N | SUP_1000ET | SUP_80211AC;
 #ifdef TCONFIG_USB
