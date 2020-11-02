@@ -1487,7 +1487,7 @@ ifeq ($(CONFIG_BCMWL6),y)
 	@echo "w1800re      Tenda W1800R build VPN"
 	@echo "w1800rz      Tenda W1800R build AIO"
 	@echo "dir865le     D-link DIR-865L build VPN"
-	@echo "dir865lz     D-link DIR-865L build Mega-VPN"
+	@echo "dir865lo     D-link DIR-865L build Mega-VPN"
 	@echo "r6300e       Netgear R6300V1 build VPN"
 	@echo "r6300z       Netgear R6300V1 build AIO"
 	@echo "wndr4500e    Netgear WNDR4500V1 build VPN"
