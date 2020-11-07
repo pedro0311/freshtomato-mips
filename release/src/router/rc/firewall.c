@@ -133,6 +133,11 @@ void enable_ip_forward(void)
 	f_write_string("/proc/sys/net/ipv4/ip_forward", "1", 0, 0);
 }
 
+void log_segfault(void)
+{
+	f_write_string("/proc/sys/kernel/print-fatal-signals", (nvram_get_int("debug_logsegfault") ? "1" : "0"), 0, 0);
+}
+
 #ifdef TCONFIG_IPV6
 void enable_ip6_forward(void)
 {
@@ -617,7 +622,7 @@ static void mangle_table(void)
 	) {
 		ipt_qos();
 		/* 1 for mangle */
-		ipt_qoslimit(1);
+		ipt_bwlimit(1);
 
 		p = nvram_safe_get("nf_ttl");
 		if (strncmp(p, "c:", 2) == 0) {
@@ -784,7 +789,7 @@ static void nat_table(void)
 	          chain_wan_prerouting);
 
 	/* 2 for nat */
-	ipt_qoslimit(2);
+	ipt_bwlimit(2);
 
 	if (gateway_mode) {
 		for (i = 0; i < wanfaces.count; ++i) {
@@ -1108,7 +1113,7 @@ static void filter_input(void)
 
 #ifdef TCONFIG_BCMARM
 	/* 3 for filter */
-	ipt_qoslimit(3);
+	ipt_bwlimit(3);
 #endif
 
 	foreach_wan_input(wanup, wanfaces);
@@ -1782,6 +1787,8 @@ int start_firewall(void)
 	wan3up = check_wanup("wan3");
 	wan4up = check_wanup("wan4");
 #endif
+
+	log_segfault();
 
 	/* NAT performance tweaks
 	 * These values can be overriden later if needed via firewall script
