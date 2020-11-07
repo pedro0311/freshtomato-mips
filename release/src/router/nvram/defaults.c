@@ -893,6 +893,7 @@ const defaults_t defaults[] = {
 	{ "debug_nocommit",		"0"				},
 	{ "debug_cprintf",		"0"				},
 	{ "debug_cprintf_file",		"0"				},
+	{ "debug_logsegfault",		"0"				},
 	{ "console_loglevel",		"1"				},
 	{ "t_cafree",			"1"				},
 	{ "t_hidelr",			"0"				},
