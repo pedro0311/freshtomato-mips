@@ -481,7 +481,7 @@ const defaults_t defaults[] = {
 	{ "wl_ampdu_rr_rtylimit_tid",	"2 2 2 2 2 2 2 2"		},	// Default AMPDU regular rate retry limit per-tid setting
 	{ "wl_amsdu",			"auto"				},	// Default AMSDU setting
 	/* power save */
-	{ "wl_rxchain_pwrsave_enable",	"1"				},	// Rxchain powersave enable
+	{ "wl_rxchain_pwrsave_enable",	"0"				},	// Rxchain powersave enable
 	{ "wl_rxchain_pwrsave_quiet_time","1800"			},	// Quiet time for power save
 	{ "wl_rxchain_pwrsave_pps",	"10"				},	// Packets per second threshold for power save
 	{ "wl_radio_pwrsave_enable",	"0"				},	// Radio powersave enable
