@@ -461,7 +461,9 @@ const defaults_t defaults[] = {
 	{ "wl_txstreams",		"0"				},	// 802.11n Tx Streams 0, 0 is invalid, WLCONF will change it to a radio appropriate default
 	{ "wl_dfs_preism",		"60"				},	// 802.11H pre network CAC time
 	{ "wl_dfs_postism",		"60"				},	// 802.11H In Service Monitoring CAC time
+#ifndef CONFIG_BCMWL6 /* following radar thrs params are not valid and not complete for SDK6 (and up) */
 	{ "wl_radarthrs",		"1 0x6c0 0x6e0 0x6bc 0x6e0 0x6ac 0x6cc 0x6bc 0x6e0" },	// Radar thrs params format: version thresh0_20 thresh1_20 thresh0_40 thresh1_40
+#endif
 	{ "wl_bcn_rotate",		"1"				},	// Beacon rotation
 	{ "wl_vlan_prio_mode",		"off"				},	// VLAN Priority support
 	{ "wl_obss_coex",		"0"				},	// OBSS Coexistence (0|1): when enabled, channel width is forced to 20MHz
