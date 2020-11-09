@@ -628,7 +628,6 @@ const defaults_t defaults[] = {
 	{ "block_wan",			"1"				},	// block inbound icmp
 	{ "block_wan_limit",		"1"				},
 	{ "block_wan_limit_icmp",	"1"				},
-	{ "block_wan_limit_tr",		"5"				},
 	{ "multicast_pass",		"0"				},	// enable multicast proxy
 	{ "multicast_lan",		"0"				},	// on LAN (br0)
 	{ "multicast_lan1",		"0"				},	// on LAN1 (br1)
