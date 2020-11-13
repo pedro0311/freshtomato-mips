@@ -1109,7 +1109,6 @@ static const nvset_t nvset_list[] = {
 	{ "lan_access",			V_LENGTH(0, 4096)		},
 
 // advanced-wireless
-	{ "wl_country",			V_LENGTH(0, 64)			},	// !!TB - Country code
 	{ "wl_country_code",		V_LENGTH(0, 4)			},	// !!TB - Country code
 #ifdef CONFIG_BCMWL6
 	{ "wl_country_rev",		V_RANGE(0, 999)			},	/* Country rev */
