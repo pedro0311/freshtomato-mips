@@ -571,6 +571,11 @@ define BusyboxOptions
 		sed -i "/CONFIG_FEATURE_LS_COLOR_IS_DEFAULT/d" $(1); \
 		echo "CONFIG_FEATURE_LS_COLOR_IS_DEFAULT=y" >>$(1); \
 	fi; \
+	if [ "$(BUILD_DESC)" = "AIO" ] || [ "$(BUILD_DESC)" = "Mega-VPN" ]; then \
+		sed -i "s/# CONFIG_TIME is not set/CONFIG_TIME=y/g" $(1); \
+		sed -i "s/# CONFIG_GETOPT is not set/CONFIG_GETOPT=y/g" $(1); \
+		sed -i "s/# CONFIG_FEATURE_GETOPT_LONG is not set/CONFIG_FEATURE_GETOPT_LONG=y/g" $(1); \
+	fi; \
 	)
 endef
 
