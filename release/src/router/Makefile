@@ -2787,6 +2787,7 @@ mdadm-clean:
 
 ipset:
 	@$(SEP)
+	$(call patch_files,ipset)
 	$(MAKE) -C ipset binaries COPT_FLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections --param large-function-growth=800 --param max-inline-insns-single=3000"
 
 ipset-install:
@@ -2798,6 +2799,7 @@ ipset-install:
 
 ipset-clean:
 	-@$(MAKE) -C ipset clean
+	$(call unpatch_files,ipset)
 
 libjson-c/build/Makefile:
 	$(call patch_files,libjson-c)
