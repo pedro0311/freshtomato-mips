@@ -96,7 +96,6 @@ function save() {
 			if (nvram['pci/'+u_pci+'/1/regrev'])
 				E('_pci/'+u_pci+'/1/regrev').value = c_rev;
 /* BCMWL6-END */
-			E('_wl'+u+'_country').value = c_code;
 			E('_wl'+u+'_nmode_protection').value = E('_wl'+u+'_gmode_protection').value;
 		}
 	}
@@ -178,7 +177,6 @@ function init() {
 			if (nvram['pci/'+u_pci+'/1/regrev'])
 				W('<input type="hidden" id="_pci/'+u_pci+'/1/regrev" name="pci/'+u_pci+'/1/regrev">');
 /* BCMWL6-END */
-			W('<input type="hidden" id="_wl'+u+'_country" name="wl'+u+'_country">');
 			W('<input type="hidden" id="_wl'+u+'_nmode_protection" name="wl'+u+'_nmode_protection">');
 
 /* / / / */
