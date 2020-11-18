@@ -937,7 +937,7 @@ dnsmasq: $(DNSSEC_BACKEND)
 	$(call patch_files,dnsmasq)
 	$(MAKE) -C dnsmasq $(PARALLEL_BUILD) \
 	CFLAGS="-Os -ffunction-sections -fdata-sections $(EXTRACFLAGS) $(OPTSIZE_FLAG)" \
-	COPTS="-DNO_INOTIFY -DHAVE_BROKEN_RTC -DHAVE_TOMATO -DNO_DUMPFILE -DNO_ID -DNO_GMP -DNO_SCRIPT $(if $(TCONFIG_OPTIMIZE_SIZE_MORE),-DNO_TFTP -DNO_LOOP -DNO_AUTH,) -DUSE_IPSET \
+	COPTS="-DNO_INOTIFY -DHAVE_BROKEN_RTC -DHAVE_TOMATO -DNO_DUMPFILE -DNO_ID -DNO_GMP -DNO_SCRIPT $(if $(TCONFIG_OPTIMIZE_SIZE_MORE),-DNO_TFTP -DNO_LOOP -DNO_AUTH,) -DUSE_IPSET -DEDNS_PKTSZ=1280 \
 		$(if $(DNSSEC_OPENSSL),-I$(TOP)/$(OPENSSLDIR)/include -DHAVE_DNSSEC,) \
 		$(if $(DNSSEC_NETTLE),-I$(TOP)/nettle/include -I$(TOP)/gmp -DHAVE_DNSSEC -DHAVE_DNSSEC_STATIC -DNO_GOST,) \
 		$(if $(TCONFIG_IPV6),-DUSE_IPV6,-DNO_IPV6)" \
@@ -1028,6 +1028,7 @@ ppp-%:
 	$(MAKE) -C ppp/pppoecd $* INSTALLDIR=$(INSTALLDIR)/ppp $(if $(TCONFIG_IPV6),HAVE_INET6=y,)
 
 rp-pppoe/src/stamp-h1: rp-pppoe/src/Makefile.in
+	$(call patch_files,rp-pppoe)
 	cd rp-pppoe/src && \
 		CFLAGS="-g -Os $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 		CPPFLAGS="-Os -ffunction-sections -fdata-sections" \
@@ -1740,7 +1741,7 @@ endif
 	$(call patch_files,ebtables)
 	cd $(TOP)/ebtables && ./autogen.sh && \
 	$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --sysconfdir=/etc --libdir=/usr/lib \
-		CFLAGS="-Os $(EXTRACFLAGS) -DEBT_MIN_ALIGN=4 -ffunction-sections -fdata-sections -fPIC" \
+		CFLAGS="-Os $(EXTRACFLAGS) -DEBT_MIN_ALIGN=4 -ffunction-sections -fdata-sections -fPIC $(OPTSIZE_FLAG)" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
 		LOCKFILE="/var/lock/ebtables"
 	@touch $@
@@ -2813,6 +2814,7 @@ mdadm-clean:
 
 ipset:
 	@$(SEP)
+	$(call patch_files,ipset)
 	$(MAKE) -C ipset binaries COPT_FLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections --param large-function-growth=800 --param max-inline-insns-single=3000"
 
 ipset-install:
@@ -2824,6 +2826,7 @@ ipset-install:
 
 ipset-clean:
 	-@$(MAKE) -C ipset clean
+	$(call unpatch_files,ipset)
 
 libjson-c/build/Makefile:
 	$(call patch_files,libjson-c)
