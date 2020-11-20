@@ -1428,7 +1428,7 @@ ffmpeg/stamp-h1: zlib
 		$(FFMPEG_CONFIGURE_PARSERS) \
 		$(FFMPEG_CONFIGURE_DECODERS) \
 		$(FFMPEG_CONFIGURE_PROTOCOLS) \
-		--extra-cflags="-Os $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC -I$(TOP)/zlib" \
+		--extra-cflags="-Os $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC -I$(TOP)/zlib $(OPTSIZE_FLAG)" \
 		--extra-ldflags="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
 		--extra-libs="-L$(TOP)/zlib -lz" \
 		--enable-zlib --disable-debug
