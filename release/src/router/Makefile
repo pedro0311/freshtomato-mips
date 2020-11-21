@@ -2570,7 +2570,7 @@ snmp/stamp-h1:
 		$(CONFIGURE) --prefix=/usr --with-persistent-directory=/tmp/snmp-persist --with-logfile=/var/log/snmpd.log \
 		--disable-debugging --disable-manuals --disable-scripts --disable-applications --disable-privacy \
 		--disable-ipv6 --disable-mibs --disable-mib-loading --disable-embedded-perl --with-perl-modules=no --without-opaque-special-types \
-		--without-openssl --without-efence --without-rsaref --without-kmem-usage --without-rpm --without-dmalloc \
+		--without-openssl --without-rsaref --without-kmem-usage --without-rpm \
 		--with-out-transports=UDPIPv6,TCPIPv6,AAL5PVC,IPX,TCP,Unix \
 		--with-out-mib-modules=snmpv3mibs,agent_mibs,agentx,notification,utilities,target \
 		--with-mib-modules="\
