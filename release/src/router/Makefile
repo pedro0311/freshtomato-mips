@@ -936,7 +936,7 @@ dnsmasq: $(DNSSEC_BACKEND)
 	@$(SEP)
 	$(call patch_files,dnsmasq)
 	$(MAKE) -C dnsmasq $(PARALLEL_BUILD) \
-	CFLAGS="-Os -ffunction-sections -fdata-sections $(EXTRACFLAGS) $(OPTSIZE_FLAG)" \
+	CFLAGS="-Os -ffunction-sections -fdata-sections $(EXTRACFLAGS) $(OPTSIZE_MORE_FLAG)" \
 	COPTS="-DNO_INOTIFY -DHAVE_BROKEN_RTC -DHAVE_TOMATO -DNO_DUMPFILE -DNO_ID -DNO_GMP -DNO_SCRIPT $(if $(TCONFIG_OPTIMIZE_SIZE_MORE),-DNO_TFTP -DNO_LOOP -DNO_AUTH,) -DUSE_IPSET -DEDNS_PKTSZ=1280 \
 		$(if $(DNSSEC_OPENSSL),-I$(TOP)/$(OPENSSLDIR)/include -DHAVE_DNSSEC,) \
 		$(if $(DNSSEC_NETTLE),-I$(TOP)/nettle/include -I$(TOP)/gmp -DHAVE_DNSSEC -DHAVE_DNSSEC_STATIC -DNO_GOST,) \
@@ -1276,7 +1276,7 @@ pppd/Makefile: pppd/linux/Makefile.top
 
 pppd: pppd/Makefile
 	@$(SEP)
-	@$(MAKE) -C pppd MFLAGS='$(if $(TCONFIG_IPV6),HAVE_INET6=y,) $(if $(TCONFIG_HTTPS),,USE_CRYPT=y) EXTRACFLAGS="$(EXTRACFLAGS) $(OPTSIZE_FLAG)"'
+	@$(MAKE) -C pppd MFLAGS='$(if $(TCONFIG_IPV6),HAVE_INET6=y,) $(if $(TCONFIG_HTTPS),,USE_CRYPT=y) EXTRACFLAGS="$(EXTRACFLAGS) $(OPTSIZE_MORE_FLAG)"'
 
 pppd-install:
 	install -D pppd/pppd/pppd $(INSTALLDIR)/pppd/usr/sbin/pppd
@@ -1455,7 +1455,7 @@ ffmpeg/stamp-h1: zlib
 		$(FFMPEG_CONFIGURE_PARSERS) \
 		$(FFMPEG_CONFIGURE_DECODERS) \
 		$(FFMPEG_CONFIGURE_PROTOCOLS) \
-		--extra-cflags="-Os $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC -I$(TOP)/zlib" \
+		--extra-cflags="-Os $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC -I$(TOP)/zlib $(OPTSIZE_FLAG)" \
 		--extra-ldflags="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
 		--extra-libs="-L$(TOP)/zlib -lz" \
 		--enable-zlib --disable-debug
@@ -2815,7 +2815,7 @@ mdadm-clean:
 ipset:
 	@$(SEP)
 	$(call patch_files,ipset)
-	$(MAKE) -C ipset binaries COPT_FLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections --param large-function-growth=800 --param max-inline-insns-single=3000"
+	$(MAKE) -C ipset binaries COPT_FLAGS="-Os -Wall $(EXTRACFLAGS) $(OPTSIZE_FLAG) -ffunction-sections -fdata-sections --param large-function-growth=800 --param max-inline-insns-single=3000"
 
 ipset-install:
 	install -D ipset/ipset $(INSTALLDIR)/ipset/usr/sbin/ipset
