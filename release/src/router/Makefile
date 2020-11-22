@@ -1653,6 +1653,7 @@ minidlna-install:
 	$(STRIP) $(INSTALLDIR)/minidlna/usr/sbin/minidlna
 
 igmpproxy/src/Makefile: igmpproxy/src/Makefile.in
+	$(call patch_files,igmpproxy)
 	cd igmpproxy && \
 	autoreconf -fsi && \
 	$(CONFIGURE) --prefix=/usr
@@ -1660,7 +1661,7 @@ igmpproxy/src/Makefile: igmpproxy/src/Makefile.in
 igmpproxy: igmpproxy/src/Makefile
 	@$(SEP)
 	@$(MAKE) -C igmpproxy/src \
-	CFLAGS="-Os -g -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+	CFLAGS="-Os -g -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections $(OPTSIZE_MORE_FLAG)" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
 	$(PARALLEL_BUILD)
 
@@ -1671,6 +1672,7 @@ igmpproxy-install:
 igmpproxy-clean:
 	-@$(MAKE) -C igmpproxy/src clean
 	@rm -f igmpproxy/src/Makefile
+	$(call unpatch_files,igmpproxy)
 
 hotplug2:
 	@$(SEP)
