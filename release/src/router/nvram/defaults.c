@@ -96,7 +96,11 @@ const defaults_t defaults[] = {
 	{ "wan_hilink_ip",		"0.0.0.0"			},
 	{ "wan_status_script",		"0"				},
 #endif
+#ifdef TCONFIG_BBT
+	{ "wan_ckmtd",			"3"				},
+#else
 	{ "wan_ckmtd",			"2"				},
+#endif
 
 	{ "wan2_proto",			"dhcp"				},	// [static|dhcp|pppoe|disabled]
 	{ "wan2_ipaddr",		"0.0.0.0"			},	// WAN IP address
@@ -111,7 +115,11 @@ const defaults_t defaults[] = {
 	{ "wan2_hilink_ip",		"0.0.0.0"			},
 	{ "wan2_status_script",		"0"				},
 #endif
+#ifdef TCONFIG_BBT
+	{ "wan2_ckmtd",			"3"				},
+#else
 	{ "wan2_ckmtd",			"2"				},
+#endif
 
 #ifdef TCONFIG_MULTIWAN
 	{ "wan3_proto",			"dhcp"				},	// [static|dhcp|pppoe|disabled]
@@ -127,7 +135,11 @@ const defaults_t defaults[] = {
 	{ "wan3_hilink_ip",		"0.0.0.0"			},
 	{ "wan3_status_script",		"0"				},
 #endif
+#ifdef TCONFIG_BBT
+	{ "wan3_ckmtd",			"3"				},
+#else
 	{ "wan3_ckmtd",			"2"				},
+#endif
 
 	{ "wan4_proto",			"dhcp"				},	// [static|dhcp|pppoe|disabled]
 	{ "wan4_ipaddr",		"0.0.0.0"			},	// WAN IP address
@@ -142,8 +154,12 @@ const defaults_t defaults[] = {
 	{ "wan4_hilink_ip",		"0.0.0.0"			},
 	{ "wan4_status_script",		"0"				},
 #endif
+#ifdef TCONFIG_BBT
+	{ "wan4_ckmtd",			"3"				},
+#else
 	{ "wan4_ckmtd",			"2"				},
 #endif
+#endif /* TCONFIG_MULTIWAN */
 
 #ifdef TCONFIG_DNSSEC
 	{ "dnssec_enable",		"0"				},
@@ -629,7 +645,7 @@ const defaults_t defaults[] = {
 	{ "nf_loopback",		"0"				},
 	{ "block_wan",			"1"				},	// block inbound icmp
 	{ "block_wan_limit",		"1"				},
-	{ "block_wan_limit_icmp",	"1"				},
+	{ "block_wan_limit_icmp",	"3"				},
 	{ "multicast_pass",		"0"				},	// enable multicast proxy
 	{ "multicast_lan",		"0"				},	// on LAN (br0)
 	{ "multicast_lan1",		"0"				},	// on LAN1 (br1)
