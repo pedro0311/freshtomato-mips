@@ -440,7 +440,7 @@ endif
 ifeq ($(TCONFIG_SSH),y)
 	install $(LIBDIR)/libutil.so.0 $(TARGETDIR)/lib/
 endif
-ifeq ($(TCONFIG_BBT),y)
+ifeq ($(TCONFIG_USB),y)
 	install $(LIBDIR)/librt-0.9.30.1.so $(TARGETDIR)/lib/librt.so.0
 endif
 ifneq ($(TCONFIG_NGINX)$(TCONFIG_NANO),)
