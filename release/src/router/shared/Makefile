@@ -4,7 +4,7 @@ CFLAGS = -Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC -Wsi
 CFLAGS += -I. -I$(SRCBASE)/include -I$(SRCBASE)/
 
 ifeq ($(TOMATO_EXPERIMENTAL),1)
-CFLAGS += -DDEBUG_SYSLOG
+export CFLAGS += -DDEBUG_LOGMSG
 endif
 
 LDFLAGS = --gc-sections -fPIC
