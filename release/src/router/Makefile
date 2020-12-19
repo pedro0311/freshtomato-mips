@@ -1059,7 +1059,7 @@ miniupnpd: $(IPTABLES_TARGET) miniupnpd/stamp-h1
 	@$(SEP)
 	$(MAKE) -C miniupnpd $(PARALLEL_BUILD) \
 		EXTRACFLAGS="-Os $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -Wl,--as-needed -L$(TOP)/$(OPENSSLDIR) -pthread -Wl,--allow-multiple-definition"
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -Wl,--as-needed $(if $(TCONFIG_HTTPS),-L$(TOP)/$(OPENSSLDIR) -pthread) -Wl,--allow-multiple-definition"
 
 miniupnpd-install:
 	install -D miniupnpd/miniupnpd $(INSTALLDIR)/miniupnpd/usr/sbin/miniupnpd
