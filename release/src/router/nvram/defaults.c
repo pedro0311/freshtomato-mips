@@ -725,7 +725,6 @@ const defaults_t defaults[] = {
 #endif
 
 /* qos */
-	{ "atm_overhead",		"0"				},
 	{ "qos_enable",			"0"				},
 	{ "qos_ack",			"0"				},
 	{ "qos_syn",			"1"				},
@@ -736,13 +735,17 @@ const defaults_t defaults[] = {
 	{ "qos_reset",			"1"				},
 	{ "wan_qos_obw",		"700"				},
 	{ "wan_qos_ibw",		"16000"				},
+	{ "wan_qos_overhead",		"0"				},
 	{ "wan2_qos_obw",		"700"				},
 	{ "wan2_qos_ibw",		"16000"				},
+	{ "wan2_qos_overhead",		"0"				},
 #ifdef TCONFIG_MULTIWAN
 	{ "wan3_qos_obw",		"700"				},
 	{ "wan3_qos_ibw",		"16000"				},
+	{ "wan3_qos_overhead",		"0"				},
 	{ "wan4_qos_obw",		"700"				},
 	{ "wan4_qos_ibw",		"16000"				},
+	{ "wan4_qos_overhead",		"0"				},
 #endif
 #if defined(TCONFIG_NVRAM_32K) || defined(TCONFIG_OPTIMIZE_SIZE_MORE)
 	{ "qos_orules",			"0<<-1<d<53<0<<0:10<<0<DNS"	},
