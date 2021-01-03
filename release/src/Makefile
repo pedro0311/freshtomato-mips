@@ -30,7 +30,11 @@
 export ac_cv_func_malloc_0_nonnull=yes
 export SRCBASE := $(shell pwd)
 RELEASEDIR := $(shell (cd $(SRCBASE)/.. && pwd -P))
-PATH := $(RELEASEDIR)/tools:$(PATH)
+
+CC_LINUX_DIR  ?= $(abspath ../../tools/brcm/hndtools-mipsel-linux/bin/)
+CC_UCLIBC_DIR ?= $(abspath ../../tools/brcm/hndtools-mipsel-uclibc/bin/)
+
+PATH := $(RELEASEDIR)/tools:$(PATH):$(CC_LINUX_DIR):$(CC_UCLIBC_DIR)
 export TPROFILE := N
 
 include ./target.mak
