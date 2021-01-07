@@ -66,7 +66,6 @@
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OSM
 #define LOGMSG_NVDEBUG	"services_debug"
 
-
 /* Pop an alarm to recheck pids in 500 msec */
 static const struct itimerval pop_tv = { {0, 0}, {0, 500 * 1000} };
 /* Pop an alarm to reap zombies */
@@ -1209,10 +1208,10 @@ void start_ipv6(void)
 		/* HINT: "ipv6_accept_ra" bit 0 ==> used for wan, "ipv6_accept_ra" bit 1 ==> used for lan interfaces (br0...br3) */
 		/* check lanX / brX if available */
 		for (i = 0; i < BRIDGE_COUNT; i++) {
-			memset(buffer, 0 , 16);
+			memset(buffer, 0, 16);
 			sprintf(buffer, (i == 0 ? "lan_ipaddr" : "lan%d_ipaddr"), i);
 			if (strcmp(nvram_safe_get(buffer), "") != 0) {
-				memset(buffer, 0 , 16);
+				memset(buffer, 0, 16);
 				sprintf(buffer, (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
 				if (((nvram_get_int("ipv6_accept_ra") & 0x02) != 0) && !nvram_get_int("ipv6_radvd") && !nvram_get_int("ipv6_dhcpd"))
 					/* accept_ra for brX */
@@ -1676,7 +1675,7 @@ void start_syslog(void)
 		/* used to be available in syslogd -m */
 		n = nvram_get_int("log_mark");
 		if (n > 0) {
-			memset(rem, 0 , 256);
+			memset(rem, 0, 256);
 			/* n is in minutes */
 			if (n < 60)
 				sprintf(rem, "*/%d * * * *", n);
@@ -1685,7 +1684,7 @@ void start_syslog(void)
 			else
 				sprintf(rem, "0 0 */%d * *", n / (60 * 24));
 
-			memset(s, 0 , 64);
+			memset(s, 0, 64);
 			sprintf(s, "%s logger -p syslog.info -- -- MARK --", rem);
 			eval("cru", "a", "syslogdmark", s);
 		}
@@ -2148,7 +2147,7 @@ static void start_ftpd(void)
 
 	if (nvram_get_int("ftp_super")) {
 		/* rights */
-		memset(tmp, 0 , 256);
+		memset(tmp, 0, 256);
 		sprintf(tmp, "%s/%s", vsftpd_users, "admin");
 		if ((f = fopen(tmp, "w")) != NULL) {
 			fprintf(f, "dirlist_enable=yes\n"
@@ -2168,7 +2167,7 @@ static void start_ftpd(void)
 		            "anon_umask=022\n");
 
 		/* rights */
-		memset(tmp, 0 , 256);
+		memset(tmp, 0, 256);
 		sprintf(tmp, "%s/ftp", vsftpd_users);
 		if ((f = fopen(tmp, "w")) != NULL) {
 			if (nvram_match("ftp_dirlist", "0"))
@@ -2307,7 +2306,7 @@ static void start_ftpd(void)
 				root_dir = nvram_safe_get("ftp_pubroot");
 
 			/* directory */
-			memset(tmp, 0 , 256);
+			memset(tmp, 0, 256);
 			if (strncmp(rights, "Private", 7) == 0) {
 				sprintf(tmp, "%s/%s", nvram_storage_path("ftp_pvtroot"), user);
 				mkdir_if_none(tmp);
@@ -2318,7 +2317,7 @@ static void start_ftpd(void)
 			fprintf(fp, "%s:%s:0:0:%s:%s:/sbin/nologin\n", user, crypt(pass, "$1$"), user, tmp);
 
 			/* rights */
-			memset(tmp, 0 , 256);
+			memset(tmp, 0, 256);
 			sprintf(tmp, "%s/%s", vsftpd_users, user);
 			if ((f = fopen(tmp, "w")) != NULL) {
 				tmp[0] = 0;
@@ -2399,9 +2398,9 @@ void enable_gro(int interval)
 	lan_ifnames = nvram_safe_get("lan_ifnames");
 	foreach(lan_ifname, lan_ifnames, next) {
 		if (!strncmp(lan_ifname, "vlan", 4)) {
-			memset(path, 0 , 64);
+			memset(path, 0, 64);
 			sprintf(path, ">>/proc/net/vlan/%s", lan_ifname);
-			memset(parm, 0 , 32);
+			memset(parm, 0, 32);
 			sprintf(parm, "-gro %d", interval);
 			argv[1] = parm;
 			_eval(argv, path, 0, NULL);
@@ -2535,7 +2534,7 @@ static void start_samba(void)
 
 	nv = nvram_safe_get("smbd_cpage");
 	if (*nv) {
-		memset(nlsmod, 0 , 16);
+		memset(nlsmod, 0, 16);
 		sprintf(nlsmod, "nls_cp%s", nv);
 
 		nv = nvram_safe_get("smbd_nlsmod");
@@ -2993,13 +2992,13 @@ void start_services(void)
 	start_nfs();
 #endif
 
-#ifdef TCONFIG_FANCTRL
-	start_phy_tempsense();
-#endif
-
 #ifdef TCONFIG_BCMARM
 	/* do LED setup for Router */
 	led_setup();
+#endif
+
+#ifdef TCONFIG_FANCTRL
+	start_phy_tempsense();
 #endif
 
 #ifdef CONFIG_BCM7
@@ -3009,6 +3008,10 @@ void start_services(void)
 		system("/usr/sbin/dhd -i eth3 msglevel 0x00");
 	}
 #endif
+
+#ifdef TCONFIG_BCMBSD
+	start_bsd();
+#endif /* TCONFIG_BCMBSD */
 }
 
 void stop_services(void)
@@ -3062,6 +3065,10 @@ void stop_services(void)
 	stop_zebra();
 #endif
 	stop_nas();
+
+#ifdef TCONFIG_BCMBSD
+	stop_bsd();
+#endif /* TCONFIG_BCMBSD */
 }
 
 /* nvram "action_service" is: "service-action[-modifier]"
@@ -3145,6 +3152,7 @@ TOP:
 
 	if (strcmp(service, "dns") == 0) {
 		if (act_start) reload_dnsmasq();
+		goto CLEAR;
 	}
 
 #ifdef TCONFIG_STUBBY
@@ -3283,7 +3291,7 @@ TOP:
 		goto CLEAR;
 	}
 
-	if (strncmp(service, "dhcp6", 5) == 0) {
+	if (strcmp(service, "dhcp6") == 0) {
 		if (act_stop) stop_dhcp6c();
 		if (act_start) start_dhcp6c();
 		goto CLEAR;
@@ -3342,7 +3350,7 @@ TOP:
 		goto CLEAR;
 	}
 
-	if (strncmp(service, "hotplug", 7) == 0) {
+	if (strcmp(service, "hotplug") == 0) {
 		if (act_stop) stop_hotplug2();
 		if (act_start) start_hotplug2(1);
 		goto CLEAR;
@@ -3383,7 +3391,7 @@ TOP:
 #endif
 
 #ifdef TCONFIG_JFFS2
-	if (strncmp(service, "jffs", 4) == 0) {
+	if (strcmp(service, "jffs") == 0) {
 		if (act_stop) stop_jffs2();
 		if (act_start) start_jffs2();
 		goto CLEAR;
@@ -3413,7 +3421,7 @@ TOP:
 #endif
 			do_static_routes(0); /* remove old '_saved' */
 			for (i = 0; i < BRIDGE_COUNT; i++) {
-				memset(buffer2, 0 , 16);
+				memset(buffer2, 0, 16);
 				sprintf(buffer2, (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
 				if ((i == 0) || (strcmp(nvram_safe_get(buffer2), "") != 0))
 					eval("brctl", "stp", nvram_safe_get(buffer2), "0");
@@ -3427,10 +3435,10 @@ TOP:
 			start_zebra();
 #endif
 			for (i = 0; i < BRIDGE_COUNT; i++) {
-				memset(buffer, 0 , 128);
+				memset(buffer, 0, 128);
 				sprintf(buffer, (i == 0 ? "lan_ifname" : "lan%d_ifname"), i);
 				if ((i == 0) || (strcmp(nvram_safe_get(buffer), "") != 0)) {
-					memset(buffer2, 0 , 16);
+					memset(buffer2, 0, 16);
 					sprintf(buffer2, (i == 0 ? "lan_stp" : "lan%d_stp"), i);
 					eval("brctl", "stp", nvram_safe_get(buffer), nvram_safe_get(buffer2));
 				}
@@ -3556,6 +3564,14 @@ TOP:
 		}
 		goto CLEAR;
 	}
+
+#ifdef TCONFIG_BCMBSD
+	if (strcmp(service, "bsd") == 0) {
+		if (act_stop) stop_bsd();
+		if (act_start) start_bsd();
+		goto CLEAR;
+	}
+#endif /* TCONFIG_BCMBSD */
 
 	if (strncmp(service, "rstats", 6) == 0) {
 		if (act_stop) stop_rstats();
@@ -3755,15 +3771,15 @@ TOP:
 		if (act_start) start_pptpd();
 		goto CLEAR;
 	}
-#endif
 
-#ifdef TCONFIG_PPTPD
 	if (strcmp(service, "pptpclient") == 0) {
 		if (act_stop) stop_pptp_client();
 		if (act_start) start_pptp_client();
 		goto CLEAR;
 	}
 #endif
+
+	logmsg(LOG_WARNING, "no such service: %s", service);
 
 CLEAR:
 	if (next)
@@ -3836,3 +3852,35 @@ void stop_service(const char *name)
 {
 	do_service(name, "stop", 0);
 }
+
+#ifdef TCONFIG_BCMBSD
+int start_bsd(void)
+{
+	int ret = 0;
+
+	stop_bsd();
+
+	/* 0 = off, 1 = on (all-band), 2 = 5 GHz only! (no support, maybe later) */
+	if (!nvram_get_int("smart_connect_x")) {
+		ret = -1;
+		logmsg(LOG_INFO, "wireless band steering disabled");
+		return ret;
+	}
+	else
+		ret = eval("/usr/sbin/bsd");
+
+	if (ret)
+		logmsg(LOG_ERR, "starting wireless band steering failed ...");
+	else
+		logmsg(LOG_INFO, "wireless band steering is started");
+
+	return ret;
+}
+
+void stop_bsd(void)
+{
+	killall_tk_period_wait("bsd", 50);
+
+	logmsg(LOG_INFO, "wireless band steering is stopped");
+}
+#endif /* TCONFIG_BCMBSD */
