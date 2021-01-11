@@ -2453,17 +2453,17 @@
  
  #define usage() return(-1)
  
-@@ -42,7 +46,9 @@ static int fw_parse_opt(struct filter_ut
- 
- 	if (handle) {
+@@ -49,7 +53,9 @@ static int fw_parse_opt(struct filter_ut
+ 		if ((slash = strchr(handle, '/')) != NULL)
+ 			*slash = '\0';
  		if (get_u32(&t->tcm_handle, handle, 0)) {
 +#ifdef NO_OPTSIZE
  			fprintf(stderr, "Illegal \"handle\"\n");
 +#endif
  			return -1;
  		}
- 	}
-@@ -59,21 +65,27 @@ static int fw_parse_opt(struct filter_ut
+ 		if (slash) {
+@@ -70,21 +76,27 @@ static int fw_parse_opt(struct filter_ut
  			unsigned handle;
  			NEXT_ARG();
  			if (get_tc_classid(&handle, *argv)) {
@@ -2491,7 +2491,7 @@
  				return -1;
  			}
  			continue;
-@@ -83,7 +95,9 @@ static int fw_parse_opt(struct filter_ut
+@@ -94,7 +106,9 @@ static int fw_parse_opt(struct filter_ut
  			argc--;
  			argv++;
  			if (argc < 1) {
@@ -2501,7 +2501,7 @@
  				return -1;
  			}
  			strncpy(d, *argv, sizeof (d) - 1);
-@@ -92,7 +106,9 @@ static int fw_parse_opt(struct filter_ut
+@@ -103,7 +117,9 @@ static int fw_parse_opt(struct filter_ut
  			explain();
  			return -1;
  		} else {
