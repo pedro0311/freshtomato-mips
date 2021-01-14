@@ -421,21 +421,21 @@ endif
 	done
 
 # Use HTML compressor to compress HTML as much as possible
-	cd $(INSTALLDIR)/www && \
-	for F in $(wildcard *.asp ); do \
-		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/tools/bin/html-minifier $$F --minify-css -o $$F || true; \
-	done
+#	cd $(INSTALLDIR)/www && \
+#	for F in $(wildcard *.asp); do \
+#		[ -s $(INSTALLDIR)/www/$$F ] && { echo $$F; $(TOP)/www/tools/bin/html-minifier $$F --minify-css -o $$F; } || true; \
+#	done
 
 # Compress JAVASCRIPT files
 	cd $(INSTALLDIR)/www && \
-	for F in $(wildcard *.js ); do \
-		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/tools/bin/uglifyjs $$F -c -o $$F || true; \
+	for F in $(wildcard *.js); do \
+		[ -s $(INSTALLDIR)/www/$$F ] && { echo $$F; $(TOP)/www/tools/bin/uglifyjs $$F -c -o $$F; } || true; \
 	done
 
 # Compress CSS files
 	cd $(INSTALLDIR)/www && \
-	for F in $(wildcard *.css ); do \
-		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/tools/bin/uglifycss $$F --output $$F || true; \
+	for F in $(wildcard *.css); do \
+		[ -s $(INSTALLDIR)/www/$$F ] && { echo $$F; $(TOP)/www/tools/bin/uglifycss $$F --output $$F; } || true; \
 	done
 
 	chmod 0644 $(INSTALLDIR)/www/*
