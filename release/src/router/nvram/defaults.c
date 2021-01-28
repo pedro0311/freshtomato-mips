@@ -331,6 +331,7 @@ const defaults_t defaults[] = {
 	{ "ipv6_dhcpd",			"1"				},	// Enable DHCPv6
 	{ "ipv6_lease_time",		"12"				},	// DHCP IPv6 default lease time in hours
 	{ "ipv6_accept_ra",		"1"				},	// Enable Accept RA on WAN (bit 0) and/or LAN (bit 1) interfaces (br0...br3 if available)
+	{ "ipv6_fast_ra",		"0"				},	// Enable fast RA option --> send frequent RAs
 	{ "ipv6_ifname",		"six0"				},	// The interface facing the rest of the IPv6 world
 	{ "ipv6_tun_v4end",		"0.0.0.0"			},	// Foreign IPv4 endpoint of SIT tunnel
 	{ "ipv6_relay",			"1"				},	// Foreign IPv4 endpoint host of SIT tunnel 192.88.99.?
