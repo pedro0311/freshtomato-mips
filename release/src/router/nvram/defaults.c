@@ -171,17 +171,13 @@ const defaults_t defaults[] = {
 #endif
 	{ "wan_wins",			""				},	// x.x.x.x x.x.x.x ...
 	{ "wan_lease",			"86400"				},	// WAN lease time in seconds
-	{ "wan_islan",			"0"				},
 	{ "wan_modem_ipaddr",		"0.0.0.0"			},	// modem IP address (i.e. PPPoE bridged modem)
 
 	{ "wan_primary",		"1"				},	// Primary wan connection
 	{ "wan_unit",			"0"				},	// Last configured connection
-	{ "wan2_islan",			"0"				},
 	{ "wan2_modem_ipaddr",		"0.0.0.0"			},	// modem IP address (i.e. PPPoE bridged modem)
 #ifdef TCONFIG_MULTIWAN
-	{ "wan3_islan",			"0"				},
 	{ "wan3_modem_ipaddr",		"0.0.0.0"			},	// modem IP address (i.e. PPPoE bridged modem)
-	{ "wan4_islan",			"0"				},
 	{ "wan4_modem_ipaddr",		"0.0.0.0"			},	// modem IP address (i.e. PPPoE bridged modem)
 #endif
 
