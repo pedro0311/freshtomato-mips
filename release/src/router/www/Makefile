@@ -119,8 +119,8 @@ ifneq ($(TCONFIG_NGINX),y)
 	rm -f $(INSTALLDIR)/www/adminer.php
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/NGINX-BEGIN/,/NGINX-END/d"
 	sed -i $(INSTALLDIR)/www/about.asp -e "/NGINX-BEGIN/,/NGINX-END/d"
+	sed -i $(INSTALLDIR)/www/isup.jsx -e "/ NGINX-BEGIN/,/ NGINX-END/d"
 endif
-
 
 # Only include HFS/HFS+ option and pages when configured.
 ifneq ($(TCONFIG_HFS),y)
@@ -209,9 +209,9 @@ ifeq ($(CONFIG_BCMWL6),y)
 	sed -i $(INSTALLDIR)/www/advanced-misc.asp -e "/BCMNAT-BEGIN/,/BCMNAT-END/d"
 endif
 
-# Only for BCMWL6 SDK / RT-AC branch
-ifneq ($(CONFIG_BCMWL6),y)
-	sed -i $(INSTALLDIR)/www/advanced-wireless.asp -e "/BCMWL6-BEGIN/,/BCMWL6-END/d"
+# Only include SSH stuff when needed
+ifneq ($(TCONFIG_SSH),y)
+	sed -i $(INSTALLDIR)/www/isup.jsx -e "/SSH-BEGIN/,/SSH-END/d"
 endif
 
 # Add "beta" tag if needed
@@ -287,6 +287,7 @@ ifneq ($(TCONFIG_TINC),y)
 	rm -f $(INSTALLDIR)/www/vpn-tinc.asp
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/TINC-BEGIN/,/TINC-END/d"
 	sed -i $(INSTALLDIR)/www/about.asp -e "/TINC-BEGIN/,/TINC-END/d"
+	sed -i $(INSTALLDIR)/www/isup.jsx -e "/TINC-BEGIN/,/TINC-END/d"
 endif
 
 # Only include the dnscrypt option if is compiled in
@@ -391,7 +392,7 @@ endif
 		-e "/EMF-BEGIN/d"	-e "/EMF-END/d" \
 		-e "/OPENVPN-BEGIN/d"	-e "/OPENVPN-END/d" \
 		-e "/AES-BEGIN/d"	-e "/AES-END/d" \
-		-e "/PPTPD-BEGIN/d"	-e "/PPTPD-END/d"\
+		-e "/PPTPD-BEGIN/d"	-e "/PPTPD-END/d" \
 		-e "/VPN-BEGIN/,/VPN-END/d" \
 		-e "/IPV6-BEGIN/d"	-e "/IPV6-END/d" \
 		-e "/CTF-BEGIN/d"	-e "/CTF-END/d" \
@@ -400,27 +401,28 @@ endif
 		-e "/BBT-BEGIN/d"	-e "/BBT-END/d" \
 		-e "/BT-BEGIN/d"	-e "/BT-END/d" \
 		-e "/NFS-BEGIN/d"	-e "/NFS-END/d" \
-		-e "/NOCAT-BEGIN/d"	-e "/NOCAT-END/d"\
-		-e "/NGINX-BEGIN/d"	-e "/NGINX-END/d"\
-		-e "/SNMP-BEGIN/d"	-e "/SNMP-END/d"\
-		-e "/SDHC-BEGIN/d"	-e "/SDHC-END/d"\
-		-e "/HFS-BEGIN/d"	-e "/HFS-END/d"\
-		-e "/DNSCRYPT-BEGIN/d"	-e "/DNSCRYPT-END/d"\
-		-e "/STUBBY-BEGIN/d"	-e "/STUBBY-END/d"\
-		-e "/DNSSEC-BEGIN/d"	-e "/DNSSEC-END/d"\
-		-e "/TOR-BEGIN/d"	-e "/TOR-END/d"\
-		-e "/TINC-BEGIN/d"	-e "/TINC-END/d"\
-		-e "/MULTIWAN-BEGIN/d"	-e "/MULTIWAN-END/d"\
-		-e "/DUALWAN-BEGIN/d"	-e "/DUALWAN-END/d"\
-		-e "/HTTPS-BEGIN/d"	-e "/HTTPS-END/d"\
-		-e "/KEYGEN-BEGIN/d"	-e "/KEYGEN-END/d"\
-		-e "/TERMLIB-BEGIN/d"	-e "/TERMLIB-END/d"\
-		-e "/TERMLIB0-BEGIN/d"	-e "/TERMLIB0-END/d"\
+		-e "/NOCAT-BEGIN/d"	-e "/NOCAT-END/d" \
+		-e "/NGINX-BEGIN/d"	-e "/NGINX-END/d" \
+		-e "/SNMP-BEGIN/d"	-e "/SNMP-END/d" \
+		-e "/SDHC-BEGIN/d"	-e "/SDHC-END/d" \
+		-e "/HFS-BEGIN/d"	-e "/HFS-END/d" \
+		-e "/DNSCRYPT-BEGIN/d"	-e "/DNSCRYPT-END/d" \
+		-e "/STUBBY-BEGIN/d"	-e "/STUBBY-END/d" \
+		-e "/DNSSEC-BEGIN/d"	-e "/DNSSEC-END/d" \
+		-e "/TOR-BEGIN/d"	-e "/TOR-END/d" \
+		-e "/TINC-BEGIN/d"	-e "/TINC-END/d" \
+		-e "/MULTIWAN-BEGIN/d"	-e "/MULTIWAN-END/d" \
+		-e "/DUALWAN-BEGIN/d"	-e "/DUALWAN-END/d" \
+		-e "/HTTPS-BEGIN/d"	-e "/HTTPS-END/d" \
+		-e "/KEYGEN-BEGIN/d"	-e "/KEYGEN-END/d" \
+		-e "/TERMLIB-BEGIN/d"	-e "/TERMLIB-END/d" \
+		-e "/TERMLIB0-BEGIN/d"	-e "/TERMLIB0-END/d" \
 		-e "/OPTSIZE-BEGIN/d"	-e "/OPTSIZE-END/d" \
 		-e "/SIZEOPTMORE-BEGIN/d" -e "/SIZEOPTMORE-END/d" \
 		-e "/SIZEOPTMORE0-BEGIN/d" -e "/SIZEOPTMORE0-END/d" \
 		-e "/IPERF-BEGIN/d"	-e "/IPERF-END/d" \
 		-e "/ADVTHEMES-BEGIN/d"	-e "/ADVTHEMES-END/d" \
+		-e "/SSH-BEGIN/d"	-e "/SSH-END/d" \
 		|| true; \
 	done
 
