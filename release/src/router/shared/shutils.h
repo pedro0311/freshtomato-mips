@@ -238,4 +238,7 @@ extern int osifname_to_nvifname(const char *osifname, char *nvifname_buf,
 
 int ure_any_enabled(void);
 
+extern int _vstrsep(char *buf, const char *sep, ...);
+#define vstrsep(buf, sep, args...) _vstrsep(buf, sep, args, NULL)
+
 #endif /* _shutils_h_ */

@@ -298,6 +298,24 @@ void cprintf(const char *format, ...)
 #endif
 }
 
+int _vstrsep(char *buf, const char *sep, ...)
+{
+	va_list ap;
+	char **p;
+	int n;
+
+	n = 0;
+	va_start(ap, sep);
+	while ((p = va_arg(ap, char **)) != NULL) {
+		if ((*p = strsep(&buf, sep)) == NULL)
+			break;
+
+		++n;
+	}
+	va_end(ap);
+
+	return n;
+}
 
 #ifndef WL_BSS_INFO_VERSION
 #error WL_BSS_INFO_VERSION
