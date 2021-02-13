@@ -646,6 +646,7 @@ const defaults_t defaults[] = {
 	{ "udpxy_stats",		"0"				},
 	{ "udpxy_clients",		"3"				},
 	{ "udpxy_port",			"4022"				},
+	{ "udpxy_wanface",		""				},	/* alternative wanface */
 	{ "ne_syncookies",		"0"				},	// tcp_syncookies
 	{ "DSCP_fix_enable",		"1"				},	// Comacst DSCP fix
 	{ "ne_snat",			"0"				},	// use SNAT instead of MASQUERADE
