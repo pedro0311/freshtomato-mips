@@ -646,6 +646,7 @@ const defaults_t defaults[] = {
 	{ "udpxy_stats",		"0"				},
 	{ "udpxy_clients",		"3"				},
 	{ "udpxy_port",			"4022"				},
+	{ "udpxy_wanface",		""				},	/* alternative wanface */
 	{ "ne_syncookies",		"0"				},	// tcp_syncookies
 	{ "DSCP_fix_enable",		"1"				},	// Comacst DSCP fix
 	{ "ne_snat",			"0"				},	// use SNAT instead of MASQUERADE
@@ -1112,7 +1113,6 @@ const defaults_t defaults[] = {
 	{ "vpn_server1_key",		""				},
 	{ "vpn_server1_dh",		""				},
 	{ "vpn_server1_br",		"br0"				},
-	{ "vpn_server1_serial",		"00"				},
 	{ "vpn_server2_poll",		"0"				},
 	{ "vpn_server2_if",		"tun"				},
 	{ "vpn_server2_proto",		"udp"				},
@@ -1161,7 +1161,6 @@ const defaults_t defaults[] = {
 	{ "vpn_server2_key",		""				},
 	{ "vpn_server2_dh",		""				},
 	{ "vpn_server2_br",		"br0"				},
-	{ "vpn_server2_serial",		"00"				},
 	{ "vpn_client_eas",		""				},
 	{ "vpn_client1_poll",		"0"				},
 	{ "vpn_client1_if",		"tun"				},
