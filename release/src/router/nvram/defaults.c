@@ -825,7 +825,6 @@ const defaults_t defaults[] = {
 	{ "rstats_stime",		"48"				},
 	{ "rstats_offset",		"1"				},
 	{ "rstats_data",		""				},
-	{ "rstats_colors",		""				},
 	{ "rstats_exclude",		""				},
 	{ "rstats_sshut",		"1"				},
 	{ "rstats_bak",			"0"				},
