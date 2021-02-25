@@ -883,6 +883,7 @@ const defaults_t defaults[] = {
 	{ "log_out",			"0"				},
 	{ "log_mark",			"60"				},
 	{ "log_events",			""				},
+	{ "log_dropdups",		"0"				},
 
 /* admin-log-webmonitor */
 	{ "log_wm",			"0"				},
