@@ -159,7 +159,9 @@ function save() {
 	fom.ne_vegas.value = E('_f_ne_vegas').checked ? 1 : 0;
 
 	if (isup.qos == 1 && fom.qos_enable.value != 1 && isup.bwl == 1) /* also restart BWL */
-		fom._service.value += ',bwlimit-restart';
+		fom._service.value += 'qos-restart,bwlimit-restart';
+	else
+		fom._service.value = 'qos-restart';
 
 	form.submit(fom, 1);
 }
@@ -189,8 +191,7 @@ function init() {
 <!-- / / / -->
 
 <input type="hidden" name="_nextpage" value="qos-settings.asp">
-<input type="hidden" name="_service" value="qos-restart">
-
+<input type="hidden" name="_service" value="">
 <input type="hidden" name="qos_classnames">
 <input type="hidden" name="qos_enable">
 <input type="hidden" name="qos_ack">
