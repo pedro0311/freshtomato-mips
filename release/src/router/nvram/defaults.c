@@ -554,6 +554,7 @@ const defaults_t defaults[] = {
 	{ "tm_dst",			"1" 				},
 	{ "ntp_updates",		"1"				},
 	{ "ntp_server",			"0.europe.pool.ntp.org 1.europe.pool.ntp.org 2.europe.pool.ntp.org" },
+	{ "ntp_ready",			"0"				},
 	{ "ntpd_enable",		"0"				},
 	{ "ntpd_server_redir",		"0"				},
 
