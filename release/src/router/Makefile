@@ -1712,7 +1712,7 @@ endif
 	$(call patch_files,ebtables)
 	cd $(TOP)/ebtables && ./autogen.sh && \
 	$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --sysconfdir=/etc --libdir=/usr/lib \
-		CFLAGS="-Os $(EXTRACFLAGS) -DEBT_MIN_ALIGN=4 -ffunction-sections -fdata-sections -fPIC $(OPTSIZE_FLAG)" \
+		CFLAGS="-Os $(EXTRACFLAGS) -DEBT_MIN_ALIGN=4 -D_GNU_SOURCE -ffunction-sections -fdata-sections -fPIC $(OPTSIZE_FLAG)" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
 		LOCKFILE="/var/lock/ebtables"
 	@touch $@
