@@ -906,6 +906,7 @@ const defaults_t defaults[] = {
 	{ "t_hidelr",			"0"				},
 	{ "debug_clkfix",		"1"				},
 	{ "debug_ddns",			"0"				},
+	{ "http_nocache",		"0"				},
 
 /* admin-cifs */
 	{ "cifs1",			""				},
