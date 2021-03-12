@@ -93,6 +93,7 @@ const defaults_t defaults[] = {
 	{ "wan_gateway",		"0.0.0.0"			},	// WAN gateway
 	{ "wan_gateway_get",		"0.0.0.0"			},	// default gateway for PPP
 	{ "wan_dns",			""				},	// x.x.x.x x.x.x.x ...
+	{ "wan_dns_auto",		"1"				},	// wan auto dns to 1 after reset
 	{ "wan_weight",			"1"				},
 #ifdef TCONFIG_USB
 	{ "wan_hilink_ip",		"0.0.0.0"			},
@@ -105,6 +106,7 @@ const defaults_t defaults[] = {
 	{ "wan2_netmask",		"0.0.0.0"			},	// WAN netmask
 	{ "wan2_gateway",		"0.0.0.0"			},	// WAN gateway
 	{ "wan2_dns",			""				},	// x.x.x.x x.x.x.x ...
+	{ "wan2_dns_auto",		"1"				},	// wan2 auto dns to 1 after reset
 	{ "wan2_weight",		"1"				},
 	{ "wan2_hwname",		""				},	// WAN driver name (e.g. et1)
 	{ "wan2_hwaddr",		""				},	// WAN interface MAC address
@@ -121,6 +123,7 @@ const defaults_t defaults[] = {
 	{ "wan3_netmask",		"0.0.0.0"			},	// WAN netmask
 	{ "wan3_gateway",		"0.0.0.0"			},	// WAN gateway
 	{ "wan3_dns",			""				},	// x.x.x.x x.x.x.x ...
+	{ "wan3_dns_auto",		"1"				},	// wan3 auto dns to 1 after reset
 	{ "wan3_weight",		"1"				},
 	{ "wan3_hwname",		""				},	// WAN driver name (e.g. et1)
 	{ "wan3_hwaddr",		""				},	// WAN interface MAC address
@@ -136,6 +139,7 @@ const defaults_t defaults[] = {
 	{ "wan4_netmask",		"0.0.0.0"			},	// WAN netmask
 	{ "wan4_gateway",		"0.0.0.0"			},	// WAN gateway
 	{ "wan4_dns",			""				},	// x.x.x.x x.x.x.x ...
+	{ "wan4_dns_auto",		"1"				},	// wan4 auto dns to 1 after reset
 	{ "wan4_weight",		"1"				},
 	{ "wan4_hwname",		""				},	// WAN driver name (e.g. et1)
 	{ "wan4_hwaddr",		""				},	// WAN interface MAC address
