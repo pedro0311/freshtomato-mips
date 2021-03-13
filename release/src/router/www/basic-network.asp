@@ -1631,12 +1631,7 @@ REMOVE-END -->
 /* MULTIWAN-BEGIN */
 										    ,['3','3 WAN'],['4','4 WAN']
 /* MULTIWAN-END */
-/* MIPSR1-BEGIN */
-			], value: nvram.mwan_num, suffix: '&nbsp; <small>Please configure <a href="advanced-vlan-r1.asp">VLAN<\/a> first<\/small>' },
-/* MIPSR1-END */
-/* MIPSR2-BEGIN */
 			], value: nvram.mwan_num, suffix: '&nbsp; <small>Please configure <a href="advanced-vlan.asp">VLAN<\/a> first<\/small>' },
-/* MIPSR2-END */
 		{ title: 'Tune route cache', name: 'f_mwan_tune_gc', type: 'checkbox', suffix: '&nbsp; <small>for multiwan in load balancing mode<\/small>', value: (nvram['mwan_tune_gc'] == 1) },
 		{ title: 'Check connections every', name: 'mwan_cktime', type: 'select', options: [
 			['0','Disabled'],['60','1 minute'],['120','2 minutes'],['180','3 minutes'],['300','5 minutes'],
