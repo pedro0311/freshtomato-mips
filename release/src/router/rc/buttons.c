@@ -237,13 +237,14 @@ int buttons_main(int argc, char *argv[])
 		ses_led = LED_AOSS;
 		break;
 	case MODEL_WNDR3400:
-	case MODEL_WNDR3400v2:
 		reset_mask = 1 << 4;
 		ses_mask = 1 << 8;
 		break;
+	case MODEL_WNDR3400v2:
 	case MODEL_WNDR3400v3:
 		reset_mask = 1 << 12;
 		ses_mask = 1 << 23;
+		ses_led = LED_AOSS; /* Use LED AOSS for feedback if a button is pushed */
 		break;
 	case MODEL_F7D3301:
 	case MODEL_F7D3302:
