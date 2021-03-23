@@ -20,7 +20,7 @@
 	June 2014 Tvlz
 	https://bitbucket.org/tvlz/tvlz-advanced-vlan/
 
-	** Last Updated - Mar 14 2021 - pedro **
+	** Last Updated - Mar 23 2021 - pedro **
 
 	For use with Tomato Firmware only.
 	No part of this file may be used without permission.
@@ -66,12 +66,10 @@ function ethstates() {
 	if (port == 'disabled')
 		return 0;
 
-	var j = 0;
-	for (var i of [1, 2, 3, 4, 0]) { /* port order in the table */
+	for (var i = 0 ; i <= MAX_PORT_ID ; i++) {
 		port = eval('etherstates.port'+i);
 		state = _ethstates(port);
-		elem.setInnerHTML('vport_'+j, '<img src="'+state[0]+'.gif" id="'+state[0]+'_'+j+'" title="'+state[1]+'" alt="">');
-		++j;
+		elem.setInnerHTML('vport_'+i, '<img src="'+state[0]+'.gif" id="'+state[0]+'_'+i+'" title="'+state[1]+'" alt="">');
 	}
 }
 
@@ -115,11 +113,11 @@ switch (nvram['t_model_name']) {
 	case 'Netgear WNDR4000':
 	case 'Netgear WNDR4500 V1':
 	case 'Netgear WNDR4500 V2':
-		COL_P0N = '0';
-		COL_P1N = '1';
-		COL_P2N = '2';
-		COL_P3N = '3';
-		COL_P4N = '4';
+		COL_P0N = '4';
+		COL_P1N = '0';
+		COL_P2N = '1';
+		COL_P3N = '2';
+		COL_P4N = '3';
 		break;
 	case 'vlan-testid1':
 	case 'Asus RT-AC66U':
@@ -141,11 +139,11 @@ switch (nvram['t_model_name']) {
 	case 'Tenda N6':
 /*	case 'Tenda N80': */
 	case 'Tenda W1800R':
-		COL_P0N = '1';
-		COL_P1N = '2';
-		COL_P2N = '3';
-		COL_P3N = '4';
-		COL_P4N = '0';
+		COL_P0N = '0';
+		COL_P1N = '1';
+		COL_P2N = '2';
+		COL_P3N = '3';
+		COL_P4N = '4';
 		break;
 	case 'vlan-testid2':
 	case 'Asus RT-N10P':
@@ -164,11 +162,11 @@ switch (nvram['t_model_name']) {
 	case 'Netgear WNDR3400v2':
 	case 'Netgear WNDR3400v3':
 	case 'Netgear R6300 V1':
-		COL_P0N = '3';
-		COL_P1N = '2';
-		COL_P2N = '1';
-		COL_P3N = '0';
-		COL_P4N = '4';
+		COL_P0N = '4';
+		COL_P1N = '3';
+		COL_P2N = '2';
+		COL_P3N = '1';
+		COL_P4N = '0';
 		break;
 	case 'vlan-testid3':
 	case 'Asus RT-N10U':
@@ -180,18 +178,18 @@ switch (nvram['t_model_name']) {
 	case 'Netgear WNR3500L v2':
 	case 'Tenda N60':
 	case 'Linksys E2000':
-		COL_P0N = '4';
-		COL_P1N = '3';
-		COL_P2N = '2';
-		COL_P3N = '1';
-		COL_P4N = '0';
+		COL_P0N = '0';
+		COL_P1N = '4';
+		COL_P2N = '3';
+		COL_P3N = '2';
+		COL_P4N = '1';
 		break;
 	default:
-		COL_P0N = '1';
-		COL_P1N = '2';
-		COL_P2N = '3';
-		COL_P3N = '4';
-		COL_P4N = '0';
+		COL_P0N = '0';
+		COL_P1N = '1';
+		COL_P2N = '2';
+		COL_P3N = '3';
+		COL_P4N = '4';
 		unknown_router = 1;
 		break;
 /* K2.6 Routers from Tomatoanon needing port order info from router case
@@ -250,11 +248,12 @@ if (port_vlan_supported) {
 /* MULTIWAN-END */
 				], prefix: '<div class="centered">', suffix: '<\/div>' }]);
 
-		this.headerSet(['<br><br>VLAN', '<br><br>VID', '<div id="vport_0"><img src="eth_off.gif" id="eth_off_1" alt=""><\/div>1', '<br>Tag<br>1',
-		                '<div id="vport_1"><img src="eth_off.gif" id="eth_off_2" alt=""><\/div>2', '<br>Tag<br>2',
-		                '<div id="vport_2"><img src="eth_off.gif" id="eth_off_3" alt=""><\/div>3', '<br>Tag<br>3',
-		                '<div id="vport_3"><img src="eth_off.gif" id="eth_off_4" alt=""><\/div>4', '<br>Tag<br>4',
-		                '<div id="vport_4"><img src="eth_off.gif" id="eth_off_5" alt=""><\/div>WAN', '<br>Tag<br>WAN',
+		this.headerSet(['<br><br>VLAN', '<br><br>VID',
+		                '<div id="vport_0"><img src="eth_off.gif" id="eth_off_1" alt=""><\/div>WAN', '<br>Tag<br>WAN',
+		                '<div id="vport_1"><img src="eth_off.gif" id="eth_off_2" alt=""><\/div>1', '<br>Tag<br>1',
+		                '<div id="vport_2"><img src="eth_off.gif" id="eth_off_3" alt=""><\/div>2', '<br>Tag<br>2',
+		                '<div id="vport_3"><img src="eth_off.gif" id="eth_off_4" alt=""><\/div>3', '<br>Tag<br>3',
+		                '<div id="vport_4"><img src="eth_off.gif" id="eth_off_5" alt=""><\/div>4', '<br>Tag<br>4',
 		                '<br>Default<br>VLAN', 'Ethernet to<br>bridge<br>mapping']);
 
 		vlg.populate();
