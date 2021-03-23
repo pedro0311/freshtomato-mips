@@ -8,7 +8,7 @@
 	Copyright (C) 2006-2007 Jonathan Zarate
 	http://www.polarcloud.com/tomato/
 
-	** Last Updated - Mar 14 2021 - pedro **
+	** Last Updated - Mar 23 2021 - pedro **
 
 	For use with Tomato Firmware only.
 	No part of this file may be used without permission.
@@ -54,12 +54,10 @@ function ethstates() {
 	if (port == 'disabled')
 		return 0;
 
-	var j = 0;
-	for (var i of [1, 2, 3, 4, 0]) { /* port order in the table */
+	for (var i = 0 ; i <= MAX_PORT_ID ; i++) {
 		port = eval('etherstates.port'+i);
 		state = _ethstates(port);
-		elem.setInnerHTML('vport_'+j, '<img src="'+state[0]+'.gif" id="'+state[0]+'_'+j+'" title="'+state[1]+'" alt="">');
-		++j;
+		elem.setInnerHTML('vport_'+i, '<img src="'+state[0]+'.gif" id="'+state[0]+'_'+i+'" title="'+state[1]+'" alt="">');
 	}
 }
 
@@ -99,52 +97,52 @@ switch (nvram['boardtype']) {
 switch (nvram['boardtype']) {
 	case '0x0467': /* WRT54GL 1.x, WRT54GS 3.x/4.x */
 		if (nvram['boardrev'] == '0x13') {  /* WHR-G54S */
-			COL_P0N = '1';
-			COL_P1N = '2';
-			COL_P2N = '3';
-			COL_P3N = '4';
-			COL_P4N = '0';
+			COL_P0N = '0';
+			COL_P1N = '1';
+			COL_P2N = '2';
+			COL_P3N = '3';
+			COL_P4N = '4';
 		break;
 		}
 	case '0xa4cf': /* Belkin F7D3301 */
 		if (nvram['boardrev'] == '0x1100') { /* Belkin F5D8235-4 v3 */
-			COL_P0N = '1';
-			COL_P1N = '2';
-			COL_P2N = '3';
-			COL_P3N = '4';
-			COL_P4N = '0';
+			COL_P0N = '0';
+			COL_P1N = '1';
+			COL_P2N = '2';
+			COL_P3N = '3';
+			COL_P4N = '4';
 		break;
 		}
 	case '0xd4cf': /* Belkin F7D4301 */
 	case '0x048e': /* WL-520GU, WL-500G Premium v2 */
-		COL_P0N = '3';
-		COL_P1N = '2';
-		COL_P2N = '1';
-		COL_P3N = '0';
-		COL_P4N = '4';
-		break;
-	case '0x04ef': /* WRT320N/E2000 */
-	case '0x04cf': /* WRT610Nv2/E3000, RT-N16, WNR3500L */
 		COL_P0N = '4';
 		COL_P1N = '3';
 		COL_P2N = '2';
 		COL_P3N = '1';
 		COL_P4N = '0';
+		break;
+	case '0x04ef': /* WRT320N/E2000 */
+	case '0x04cf': /* WRT610Nv2/E3000, RT-N16, WNR3500L */
+		COL_P0N = '0';
+		COL_P1N = '4';
+		COL_P2N = '3';
+		COL_P3N = '2';
+		COL_P4N = '1';
 	break;
 	case '0xf52c': /* E4200v1 */
+		COL_P0N = '4';
+		COL_P1N = '0';
+		COL_P2N = '1';
+		COL_P3N = '2';
+		COL_P4N = '3';
+		break;
+	/* should work on WRT54G v2/v3, WRT54GS v1/v2 and others */
+	default:
 		COL_P0N = '0';
 		COL_P1N = '1';
 		COL_P2N = '2';
 		COL_P3N = '3';
 		COL_P4N = '4';
-		break;
-	/* should work on WRT54G v2/v3, WRT54GS v1/v2 and others */
-	default:
-		COL_P0N = '1';
-		COL_P1N = '2';
-		COL_P2N = '3';
-		COL_P3N = '4';
-		COL_P4N = '0';
 		break;
 }
 
@@ -194,11 +192,12 @@ if (port_vlan_supported) {
 /* MULTIWAN-END */
 				], prefix: '<div class="centered">', suffix: '<\/div>' }]);
 
-		this.headerSet(['<br><br>VLAN', '<br><br>VID', '<div id="vport_0"><img src="eth_off.gif" id="eth_off_1" alt=""><\/div>1', '<br>Tag<br>1',
-		                '<div id="vport_1"><img src="eth_off.gif" id="eth_off_2" alt=""><\/div>2', '<br>Tag<br>2',
-		                '<div id="vport_2"><img src="eth_off.gif" id="eth_off_3" alt=""><\/div>3', '<br>Tag<br>3',
-		                '<div id="vport_3"><img src="eth_off.gif" id="eth_off_4" alt=""><\/div>4', '<br>Tag<br>4',
-		                '<div id="vport_4"><img src="eth_off.gif" id="eth_off_5" alt=""><\/div>WAN', '<br>Tag<br>WAN',
+		this.headerSet(['<br><br>VLAN', '<br><br>VID',
+		                '<div id="vport_0"><img src="eth_off.gif" id="eth_off_1" alt=""><\/div>WAN', '<br>Tag<br>WAN',
+		                '<div id="vport_1"><img src="eth_off.gif" id="eth_off_2" alt=""><\/div>1', '<br>Tag<br>1',
+		                '<div id="vport_2"><img src="eth_off.gif" id="eth_off_3" alt=""><\/div>2', '<br>Tag<br>2',
+		                '<div id="vport_3"><img src="eth_off.gif" id="eth_off_4" alt=""><\/div>3', '<br>Tag<br>3',
+		                '<div id="vport_4"><img src="eth_off.gif" id="eth_off_5" alt=""><\/div>4', '<br>Tag<br>4',
 		                '<br>Default<br>VLAN', 'Ethernet to<br>bridge<br>mapping']);
 
 		vlg.populate();
