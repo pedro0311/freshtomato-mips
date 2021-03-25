@@ -173,6 +173,7 @@ switch (nvram['t_model_name']) {
 	case 'Netgear WNR3500L/U/v2':
 	case 'Netgear WNR3500L v2':
 	case 'Tenda N60':
+	case 'Linksys WRT160N': /* WRT160Nv3 */
 	case 'Linksys E2000':
 		COL_P0N = '0';
 		COL_P1N = '4';
@@ -192,7 +193,6 @@ switch (nvram['t_model_name']) {
 	case 'CW-5356U':
 	case 'ZTE H218N':
 	case 'ZTE ZXV10 H618B':
-	case 'Linksys WRT160N':
 	case 'Linksys WRT300N v1':
 	case 'D-Link DIR-627':
 	case 'Netcore NI360/Q3':
