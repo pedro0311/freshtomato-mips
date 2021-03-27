@@ -18,7 +18,7 @@
 
 <script>
 
-//	<% nvram("qos_enable,qos_mode,qos_classnames,web_svg"); %>
+//	<% nvram("qos_enable,qos_classnames,web_svg"); %>
 
 //	<% qrate(); %>
 
@@ -107,15 +107,10 @@ function showData() {
 }
 
 function earlyInit() {
-	if ((nvram.qos_enable != '1') || (nvram.qos_enable == '1' && nvram.qos_mode == '2')) { /* off or cake */
+	if (nvram.qos_enable != '1') {
 		E('qosstats').style.display = 'none';
 		E('qosstatsoff').style.display = 'block';
-
-		if (nvram.qos_enable != '1')
-			E('note-disabled').style.display = 'block';
-		else
-			E('note-cake').style.display = 'block';
-
+		E('note-disabled').style.display = 'block';
 		E('refresh-time').setAttribute('disabled', 'disabled');
 		E('refresh-button').setAttribute('disabled', 'disabled');
 
@@ -241,7 +236,6 @@ function earlyInit() {
 <!-- / / / -->
 
 <div class="note-disabled" id="note-disabled" style="display:none"><b>QoS disabled.</b><br><br><a href="qos-settings.asp">Enable &raquo;</a></div>
-<div class="note-disabled" id="note-cake" style="display:none"><b>Statistics not available in Cake mode.</b><br><br><a href="qos-settings.asp">Change mode &raquo;</a></div>
 
 <!-- / / / -->
 
