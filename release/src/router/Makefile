@@ -931,11 +931,12 @@ dnsmasq: $(DNSSEC_BACKEND)
 	@$(SEP)
 	$(call patch_files,dnsmasq)
 	$(MAKE) -C dnsmasq $(PARALLEL_BUILD) \
-	CFLAGS="-Os -Wall -ffunction-sections -fdata-sections $(EXTRACFLAGS) $(OPTSIZE_MORE_FLAG)" \
-	COPTS="-DNO_INOTIFY -DHAVE_BROKEN_RTC -DHAVE_TOMATO -DNO_DUMPFILE -DNO_ID -DNO_GMP -DNO_SCRIPT $(if $(TCONFIG_OPTIMIZE_SIZE_MORE),-DNO_TFTP -DNO_LOOP -DNO_AUTH,) -DUSE_IPSET -DEDNS_PKTSZ=1280 \
+	COPTS="-DHAVE_BROKEN_RTC -DHAVE_TOMATO -DNO_DUMPFILE -DNO_ID -DNO_GMP $(if $(TCONFIG_OPTIMIZE_SIZE_MORE),-DNO_LOOP,) -DNO_INOTIFY -DUSE_IPSET -DEDNS_PKTSZ=1280 \
+		$(if $(TCONFIG_USB_EXTRAS),,-DNO_TFTP -DNO_SCRIPT -DNO_AUTH) \
 		$(if $(DNSSEC_OPENSSL),-I$(TOP)/$(OPENSSLDIR)/include -DHAVE_DNSSEC,) \
 		$(if $(DNSSEC_NETTLE),-I$(TOP)/nettle/include -I$(TOP)/gmp -DHAVE_DNSSEC -DHAVE_DNSSEC_STATIC -DNO_GOST,) \
 		$(if $(TCONFIG_IPV6),-DUSE_IPV6,-DNO_IPV6)" \
+	CFLAGS="-Os -Wall -ffunction-sections -fdata-sections $(EXTRACFLAGS) $(OPTSIZE_MORE_FLAG)" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections \
 		$(if $(DNSSEC_OPENSSL),-pthread -L$(TOP)/$(OPENSSLDIR),) \
 		$(if $(DNSSEC_NETTLE),-L$(TOP)/nettle/lib -L$(TOP)/gmp/.libs,)" \
