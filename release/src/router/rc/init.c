@@ -1664,6 +1664,7 @@ int init_main(int argc, char *argv[])
 				stop_syslog();
 
 				shutdn(state == SIGTERM /* REBOOT */);
+				sync(); sync(); sync();
 				exit(0);
 			}
 			if (state == SIGINT /* STOP */) {
