@@ -69,6 +69,11 @@
 #define ONEMONTH_LIFETIME (30 * 24 * 60 * 60)
 #define IPV6_MIN_LIFETIME 120
 
+/* The g_upgrade global variable is used to skip several unnecessary delay
+ * and redundant steps during upgrade procedure.
+ */
+int g_upgrade = 0;
+
 /* Pop an alarm to recheck pids in 500 msec */
 static const struct itimerval pop_tv = { {0, 0}, {0, 500 * 1000} };
 /* Pop an alarm to reap zombies */
@@ -406,17 +411,19 @@ void start_dnsmasq()
 		if ((vstrsep(p, "<", &mac, &ip, &name, &bind)) < 4)
 			continue;
 
-		if (*ip == '\0')
-			continue;
-		else if (inet_pton(AF_INET, ip, &in4) <= 0 || in4.s_addr == INADDR_ANY || in4.s_addr == INADDR_LOOPBACK || in4.s_addr == INADDR_BROADCAST)
+		if (*ip != '\0' && (inet_pton(AF_INET, ip, &in4) <= 0 || in4.s_addr == INADDR_ANY || in4.s_addr == INADDR_LOOPBACK || in4.s_addr == INADDR_BROADCAST)) /* invalid IP (if any) */
 			continue;
 
-		if ((hf) && (*name))
+		if ((hf) && (*ip) && (*name))
 			fprintf(hf, "%s %s\n", ip, name);
 
 		if (do_dhcpd_hosts > 0 && ether_atoe(mac, ea)) {
-			fprintf(f, "dhcp-host=%s,%s", mac, ip);
-			if (nvram_get_int("dhcpd_slt") != 0)
+			if (*ip)
+				fprintf(f, "dhcp-host=%s,%s", mac, ip);
+			else if (*name)
+				fprintf(f, "dhcp-host=%s,%s", mac, name);
+
+			if (((*ip) || (*name)) && (nvram_get_int("dhcpd_slt") != 0))
 				fprintf(f, ",%s", sdhcp_lease);
 
 			fprintf(f, "\n");
@@ -2397,12 +2404,14 @@ static void stop_ftpd(void)
 		return;
 	}
 
-	killall_tk_period_wait("vsftpd", 50);
-	unlink(vsftpd_passwd);
-	unlink(vsftpd_conf);
-	eval("rm", "-rf", vsftpd_users);
+	if (pidof("vsftpd") > 0) {
+		killall_tk_period_wait("vsftpd", 50);
+		unlink(vsftpd_passwd);
+		unlink(vsftpd_conf);
+		eval("rm", "-rf", vsftpd_users);
 
-	logmsg(LOG_INFO, "vsftpd is stopped");
+		logmsg(LOG_INFO, "vsftpd is stopped");
+	}
 }
 #endif /* TCONFIG_FTP */
 
@@ -2705,20 +2714,21 @@ void stop_samba(void)
 	}
 
 	stop_wsdd();
-	kill_samba(SIGTERM);
 
-	/* clean up */
-	unlink("/var/log/log.smbd");
-	unlink("/var/log/log.nmbd");
-	eval("rm", "-rf", "/var/nmbd");
-	eval("rm", "-rf", "/var/log/cores");
-	eval("rm", "-rf", "/var/run/samba");
+	if ((pidof("smbd") > 0 ) || (pidof("nmbd") > 0 )) {
+		kill_samba(SIGTERM);
 
+		/* clean up */
+		unlink("/var/log/log.smbd");
+		unlink("/var/log/log.nmbd");
+		eval("rm", "-rf", "/var/nmbd");
+		eval("rm", "-rf", "/var/log/cores");
+		eval("rm", "-rf", "/var/run/samba");
 #if defined(TCONFIG_BCMARM) && defined(TCONFIG_GROCTRL)
-	enable_gro(0);
+		enable_gro(0);
 #endif
-
-	logmsg(LOG_INFO, "Samba daemon is stopped");
+		logmsg(LOG_INFO, "Samba daemon is stopped");
+	}
 }
 
 void start_wsdd()
@@ -2882,9 +2892,11 @@ static void stop_media_server(void)
 		return;
 	}
 
-	killall_tk_period_wait(MEDIA_SERVER_APP, 50);
+	if (pidof(MEDIA_SERVER_APP) > 0) {
+		killall_tk_period_wait(MEDIA_SERVER_APP, 50);
 
-	logmsg(LOG_INFO, MEDIA_SERVER_APP" is stopped");
+		logmsg(LOG_INFO, MEDIA_SERVER_APP" is stopped");
+	}
 }
 #endif /* TCONFIG_MEDIA_SERVER */
 
@@ -3391,6 +3403,7 @@ TOP:
 
 	if (strcmp(service, "upgrade") == 0) {
 		if (act_start) {
+			g_upgrade = 1;
 			restart_nas_services(1, 0); /* Samba, FTP and Media Server */
 			stop_jffs2();
 #ifdef TCONFIG_ZEBRA
