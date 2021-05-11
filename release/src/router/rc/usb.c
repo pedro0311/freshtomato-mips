@@ -1,8 +1,8 @@
 /*
-
-	USB Support
-
-*/
+ *
+ * USB Support
+ *
+ */
 
 
 #include "rc.h"
@@ -26,16 +26,10 @@
 #define LOGMSG_DISABLE	0
 #define LOGMSG_NVDEBUG	"usb_debug"
 
-
-/* Adjust bdflush parameters.
- * Do this here, because Tomato doesn't have the sysctl command.
- * With these values, a disk block should be written to disk within 2 seconds.
- */
-void tune_bdflush(void)
-{
-	f_write_string("/proc/sys/vm/dirty_expire_centisecs", "200", 0, 0);
-	f_write_string("/proc/sys/vm/dirty_writeback_centisecs", "200", 0, 0);
-}
+#define MOUNT_VAL_FAIL	0
+#define MOUNT_VAL_RONLY	1
+#define MOUNT_VAL_RW	2
+#define MOUNT_VAL_EXIST	3
 
 #define USBCORE_MOD	"usbcore"
 #define USB20_MOD	"ehci-hcd"
@@ -47,6 +41,21 @@ void tune_bdflush(void)
 #define USBPRINTER_MOD	"usblp"
 #define SCSI_WAIT_MOD	"scsi_wait_scan"
 #define USBFS		"usbfs"
+
+#ifndef MNT_DETACH
+#define MNT_DETACH	0x00000002 /* from linux/fs.h - just detach from the tree */
+#endif
+
+
+/* Adjust bdflush parameters.
+ * Do this here, because Tomato doesn't have the sysctl command.
+ * With these values, a disk block should be written to disk within 2 seconds.
+ */
+void tune_bdflush(void)
+{
+	f_write_string("/proc/sys/vm/dirty_expire_centisecs", "200", 0, 0);
+	f_write_string("/proc/sys/vm/dirty_writeback_centisecs", "200", 0, 0);
+}
 
 static int p9100d_sig(int sig)
 {
@@ -71,7 +80,15 @@ static int p9100d_sig(int sig)
 void start_usb(void)
 {
 	char param[32];
-	int i;
+	int i = 255;
+
+#ifdef CONFIG_BCMWL6
+	if (nvram_match("boardtype", "0x052b")) /* Netgear WNR3500L v2 - initialize USB port */
+		xstart("gpio", "enable", "20");
+
+	if (nvram_match("boardtype", "0x0617") &&  nvram_match("boardrev", "0x1102")) /* DIR-865L enable USB */
+		xstart("gpio", "enable", "7");
+#endif
 
 	logmsg(LOG_DEBUG, "*** %s", __FUNCTION__);
 	tune_bdflush();
@@ -85,11 +102,42 @@ void start_usb(void)
 		/* check USB LED */
 		i = do_led(LED_USB, LED_PROBE);
 		if (i != 255) {
+#if defined(CONFIG_BCMWL6) || defined (TCONFIG_BLINK)
+			/* Remove legacy approach in the code here - rather, use do_led() function, which is designed to do this
+			 * The reason for changing this... some HW (like Netgear WNDR4000) don't work with direct GPIO write -> use do_led()!
+			 */
+			do_led(LED_USB, LED_OFF); /* turn off USB LED */
+#else
 			modprobe("ledtrig-usbdev");
 			modprobe("leds-usb");
 			sprintf(param, "%d", i);
 			f_write_string("/proc/leds-usb/gpio_pin", param, 0, 0);
+#endif
 		}
+#ifdef TCONFIG_USBAP
+		char instance[20];
+		/* From Asus QTD cache params */
+		char arg1[20] = {0};
+		char arg2[20] = {0};
+		char arg3[20] = {0};
+		char arg4[20] = {0};
+		char arg5[20] = {0};
+		char arg6[20] = {0};
+		char arg7[20] = {0};
+		/* Save QTD cache params in nvram */
+		sprintf(arg1, "log2_irq_thresh=%d", nvram_get_int("ehciirqt"));
+		sprintf(arg2, "qtdc_pid=%d", nvram_get_int("qtdc_pid"));
+		sprintf(arg3, "qtdc_vid=%d", nvram_get_int("qtdc_vid"));
+		sprintf(arg4, "qtdc0_ep=%d", nvram_get_int("qtdc0_ep"));
+		sprintf(arg5, "qtdc0_sz=%d", nvram_get_int("qtdc0_sz"));
+		sprintf(arg6, "qtdc1_ep=%d", nvram_get_int("qtdc1_ep"));
+		sprintf(arg7, "qtdc1_sz=%d", nvram_get_int("qtdc1_sz"));
+
+		modprobe("ehci-hcd", arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+
+		sprintf(instance, "instance_base=1");
+		modprobe("wl_high", instance);
+#endif
 
 		if (nvram_get_int("usb_storage")) {
 			/* insert scsi and storage modules before usb drivers */
@@ -98,22 +146,46 @@ void start_usb(void)
 			modprobe(SD_MOD);
 			modprobe(USBSTORAGE_MOD);
 
+#ifdef TCONFIG_BCMARM
+			if (nvram_get_int("usb_fs_ext4")) {
+#else
 			if (nvram_get_int("usb_fs_ext3")) {
-				modprobe("mbcache");	// used by ext2/ext3
-				/* insert ext3 first so that lazy mount tries ext3 before ext2 */
+#endif
+				modprobe("mbcache"); /* used by ext2/3/(4) */
+#ifdef TCONFIG_BCMARM
+				modprobe("jbd2");
+				modprobe("crc16");
+				modprobe("ext4");
+#else
 				modprobe("jbd");
 				modprobe("ext3");
 				modprobe("ext2");
+#endif
 			}
 
 			if (nvram_get_int("usb_fs_fat")) {
 				modprobe("fat");
 				modprobe("vfat");
 			}
+
+#ifdef TCONFIG_UFSD
+			if (nvram_get_int("usb_fs_ntfs"))
+				modprobe("ufsd");
+#endif
+
 #ifdef TCONFIG_HFS
 			if (nvram_get_int("usb_fs_hfs")) {
 				modprobe("hfs");
 				modprobe("hfsplus");
+			}
+#endif
+
+#ifdef TCONFIG_MICROSD
+			if (nvram_get_int("usb_mmc") == 1) {
+				/* insert SD/MMC modules if present */
+				modprobe("mmc_core");
+				modprobe("mmc_block");
+				modprobe("sdhci");
 			}
 #endif
 		}
@@ -127,13 +199,11 @@ void start_usb(void)
 			modprobe(USB20_MOD, param);
 		}
 
-		if (nvram_get_int("usb_uhci") == 1) {
+		if (nvram_get_int("usb_uhci") == 1)
 			modprobe(USBUHCI_MOD);
-		}
 
-		if (nvram_get_int("usb_ohci") == 1) {
+		if (nvram_get_int("usb_ohci") == 1)
 			modprobe(USBOHCI_MOD);
-		}
 
 		if (nvram_get_int("usb_printer")) {
 			symlink("/dev/usb", "/dev/printers");
@@ -142,16 +212,14 @@ void start_usb(void)
 			/* start printer server only if not already running */
 			if (p9100d_sig(0) != 0) {
 				eval("p910nd",
-				nvram_get_int("usb_printer_bidirect") ? "-b" : "", //bidirectional
-				"-f", "/dev/usb/lp0", // device
-				"0" // listen port
+				nvram_get_int("usb_printer_bidirect") ? "-b" : "", /* bidirectional */
+				              "-f", "/dev/usb/lp0", /* device */
+				              "0" /* listen port */
 				);
 			}
 		}
-
-		if (nvram_get_int("idle_enable") == 1) {
+		if (nvram_get_int("idle_enable") == 1)
 			xstart( "sd-idle" );
-		}
 
 #ifdef TCONFIG_UPS
 		if (nvram_get_int("usb_apcupsd") == 1) {
@@ -162,12 +230,18 @@ void start_usb(void)
 		}
 #endif
 
-// shibby
-// If we want restore backup of webmon from USB device,
-// we have to wait for mount USB devices by hotplug
-// and then reboot firewall service (webmon iptables rules) one more time.
-		if( nvram_match( "log_wm", "1" ) && nvram_match( "webmon_bkp", "1" ) )
-			xstart( "service", "firewall", "restart" );
+#ifdef TCONFIG_USBAP
+		/* enable eth2 after detect new iface by wl_high module */
+		sleep(5);
+		xstart("service", "wireless", "restart");
+#endif
+
+/* If we want restore backup of webmon from USB device,
+ * we have to wait for mount USB devices by hotplug
+ * and then reboot firewall service (webmon iptables rules) one more time.
+ */
+		if (nvram_match("log_wm", "1") && nvram_match("webmon_bkp", "1"))
+			xstart("service", "firewall", "restart");
 
 	}
 }
@@ -183,76 +257,6 @@ void stop_usb(void)
 	char tmp[100];
 	char prefix[] = "wanXX";
 
-#ifdef TCONFIG_UPS
-		stop_ups();
-		modprobe_r("usbhid");
-		modprobe_r("hid");
-		modprobe_r("input-core");
-#endif
-
-	// only find and kill the printer server we started (port 0)
-	p9100d_sig(SIGTERM);
-	modprobe_r(USBPRINTER_MOD);
-
-	// only stop storage services if disabled
-	if ((disabled) || (!nvram_get_int("usb_storage"))) {
-		// Unmount all partitions
-		remove_storage_main(0);
-
-		// Stop storage services
-		modprobe_r("ext2");
-		modprobe_r("ext3");
-		modprobe_r("jbd");
-		modprobe_r("mbcache");
-		modprobe_r("vfat");
-		modprobe_r("fat");
-		modprobe_r("fuse");
-#ifdef TCONFIG_HFS
-		modprobe_r("hfs");
-		modprobe_r("hfsplus");
-#endif
-		sleep(1);
-#ifdef TCONFIG_SAMBASRV
-		modprobe_r("nls_cp437");
-		modprobe_r("nls_cp850");
-		modprobe_r("nls_cp852");
-		modprobe_r("nls_cp866");
-		modprobe_r("nls_cp932");
-		modprobe_r("nls_cp936");
-		modprobe_r("nls_cp949");
-		modprobe_r("nls_cp950");
-#endif
-		modprobe_r(USBSTORAGE_MOD);
-		modprobe_r(SD_MOD);
-		modprobe_r(SCSI_WAIT_MOD);
-		modprobe_r(SCSI_MOD);
-	}
-
-	if (disabled || nvram_get_int("usb_ohci") != 1) modprobe_r(USBOHCI_MOD);
-	if (disabled || nvram_get_int("usb_uhci") != 1) modprobe_r(USBUHCI_MOD);
-	if (disabled || nvram_get_int("usb_usb2") != 1) modprobe_r(USB20_MOD);
-
-	modprobe_r("leds-usb");
-	modprobe_r("ledtrig-usbdev");
-	led(LED_USB, LED_OFF);
-
-	// only unload core modules if usb is disabled
-	if (disabled) {
-		umount("/proc/bus/usb"); // unmount usb device filesystem
-		modprobe_r(USBOHCI_MOD);
-		modprobe_r(USBUHCI_MOD);
-		modprobe_r(USB20_MOD);
-		modprobe_r(USBCORE_MOD);
-	}
-
-	if (nvram_get_int("idle_enable") == 0) {
-		killall("sd-idle", SIGTERM);
-	}
-
-#ifdef TCONFIG_UPS
-	stop_ups();
-#endif
-
 	/* Remove 3G/4G modem modules */
 	if ((disabled) || (!nvram_get_int("usb_3g"))) {
 		mwan_num = atoi(nvram_safe_get("mwan_num"));
@@ -266,22 +270,113 @@ void stop_usb(void)
 			if (module != NULL) {
 				while ((mod = strsep(&module, " ")) != NULL) {
 					int r = modprobe_r(mod);
-					if (r == 0) {
+					if (r == 0)
 						logmsg(LOG_INFO, "USB: module '%s' was removed correctly (iface: %s, errno: %d)", mod, prefix, r);
-					} else {
+					else
 						logmsg(LOG_INFO, "USB: module '%s' could not be removed! (iface: %s, errno: %d)", mod, prefix, r);
-					}
 				}
 				free(module);
 			}
 		}
 	}
-}
 
-#define MOUNT_VAL_FAIL 	0
-#define MOUNT_VAL_RONLY	1
-#define MOUNT_VAL_RW 	2
-#define MOUNT_VAL_EXIST	3
+#ifdef TCONFIG_UPS
+	stop_ups();
+	modprobe_r("usbhid");
+	modprobe_r("hid");
+	modprobe_r("input-core");
+#endif
+
+	/* only find and kill the printer server we started (port 0) */
+	p9100d_sig(SIGTERM);
+	modprobe_r(USBPRINTER_MOD);
+
+	if (nvram_get_int("idle_enable") == 0)
+		killall("sd-idle", SIGTERM);
+
+	/* only stop storage services if disabled */
+	if ((disabled) || (!nvram_get_int("usb_storage"))) {
+		/* Unmount all partitions */
+		remove_storage_main(0);
+
+		/* Stop storage services */
+#ifdef TCONFIG_BCMARM
+		modprobe_r("ext4");
+		modprobe_r("crc16");
+		modprobe_r("jbd2");
+#else
+		modprobe_r("ext2");
+		modprobe_r("ext3");
+		modprobe_r("jbd");
+#endif
+		modprobe_r("mbcache");
+		modprobe_r("vfat");
+		modprobe_r("fat");
+		modprobe_r("exfat");
+#ifdef TCONFIG_UFSD
+		modprobe_r("ufsd");
+#endif
+#ifdef TCONFIG_HFS
+		modprobe_r("hfs");
+		modprobe_r("hfsplus");
+#endif
+		modprobe_r("fuse");
+		sleep(1);
+
+#ifdef TCONFIG_SAMBASRV
+		modprobe_r("nls_cp437");
+		modprobe_r("nls_cp850");
+		modprobe_r("nls_cp852");
+		modprobe_r("nls_cp866");
+		modprobe_r("nls_cp932");
+		modprobe_r("nls_cp936");
+		modprobe_r("nls_cp949");
+		modprobe_r("nls_cp950");
+#endif
+		modprobe_r(SD_MOD);
+		modprobe_r(USBSTORAGE_MOD);
+		modprobe_r(SCSI_WAIT_MOD);
+		modprobe_r(SCSI_MOD);
+	}
+
+#ifdef TCONFIG_MICROSD
+	if (disabled || !nvram_get_int("usb_storage") || nvram_get_int("usb_mmc") != 1) {
+		modprobe_r("sdhci");
+		modprobe_r("mmc_block");
+		modprobe_r("mmc_core");
+	}
+#endif
+
+	if (disabled || nvram_get_int("usb_ohci") != 1)
+		modprobe_r(USBOHCI_MOD);
+	if (disabled || nvram_get_int("usb_uhci") != 1)
+		modprobe_r(USBUHCI_MOD);
+	if (disabled || nvram_get_int("usb_usb2") != 1)
+		modprobe_r(USB20_MOD);
+
+#if !defined(CONFIG_BCMWL6) && !defined (TCONFIG_BLINK)
+	modprobe_r("leds-usb");
+	modprobe_r("ledtrig-usbdev");
+#endif
+	led(LED_USB, LED_OFF);
+
+	/* only unload core modules if usb is disabled */
+	if (disabled) {
+		umount("/proc/bus/usb"); /* unmount usb device filesystem */
+		modprobe_r(USBOHCI_MOD);
+		modprobe_r(USBUHCI_MOD);
+		modprobe_r(USB20_MOD);
+		modprobe_r(USBCORE_MOD);
+	}
+
+#if defined(CONFIG_BCMWL6) || defined (TCONFIG_BLINK)
+	if (nvram_match("boardtype", "0x052b")) /* Netgear WNR3500L v2 - disable USB port */
+		xstart("gpio", "disable", "20");
+
+	if (nvram_match("boardtype", "0x0617") &&  nvram_match("boardrev", "0x1102")) /* DIR-865L disable USB */
+		xstart("gpio", "disable", "7");
+#endif
+}
 
 int mount_r(char *mnt_dev, char *mnt_dir, char *type)
 {
@@ -301,19 +396,18 @@ int mount_r(char *mnt_dev, char *mnt_dir, char *type)
 	if (type) {
 		unsigned long flags = MS_NOATIME | MS_NODEV;
 
-		if (strcmp(type, "swap") == 0 || strcmp(type, "mbr") == 0) {
+		if ((strcmp(type, "swap") == 0) || (strcmp(type, "mbr") == 0)) {
 			/* not a mountable partition */
 			flags = 0;
 		}
-		else if (strcmp(type, "ext2") == 0 || strcmp(type, "ext3") == 0) {
+		else if ((strcmp(type, "ext2") == 0) || (strcmp(type, "ext3") == 0)) {
 			if (nvram_invmatch("usb_ext_opt", ""))
 				sprintf(options, nvram_safe_get("usb_ext_opt"));
 		}
 		else if (strcmp(type, "vfat") == 0) {
 			if (nvram_invmatch("smbd_cset", ""))
-				sprintf(options, "iocharset=%s%s", 
-					isdigit(nvram_get("smbd_cset")[0]) ? "cp" : "",
-						nvram_get("smbd_cset"));
+				sprintf(options, "iocharset=%s%s", isdigit(nvram_get("smbd_cset")[0]) ? "cp" : "", nvram_get("smbd_cset"));
+
 			if (nvram_invmatch("smbd_cpage", "")) {
 				char *cp = nvram_safe_get("smbd_cpage");
 				sprintf(options + strlen(options), ",codepage=%s" + (options[0] ? 0 : 1), cp);
@@ -334,9 +428,8 @@ int mount_r(char *mnt_dev, char *mnt_dir, char *type)
 		}
 		else if (strncmp(type, "ntfs", 4) == 0) {
 			if (nvram_invmatch("smbd_cset", ""))
-				sprintf(options, "iocharset=%s%s",
-					isdigit(nvram_get("smbd_cset")[0]) ? "cp" : "",
-						nvram_get("smbd_cset"));
+				sprintf(options, "iocharset=%s%s", isdigit(nvram_get("smbd_cset")[0]) ? "cp" : "", nvram_get("smbd_cset"));
+
 			if (nvram_invmatch("usb_ntfs_opt", ""))
 				sprintf(options + strlen(options), "%s%s", options[0] ? "," : "", nvram_safe_get("usb_ntfs_opt"));
 		}
@@ -350,17 +443,23 @@ int mount_r(char *mnt_dev, char *mnt_dir, char *type)
 
 			/* mount at last */
 			ret = mount(mnt_dev, mnt_dir, type, flags, options[0] ? options : "");
+			logmsg(LOG_DEBUG, "*** %s: # mount # type: %s, options: %s, mnt_dev: %s, mnt_dir: %s; return code: %d", __FUNCTION__, type, strlen(options) ? options : "none", mnt_dev, mnt_dir, ret);
 
 #ifdef TCONFIG_NTFS
 			if (ret != 0 && strncmp(type, "ntfs", 4) == 0) {
 				sprintf(options + strlen(options), ",noatime,nodev" + (options[0] ? 0 : 1));
 				if (nvram_get_int("usb_fs_ntfs"))
+#ifdef TCONFIG_UFSD
+					ret = eval("mount", "-t", "ufsd", "-o", options, "-o", "force", mnt_dev, mnt_dir);
+#else
 					ret = eval("ntfs-3g", "-o", options, mnt_dev, mnt_dir);
+#endif
 			}
 #endif /* TCONFIG_NTFS */
 
 #ifdef TCONFIG_HFS
-			if (ret != 0 && strncmp(type, "hfs", 3) == 0) {
+			/* try rw mount for kernel HFS/HFS+ driver (guess fs) */
+			if (ret != 0 && (strncmp(type, "hfs", 3) == 0)) {
 				ret = eval("mount", "-o", "noatime,nodev", mnt_dev, mnt_dir);
 			}
 #endif /* TCONFIG_HFS */
@@ -371,9 +470,9 @@ int mount_r(char *mnt_dev, char *mnt_dir, char *type)
 			if (ret == 0) {
 				logmsg(LOG_INFO, "USB %s%s fs at %s mounted on %s", type, (flags & MS_RDONLY) ? " (ro)" : "", mnt_dev, mnt_dir);
 				return (flags & MS_RDONLY) ? MOUNT_VAL_RONLY : MOUNT_VAL_RW;
-			} else {
-				logmsg(LOG_INFO, "USB %s%s fs at %s failed to mount on %s", type, (flags & MS_RDONLY) ? " (ro)" : "", mnt_dev, mnt_dir);
 			}
+			else
+				logmsg(LOG_INFO, "USB %s%s fs at %s failed to mount on %s", type, (flags & MS_RDONLY) ? " (ro)" : "", mnt_dev, mnt_dir);
 
 			if (dir_made) {
 				unlink(flagfn);
@@ -381,6 +480,7 @@ int mount_r(char *mnt_dev, char *mnt_dir, char *type)
 			}
 		}
 	}
+
 	return MOUNT_VAL_FAIL;
 }
 
@@ -416,6 +516,7 @@ struct mntent *mount_fstab(char *dev_name, char *type, char *label, char *uuid)
 
 	if (mnt)
 		logmsg(LOG_INFO, "USB %s fs at %s mounted on %s", type, dev_name, mnt->mnt_dir);
+
 	return (mnt);
 }
 
@@ -446,9 +547,6 @@ static int usb_ufd_connected(int host_no)
 	return 0;
 }
 
-#ifndef MNT_DETACH
-#define MNT_DETACH	0x00000002      /* from linux/fs.h - just detach from the tree */
-#endif
 int umount_mountpoint(struct mntent *mnt, uint flags);
 int uswap_mountpoint(struct mntent *mnt, uint flags);
 
@@ -460,7 +558,7 @@ int uswap_mountpoint(struct mntent *mnt, uint flags);
  */
 int umount_partition(char *dev_name, int host_num, char *dsc_name, char *pt_name, uint flags)
 {
-	sync();	/* This won't matter if the device is unplugged, though. */
+	sync(); /* This won't matter if the device is unplugged, though. */
 
 	if (flags & EFH_HUNKNOWN) {
 		/* EFH_HUNKNOWN flag is passed if the host was unknown.
@@ -475,12 +573,14 @@ int umount_partition(char *dev_name, int host_num, char *dsc_name, char *pt_name
 
 	/* Find all the mountpoints that are for this device and unmount them. */
 	findmntents(dev_name, 0, umount_mountpoint, flags);
+
 	return 0;
 }
 
 int uswap_mountpoint(struct mntent *mnt, uint flags)
 {
 	swapoff(mnt->mnt_fsname);
+
 	return 0;
 }
 
@@ -496,6 +596,7 @@ int umount_mountpoint(struct mntent *mnt, uint flags)
  	 */
 	if (nvram_get_int("usb_automount"))
 		run_nvscript("script_usbumount", mnt->mnt_dir, 3);
+
 	/* Run *.autostop scripts located in the root of the partition being unmounted if any. */
 	run_userfile(mnt->mnt_dir, ".autostop", mnt->mnt_dir, 5);
 	run_nvscript("script_autostop", mnt->mnt_dir, 5);
@@ -509,6 +610,7 @@ int umount_mountpoint(struct mntent *mnt, uint flags)
 		 */
 		if ((count == 1) && ((flags & EFH_USER) == 0))
 			restart_nas_services(1, 0);
+
 		sleep(1);
 	}
 
@@ -537,11 +639,10 @@ int umount_mountpoint(struct mntent *mnt, uint flags)
 	}
 
 	if (ret == 0) {
-		if ((unlink(flagfn) == 0)) {
-			// Only delete the directory if it was auto-created
+		if ((unlink(flagfn) == 0)) /* Only delete the directory if it was auto-created */
 			rmdir(mnt->mnt_dir);
-		}
 	}
+
 	return (ret == 0);
 }
 
@@ -551,11 +652,11 @@ int umount_mountpoint(struct mntent *mnt, uint flags)
  * If this is a regular partition, try mount -a.
  *
  * Before we mount any partitions:
- *	If the type is swap and /etc/fstab exists, do "swapon -a"
- *	If /etc/fstab exists, try mounting using fstab.
- *  We delay invoking mount because mount will probe all the partitions
- *	to read the labels, and we don't want it to do that early on.
- *  We don't invoke swapon until we actually find a swap partition.
+ * If the type is swap and /etc/fstab exists, do "swapon -a"
+ * If /etc/fstab exists, try mounting using fstab.
+ * We delay invoking mount because mount will probe all the partitions
+ * to read the labels, and we don't want it to do that early on.
+ * We don't invoke swapon until we actually find a swap partition.
  *
  * If the mount succeeds, execute the *.autorun scripts in the top
  * directory of the newly mounted partition.
@@ -601,14 +702,15 @@ int mount_partition(char *dev_name, int host_num, char *dsc_name, char *pt_name,
 	/* Can't mount to /mnt/LABEL, so try mounting to /mnt/discDN_PN */
 	sprintf(mountpoint, "%s/%s", MOUNT_ROOT, pt_name);
 	ret = mount_r(dev_name, mountpoint, type);
+
 done:
-	if (ret == MOUNT_VAL_RONLY || ret == MOUNT_VAL_RW)
-	{
+	if (ret == MOUNT_VAL_RONLY || ret == MOUNT_VAL_RW) {
 		/* Run user *.autorun and post-mount scripts if any. */
 		run_userfile(mountpoint, ".autorun", mountpoint, 3);
 		if (nvram_get_int("usb_automount"))
 			run_nvscript("script_usbmount", mountpoint, 3);
 	}
+
 	return (ret == MOUNT_VAL_RONLY || ret == MOUNT_VAL_RW);
 }
 
@@ -621,17 +723,16 @@ int dir_is_mountpoint(const char *root, const char *dir)
 	snprintf(path, sizeof(path), "%s%s%s", root ? : "", root ? "/" : "", dir);
 
 	/* Check if this is a directory */
-	sb.st_mode = S_IFDIR;	/* failsafe */
+	sb.st_mode = S_IFDIR; /* failsafe */
 	stat(path, &sb);
 
 	if (S_ISDIR(sb.st_mode)) {
-
 		/* If this dir & its parent dir are on the same device, it is not a mountpoint */
 		strcat(path, "/.");
 		stat(path, &sb);
 		thisdev = sb.st_dev;
 		strcat(path, ".");
-		++sb.st_dev;	/* failsafe */
+		++sb.st_dev; /* failsafe */
 		stat(path, &sb);
 
 		return (thisdev != sb.st_dev);
@@ -650,6 +751,7 @@ void hotplug_usb_storage_device(int host_no, int action_add, uint flags)
 {
 	if (!nvram_get_int("usb_enable"))
 		return;
+
 	logmsg(LOG_DEBUG, "*** %s: host %d action: %d\n", __FUNCTION__, host_no, action_add);
 
 	if (action_add) {
@@ -657,9 +759,8 @@ void hotplug_usb_storage_device(int host_no, int action_add, uint flags)
 			/* Do not probe the device here. It's either initiated by user,
 			 * or hotplug_usb() already did.
 			 */
-			if (exec_for_host(host_no, 0x00, flags, mount_partition)) {
-				restart_nas_services(0, 1); // restart all NAS applications
-			}
+			if (exec_for_host(host_no, 0x00, flags, mount_partition))
+				restart_nas_services(0, 1); /* restart all NAS applications */
 		}
 	}
 	else {
@@ -681,6 +782,7 @@ void remove_storage_main(int shutdn)
 {
 	if (shutdn)
 		restart_nas_services(1, 0);
+
 	/* Unmount all partitions */
 	exec_for_host(-1, 0x02, shutdn ? EFH_SHUTDN : 0, umount_partition);
 }
@@ -705,16 +807,60 @@ static inline void usbled_proc(char *device, int add)
 	char param[32];
 
 	if (do_led(LED_USB, LED_PROBE) != 255) {
-		strncpy(param, device, sizeof(param));
-		if ((p = strchr(param, ':')) != NULL)
-			*p = 0;
+#if defined(CONFIG_BCMWL6) || defined (TCONFIG_BLINK)
+		if (device != NULL) {
+#endif
+			strncpy(param, device, sizeof(param));
+			if ((p = strchr(param, ':')) != NULL)
+				*p = 0;
 
-		/* verify if we need to ignore this device (i.e. an internal SD/MMC slot ) */
-		p = nvram_safe_get("usb_noled");
-		if (strcmp(p, param) == 0)
-			return;
+			/* verify if we need to ignore this device (i.e. an internal SD/MMC slot ) */
+			p = nvram_safe_get("usb_noled");
+			if (strcmp(p, param) == 0)
+				return;
 
+#if defined(CONFIG_BCMWL6) || defined (TCONFIG_BLINK)
+		}
+		DIR *usb1 = NULL;
+		DIR *usb2 = NULL;
+		DIR *usb3 = NULL;
+		DIR *usb4 = NULL;
+
+		usb1 = opendir ("/sys/bus/usb/devices/2-1:1.0");
+		usb2 = opendir ("/sys/bus/usb/devices/2-2:1.0");
+		usb3 = opendir ("/sys/bus/usb/devices/1-1:1.0");
+		usb4 = opendir ("/sys/bus/usb/devices/1-2:1.0");
+
+		if (add) {
+			if (usb1 != NULL) {
+				do_led(LED_USB, LED_ON); /* USB LED On! */
+				(void) closedir (usb1);
+				usb1 = NULL;
+			}
+			if (usb3 != NULL) {
+				do_led(LED_USB, LED_ON); /* USB LED On! */
+				(void) closedir (usb3);
+				usb3 = NULL;
+			}
+			if (usb2 != NULL) {
+				do_led(LED_USB, LED_ON); /* USB LED On! */
+				(void) closedir (usb2);
+				usb2 = NULL;
+			}
+			if (usb4 != NULL) {
+				do_led(LED_USB, LED_ON); /* USB LED On! */
+				(void) closedir (usb4);
+				usb4 = NULL;
+			}
+		}
+		else {
+			if (usb1 == NULL && usb3 == NULL && usb2 == NULL && usb4 == NULL) {
+				do_led(LED_USB, LED_OFF); /* USB LED Off! */
+			}
+		}
+#else
 		f_write_string(add ? "/proc/leds-usb/add" : "/proc/leds-usb/remove", param, 0, 0);
+#endif
 	}
 }
 
@@ -793,7 +939,8 @@ void hotplug_usb(void)
 
 	logmsg(LOG_DEBUG, "*** %s: %s hotplug INTERFACE=%s ACTION=%s PRODUCT=%s HOST=%s DEVICE=%s\n", __FUNCTION__, getenv("SUBSYSTEM") ? : "USB", interface, action, product, scsi_host, device);
 
-	if (!nvram_get_int("usb_enable")) return;
+	if (!nvram_get_int("usb_enable"))
+		return;
 	if (!action || ((!interface || !product) && !is_block))
 		return;
 
@@ -808,9 +955,9 @@ void hotplug_usb(void)
 			logmsg(LOG_DEBUG, "*** %s: attached USB device %s [INTERFACE=%s PRODUCT=%s]", __FUNCTION__, device, interface, product);
 	}
 
-	if (strncmp(interface ? : "", "TOMATO/", 7) == 0) {	/* web admin */
+	if (strncmp(interface ? : "", "TOMATO/", 7) == 0) { /* web admin */
 		if (scsi_host == NULL)
-			host = atoi(product);	// for backward compatibility
+			host = atoi(product); /* for backward compatibility */
 		/* If host is negative, unmount all partitions of *all* hosts.
 		 * If host == -1, execute "soft" unmount (do not kill NAS apps, no "lazy" umount).
 		 * If host == -2, run "hard" unmount, as if the drive is unplugged.
@@ -820,9 +967,14 @@ void hotplug_usb(void)
 		 *
 		 * PRODUCT is required to pass the env variables verification.
 		 */
+
 		/* Unmount or remount all partitions of the host. */
-		hotplug_usb_storage_device(host < 0 ? -1 : host, add ? -1 : 0,
-			host == -2 ? 0 : EFH_USER);
+		hotplug_usb_storage_device(host < 0 ? -1 : host, add ? -1 : 0, host == -2 ? 0 : EFH_USER);
+
+#if defined(CONFIG_BCMWL6) || defined (TCONFIG_BLINK)
+		if (device == NULL)
+			usbled_proc(device, add);
+#endif
 	}
 	else if (is_block && strcmp(getenv("MAJOR") ? : "", "8") == 0 && strcmp(getenv("PHYSDEVBUS") ? : "", "scsi") == 0) {
 		/* scsi partition */
@@ -840,9 +992,8 @@ void hotplug_usb(void)
 					 */
 					return;
 				}
-				if (mount_partition(devname, host, NULL, device, EFH_HP_ADD)) {
-					restart_nas_services(0, 1); // restart all NAS applications
-				}
+				if (mount_partition(devname, host, NULL, device, EFH_HP_ADD))
+					restart_nas_services(0, 1); /* restart all NAS applications */
 			}
 		}
 		else {
@@ -855,14 +1006,16 @@ void hotplug_usb(void)
 		}
 		file_unlock(lock);
 	}
-	else if (strncmp(interface ? : "", "8/", 2) == 0) {	/* usb storage */
+	else if (strncmp(interface ? : "", "8/", 2) == 0) { /* usb storage */
 		usbled_proc(device, add);
 		run_nvscript("script_usbhotplug", NULL, 2);
 	}
-	else {	/* It's some other type of USB device, not storage. */
-		if (is_block) return;
-		if (strncmp(interface ? : "", "7/", 2) == 0)	/* printer */
+	else { /* It's some other type of USB device, not storage. */
+		if (is_block)
+			return;
+		if (strncmp(interface ? : "", "7/", 2) == 0) /* printer */
 			usbled_proc(device, add);
+
 		/* Do nothing. The user's hotplug script must do it all. */
 		run_nvscript("script_usbhotplug", NULL, 2);
 	}
