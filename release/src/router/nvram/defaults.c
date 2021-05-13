@@ -783,7 +783,7 @@ const defaults_t defaults[] = {
 	{ "http_wanport",		"8080"				},	// WAN port to listen on
 	{ "http_lanport",		"80"				},	// LAN port to listen on
 	{ "http_enable",		"1"				},	// HTTP server enable/disable
-	{ "remote_upgrade",		"0"				},	/* allow remote upgrade [1|0] - for brave guys */
+	{ "remote_upgrade",		"1"				},	/* allow remote upgrade [1|0] - for brave guys */
 #ifdef TCONFIG_HTTPS
 	{ "remote_mgt_https",		"0"				},	// Remote Management use https [1|0]
 	{ "https_lanport",		"443"				},	// LAN port to listen on

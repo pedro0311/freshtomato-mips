@@ -32,6 +32,9 @@
 #define MOUNT_VAL_EXIST	3
 
 #define USBCORE_MOD	"usbcore"
+#ifdef TCONFIG_BCMARM
+#define USB30_MOD	"xhci-hcd"
+#endif
 #define USB20_MOD	"ehci-hcd"
 #define USBSTORAGE_MOD	"usb-storage"
 #define SCSI_MOD	"scsi_mod"
@@ -46,6 +49,9 @@
 #define MNT_DETACH	0x00000002 /* from linux/fs.h - just detach from the tree */
 #endif
 
+
+int umount_mountpoint(struct mntent *mnt, uint flags);
+int uswap_mountpoint(struct mntent *mnt, uint flags);
 
 /* Adjust bdflush parameters.
  * Do this here, because Tomato doesn't have the sysctl command.
@@ -82,17 +88,55 @@ void start_usb(void)
 	char param[32];
 	int i = 255;
 
-#ifdef CONFIG_BCMWL6
+#ifdef TCONFIG_BCMARM
+#ifdef TCONFIG_BCMSMP
+	int fd;
+#endif
+	/* get router model */
+	int model = get_model();
+
+	if ((model == MODEL_DIR868L)) {
+		set_gpio(GPIO_10, T_HIGH);
+	}
+	else if ((model == MODEL_WS880)) {
+		set_gpio(GPIO_07, T_HIGH);
+	}
+	else if ((model == MODEL_R1D) ||
+		 (model == MODEL_R6400) ||
+		 (model == MODEL_R6400v2) ||
+		 (model == MODEL_R6700v3) ||
+		 (model == MODEL_XR300) ) {
+		set_gpio(GPIO_00, T_HIGH);
+	}
+	else if ((model == MODEL_EA6350v1) ||
+		 (model == MODEL_EA6400) ||
+		 (model == MODEL_EA6700) ||
+		 (model == MODEL_EA6900) ||
+		 (model == MODEL_AC18) ||
+		 (model == MODEL_WZR1750) ||
+		 (model == MODEL_F9K1113v2_20X0) ||
+		 (model == MODEL_F9K1113v2)) {
+		set_gpio(GPIO_09, T_HIGH);
+		if ((model == MODEL_WZR1750)) {
+			 set_gpio(GPIO_10, T_LOW); /* usb3.0 */
+		}
+		if ((model == MODEL_F9K1113v2_20X0) ||
+		    (model == MODEL_F9K1113v2)) {
+			set_gpio(GPIO_10, T_HIGH); /* usb3.0 */
+		}
+	}
+#elif CONFIG_BCMWL6 /* TCONFIG_BCMARM */
 	if (nvram_match("boardtype", "0x052b")) /* Netgear WNR3500L v2 - initialize USB port */
 		xstart("gpio", "enable", "20");
 
 	if (nvram_match("boardtype", "0x0617") &&  nvram_match("boardrev", "0x1102")) /* DIR-865L enable USB */
 		xstart("gpio", "enable", "7");
-#endif
+#endif /* TCONFIG_BCMARM */
 
 	logmsg(LOG_DEBUG, "*** %s", __FUNCTION__);
 	tune_bdflush();
 
+	/* load modules if USB is enabled */
 	if (nvram_get_int("usb_enable")) {
 		modprobe(USBCORE_MOD);
 
@@ -102,7 +146,18 @@ void start_usb(void)
 		/* check USB LED */
 		i = do_led(LED_USB, LED_PROBE);
 		if (i != 255) {
-#if defined(CONFIG_BCMWL6) || defined (TCONFIG_BLINK)
+
+#ifdef TCONFIG_BCMARM
+			do_led(LED_USB, LED_OFF); /* turn off USB LED */
+		}
+
+		i = 255; /* reset to 255 */
+		/* check USB3 LED */
+		i = do_led(LED_USB3, LED_PROBE);
+		if (i != 255) {
+			do_led(LED_USB3, LED_OFF); /* turn off USB3 LED */
+
+#elif defined(CONFIG_BCMWL6) || defined(TCONFIG_BLINK) /* TCONFIG_BCMARM */
 			/* Remove legacy approach in the code here - rather, use do_led() function, which is designed to do this
 			 * The reason for changing this... some HW (like Netgear WNDR4000) don't work with direct GPIO write -> use do_led()!
 			 */
@@ -112,8 +167,9 @@ void start_usb(void)
 			modprobe("leds-usb");
 			sprintf(param, "%d", i);
 			f_write_string("/proc/leds-usb/gpio_pin", param, 0, 0);
-#endif
+#endif /* TCONFIG_BCMARM */
 		}
+
 #ifdef TCONFIG_USBAP
 		char instance[20];
 		/* From Asus QTD cache params */
@@ -150,7 +206,7 @@ void start_usb(void)
 			if (nvram_get_int("usb_fs_ext4")) {
 #else
 			if (nvram_get_int("usb_fs_ext3")) {
-#endif
+#endif /* TCONFIG_BCMARM */
 				modprobe("mbcache"); /* used by ext2/3/(4) */
 #ifdef TCONFIG_BCMARM
 				modprobe("jbd2");
@@ -160,7 +216,7 @@ void start_usb(void)
 				modprobe("jbd");
 				modprobe("ext3");
 				modprobe("ext2");
-#endif
+#endif /* TCONFIG_BCMARM */
 			}
 
 			if (nvram_get_int("usb_fs_fat")) {
@@ -168,16 +224,38 @@ void start_usb(void)
 				modprobe("vfat");
 			}
 
-#ifdef TCONFIG_UFSD
+#ifdef TCONFIG_BCMARM
+			if (nvram_get_int("usb_fs_exfat"))
+				modprobe("exfat");
+#endif
+
+#if defined(TCONFIG_UFSDA) || defined(TCONFIG_UFSDN)
+			if (nvram_get_int("usb_fs_ntfs") && nvram_match("usb_ntfs_driver", "paragon"))
+				modprobe("ufsd");
+#elif TCONFIG_UFSD
 			if (nvram_get_int("usb_fs_ntfs"))
 				modprobe("ufsd");
 #endif
 
+#ifdef TCONFIG_TUXERA
+			if (nvram_get_int("usb_fs_ntfs") && nvram_match("usb_ntfs_driver", "tuxera"))
+				modprobe("tntfs");
+#endif
+
 #ifdef TCONFIG_HFS
-			if (nvram_get_int("usb_fs_hfs")) {
+			if (nvram_get_int("usb_fs_hfs")
+#ifdef TCONFIG_BCMARM
+			    && nvram_match("usb_hfs_driver", "kernel")
+#endif
+			) {
 				modprobe("hfs");
 				modprobe("hfsplus");
 			}
+#endif /* TCONFIG_HFS */
+
+#ifdef TCONFIG_TUXERA_HFS
+			if (nvram_get_int("usb_fs_hfs") && nvram_match("usb_hfs_driver", "tuxera"))
+				modprobe("thfsplus");
 #endif
 
 #ifdef TCONFIG_MICROSD
@@ -188,7 +266,21 @@ void start_usb(void)
 				modprobe("sdhci");
 			}
 #endif
+
+		} /* if (nvram_get_int("usb_storage")) */
+
+#ifdef TCONFIG_BCMARM
+		if (nvram_get_int("usb_usb3") == 1) {
+			modprobe(USB30_MOD);
+#ifdef TCONFIG_BCMSMP
+			sleep(1);
+			if ((fd = open("/proc/irq/163/smp_affinity", O_RDWR)) >= 0) {
+				close(fd);
+				f_write_string("/proc/irq/112/smp_affinity", TOMATO_CPU1, 0, 0); /* xhci_hcd --> CPU 1 */
+			}
+#endif
 		}
+#endif /* TCONFIG_BCMARM */
 
 		/* if enabled, force USB2 before USB1.1 */
 		if (nvram_get_int("usb_usb2") == 1) {
@@ -197,6 +289,13 @@ void start_usb(void)
 				i = 0;
 			sprintf(param, "log2_irq_thresh=%d", i);
 			modprobe(USB20_MOD, param);
+#if defined(TCONFIG_BCMARM) && defined(TCONFIG_BCMSMP)
+			sleep(1);
+			if ((fd = open("/proc/irq/163/smp_affinity", O_RDWR)) >= 0) {
+				close(fd);
+				f_write_string("/proc/irq/111/smp_affinity", TOMATO_CPU1, 0, 0); /* ehci_hcd --> CPU 1 */
+			}
+#endif
 		}
 
 		if (nvram_get_int("usb_uhci") == 1)
@@ -314,6 +413,7 @@ void remove_usb_storage_module(void)
 #ifdef TCONFIG_TUXERA_HFS
 	modprobe_r("thfsplus");
 #endif
+
 	modprobe_r("fuse");
 	sleep(1);
 
@@ -331,6 +431,13 @@ void remove_usb_storage_module(void)
 	modprobe_r(USBSTORAGE_MOD);
 	modprobe_r(SCSI_WAIT_MOD);
 	modprobe_r(SCSI_MOD);
+#ifdef TCONFIG_MICROSD
+	if (nvram_get_int("usb_mmc") != 1) {
+		modprobe_r("sdhci");
+		modprobe_r("mmc_block");
+		modprobe_r("mmc_core");
+	}
+#endif
 }
 
 void remove_usb_host_module(void)
@@ -338,6 +445,9 @@ void remove_usb_host_module(void)
 	modprobe_r(USBOHCI_MOD);
 	modprobe_r(USBUHCI_MOD);
 	modprobe_r(USB20_MOD);
+#ifdef TCONFIG_BCMARM
+	modprobe_r(USB30_MOD);
+#endif
 	modprobe_r(USBCORE_MOD);
 }
 
@@ -353,6 +463,13 @@ void remove_usb_module(void)
 void stop_usb(void)
 {
 	int disabled = !nvram_get_int("usb_enable");
+#ifdef TCONFIG_BCMARM
+	int i = 255;
+	int model;
+
+	/* get router model */
+	model = get_model();
+#endif
 
 #ifdef TCONFIG_UPS
 	stop_ups();
@@ -373,14 +490,6 @@ void stop_usb(void)
 		remove_usb_storage_module();
 	}
 
-#ifdef TCONFIG_MICROSD
-	if (disabled || !nvram_get_int("usb_storage") || nvram_get_int("usb_mmc") != 1) {
-		modprobe_r("sdhci");
-		modprobe_r("mmc_block");
-		modprobe_r("mmc_core");
-	}
-#endif
-
 	if (disabled || nvram_get_int("usb_ohci") != 1)
 		modprobe_r(USBOHCI_MOD);
 	if (disabled || nvram_get_int("usb_uhci") != 1)
@@ -388,11 +497,29 @@ void stop_usb(void)
 	if (disabled || nvram_get_int("usb_usb2") != 1)
 		modprobe_r(USB20_MOD);
 
-#if !defined(CONFIG_BCMWL6) && !defined (TCONFIG_BLINK)
+#ifdef TCONFIG_BCMARM
+	if (disabled || nvram_get_int("usb_xhci") != 1)
+		modprobe_r(USB30_MOD);
+
+	/* check USB LED */
+	i = do_led(LED_USB, LED_PROBE);
+	if (i != 255)
+		do_led(LED_USB, LED_OFF); /* turn off USB LED */
+
+	i = 255; /* reset to 255 */
+	/* check USB3 LED */
+	i = do_led(LED_USB3, LED_PROBE);
+	if (i != 255)
+		do_led(LED_USB3, LED_OFF); /* turn off USB3 LED */
+
+#elif !defined(CONFIG_BCMWL6) && !defined (TCONFIG_BLINK) /* TCONFIG_BCMARM */
 	modprobe_r("leds-usb");
 	modprobe_r("ledtrig-usbdev");
-#endif
+#endif /* TCONFIG_BCMARM */
+
+#ifndef TCONFIG_BCMARM
 	led(LED_USB, LED_OFF);
+#endif
 
 	/* only unload core modules if usb is disabled */
 	if (disabled) {
@@ -400,10 +527,40 @@ void stop_usb(void)
 		modprobe_r(USBOHCI_MOD);
 		modprobe_r(USBUHCI_MOD);
 		modprobe_r(USB20_MOD);
+#ifdef TCONFIG_BCMARM
+		modprobe_r(USB30_MOD);
+#endif
 		modprobe_r(USBCORE_MOD);
 	}
 
-#if defined(CONFIG_BCMWL6) || defined (TCONFIG_BLINK)
+#ifdef TCONFIG_BCMARM
+	if ((model == MODEL_DIR868L))
+		set_gpio(GPIO_10, T_LOW);
+	else if ((model == MODEL_WS880))
+		set_gpio(GPIO_07, T_LOW);
+	else if ((model == MODEL_R1D) ||
+		 (model == MODEL_R6400) ||
+		 (model == MODEL_R6400v2) ||
+		 (model == MODEL_R6700v3) ||
+		 (model == MODEL_XR300) )
+		set_gpio(GPIO_00, T_LOW);
+	else if ((model == MODEL_EA6350v1) ||
+		 (model == MODEL_EA6400) ||
+		 (model == MODEL_EA6700) ||
+		 (model == MODEL_EA6900) ||
+		 (model == MODEL_AC18) ||
+		 (model == MODEL_WZR1750) ||
+		 (model == MODEL_F9K1113v2_20X0) ||
+		 (model == MODEL_F9K1113v2)) {
+		set_gpio(GPIO_09, T_LOW);
+			if ((model == MODEL_WZR1750))
+				set_gpio(GPIO_10, T_HIGH); /* usb3.0 */
+			if ((model == MODEL_F9K1113v2_20X0) ||
+			    (model == MODEL_F9K1113v2)) {
+				set_gpio(GPIO_10, T_LOW); /* usb3.0 */
+			}
+	}
+#elif defined(CONFIG_BCMWL6) || defined (TCONFIG_BLINK)
 	if (nvram_match("boardtype", "0x052b")) /* Netgear WNR3500L v2 - disable USB port */
 		xstart("gpio", "disable", "20");
 
@@ -434,7 +591,11 @@ int mount_r(char *mnt_dev, char *mnt_dir, char *type)
 			/* not a mountable partition */
 			flags = 0;
 		}
-		else if ((strcmp(type, "ext2") == 0) || (strcmp(type, "ext3") == 0)) {
+		else if ((strcmp(type, "ext2") == 0) || (strcmp(type, "ext3") == 0)
+#ifdef TCONFIG_BCMARM
+		         || (strcmp(type, "ext4") == 0)
+#endif
+		) {
 			if (nvram_invmatch("usb_ext_opt", ""))
 				sprintf(options, nvram_safe_get("usb_ext_opt"));
 		}
@@ -468,6 +629,29 @@ int mount_r(char *mnt_dev, char *mnt_dir, char *type)
 				sprintf(options + strlen(options), "%s%s", options[0] ? "," : "", nvram_safe_get("usb_ntfs_opt"));
 		}
 
+#if defined(TCONFIG_BCMARM) && defined(TCONFIG_HFS)
+		else if (strncmp(type, "hfs", 3) == 0) {
+			if (nvram_get_int("usb_fs_hfs")) {
+				if (nvram_match("usb_hfs_driver", "kernel")) {
+					sprintf(options, "rw,noatime,nodev");
+
+					if (strncmp(type, "hfsplus", 7) == 0)
+						sprintf(options + strlen(options), ",force" + (options[0] ? 0 : 1));
+				}
+#ifdef TCONFIG_TUXERA_HFS
+				else if (nvram_match("usb_hfs_driver", "tuxera")) {
+					/* override fs fype */
+					type = "thfsplus";
+				}
+#endif
+				if (nvram_invmatch("usb_hfs_opt", ""))
+					sprintf(options + strlen(options), "%s%s", options[0] ? "," : "", nvram_safe_get("usb_hfs_opt"));
+			}
+			else /* HFS support disabled by user, don't try to mount */
+				flags = 0;
+		}
+#endif /* TCONFIG_BCMARM && TCONFIG_HFS */
+
 		if (flags) {
 			if ((dir_made = mkdir_if_none(mnt_dir))) {
 				/* Create the flag file for remove the directory on dismount. */
@@ -482,19 +666,43 @@ int mount_r(char *mnt_dev, char *mnt_dir, char *type)
 #ifdef TCONFIG_NTFS
 			if (ret != 0 && strncmp(type, "ntfs", 4) == 0) {
 				sprintf(options + strlen(options), ",noatime,nodev" + (options[0] ? 0 : 1));
-				if (nvram_get_int("usb_fs_ntfs"))
+				if (nvram_get_int("usb_fs_ntfs")) {
+#ifdef TCONFIG_BCMARM
+					if (nvram_match("usb_ntfs_driver", "ntfs3g"))
+						ret = eval("ntfs-3g", "-o", options, mnt_dev, mnt_dir);
+#if defined(TCONFIG_UFSDA) || defined(TCONFIG_UFSDN)
+					else if (nvram_match("usb_ntfs_driver", "paragon"))
+						ret = eval("mount", "-t", "ufsd", "-o", options, "-o", "force", mnt_dev, mnt_dir);
+#endif
+#ifdef TCONFIG_TUXERA
+					else if (nvram_match("usb_ntfs_driver", "tuxera"))
+						ret = eval("mount", "-t", "tntfs", "-o", options, mnt_dev, mnt_dir);
+#endif
+#else /* TCONFIG_BCMARM */
 #ifdef TCONFIG_UFSD
 					ret = eval("mount", "-t", "ufsd", "-o", options, "-o", "force", mnt_dev, mnt_dir);
 #else
 					ret = eval("ntfs-3g", "-o", options, mnt_dev, mnt_dir);
 #endif
+#endif /* TCONFIG_BCMARM */
+				}
 			}
 #endif /* TCONFIG_NTFS */
 
 #ifdef TCONFIG_HFS
 			/* try rw mount for kernel HFS/HFS+ driver (guess fs) */
 			if (ret != 0 && (strncmp(type, "hfs", 3) == 0)) {
+#ifdef TCONFIG_BCMARM
+				eval("fsck.hfsplus", "-f", mnt_dev);
+
+				ret = eval("mount", "-o", options, mnt_dev, mnt_dir);
+				if (ret == 0)
+					logmsg(LOG_INFO, "USB: %s: attempt to mount rw after unclean unmounting succeeded!", type);
+
+				logmsg(LOG_DEBUG, "*** %s: mount cmd: mount -o %s %s %s, return: %d", __FUNCTION__, options, mnt_dev, mnt_dir, ret);
+#else /* TCONFIG_BCMARM */
 				ret = eval("mount", "-o", "noatime,nodev", mnt_dev, mnt_dir);
+#endif /* TCONFIG_BCMARM */
 			}
 #endif /* TCONFIG_HFS */
 
@@ -581,9 +789,6 @@ static int usb_ufd_connected(int host_no)
 	return 0;
 }
 
-int umount_mountpoint(struct mntent *mnt, uint flags);
-int uswap_mountpoint(struct mntent *mnt, uint flags);
-
 /* Unmount this partition from all its mountpoints.  Note that it may
  * actually be mounted several times, either with different names or
  * with "-o bind" flag.
@@ -627,7 +832,7 @@ int umount_mountpoint(struct mntent *mnt, uint flags)
 
 	/* Run user pre-unmount scripts if any. It might be too late if
 	 * the drive has been disconnected, but we'll try it anyway.
- 	 */
+	 */
 	if (nvram_get_int("usb_automount"))
 		run_nvscript("script_usbumount", mnt->mnt_dir, 3);
 
@@ -839,8 +1044,97 @@ static inline void usbled_proc(char *device, int add)
 {
 	char *p;
 	char param[32];
+#if defined(CONFIG_BCMWL6) || defined (TCONFIG_BLINK)
+	DIR *usb1 = NULL;
+	DIR *usb2 = NULL;
+	DIR *usb3 = NULL;
+	DIR *usb4 = NULL;
+#endif
 
-	if (do_led(LED_USB, LED_PROBE) != 255) {
+#ifdef TCONFIG_BCMARM
+	/* check if there are two LEDs for USB and USB3, see LED table at shared/led.c */
+	if (do_led(LED_USB, LED_PROBE) != 255 && do_led(LED_USB3, LED_PROBE) != 255) {
+		if (device != NULL) {
+			strncpy(param, device, sizeof(param));
+			if ((p = strchr(param, ':')) != NULL)
+				*p = 0;
+
+			/* verify if we need to ignore this device (i.e. an internal SD/MMC slot ) */
+			p = nvram_safe_get("usb_noled");
+			if (strcmp(p, param) == 0)
+				return;
+		}
+
+		/* get router model */
+		int model = get_model();
+
+		switch(model) {
+		case MODEL_RTN18U:
+		case MODEL_RTAC56U:
+		case MODEL_RTAC68U:
+		case MODEL_RTAC68UV3:
+		case MODEL_RTAC1900P:
+		case MODEL_R6400:
+		case MODEL_R6400v2:
+		case MODEL_R6700v1:
+		case MODEL_R6700v3:
+		case MODEL_R7000:
+		case MODEL_XR300:
+#ifdef TCONFIG_BCM7
+		case MODEL_R8000:
+#endif
+		case MODEL_F9K1113v2_20X0:
+		case MODEL_F9K1113v2:
+			/* switch usb2 --> usb1 and usb4 --> usb3 */
+			usb2 = opendir ("/sys/bus/usb/devices/2-1:1.0"); /* Example RT-N18U: port 1 gpio 14 for USB3 */
+			usb1 = opendir ("/sys/bus/usb/devices/2-2:1.0"); /* Example RT-N18U: port 2 gpio 3 */
+			usb4 = opendir ("/sys/bus/usb/devices/1-1:1.0");
+			usb3 = opendir ("/sys/bus/usb/devices/1-2:1.0");
+			break;
+		default:
+			/* default - keep it in place (for the future), if there is a router with a different setup/config!
+			   Right now all router have USB3 connected to port 1 */
+			usb1 = opendir ("/sys/bus/usb/devices/2-1:1.0");
+			usb2 = opendir ("/sys/bus/usb/devices/2-2:1.0");
+			usb3 = opendir ("/sys/bus/usb/devices/1-1:1.0");
+			usb4 = opendir ("/sys/bus/usb/devices/1-2:1.0");
+			break;
+		}
+
+		if (add) {
+			if (usb1 != NULL) {
+				do_led(LED_USB, LED_ON); /* USB LED On! */
+				(void) closedir (usb1);
+				usb1 = NULL;
+			}
+			if (usb3 != NULL) {
+				do_led(LED_USB, LED_ON); /* USB LED On! */
+				(void) closedir (usb3);
+				usb3 = NULL;
+			}
+			if (usb2 != NULL) {
+				do_led(LED_USB3, LED_ON); /* USB3 LED On! */
+				(void) closedir (usb2);
+				usb2 = NULL;
+			}
+			if (usb4 != NULL) {
+				do_led(LED_USB3, LED_ON); /* USB3 LED On! */
+				(void) closedir (usb4);
+				usb4 = NULL;
+			}
+		}
+		else {
+			if (usb1 == NULL && usb3 == NULL)
+				do_led(LED_USB, LED_OFF); /* USB LED Off! */
+
+			if (usb2 == NULL && usb4 == NULL)
+				do_led(LED_USB3, LED_OFF); /* USB3 LED Off! */
+		}
+	}
+	else
+#endif /* TCONFIG_BCMARM */
+	/* only one LED for USB */
+	     if (do_led(LED_USB, LED_PROBE) != 255) {
 #if defined(CONFIG_BCMWL6) || defined (TCONFIG_BLINK)
 		if (device != NULL) {
 #endif
@@ -855,10 +1149,6 @@ static inline void usbled_proc(char *device, int add)
 
 #if defined(CONFIG_BCMWL6) || defined (TCONFIG_BLINK)
 		}
-		DIR *usb1 = NULL;
-		DIR *usb2 = NULL;
-		DIR *usb3 = NULL;
-		DIR *usb4 = NULL;
 
 		usb1 = opendir ("/sys/bus/usb/devices/2-1:1.0");
 		usb2 = opendir ("/sys/bus/usb/devices/2-2:1.0");
@@ -888,14 +1178,13 @@ static inline void usbled_proc(char *device, int add)
 			}
 		}
 		else {
-			if (usb1 == NULL && usb3 == NULL && usb2 == NULL && usb4 == NULL) {
+			if (usb1 == NULL && usb3 == NULL && usb2 == NULL && usb4 == NULL)
 				do_led(LED_USB, LED_OFF); /* USB LED Off! */
-			}
 		}
 #else
 		f_write_string(add ? "/proc/leds-usb/add" : "/proc/leds-usb/remove", param, 0, 0);
 #endif
-	}
+	} /* else if (only one LED for USB) */
 }
 
 /* Plugging or removing usb device
