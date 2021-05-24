@@ -2321,6 +2321,7 @@ libevent/stamp-h1:
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC" \
 		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC -I$(TOP)/zlib $(if $(TCONFIG_HTTPS),-I$(TOP)/$(OPENSSLDIR)/include,) -fPIC" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC -L$(TOP)/zlib $(if $(TCONFIG_HTTPS),-L$(TOP)/$(OPENSSLDIR),)" \
+		PKG_CONFIG_PATH="$(PKG_CONFIG_PATH):$(TOP)/$(OPENSSLDIR)" \
 		$(CONFIGURE) $(if $(TCONFIG_HTTPS),,--disable-openssl) --disable-doxygen-html \
 			--disable-debug-mode --disable-samples --disable-dependency-tracking
 	@touch $@
