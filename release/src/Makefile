@@ -857,6 +857,18 @@ define BusyboxOptions
 	)
 endef
 
+define extrawlConfig
+	@( \
+	if [ "$(USBAP)" = "y" ]; then \
+		cp -f $(SRCBASE)/wl/linux/100/wl_apsta.o $(SRCBASE)/wl/linux/wl_apsta.o ; \
+		cp -f $(SRCBASE)/include/100/epivers.h $(SRCBASE)/include/epivers.h ; \
+	else \
+		cp -f $(SRCBASE)/wl/linux/110/wl_apsta.o $(SRCBASE)/wl/linux/wl_apsta.o ; \
+		cp -f $(SRCBASE)/include/110/epivers.h $(SRCBASE)/include/epivers.h ; \
+	fi; \
+	)
+endef
+
 define KernelConfig
 	@( \
 	sed -i "/CONFIG_NVRAM_SIZE/d" $(1); \
@@ -1016,6 +1028,7 @@ define KernelConfig
 		sed -i "s/# CONFIG_BONDING is not set/CONFIG_BONDING=m/g" $(1); \
 	fi; \
 	)
+	$(call extrawlConfig, $(1))
 endef
 
 
