@@ -1500,6 +1500,7 @@ endif
 	@true
 
 flac/stamp-h1: libogg
+	$(call patch_files,flac)
 	cd $(TOP)/flac && autoreconf -fsi && \
 	CFLAGS="-Os $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections" \
 	CPPFLAGS="-I$(TOP)/libogg/include -I$(LINUXDIR)/include -fPIC" \
@@ -1517,6 +1518,7 @@ flac: flac/stamp-h1 libogg
 flac-clean:
 	-@$(MAKE) -C flac clean
 	@rm -f flac/stamp-h1
+	$(call unpatch_files,flac)
 
 flac-install:
 ifneq ($(MEDIA_SERVER_STATIC),y)
