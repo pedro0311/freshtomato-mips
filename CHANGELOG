@@ -5,30 +5,12 @@ FreshTomato-MIPS Changelog
 
 
 
-2021.4          2021.06.17
---------------------------
-
-- nginx: update to 1.21.0
-- libcurl: update to 7.77.0
-- snmp: update to 5.9.1
-- build: Belkin F9K1102 (v1/v3): avoid using/watching reset button (gpio 3) and use wps button (gpio 7) at tomato level for reset purpose
-- QoS: fix IPP2P/Layer7/DSCP RETURN being absolutely blank in iptables
-- libcurl: update CA certificate bundle as of 2021-05-25
-- httpd: devlist.c: fix display of devices in wds mode
-- others: mymotd: code improvements, thanks to @WildFireSG
-- rc: firewall.c: fix removing ipt_web/xt_web module
-- rc: restrict: disable web for ip6tables in ARM branch
-- rc: init.c: clarify the supported model name as 'WRT310 v2'
-- rc: services.c: fix problems with upgrade/restore defaults/etc on routers built with USBAP
-- shared: id.c: fix detection of Tenda W1800R 
-- www: fix problems when image is built without advanced themes
-
-
 2021.3          2021.06.05
 --------------------------
 
 - kernel: squashfs: update to compile on Artix
 - SDK5: align wl driver version for USB AP router (and revert back wl driver for eth1); Note: patch only for USB AP Router like f9k, rtn53, e3200, ...
+- SDK6 MIPS (for RT-AC branch / router): fix router reboots, when connected to wifi
 - busybox: update to 1.33.1
 - tor: update to 0.4.5.8
 - sqlite: update to 3.35.5
