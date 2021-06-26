@@ -805,7 +805,7 @@ const defaults_t defaults[] = {
 	{ "ttb_css",			"example"			},	// Tomato Themes Base - default theme name
 #ifdef TCONFIG_USB
 	{ "ttb_loc",			""				},	// Tomato Themes Base - default files location
-	{ "ttb_url",			"http://www.tomatothemebase.eu/wp-content/uploads"},	// Tomato Themes Base - default URL
+	{ "ttb_url",			"http://ttb.mooo.com http://ttb.ath.cx http://ttb.ddnsfree.com"},	// Tomato Themes Base - default URL
 #endif
 	{ "web_svg",			"1"				},
 	{ "telnetd_eas",		"1"				},
