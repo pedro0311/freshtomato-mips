@@ -632,6 +632,11 @@ const defaults_t defaults[] = {
 #ifdef TCONFIG_TOR
 	{ "dnsmasq_onion_support",	"0"				},
 #endif
+#ifdef TCONFIG_MDNS
+	{ "mdns_enable",		"0"				},
+	{ "mdns_reflector",		"1"				},
+	{ "mdns_debug",			"0"				},
+#endif
 
 /* advanced-firewall */
 	{ "nf_loopback",		"0"				},
