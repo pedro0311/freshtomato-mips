@@ -1094,7 +1094,7 @@ vsftpd-clean:
 
 ntfs-3g/Makefile:
 	$(call patch_files,ntfs-3g)
-	cd ntfs-3g && \
+	cd ntfs-3g && autoreconf -fsi && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC $(OPTSIZE_FLAG)" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
 		$(CONFIGURE) --enable-shared=no --enable-static=no \
