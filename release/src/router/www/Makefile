@@ -381,7 +381,7 @@ endif
 endif
 
 # Only include the mdns option if it is compiled in
-ifneq ($(TCONFIG_IPERF),y)
+ifneq ($(TCONFIG_MDNS),y)
 	sed -i $(INSTALLDIR)/www/advanced-dhcpdns.asp -e "/MDNS-BEGIN/,/MDNS-END/d"
 endif
 
@@ -433,6 +433,7 @@ endif
 		-e "/ADVTHEMES-BEGIN/d"	-e "/ADVTHEMES-END/d" \
 		-e "/SSH-BEGIN/d"	-e "/SSH-END/d" \
 		-e "/DISCOVERY-BEGIN/d"	-e "/DISCOVERY-END/d" \
+		-e "/MDNS-BEGIN/d"	-e "/MDNS-END/d" \
 		|| true; \
 	done
 
