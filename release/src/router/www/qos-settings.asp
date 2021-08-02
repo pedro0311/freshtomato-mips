@@ -103,7 +103,7 @@ function verifyFields(focused, quiet) {
 	f = E('t_fom').elements;
 	b = !E('_f_qos_enable').checked;
 	for (i = 0; i < f.length; ++i) {
-		if ((f[i].name.substr(0, 1) != '_') && (f[i].type != 'button') && (f[i].name.indexOf('enable') == -1) && (f[i].name.indexOf('ne_v') == -1) && (f[i].name.indexOf('header') == -1) && (f[i].name.indexOf('header') == -1))
+		if ((f[i].name.substr(0, 1) != '_') && (f[i].type != 'button') && (f[i].name.indexOf('enable') == -1) && (f[i].name.indexOf('ne_v') == -1) && (f[i].name.indexOf('header') == -1))
 			f[i].disabled = b;
 	}
 
