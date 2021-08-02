@@ -1729,6 +1729,8 @@ translate_compat_table(const char *name,
 	if (!newinfo)
 		goto out_unlock;
 
+	memset(newinfo->entries, 0, size);
+
 	newinfo->number = number;
 	for (i = 0; i < NF_IP_NUMHOOKS; i++) {
 		newinfo->hook_entry[i] = info->hook_entry[i];
