@@ -2876,6 +2876,7 @@ sd-idle-clean:
 	-@$(MAKE) -C sd-idle clean
 
 iperf/stamp-h1:
+	$(call patch_files,iperf)
 	cd iperf && autoreconf -fsi && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
 		ac_cv_func_clock_gettime="no" \
@@ -2885,7 +2886,6 @@ iperf/stamp-h1:
 
 iperf: iperf/stamp-h1
 	@$(SEP)
-	$(call patch_files,iperf)
 	$(MAKE) -C iperf
 
 iperf-install:
