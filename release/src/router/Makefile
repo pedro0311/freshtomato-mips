@@ -1878,6 +1878,7 @@ libxml2-clean:
 libpng/stamp-h1:
 	cd libpng && \
 		CFLAGS="-Os -Wall -I$(TOP)/zlib $(EXTRACFLAGS)" \
+		CPPFLAGS="-I$(TOP)/zlib" \
 		LDFLAGS="-L$(TOP)/zlib" \
 		$(CONFIGURE) --prefix=/usr --enable-static --enable-shared
 	@touch $@
@@ -1888,16 +1889,11 @@ libpng: libpng/stamp-h1
 	@$(MAKE) -C libpng DESTDIR=$(TOP)/libpng/staged install
 
 libpng-install:
-	install -D libpng/.libs/libpng.so.3.59.0 $(INSTALLDIR)/libpng/usr/lib/libpng.so.3.59.0
-	$(STRIP) $(INSTALLDIR)/libpng/usr/lib/libpng.so.3.59.0
+	install -D libpng/.libs/libpng16.so.16.37.0 $(INSTALLDIR)/libpng/usr/lib/libpng16.so.16.37.0
+	$(STRIP) $(INSTALLDIR)/libpng/usr/lib/libpng16.so.16.37.0
 	cd $(INSTALLDIR)/libpng/usr/lib && \
-		ln -sf libpng.so.3.59.0 libpng.so && \
-		ln -sf libpng.so.3.59.0 libpng.so.3
-	install -D libpng/.libs/libpng12.so.0.59.0 $(INSTALLDIR)/libpng/usr/lib/libpng12.so.0.59.0
-	$(STRIP) $(INSTALLDIR)/libpng/usr/lib/libpng12.so.0.59.0
-	cd $(INSTALLDIR)/libpng/usr/lib && \
-		ln -sf libpng12.so.0.59.0 libpng12.so && \
-		ln -sf libpng12.so.0.59.0 libpng12.so.0
+		ln -sf libpng16.so.16.37.0 libpng16.so && \
+		ln -sf libpng16.so.16.37.0 libpng16.so.16
 
 libpng-clean:
 	-@$(MAKE) -C libpng clean
