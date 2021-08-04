@@ -348,6 +348,10 @@ function show() {
 				c('qual'+uidx, stats.qual[uidx] || '');
 			}
 		}
+		else {
+				/* do not display any virtual interface linked to the chip/frequency that is disabled */
+				elem.display('wl'+wl_fface(uidx)+'-title', 'sesdiv_wl_'+wl_fface(uidx), wlstats[uidx].radio);
+		}
 		c('ifstatus'+uidx, wlstats[uidx].ifstatus || '');
 	}
 }
@@ -569,9 +573,6 @@ function init() {
 
 <script>
 	for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
-/* REMOVE-BEGIN
-		u = wl_unit(uidx);
-REMOVE-END */
 		u = wl_fface(uidx);
 		W('<div class="section-title" id="wl'+u+'-title">Wireless');
 		if (wl_ifaces.length > 0)
