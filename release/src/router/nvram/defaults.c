@@ -399,7 +399,7 @@ const defaults_t defaults[] = {
 	{ "wl_btc_mode",		"0"				},	// !!TB - BT Coexistence Mode
 	{ "wl_sta_retry_time",		"5"				},	// !!TB - Seconds between association attempts (0 to disable retries)
 	{ "wl_mitigation",		"0"				},	// Non-AC Interference Mitigation Mode (0|1|2|3|4)
-#ifdef TCONFIG_BCMWL6
+#ifdef TCONFIG_BCMARM
 	{ "wl_mitigation_ac",		"0"				},	// AC Interference Mitigation Mode (bit mask (3 bits), values from 0 to 7); 0 == disabled
 #endif
 	{ "wl_passphrase",		""				},	// Passphrase
