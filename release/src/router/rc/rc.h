@@ -132,6 +132,7 @@ extern void start_pppoe(int, char *prefix);
 extern void stop_pppoe(char *prefix);
 extern void start_l2tp(char *prefix);
 extern void stop_l2tp(char *prefix);
+extern void store_wan_if_to_nvram(char *prefix);
 extern void start_wan_if(char *prefix);
 extern void start_wan(void);
 extern void start_wan_done(char *ifname,char *prefix);
