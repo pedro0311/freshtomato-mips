@@ -14,6 +14,17 @@
 //	<% sysinfo(); %>
 //	<% wlstats(1); %>
 
+function setColor(n) {
+	if (n >= 75)
+		return 'red';
+	else if (n >= 50)
+		return 'orange';
+	else if (n >= 25)
+		return 'yellow';
+	else
+		return 'green';
+}
+
 stats = { };
 
 var a, b, i;
@@ -38,11 +49,11 @@ stats.uptime = sysinfo.uptime_s;
 
 a = sysinfo.totalram;
 b = sysinfo.totalfreeram;
-stats.memory = scaleSize(a - b)+' / '+scaleSize(a)+' <small>('+((a - b) / a * 100.0).toFixed(2)+'%)</small><div><progress id="bar_mem" value="'+(a - b)+'" max="'+a+'">'+(a - b)+'%</progress></div>';
+stats.memory = scaleSize(a - b)+' / '+scaleSize(a)+' <small>('+((a - b) / a * 100.0).toFixed(2)+'%)</small><div class="progress-wrapper"><div class="progress-container"><div class="progress-bar" style="background-color:'+setColor(((a - b) / a * 100.0).toFixed(2))+';width:'+((a - b) / a * 100.0).toFixed(2)+'%"></div></div></div>';
 if (sysinfo.totalswap > 0) {
 	a = sysinfo.totalswap;
 	b = sysinfo.freeswap;
-	stats.swap = scaleSize(a - b)+' / '+scaleSize(a)+' <small>('+((a - b) / a * 100.0).toFixed(2)+'%)</small><div><progress id="bar_swap" value="'+(a - b)+'" max="'+a+'">'+(a - b)+'%</progress></div>';
+	stats.swap = scaleSize(a - b)+' / '+scaleSize(a)+' <small>('+((a - b) / a * 100.0).toFixed(2)+'%)</small><div class="progress-wrapper"><div class="progress-container"><div class="progress-bar" style="background-color:'+setColor(((a - b) / a * 100.0).toFixed(2))+';width:'+((a - b) / a * 100.0).toFixed(2)+'%"></div></div></div>';
 } else
 	stats.swap = '';
 
