@@ -896,6 +896,7 @@ const defaults_t defaults[] = {
 	{ "log_mark",			"60"				},
 	{ "log_events",			""				},
 	{ "log_dropdups",		"0"				},
+	{ "log_min_level",		"8"				},
 
 /* admin-log-webmonitor */
 	{ "log_wm",			"0"				},
