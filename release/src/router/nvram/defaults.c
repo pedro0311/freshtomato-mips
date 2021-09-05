@@ -507,7 +507,8 @@ const defaults_t defaults[] = {
 	/* misc */
 	{ "wl_wmf_bss_enable",		"0"				},	// Wireless Multicast Forwarding Enable/Disable
 	{ "wl_rifs_advert",		"auto"				},	// RIFS mode advertisement
-	{ "wl_stbc_tx",			"auto"				},	// Default STBC TX setting
+	{ "wl_stbc_tx",			"auto"				},	/* Default STBC TX setting */
+	{ "wl_stbc_rx", 		"1"				},	/* Default STBC RX setting */
 	{ "wl_mcast_regen_bss_enable",	"1"				},	// MCAST REGEN Enable/Disable
 #endif
 
