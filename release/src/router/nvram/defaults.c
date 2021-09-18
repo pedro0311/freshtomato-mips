@@ -1387,7 +1387,7 @@ const defaults_t defaults[] = {
 	{ "NC_GatewayMode",		"Open"				},
 	{ "NC_DocumentRoot",		"/tmp/splashd"			},
 	{ "NC_ExcludePorts",		"1863"				},
-	{ "NC_HomePage",		"http://google.com"		},
+	{ "NC_HomePage",		"https://startpage.com"		},
 	{ "NC_ForcedRedirect",		"0"				},
 	{ "NC_IdleTimeout",		"0"				},
 	{ "NC_MaxMissedARP",		"5"				},
