@@ -44,7 +44,7 @@
  	}
  	if (opts & (OPT_d|OPT_t)) {
  		struct tm tm_time;
-@@ -152,21 +157,39 @@
+@@ -152,21 +157,40 @@
  		t = validate_tm_time(date_str, &tm_time);
  
  		timebuf[1].tv_sec = timebuf[0].tv_sec = t;
@@ -65,7 +65,7 @@
 +		newtime = timebuf;
  #endif
  
--	argv += optind;
+ 	argv += optind;
  	do {
 -		int result = utimensat(AT_FDCWD, *argv, timebuf,
 -				(opts & OPT_h) ? AT_SYMLINK_NOFOLLOW : 0);
@@ -95,15 +95,12 @@
  		if (result != 0) {
  			if (errno == ENOENT) { /* no such file? */
  				if (opts & OPT_c) {
-@@ -176,9 +199,9 @@
- 				/* Try to create the file */
+@@ -177,7 +201,7 @@
  				fd = open(*argv, O_RDWR | O_CREAT, 0666);
  				if (fd >= 0) {
--					if (opts & (OPT_r|OPT_d|OPT_t))
+ 					if (opts & (OPT_r|OPT_d|OPT_t))
 -						futimens(fd, timebuf);
- 					xclose(fd);
-+					if (reference_file || date_str)
 +						utimes(*argv, newtime);
+ 					xclose(fd);
  					continue;
  				}
- 			}
