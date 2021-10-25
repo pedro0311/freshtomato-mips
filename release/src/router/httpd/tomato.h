@@ -37,7 +37,12 @@ extern int rboot;
 extern void exec_service(const char *action);
 extern void wi_generic(char *url, int len, char *boundary);
 extern void common_redirect(void);
+#ifdef TCONFIG_BCMARM
+extern char* get_wl_tempsense(char *);
+extern int get_cpuinfo(char *system_type, char *cpu_model, char *bogomips, char *cpuclk, char *cputemp);
+#else
 extern int get_cpuinfo(char *system_type, char *cpu_model, char *bogomips, char *cpuclk);
+#endif
 
 extern const char *resmsg_get(void);
 extern void resmsg_set(const char *msg);
@@ -76,6 +81,9 @@ extern void wo_ovpn_genkey(char *url);
 #ifdef TCONFIG_KEYGEN
 extern void wo_ovpn_genclientconfig(char *url);
 #endif
+#endif
+#ifdef TCONFIG_BCMARM
+extern void asp_jiffies(int argc, char **argv);
 #endif
 extern void asp_sysinfo(int argc, char **argv);
 extern void asp_statfs(int argc, char **argv);
