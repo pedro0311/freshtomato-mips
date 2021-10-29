@@ -1875,6 +1875,8 @@ libpng: libpng/stamp-h1
 	@$(SEP)
 	@$(MAKE) -C libpng all $(PARALLEL_BUILD)
 	@$(MAKE) -C libpng DESTDIR=$(TOP)/libpng/staged install
+	@rm -f $(TOP)/libpng/staged/usr/lib/libpng.la
+	@rm -f $(TOP)/libpng/staged/usr/lib/libpng12.la
 
 libpng-install:
 	install -D libpng/.libs/libpng16.so.16.37.0 $(INSTALLDIR)/libpng/usr/lib/libpng16.so.16.37.0
@@ -1914,8 +1916,8 @@ php/stamp-h1: pcre zlib libiconv sqlite libxml2 libpng jpeg libcurl
 	LDFLAGS="-L$(TOP)/pcre/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/zlib -L$(TOP)/libxml2/.libs -L$(TOP)/libiconv/lib/.libs \
 		-L$(TOP)/libpng/.libs -L$(TOP)/libcurl/staged/usr/lib -Wl,-rpath,$(TOP)/$(OPENSSLDIR)" \
 	CPPFLAGS="-L$(TOP)/pcre/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/zlib -L$(TOP)/libxml2/.libs -L$(TOP)/libiconv/lib/.libs -L$(TOP)/libpng/.libs" \
-	LIBS="-L$(TOP)/pcre/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/zlib -L$(TOP)/libxml2/.libs -L$(TOP)/libiconv/lib/.libs -L$(TOP)/libpng/.libs -L$(TOP)/libcurl/lib/.libs \
-		-lz -lsqlite3 -ldl -lpthread -liconv -lxml2 -lstdc++ -lcurl" \
+	LIBS="-L$(TOP)/pcre/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/zlib -L$(TOP)/libxml2/.libs -L$(TOP)/libiconv/lib/.libs -L$(TOP)/libpng/.libs -L$(TOP)/libcurl/lib/.libs -L$(TOP)/$(OPENSSLDIR) \
+		-lz -lsqlite3 -ldl -lpthread -liconv -lxml2 -lstdc++ -lcurl -lcrypto -lssl" \
 	PHP_FCGI_LIBXML_DIR="$(TOP)/libxml2/staged/usr" \
 	ac_cv_func_memcmp_working=yes \
 	cv_php_mbstring_stdarg=yes \
@@ -2294,6 +2296,7 @@ libcurl: libcurl/stamp-h1
 	@$(SEP)
 	@$(MAKE) -C libcurl $(PARALLEL_BUILD)
 	@$(MAKE) -C libcurl DESTDIR=$(TOP)/libcurl/staged install
+	@rm -f libcurl/staged/usr/lib/libcurl.la
 
 libcurl-install:
 	install -D libcurl/lib/.libs/libcurl.so.4.7.0 $(INSTALLDIR)/libcurl/usr/lib/libcurl.so.4.7.0
@@ -2412,6 +2415,7 @@ libnfsidmap: libnfsidmap/stamp-h1
 libnfsidmap-install:
 	install -d $(TOP)/libnfsidmap/staged
 	$(MAKE) -C libnfsidmap DESTDIR=$(TOP)/libnfsidmap/staged install
+	@rm -f libnfsidmap/staged/usr/lib/libnfsidmap.la
 
 libnfsidmap-clean:
 	-@$(MAKE) -C libnfsidmap clean
