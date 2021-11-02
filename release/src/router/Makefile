@@ -235,8 +235,9 @@ obj-$(TCONFIG_MEDIA_SERVER) += libexif
 obj-$(TCONFIG_MEDIA_SERVER) += libid3tag
 obj-$(TCONFIG_MEDIA_SERVER) += libvorbis
 obj-$(TCONFIG_MEDIA_SERVER) += minidlna
-MEDIA_SERVER_STATIC=y
+MEDIA_SERVER_STATIC=
 INSTALL_ZLIB := $(if $(or $(TCONFIG_BBT)$(TCONFIG_TOR)$(TCONFIG_NGINX),$(if $(MEDIA_SERVER_STATIC),,y)),y,)
+INSTALL_SQLITE := $(if $(or $(TCONFIG_NGINX),$(if $(MEDIA_SERVER_STATIC),,y)),y,)
 
 #obj-y += libnfnetlink
 obj-y += miniupnpd
@@ -1376,7 +1377,7 @@ sqlite-clean:
 	@rm -f sqlite/stamp-h1
 
 sqlite-install:
-ifeq ($(TCONFIG_NGINX),y)
+ifeq ($(INSTALL_SQLITE),y)
 	install -D sqlite/.libs/libsqlite3.so.0.8.6 $(INSTALLDIR)/sqlite/usr/lib/libsqlite3.so.0.8.6
 	$(STRIP) $(INSTALLDIR)/sqlite/usr/lib/libsqlite3.so.0.8.6
 	cd $(INSTALLDIR)/sqlite/usr/lib/ && \
@@ -1629,19 +1630,37 @@ ifneq ($(MEDIA_SERVER_STATIC),y)
 endif
 	@true
 
-minidlna: zlib sqlite ffmpeg libogg flac jpeg libexif libid3tag libvorbis
-	@$(SEP)
+minidlna/stamp-h1: zlib sqlite ffmpeg libogg flac jpeg libexif libid3tag libvorbis
 	$(call patch_files,minidlna)
-	@$(MAKE) -C minidlna CC=$(CC) $(if $(MEDIA_SERVER_STATIC),STATIC=1,) minidlna $(PARALLEL_BUILD)
+	cd minidlna && ./autogen.sh && \
+		CFLAGS="-Os -Wall $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections" \
+		CPPFLAGS="-I$(TOP)/ffmpeg/libavutil -I$(TOP)/ffmpeg/libavcodec -I$(TOP)/ffmpeg/libavformat -I$(TOP)/ffmpeg/libswscale -I$(TOP)/ffmpeg -I$(TOP)/flac/include \
+			-I$(TOP)/sqlite -I$(TOP)/jpeg -I$(TOP)/libexif -I$(TOP)/libid3tag -I$(TOP)/libogg/include -I$(TOP)/libvorbis/include -I$(TOP)/zlib -I$(TOP)/shared" \
+		LDFLAGS="-Wl,--gc-sections -ffunction-sections -fdata-sections -L$(TOP)/libvorbis/lib/.libs -L$(TOP)/libogg/src/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/libexif/libexif/.libs \
+			-L$(TOP)/jpeg -L$(TOP)/flac/src/libFLAC/.libs -L$(TOP)/libid3tag/.libs -L$(TOP)/zlib -L$(TOP)/ffmpeg/libavformat -L$(TOP)/ffmpeg/libavcodec -L$(TOP)/ffmpeg/libavutil" \
+		LIBS="-lvorbis -logg -lsqlite3 -lexif -ljpeg -lFLAC -lid3tag -lz -lavformat -lavcodec -lavutil -lpthread -lm" \
+		ac_cv_lib_id3tag__lz___id3_file_open=yes \
+		ac_cv_lib_avformat__lavcodec__lavutil__lz_avformat_open_input=no \
+		ac_cv_lib_avformat__lavcodec__lavutil__lz___av_open_input_file=yes \
+		ac_cv_header_stddef_h=no \
+		ac_cv_header_stdlib_h=no \
+		ac_cv_func_getifaddrs=yes \
+		$(CONFIGURE) --prefix=/usr --libdir=/usr/lib --with-db-path=/tmp/minidlna --with-log-path=/var/log --with-os-name="FreshTomato" --with-os-url="https://freshtomato.org/" \
+			--with-os-version="Linux/2.6.22.19" $(if $(MEDIA_SERVER_STATIC),--enable-static,) --enable-tivo --disable-dependency-tracking
+	@touch $@
+
+minidlna: minidlna/stamp-h1
+	@$(SEP)
+	@$(MAKE) -C minidlna $(if $(MEDIA_SERVER_STATIC),STATIC=1,) $(PARALLEL_BUILD)
+
+minidlna-install:
+	install -D minidlna/minidlnad $(INSTALLDIR)/minidlna/usr/sbin/minidlna
+	$(STRIP) $(INSTALLDIR)/minidlna/usr/sbin/minidlna
 
 minidlna-clean:
 	-@$(MAKE) -C minidlna clean
 	@rm -f minidlna/stamp-h1
 	$(call unpatch_files,minidlna)
-
-minidlna-install:
-	install -D minidlna/minidlna $(INSTALLDIR)/minidlna/usr/sbin/minidlna
-	$(STRIP) $(INSTALLDIR)/minidlna/usr/sbin/minidlna
 
 igmpproxy/src/Makefile: igmpproxy/src/Makefile.in
 	$(call patch_files,igmpproxy)
