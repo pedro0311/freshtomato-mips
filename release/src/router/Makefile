@@ -2646,9 +2646,10 @@ apcupsd-install:
 
 libsodium/stamp-h1:
 	cd libsodium && autoreconf -fsi && \
-		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC"  \
-		$(CONFIGURE) --prefix=/usr --disable-ssp --enable-minimal
+		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+		LDFLAGS="-Wl,--gc-sections -fPIC"  \
+		$(CONFIGURE) --prefix=/usr --disable-ssp --disable-shared --enable-static --enable-minimal --disable-dependency-tracking
 	@touch $@
 
 libsodium: libsodium/stamp-h1
@@ -2656,12 +2657,7 @@ libsodium: libsodium/stamp-h1
 	$(MAKE) -C libsodium $(PARALLEL_BUILD)
 
 libsodium-install:
-	install -d $(INSTALLDIR)/libsodium/usr/lib
-	install -D libsodium/src/libsodium/.libs/libsodium.so.23.0.0 $(INSTALLDIR)/libsodium/usr/lib/libsodium.so.23.0.0
-	$(STRIP) -s $(INSTALLDIR)/libsodium/usr/lib/libsodium.so.23.0.0
-	cd $(INSTALLDIR)/libsodium/usr/lib/ && \
-		ln -sf libsodium.so.23.0.0 libsodium.so.23 && \
-		ln -sf libsodium.so.23.0.0 libsodium.so
+	@true
 
 libsodium-clean:
 	-$(MAKE) -C libsodium clean
@@ -2669,23 +2665,28 @@ libsodium-clean:
 
 dnscrypt/stamp-h1: libsodium
 	cd dnscrypt && autoreconf && \
-		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
-		CPPFLAGS="-I$(TOP)/libsodium/src/libsodium/include" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(TOP)/libsodium/src/libsodium/.libs" \
-		$(CONFIGURE) --prefix=/usr --disable-ssp
+		CFLAGS="-Os -Wall $(EXTRACFLAGS) -I$(TOP)/libsodium/src/libsodium/include/ -ffunction-sections -fdata-sections" \
+		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -I$(TOP)/libsodium/src/libsodium/include/ -ffunction-sections -fdata-sections" \
+		LDFLAGS="-Wl,--gc-sections -L$(TOP)/libsodium/src/libsodium/.libs" \
+		$(CONFIGURE) --prefix=/usr --disable-ssp --disable-dependency-tracking
 	@touch $@
 
 dnscrypt: dnscrypt/stamp-h1
 	@$(SEP)
+	$(MAKE) -C dnscrypt/libltdl $(PARALLEL_BUILD)
 	$(MAKE) -C dnscrypt $(PARALLEL_BUILD)
 
 dnscrypt-install:
-	install -D dnscrypt/src/proxy/.libs/dnscrypt-proxy $(INSTALLDIR)/dnscrypt/usr/sbin/dnscrypt-proxy
-	install -D dnscrypt/src/hostip/.libs/hostip $(INSTALLDIR)/dnscrypt/usr/sbin/hostip
+	make -C dnscrypt install DESTDIR=$(INSTALLDIR)/dnscrypt
+	@rm -rf $(INSTALLDIR)/dnscrypt/usr/etc
+	@rm -rf $(INSTALLDIR)/dnscrypt/usr/include
+	@rm -rf $(INSTALLDIR)/dnscrypt/usr/lib
+	@rm -rf $(INSTALLDIR)/dnscrypt/usr/share
 	$(STRIP) -s $(INSTALLDIR)/dnscrypt/usr/sbin/dnscrypt-proxy
-	$(STRIP) -s $(INSTALLDIR)/dnscrypt/usr/sbin/hostip
+	$(STRIP) -s $(INSTALLDIR)/dnscrypt/usr/bin/hostip
 
 dnscrypt-clean:
+	-@$(MAKE) -C dnscrypt/libltdl clean
 	-@$(MAKE) -C dnscrypt clean
 	@rm -rf dnscrypt/stamp-h1 dnscrypt/src/dnscrypt-proxy/.deps dnscrypt/Makefile
 
