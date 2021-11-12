@@ -166,7 +166,7 @@ sub fixDyn
 #	fixDynDep("transmission-remote", "libiconv.so.2.6.1");
 	fixDynDep("radvd", "libdaemon.so.0.5.0");
 	fixDynDep("miniupnpd", "libnfnetlink.so.0.2.0");
-	fixDynDep("dnscrypt-proxy", "libsodium.so.23.0.0");
+	fixDynDep("dnscrypt-proxy", "libsodium.so.23.3.0");
 	fixDynDep("tincd", "liblzo2.so.2.0.0");
 	fixDynDep("openvpn", "liblzo2.so.2.0.0");
 	fixDynDep("usb_modeswitch", "libusb-1.0.so");
@@ -630,7 +630,7 @@ genSO("${root}/usr/lib/libevent-2.1.so.7", "${router}/libevent/.libs/libevent.a"
 genSO("${root}/usr/lib/libdaemon.so.0.5.0", "${router}/libdaemon/libdaemon/.libs/libdaemon.a");
 genSO("${root}/usr/lib/libiconv.so.2.6.1", "${router}/libiconv/lib/.libs/libiconv.a");
 genSO("${root}/usr/lib/libnfnetlink.so.0.2.0", "${router}/libnfnetlink/src/.libs/libnfnetlink.a");
-genSO("${root}/usr/lib/libsodium.so.23.0.0", "${router}/libsodium/src/libsodium/.libs/libsodium.a");
+genSO("${root}/usr/lib/libsodium.so.23.3.0", "${router}/libsodium/src/libsodium/.libs/libsodium.a");
 genSO("${root}/usr/lib/libpng16.so.16.37.0", "${router}/libpng/.libs/libpng16.a", "", "-L${router}/zlib");
 genSO("${root}/usr/lib/libxml2.so.2.9.12", "${router}/libxml2/.libs/libxml2.a", "", "-L${router}/zlib");
 genSO("${root}/usr/lib/libpcre.so.1.2.12", "${router}/pcre/.libs/libpcre.a");

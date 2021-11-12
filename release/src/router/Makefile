@@ -179,7 +179,6 @@ obj-$(TCONFIG_NFS) += portmap
 obj-$(TCONFIG_NFS) += libnfsidmap
 obj-$(TCONFIG_NFS) += nfs-utils
 
-#Roadkill
 obj-$(TCONFIG_NOCAT) += glib
 obj-$(TCONFIG_NOCAT) += nocat
 
@@ -1185,11 +1184,11 @@ usbmodeswitch-install: usbmodeswitch usbmodeswitchdb-install
 
 dhcpv6/stamp-h1:
 	@cd dhcpv6 && \
-	CFLAGS="-Os -Wall $(EXTRACFLAGS) -D_GNU_SOURCE -ffunction-sections -fdata-sections -fPIC -I$(SRCBASE)/include -DTOMATO" \
-	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC $(if $(TCONFIG_BCMARM),-L$(TOP)/nvram${BCMEX} -lnvram,-L$(TOP)/nvram -lnvram -L$(TOP)/shared -lshared)" \
-	ac_cv_func_setpgrp_void=yes \
-	$(CONFIGURE) --prefix= --with-localdbdir=/var
-	@$(MAKE) -C dhcpv6 clean
+		CFLAGS="-Os -Wall $(EXTRACFLAGS) -D_GNU_SOURCE -ffunction-sections -fdata-sections -I$(SRCBASE)/include -DTOMATO" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections $(if $(TCONFIG_BCMARM),-L$(TOP)/nvram${BCMEX} -lnvram,-L$(TOP)/nvram -lnvram -L$(TOP)/shared -lshared)" \
+		ac_cv_func_setpgrp_void=yes \
+		$(CONFIGURE) --prefix= --with-localdbdir=/var
+		@$(MAKE) -C dhcpv6 clean
 	@touch $@
 
 dhcpv6: dhcpv6/stamp-h1
@@ -1807,36 +1806,34 @@ spawn-fcgi-install:
 
 glib/stamp-h1:
 	$(call patch_files,glib)
-	@cd glib && \
-	CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC $(OPTSIZE_FLAG)" \
-	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
-	$(CONFIGURE) --prefix=/usr glib_cv_prog_cc_ansi_proto=no glib_cv_has__inline=yes glib_cv_has__inline__=yes glib_cv_hasinline=yes \
-		glib_cv_sane_realloc=yes glib_cv_va_copy=no glib_cv___va_copy=yes glib_cv_va_val_copy=yes glib_cv_rtldglobal_broken=no \
-		glib_cv_uscore=no glib_cv_func_pthread_mutex_trylock_posix=yes glib_cv_func_pthread_cond_timedwait_posix=yes glib_cv_sizeof_gmutex=24 \
-		glib_cv_byte_contents_gmutex="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0" glib_cv_sys_pthread_getspecific_posix=yes \
-		glib_cv_sys_pthread_mutex_trylock_posix=yes glib_cv_sys_pthread_cond_timedwait_posix=yes ac_cv_func_getpwuid_r=yes ac_cv_func_getpwuid_r_posix=yes
-	@$(MAKE) -C glib
+	cd glib && \
+		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC $(OPTSIZE_FLAG)" \
+		LDFLAGS="-Wl,--gc-sections -fPIC" \
+		$(CONFIGURE) --prefix=/usr --enable-debug=no --enable-static=no --disable-dependency-tracking \
+			glib_cv_prog_cc_ansi_proto=no glib_cv_has__inline=yes glib_cv_has__inline__=yes glib_cv_hasinline=yes \
+			glib_cv_sane_realloc=yes glib_cv_va_copy=no glib_cv___va_copy=yes glib_cv_va_val_copy=yes glib_cv_rtldglobal_broken=no \
+			glib_cv_uscore=no glib_cv_func_pthread_mutex_trylock_posix=yes glib_cv_func_pthread_cond_timedwait_posix=yes glib_cv_sizeof_gmutex=24 \
+			glib_cv_byte_contents_gmutex="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0" glib_cv_sys_pthread_getspecific_posix=yes \
+			glib_cv_sys_pthread_mutex_trylock_posix=yes glib_cv_sys_pthread_cond_timedwait_posix=yes ac_cv_func_getpwuid_r=yes ac_cv_func_getpwuid_r_posix=yes
 	@touch $@
 
 glib: glib/stamp-h1
 	@$(SEP)
 	@$(MAKE) -C glib $(PARALLEL_BUILD)
 
-glib-clean:
-	-@$(MAKE) -C glib clean
-	rm -f glib/stamp-h1
-	$(call unpatch_files,glib)
-
 glib-install: glib
 	@$(MAKE) -C glib DESTDIR=$(INSTALLDIR)/glib install
 
-nocat/stamp-h1: glib-install
-	@cd nocat && \
-	NC_CONF_PATH="/" \
-	CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
-	$(CONFIGURE) --with-firewall=iptables --with-glib-prefix="$(INSTALLDIR)/glib/usr" --localstatedir=/var --sysconfdir=/etc
-	@$(MAKE) -C nocat
+glib-clean:
+	-@$(MAKE) -C glib clean
+	-@rm -f glib/stamp-h1
+	$(call unpatch_files,glib)
 
+nocat/stamp-h1: glib-install
+	cd nocat && \
+		NC_CONF_PATH="/" \
+		CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
+		$(CONFIGURE) --with-firewall=iptables --with-glib-prefix="$(INSTALLDIR)/glib/usr" --localstatedir=/var --sysconfdir=/etc
 	echo *** integrate glib to nocat installdir
 	install -d $(INSTALLDIR)/nocat/usr/lib
 	install -D glib/.libs/libglib-1.2.so.0.0.10 $(INSTALLDIR)/nocat/usr/lib/libglib-1.2.so.0.0.10
@@ -1848,16 +1845,16 @@ nocat: nocat/stamp-h1
 	@$(SEP)
 	@$(MAKE) -C nocat $(PARALLEL_BUILD)
 
-nocat-clean:
-	-@$(MAKE) -C nocat clean
-	rm -f nocat/stamp-h1
-
 nocat-install:
 	install -D nocat/src/splashd $(INSTALLDIR)/nocat/usr/sbin/splashd
 	$(STRIP) $(INSTALLDIR)/nocat/usr/sbin/splashd
 	mkdir -p $(INSTALLDIR)/nocat/usr/libexec/nocat
 	install -D nocat/libexec/iptables/* $(INSTALLDIR)/nocat/usr/libexec/nocat
-	rm -rf $(INSTALLDIR)/glib/*
+	-@rm -rf $(INSTALLDIR)/glib
+
+nocat-clean:
+	-@$(MAKE) -C nocat clean
+	-@rm -f nocat/stamp-h1
 
 pcre/stamp-h1:
 	$(call patch_files,pcre)
@@ -2418,9 +2415,9 @@ transmission/build/Makefile: $(OPENSSLDIR) libcurl libevent zlib
 	$(call CMAKE_CrossOptions, crosscompiled.cmake) && \
 	cmake -DCMAKE_TOOLCHAIN_FILE=crosscompiled.cmake \
 		-DCMAKE_INSTALL_PREFIX=/usr \
-		-DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_SKIP_RPATH=TRUE \
-		-DCMAKE_C_FLAGS="-O3 -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC --param large-function-growth=800 --param max-inline-insns-single=3600" \
-		-DCMAKE_CXX_FLAGS="-O3 -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC --param large-function-growth=800 --param max-inline-insns-single=3600" \
+		-DCMAKE_BUILD_TYPE=Release -DCMAKE_SKIP_RPATH=TRUE \
+		-DCMAKE_C_FLAGS="-Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC --param large-function-growth=800 --param max-inline-insns-single=3600" \
+		-DCMAKE_CXX_FLAGS="-Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC --param large-function-growth=800 --param max-inline-insns-single=3600" \
 		-DCMAKE_EXE_LINKER_FLAGS="-Wl,--gc-sections -fPIC" \
 		-DENABLE_LIGHTWEIGHT=TRUE -DENABLE_UTP=TRUE -DENABLE_NLS=FALSE -DENABLE_CLI=FALSE -DENABLE_GTK=FALSE -DENABLE_TESTS=FALSE \
 		-DENABLE_NLS=FALSE -DINSTALL_DOC=FALSE -DUSE_SYSTEM_UTP=FALSE -DUSE_SYSTEM_DHT=FALSE -DUSE_SYSTEM_B64=FALSE -DWITH_SYSTEMD=FALSE \
@@ -2677,9 +2674,10 @@ apcupsd-install:
 
 libsodium/stamp-h1:
 	cd libsodium && autoreconf -fsi && \
-		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC"  \
-		$(CONFIGURE) --prefix=/usr --disable-ssp --enable-minimal
+		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+		LDFLAGS="-Wl,--gc-sections -fPIC"  \
+		$(CONFIGURE) --prefix=/usr --disable-ssp --disable-shared --enable-static --enable-minimal --disable-dependency-tracking
 	@touch $@
 
 libsodium: libsodium/stamp-h1
@@ -2687,12 +2685,7 @@ libsodium: libsodium/stamp-h1
 	$(MAKE) -C libsodium $(PARALLEL_BUILD)
 
 libsodium-install:
-	install -d $(INSTALLDIR)/libsodium/usr/lib
-	install -D libsodium/src/libsodium/.libs/libsodium.so.23.0.0 $(INSTALLDIR)/libsodium/usr/lib/libsodium.so.23.0.0
-	$(STRIP) -s $(INSTALLDIR)/libsodium/usr/lib/libsodium.so.23.0.0
-	cd $(INSTALLDIR)/libsodium/usr/lib/ && \
-		ln -sf libsodium.so.23.0.0 libsodium.so.23 && \
-		ln -sf libsodium.so.23.0.0 libsodium.so
+	@true
 
 libsodium-clean:
 	-$(MAKE) -C libsodium clean
@@ -2700,23 +2693,28 @@ libsodium-clean:
 
 dnscrypt/stamp-h1: libsodium
 	cd dnscrypt && autoreconf && \
-		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
-		CPPFLAGS="-I$(TOP)/libsodium/src/libsodium/include" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(TOP)/libsodium/src/libsodium/.libs" \
-		$(CONFIGURE) --prefix=/usr --disable-ssp
+		CFLAGS="-Os -Wall $(EXTRACFLAGS) -I$(TOP)/libsodium/src/libsodium/include/ -ffunction-sections -fdata-sections" \
+		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -I$(TOP)/libsodium/src/libsodium/include/ -ffunction-sections -fdata-sections" \
+		LDFLAGS="-Wl,--gc-sections -L$(TOP)/libsodium/src/libsodium/.libs" \
+		$(CONFIGURE) --prefix=/usr --disable-ssp --disable-dependency-tracking
 	@touch $@
 
 dnscrypt: dnscrypt/stamp-h1
 	@$(SEP)
+	$(MAKE) -C dnscrypt/libltdl $(PARALLEL_BUILD)
 	$(MAKE) -C dnscrypt $(PARALLEL_BUILD)
 
 dnscrypt-install:
-	install -D dnscrypt/src/proxy/.libs/dnscrypt-proxy $(INSTALLDIR)/dnscrypt/usr/sbin/dnscrypt-proxy
-	install -D dnscrypt/src/hostip/.libs/hostip $(INSTALLDIR)/dnscrypt/usr/sbin/hostip
+	make -C dnscrypt install DESTDIR=$(INSTALLDIR)/dnscrypt
+	@rm -rf $(INSTALLDIR)/dnscrypt/usr/etc
+	@rm -rf $(INSTALLDIR)/dnscrypt/usr/include
+	@rm -rf $(INSTALLDIR)/dnscrypt/usr/lib
+	@rm -rf $(INSTALLDIR)/dnscrypt/usr/share
 	$(STRIP) -s $(INSTALLDIR)/dnscrypt/usr/sbin/dnscrypt-proxy
-	$(STRIP) -s $(INSTALLDIR)/dnscrypt/usr/sbin/hostip
+	$(STRIP) -s $(INSTALLDIR)/dnscrypt/usr/bin/hostip
 
 dnscrypt-clean:
+	-@$(MAKE) -C dnscrypt/libltdl clean
 	-@$(MAKE) -C dnscrypt clean
 	@rm -rf dnscrypt/stamp-h1 dnscrypt/src/dnscrypt-proxy/.deps dnscrypt/Makefile
 
@@ -2747,7 +2745,7 @@ getdns/build/Makefile:
 	cmake -DCMAKE_TOOLCHAIN_FILE=crosscompiled.cmake \
 		-DCMAKE_INSTALL_PREFIX:PATH=/usr \
 		-DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_SKIP_RPATH=TRUE \
-		-DCMAKE_C_FLAGS="-Os -DNDEBUG -ffunction-sections -fdata-sections -std=c99 $(EXTRACFLAGS)" \
+		-DCMAKE_C_FLAGS="-ffunction-sections -fdata-sections -std=c99 $(EXTRACFLAGS)" \
 		-DCMAKE_EXE_LINKER_FLAGS="-Wl,--gc-sections $(if $(TCONFIG_OPENSSL11),-lpthread,)" \
 		-DENABLE_STATIC=TRUE -DENABLE_SHARED=FALSE -DENABLE_GOST=FALSE \
 		-DBUILD_GETDNS_QUERY=FALSE \
@@ -2860,7 +2858,7 @@ libjson-c/build/Makefile:
 	cmake -DCMAKE_TOOLCHAIN_FILE=crosscompiled.cmake \
 		-DCMAKE_INSTALL_PREFIX:PATH=/usr \
 		-DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_SKIP_RPATH=TRUE \
-		-DCMAKE_C_FLAGS="-Os -DNDEBUG -ffunction-sections -fdata-sections $(EXTRACFLAGS)" \
+		-DCMAKE_C_FLAGS="-ffunction-sections -fdata-sections $(EXTRACFLAGS)" \
 		-DCMAKE_EXE_LINKER_FLAGS="-Wl,--gc-sections" \
 		-DBUILD_TESTING=FALSE \
 		-DDISABLE_WERROR=TRUE \
