@@ -58,6 +58,7 @@ ifneq ($(TCONFIG_STUBBY),y)
 	sed -i $(INSTALLDIR)/usr/sbin/ttb -e "/STUBBY-BEGIN/,/STUBBY-END/d"
 else
 	sed -i $(INSTALLDIR)/usr/sbin/ttb -e "/STUBBYNO-BEGIN/,/STUBBYNO-END/d"
+endif
 
 #Ethernet state report
 	install -m 0700 ethstate $(INSTALLDIR)/usr/sbin
