@@ -696,6 +696,33 @@ bcm_robo_attach(si_t *sih, void *h, char *vars, miird_f miird, miiwr_f miiwr)
 		ET_MSG(("%s: devid: 0x%x\n", __FUNCTION__, robo->devid));
 	}
 
+	if (robo->devid == DEVID5395)
+		nvram_set("switch_type", "BCM5395");
+	else if(robo->devid == DEVID5397)
+		nvram_set("switch_type", "BCM5397");
+	else if(robo->devid == DEVID5325)
+		nvram_set("switch_type", "BCM5325");
+	else if(robo->devid == DEVID53115)
+		nvram_set("switch_type", "BCM53115S");
+	else if(robo->devid == DEVID53125)
+		nvram_set("switch_type", "BCM53125");
+#if 0 /* FT: only for ARM */
+	else if(robo->devid == DEVID53010)
+		nvram_set("switch_type", "BCM53010");
+	else if(robo->devid == DEVID53011)
+		nvram_set("switch_type", "BCM53011");
+	else if(robo->devid == DEVID53012)
+		nvram_set("switch_type", "BCM53012");
+	else if(robo->devid == DEVID53018)
+		nvram_set("switch_type", "BCM53018");
+	else if(robo->devid == DEVID53019)
+		nvram_set("switch_type", "BCM53019");
+	else if(robo->devid == DEVID53030)
+		nvram_set("switch_type", "BCM53030");
+#endif
+	else
+		nvram_set("switch_type", "unknown");
+
 	if ((robo->devid == DEVID5395) ||
 	    (robo->devid == DEVID5397) ||
 	    (robo->devid == DEVID5398)) {
