@@ -244,6 +244,7 @@ endif
 obj-$(TCONFIG_EBTABLES) += ebtables
 obj-$(TCONFIG_IPV6) += dhcpv6
 
+obj-$(TCONFIG_SAMBASRV) += libiconv
 obj-$(TCONFIG_SAMBASRV) += samba3
 obj-$(TCONFIG_SAMBASRV) += wsdd2
 
@@ -262,7 +263,7 @@ INSTALL_SQLITE := $(if $(or $(TCONFIG_NGINX),$(if $(MEDIA_SERVER_STATIC),,y)),y,
 
 #obj-y += libnfnetlink
 obj-y += miniupnpd
-obj-y += ipset
+obj-y += ipset-6.24
 
 ifeq ($(TCONFIG_MDNS),y)
 obj-y += libdaemon
@@ -309,7 +310,7 @@ obj-$(TCONFIG_NGINX) += libiconv
 obj-$(TCONFIG_NGINX) += libxml2
 obj-$(TCONFIG_NGINX) += libpng
 obj-$(TCONFIG_NGINX) += jpeg
-obj-$(TCONFIG_NGINX) += php
+obj-$(TCONFIG_NGINX) += php5
 obj-$(TCONFIG_NGINX) += nginx
 
 obj-$(TCONFIG_NANO) += nano
@@ -1266,7 +1267,7 @@ wsdd2-clean:
 
 p910nd:
 
-samba3: $(if $(TCONFIG_MEDIA_SERVER)$(TCONFIG_NGINX),libiconv,)
+samba3: $(if $(TCONFIG_NGINX),libiconv,)
 
 nvram: shared
 
@@ -2004,9 +2005,9 @@ libatomic_ops-clean:
 	-@$(MAKE) -C libatomic_ops clean
 	@rm -f libatomic_ops/stamp-h1
 
-php/stamp-h1: pcre zlib libiconv sqlite libxml2 libpng jpeg libcurl
-	$(call patch_files,php)
-	cd php && \
+php5/stamp-h1: pcre zlib libiconv sqlite libxml2 libpng jpeg libcurl
+	$(call patch_files,php5)
+	cd php5 && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -I$(TOP)/zlib/staged/usr/include -I$(TOP)/libxml2/include/libxml -I$(TOP)/libxml2/include -I$(TOP)/pcre -I$(TOP)/libiconv/include \
 			-I$(TOP)/libpng/staged/usr/include -I$(TOP)/libcurl/staged/usr/include" \
 		LDFLAGS="-L$(TOP)/pcre/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/zlib/staged/usr/lib -L$(TOP)/libxml2/.libs -L$(TOP)/libiconv/lib/.libs \
@@ -2075,22 +2076,22 @@ php/stamp-h1: pcre zlib libiconv sqlite libxml2 libpng jpeg libcurl
 			--with-libxml-dir="$(TOP)/libxml2/staged/usr"
 	@touch $@
 
-php: php/stamp-h1
+php5: php5/stamp-h1
 	@$(SEP)
 	@$(MAKE) -C $@ $(PARALLEL_BUILD)
 
-php-install:
-	install -d $(INSTALLDIR)/php/usr/sbin
-	install -D php/sapi/cli/.libs/php $(INSTALLDIR)/php/usr/sbin/php-cli && chmod 0755 $(INSTALLDIR)/php/usr/sbin/php-cli
-	$(STRIP) $(INSTALLDIR)/php/usr/sbin/php-cli
-	install -D php/sapi/cgi/.libs/php-cgi $(INSTALLDIR)/php/usr/sbin/php-cgi && chmod 0755 $(INSTALLDIR)/php/usr/sbin/php-cgi
-	cd $(INSTALLDIR)/php/usr/sbin && ln -sf php-cgi php-fcgi
-	$(STRIP) $(INSTALLDIR)/php/usr/sbin/php-cgi
+php5-install:
+	install -d $(INSTALLDIR)/php5/usr/sbin
+	install -D php5/sapi/cli/.libs/php $(INSTALLDIR)/php5/usr/sbin/php-cli && chmod 0755 $(INSTALLDIR)/php5/usr/sbin/php-cli
+	$(STRIP) $(INSTALLDIR)/php5/usr/sbin/php-cli
+	install -D php5/sapi/cgi/.libs/php-cgi $(INSTALLDIR)/php5/usr/sbin/php-cgi && chmod 0755 $(INSTALLDIR)/php5/usr/sbin/php-cgi
+	cd $(INSTALLDIR)/php5/usr/sbin && ln -sf php-cgi php-fcgi
+	$(STRIP) $(INSTALLDIR)/php5/usr/sbin/php-cgi
 
-php-clean:
-	-@$(MAKE) -C php clean
-	@rm -f php/stamp-h1
-	$(call unpatch_files,php)
+php5-clean:
+	-@$(MAKE) -C php5 clean
+	@rm -f php5/stamp-h1
+	$(call unpatch_files,php5)
 
 nginx/stamp-h1: $(OPENSSLDIR) zlib pcre libatomic_ops
 	$(call patch_files,nginx)
@@ -2900,21 +2901,21 @@ mdadm-install:
 mdadm-clean:
 	-@$(MAKE) -C mdadm clean
 
-ipset:
+ipset-6.24:
 	@$(SEP)
-	$(call patch_files,ipset)
+	$(call patch_files,ipset-6.24)
 	$(MAKE) -C $@ binaries COPT_FLAGS="-Os -Wall $(EXTRACFLAGS) $(OPTSIZE_FLAG) -ffunction-sections -fdata-sections --param large-function-growth=800 --param max-inline-insns-single=3000"
 
-ipset-install:
-	install -D ipset/ipset $(INSTALLDIR)/ipset/usr/sbin/ipset
-	install -d $(INSTALLDIR)/ipset/usr/lib/
-	install ipset/*.so $(INSTALLDIR)/ipset/usr/lib/
-	$(STRIP) $(INSTALLDIR)/ipset/usr/lib/*.so
-	$(STRIP) $(INSTALLDIR)/ipset/usr/sbin/ipset
+ipset-6.24-install:
+	install -D ipset-6.24/ipset $(INSTALLDIR)/ipset-6.24/usr/sbin/ipset
+	install -d $(INSTALLDIR)/ipset-6.24/usr/lib/
+	install ipset-6.24/*.so $(INSTALLDIR)/ipset-6.24/usr/lib/
+	$(STRIP) $(INSTALLDIR)/ipset-6.24/usr/lib/*.so
+	$(STRIP) $(INSTALLDIR)/ipset-6.24/usr/sbin/ipset
 
-ipset-clean:
-	-@$(MAKE) -C ipset clean
-	$(call unpatch_files,ipset)
+ipset-6.24-clean:
+	-@$(MAKE) -C ipset-6.24 clean
+	$(call unpatch_files,ipset-6.24)
 
 libjson-c/build/Makefile:
 	$(call patch_files,libjson-c)
