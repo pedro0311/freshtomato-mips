@@ -293,7 +293,7 @@ obj-$(TCONFIG_NGINX) += libiconv
 obj-$(TCONFIG_NGINX) += libxml2
 obj-$(TCONFIG_NGINX) += libpng
 obj-$(TCONFIG_NGINX) += jpeg
-obj-$(TCONFIG_NGINX) += php
+obj-$(TCONFIG_NGINX) += php5
 obj-$(TCONFIG_NGINX) += nginx
 
 obj-$(TCONFIG_NANO) += nano
@@ -1974,9 +1974,9 @@ libatomic_ops-clean:
 	-@$(MAKE) -C libatomic_ops clean
 	@rm -f libatomic_ops/stamp-h1
 
-php/stamp-h1: pcre zlib libiconv sqlite libxml2 libpng jpeg libcurl
-	$(call patch_files,php)
-	cd php && \
+php5/stamp-h1: pcre zlib libiconv sqlite libxml2 libpng jpeg libcurl
+	$(call patch_files,php5)
+	cd php5 && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -I$(TOP)/zlib/staged/usr/include -I$(TOP)/libxml2/include/libxml -I$(TOP)/libxml2/include -I$(TOP)/pcre -I$(TOP)/libiconv/include \
 			-I$(TOP)/libpng/staged/usr/include -I$(TOP)/libcurl/staged/usr/include" \
 		LDFLAGS="-L$(TOP)/pcre/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/zlib/staged/usr/lib -L$(TOP)/libxml2/.libs -L$(TOP)/libiconv/lib/.libs \
@@ -2045,22 +2045,22 @@ php/stamp-h1: pcre zlib libiconv sqlite libxml2 libpng jpeg libcurl
 			--with-libxml-dir="$(TOP)/libxml2/staged/usr"
 	@touch $@
 
-php: php/stamp-h1
+php5: php5/stamp-h1
 	@$(SEP)
 	@$(MAKE) -C $@ $(PARALLEL_BUILD)
 
-php-install:
-	install -d $(INSTALLDIR)/php/usr/sbin
-	install -D php/sapi/cli/.libs/php $(INSTALLDIR)/php/usr/sbin/php-cli && chmod 0755 $(INSTALLDIR)/php/usr/sbin/php-cli
-	$(STRIP) $(INSTALLDIR)/php/usr/sbin/php-cli
-	install -D php/sapi/cgi/.libs/php-cgi $(INSTALLDIR)/php/usr/sbin/php-cgi && chmod 0755 $(INSTALLDIR)/php/usr/sbin/php-cgi
-	cd $(INSTALLDIR)/php/usr/sbin && ln -sf php-cgi php-fcgi
-	$(STRIP) $(INSTALLDIR)/php/usr/sbin/php-cgi
+php5-install:
+	install -d $(INSTALLDIR)/php5/usr/sbin
+	install -D php5/sapi/cli/.libs/php $(INSTALLDIR)/php5/usr/sbin/php-cli && chmod 0755 $(INSTALLDIR)/php5/usr/sbin/php-cli
+	$(STRIP) $(INSTALLDIR)/php5/usr/sbin/php-cli
+	install -D php5/sapi/cgi/.libs/php-cgi $(INSTALLDIR)/php5/usr/sbin/php-cgi && chmod 0755 $(INSTALLDIR)/php5/usr/sbin/php-cgi
+	cd $(INSTALLDIR)/php5/usr/sbin && ln -sf php-cgi php-fcgi
+	$(STRIP) $(INSTALLDIR)/php5/usr/sbin/php-cgi
 
-php-clean:
-	-@$(MAKE) -C php clean
-	@rm -f php/stamp-h1
-	$(call unpatch_files,php)
+php5-clean:
+	-@$(MAKE) -C php5 clean
+	@rm -f php5/stamp-h1
+	$(call unpatch_files,php5)
 
 nginx/stamp-h1: $(OPENSSLDIR) zlib pcre libatomic_ops
 	$(call patch_files,nginx)
