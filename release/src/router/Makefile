@@ -228,6 +228,7 @@ obj-$(TCONFIG_NTFS) += ntfs-3g
 obj-$(TCONFIG_EBTABLES) += ebtables
 obj-$(TCONFIG_IPV6) += dhcpv6
 
+obj-$(TCONFIG_SAMBASRV) += libiconv
 obj-$(TCONFIG_SAMBASRV) += samba3
 obj-$(TCONFIG_SAMBASRV) += wsdd2
 
@@ -1236,7 +1237,7 @@ wsdd2-clean:
 
 p910nd:
 
-samba3: $(if $(TCONFIG_MEDIA_SERVER)$(TCONFIG_NGINX),libiconv,)
+samba3: $(if $(TCONFIG_NGINX),libiconv,)
 
 nvram: shared
 
