@@ -246,7 +246,7 @@ INSTALL_SQLITE := $(if $(or $(TCONFIG_NGINX),$(if $(MEDIA_SERVER_STATIC),,y)),y,
 
 #obj-y += libnfnetlink
 obj-y += miniupnpd
-obj-y += ipset
+obj-y += ipset-6.24
 
 ifeq ($(TCONFIG_MDNS),y)
 obj-y += libdaemon
@@ -2870,21 +2870,21 @@ mdadm-install:
 mdadm-clean:
 	-@$(MAKE) -C mdadm clean
 
-ipset:
+ipset-6.24:
 	@$(SEP)
-	$(call patch_files,ipset)
+	$(call patch_files,ipset-6.24)
 	$(MAKE) -C $@ binaries COPT_FLAGS="-Os -Wall $(EXTRACFLAGS) $(OPTSIZE_FLAG) -ffunction-sections -fdata-sections --param large-function-growth=800 --param max-inline-insns-single=3000"
 
-ipset-install:
-	install -D ipset/ipset $(INSTALLDIR)/ipset/usr/sbin/ipset
-	install -d $(INSTALLDIR)/ipset/usr/lib/
-	install ipset/*.so $(INSTALLDIR)/ipset/usr/lib/
-	$(STRIP) $(INSTALLDIR)/ipset/usr/lib/*.so
-	$(STRIP) $(INSTALLDIR)/ipset/usr/sbin/ipset
+ipset-6.24-install:
+	install -D ipset-6.24/ipset $(INSTALLDIR)/ipset-6.24/usr/sbin/ipset
+	install -d $(INSTALLDIR)/ipset-6.24/usr/lib/
+	install ipset-6.24/*.so $(INSTALLDIR)/ipset-6.24/usr/lib/
+	$(STRIP) $(INSTALLDIR)/ipset-6.24/usr/lib/*.so
+	$(STRIP) $(INSTALLDIR)/ipset-6.24/usr/sbin/ipset
 
-ipset-clean:
-	-@$(MAKE) -C ipset clean
-	$(call unpatch_files,ipset)
+ipset-6.24-clean:
+	-@$(MAKE) -C ipset-6.24 clean
+	$(call unpatch_files,ipset-6.24)
 
 libjson-c/build/Makefile:
 	$(call patch_files,libjson-c)

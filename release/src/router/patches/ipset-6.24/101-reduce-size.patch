@@ -1,5 +1,5 @@
---- ipset/ipset.c
-+++ ipset/ipset.c
+--- ipset-6.24/ipset.c
++++ ipset-6.24/ipset.c
 @@ -151,6 +151,7 @@ static char commands_v_options[NUMBER_OF
  /* Main parser function */
  int parse_commandline(int argc, char *argv[]);
@@ -37,8 +37,8 @@
  
  static int find_cmd(int option)
  {
---- ipset/ipset.h
-+++ ipset/ipset.h
+--- ipset-6.24/ipset.h
++++ ipset-6.24/ipset.h
 @@ -160,7 +160,11 @@ extern void settype_register(struct sett
  
  /* extern void unregister_settype(set_type_t *set_type); */
@@ -51,8 +51,8 @@
  
  extern char *binding_ip_tostring(struct set *set,
  				 ip_set_ip_t ip, unsigned options);
---- ipset/ipset_iphash.c
-+++ ipset/ipset_iphash.c
+--- ipset-6.24/ipset_iphash.c
++++ ipset-6.24/ipset_iphash.c
 @@ -234,6 +234,7 @@ iphash_saveips(struct set *set UNUSED, v
  	}
  }
@@ -81,8 +81,8 @@
  };
  
  CONSTRUCTOR(iphash)
---- ipset/ipset_ipmap.c
-+++ ipset/ipset_ipmap.c
+--- ipset-6.24/ipset_ipmap.c
++++ ipset-6.24/ipset_ipmap.c
 @@ -331,6 +331,7 @@ ipmap_saveips(struct set *set, void *dat
  	}
  }
@@ -111,8 +111,8 @@
  };
  
  CONSTRUCTOR(ipmap)
---- ipset/ipset_ipporthash.c
-+++ ipset/ipset_ipporthash.c
+--- ipset-6.24/ipset_ipporthash.c
++++ ipset-6.24/ipset_ipporthash.c
 @@ -303,6 +303,7 @@ ipporthash_saveips(struct set *set, void
  	}
  }
@@ -141,8 +141,8 @@
  };
  
  CONSTRUCTOR(ipporthash)
---- ipset/ipset_ipportiphash.c
-+++ ipset/ipset_ipportiphash.c
+--- ipset-6.24/ipset_ipportiphash.c
++++ ipset-6.24/ipset_ipportiphash.c
 @@ -314,6 +314,7 @@ ipportiphash_saveips(struct set *set, vo
  	}
  }
@@ -171,8 +171,8 @@
  };
  
  CONSTRUCTOR(ipportiphash)
---- ipset/ipset_ipportnethash.c
-+++ ipset/ipset_ipportnethash.c
+--- ipset-6.24/ipset_ipportnethash.c
++++ ipset-6.24/ipset_ipportnethash.c
 @@ -379,6 +379,7 @@ ipportnethash_saveips(struct set *set, v
  	}
  }
@@ -201,8 +201,8 @@
  };
  
  CONSTRUCTOR(ipportnethash)
---- ipset/ipset_iptree.c
-+++ ipset/ipset_iptree.c
+--- ipset-6.24/ipset_iptree.c
++++ ipset-6.24/ipset_iptree.c
 @@ -180,6 +180,7 @@ iptree_saveips(struct set *set, void *da
  	}
  }
@@ -231,8 +231,8 @@
  };
  
  CONSTRUCTOR(iptree)
---- ipset/ipset_iptreemap.c
-+++ ipset/ipset_iptreemap.c
+--- ipset-6.24/ipset_iptreemap.c
++++ ipset-6.24/ipset_iptreemap.c
 @@ -167,6 +167,7 @@ iptreemap_saveips(struct set *set UNUSED
  	}
  }
@@ -261,8 +261,8 @@
  };
  
  CONSTRUCTOR(iptreemap)
---- ipset/ipset_macipmap.c
-+++ ipset/ipset_macipmap.c
+--- ipset-6.24/ipset_macipmap.c
++++ ipset-6.24/ipset_macipmap.c
 @@ -337,6 +337,7 @@ macipmap_saveips(struct set *set, void *
  	}
  }
@@ -291,8 +291,8 @@
  };
  
  CONSTRUCTOR(macipmap)
---- ipset/ipset_nethash.c
-+++ ipset/ipset_nethash.c
+--- ipset-6.24/ipset_nethash.c
++++ ipset-6.24/ipset_nethash.c
 @@ -263,6 +263,7 @@ nethash_saveips(struct set *set UNUSED,
  	}
  }
@@ -321,8 +321,8 @@
  };
  
  CONSTRUCTOR(nethash)
---- ipset/ipset_portmap.c
-+++ ipset/ipset_portmap.c
+--- ipset-6.24/ipset_portmap.c
++++ ipset-6.24/ipset_portmap.c
 @@ -228,6 +228,7 @@ portmap_saveips(struct set *set, void *d
  	}
  }
@@ -351,8 +351,8 @@
  };
  
  CONSTRUCTOR(portmap)
---- ipset/ipset_setlist.c
-+++ ipset/ipset_setlist.c
+--- ipset-6.24/ipset_setlist.c
++++ ipset-6.24/ipset_setlist.c
 @@ -185,6 +185,7 @@ setlist_saveips(struct set *set, void *d
  	}
  }
