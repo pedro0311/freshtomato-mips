@@ -203,8 +203,10 @@ endif
 ifneq ($(TCONFIG_BCMNAT),y)
 	sed -i $(INSTALLDIR)/www/advanced-misc.asp -e "/BCMNAT-BEGIN/,/BCMNAT-END/d"
 endif
+ifneq ($(TCONFIG_BCMARM),y)
 ifeq ($(CONFIG_BCMWL6),y)
 	sed -i $(INSTALLDIR)/www/advanced-misc.asp -e "/BCMNAT-BEGIN/,/BCMNAT-END/d"
+endif
 endif
 
 # Only include SSH stuff when needed
@@ -451,27 +453,29 @@ endif
 		|| true; \
 	done
 
-# Remove C-style comments from java, asp and css files. All "control" comments have been processed by now.
+# remove C-style comments from java, asp and css files. All "control" comments have been processed by now.
 	for F in $(wildcard *.js *.jsx *.asp *.css); do \
 		[ -f $(INSTALLDIR)/www/$$F ] && $(TOP)/www/remcoms2.sh $(INSTALLDIR)/www/$$F c; \
 	done
 
-# Use HTML compressor to compress HTML as much as possible
+ifneq ($(TCONFIG_BCMARM),y)
+# use HTML compressor to compress HTML as much as possible
 #	cd $(INSTALLDIR)/www && \
 #	for F in $(wildcard *.asp); do \
 #		[ -s $(INSTALLDIR)/www/$$F ] && { echo $$F; $(TOP)/www/tools/bin/html-minifier $$F --minify-css -o $$F; } || true; \
 #	done
 
-# Compress JAVASCRIPT files
+# compress JAVASCRIPT files
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.js); do \
 		[ -s $(INSTALLDIR)/www/$$F ] && { echo $$F; $(TOP)/www/tools/bin/uglifyjs $$F -c -o $$F; } || true; \
 	done
 
-# Compress CSS files
+# compress CSS files
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.css); do \
 		[ -s $(INSTALLDIR)/www/$$F ] && { echo $$F; $(TOP)/www/tools/bin/uglifycss $$F --output $$F; } || true; \
 	done
+endif
 
 	chmod 0644 $(INSTALLDIR)/www/*
