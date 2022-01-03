@@ -407,6 +407,15 @@ ifneq ($(TCONFIG_QRCODE),y)
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/QRCODE-BEGIN/,/QRCODE-END/d"
 endif
 
+# distinguish version if ARM or MIPS
+ifeq ($(TCONFIG_OPENVPN),y)
+ifneq ($(TCONFIG_BCMARM),y)
+	sed -i $(INSTALLDIR)/www/isup.jsx -e "/BCMARM-BEGIN/,/BCMARM-END/d"
+else
+	sed -i $(INSTALLDIR)/www/isup.jsx -e "/BCMARMNO-BEGIN/,/BCMARMNO-END/d"
+endif
+endif
+
 # clean up
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp *.js *.jsx *.html); do \
@@ -458,6 +467,8 @@ endif
 		-e "/DISCOVERY-BEGIN/d"	-e "/DISCOVERY-END/d" \
 		-e "/MDNS-BEGIN/d"	-e "/MDNS-END/d" \
 		-e "/QRCODE-BEGIN/d"	-e "/QRCODE-END/d" \
+		-e "/BCMARM-BEGIN/d"	-e "/BCMARM-END/d" \
+		-e "/BCMARMNO-BEGIN/d"	-e "/BCMARMNO-END/d" \
 		|| true; \
 	done
 
