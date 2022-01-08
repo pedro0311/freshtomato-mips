@@ -1669,30 +1669,59 @@ static int init_nvram(void)
 			nvram_set("lan_ifnames", "vlan1 eth1 eth2");
 			nvram_set("wan_ifnameX", "vlan2");
 			nvram_set("wl_ifnames", "eth1 eth2");
-#ifdef TCONFIG_AC66U
 			nvram_set("wl_ifname", "eth1");
 			nvram_set("wl0_ifname", "eth1");
 			nvram_set("wl1_ifname", "eth2");
-#endif
 			nvram_set("landevs", "vlan1 wl0 wl1");
 			nvram_set("wandevs", "vlan2");
+
+			/* fix MAC addresses for N66U and AC66U */
+			strcpy(s, nvram_safe_get("et0macaddr"));	/* get et0 MAC address for LAN */
+			inc_mac(s, +2);
+			nvram_set("pci/1/1/macaddr", s);		/* fix WL mac for 2,4G */
+			nvram_set("wl0_hwaddr", s);
+			inc_mac(s, +4);					/* do not overlap with VIFs */
+			nvram_set("pci/2/1/macaddr", s);		/* fix WL mac for 5G */
+			nvram_set("wl1_hwaddr", s);
+
+			/* wifi settings/channels */
+#ifdef TCONFIG_BCMWL6
+			nvram_set("wl0_bw_cap", "3");
+			nvram_set("wl0_chanspec", "6u");
+#endif
+			nvram_set("wl0_channel" ,"6");
+			nvram_set("wl0_nbw", "40");
+			nvram_set("wl0_nctrlsb", "upper");
+#ifdef TCONFIG_AC66U
+			nvram_set("wl1_bw_cap", "7");
+			nvram_set("wl1_chanspec", "36/80");
+			nvram_set("wl1_channel", "36");
+			nvram_set("wl1_nbw", "80");
+			nvram_set("wl1_nbw_cap", "3");
+			nvram_set("wl1_nctrlsb", "lower");
+#else /* SDK5 OR SDK6 for RT-N66U */
+#ifdef TCONFIG_BCMWL6
+			nvram_set("wl1_bw_cap", "3");
+			nvram_set("wl1_chanspec", "36l");
+#endif
+			nvram_set("wl1_channel", "36");
+			nvram_set("wl1_nbw", "40");
+			nvram_set("wl1_nbw_cap", "1");
+			nvram_set("wl1_nctrlsb", "lower");
+#endif
+
 #ifndef TCONFIG_AC66U
 #ifdef TCONFIG_USB
 			nvram_set("usb_noled", "1-1.4"); /* SD/MMC Card */
 #endif
 #else
-			nvram_set("wl1_bw_cap","7");
-			nvram_set("wl1_chanspec","36/80");
-			nvram_set("wl0_bw_cap","3");
-			nvram_set("wl0_chanspec","1l");
-			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
+			/* wifi country settings SDK6 */
+			nvram_set("pci/1/1/regrev", "12");
+			nvram_set("pci/2/1/regrev", "12");
+			nvram_set("pci/1/1/ccode", "SG");
+			nvram_set("pci/2/1/ccode", "SG");
 
-			// fix WL mac`s
-			strcpy(s, nvram_safe_get("et0macaddr"));
-			inc_mac(s, +2);
-			nvram_set("wl0_hwaddr", s);
-			inc_mac(s, +1);
-			nvram_set("wl1_hwaddr", s);
+			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
 
 			// bcm4360ac_defaults
 			nvram_set("pci/2/1/aa2g", "0");
