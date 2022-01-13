@@ -156,7 +156,7 @@ void start_dnsmasq()
 		logmsg(LOG_WARNING, "Starting dnsmasq is skipped due to the WEB mode enabled");
 		return;
 	}
-	
+
 #ifdef TCONFIG_BCMWL6
 	/* check media bridge (psta) after stop_dnsmasq() */
 	if (foreach_wif(1, NULL, is_psta)) {

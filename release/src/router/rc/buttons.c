@@ -11,9 +11,12 @@
 #include <sys/reboot.h>
 #include <wlutils.h>
 #include <wlioctl.h>
-#include <syslog.h>
 
-//	#define DEBUG_TEST
+// #define DEBUG_TEST
+
+/* needed by logmsg() */
+#define LOGMSG_DISABLE	DISABLE_SYSLOG_OS
+#define LOGMSG_NVDEBUG	"buttons_debug"
 
 static int gf;
 
@@ -54,13 +57,13 @@ int buttons_main(int argc, char *argv[])
 	/* get Router model */
 	model = get_model();
 
-	ses_mask = ses_pushed = 0;
+	ses_mask = 0;
+	ses_pushed = 0;
 	reset_pushed = 0;
 	brau_mask = 0;
 	brau_state = ~0;
 	ses_led = LED_DIAG;
 
-	/* move me */
 	switch (nvram_get_int("btn_override") ? MODEL_UNKNOWN : model) {
 	case MODEL_WRT54G:
 	case MODEL_WRTSL54GS:
@@ -68,11 +71,6 @@ int buttons_main(int argc, char *argv[])
 		ses_mask = 1 << 4;
 		ses_led = LED_DMZ;
 		break;
-/*		
-	case MODEL_WRH54G:
-		reset_mask = 1 << 6;
-		break;
-*/
 	case MODEL_WTR54GS:
 		reset_mask = 1 << 3;
 		ses_mask = 1 << 2;
@@ -122,21 +120,18 @@ int buttons_main(int argc, char *argv[])
 	case MODEL_WL500W:
 		reset_mask = reset_pushed = 1 << 6;
 		ses_mask = ses_pushed = 1 << 7;
-		break;		
+		break;
 	case MODEL_DIR320:
 	case MODEL_H618B:
 		reset_mask = 1 << 7;
-		ses_mask = 1 << 6;	// WLAN button on H618B
-		break;		
+		ses_mask = 1 << 6; /* WLAN button on H618B */
+		break;
 	case MODEL_WL500GPv2:
 	case MODEL_WL520GU:
 	case MODEL_WL330GE:
 		reset_mask = 1 << 2;
 		ses_mask = 1 << 3;
-		break;		
-//	case MODEL_MN700:
-//?		reset_mask = reset_pushed = 1 << 7;
-//		break;
+		break;
 	case MODEL_WLA2G54L:
 		reset_mask = reset_pushed = 1 << 7;
 		break;
@@ -145,82 +140,18 @@ int buttons_main(int argc, char *argv[])
 		ses_mask = 1 << 4;
 		ses_led = LED_AOSS;
 		break;
-#ifdef CONFIG_BCMWL5
 	case MODEL_RTN10:
 		reset_mask = 1 << 3;
 		ses_mask = 1 << 2;
-		break;
-	case MODEL_RTN10U:
-		reset_mask = 1 << 21;
-		ses_mask = 1 << 20;
-		ses_led = LED_AOSS;
-		break;
-	case MODEL_RTN10P:
-		reset_mask = 1 << 20;
-		ses_mask = 1 << 21;
-		ses_led = LED_AOSS;
-		break;
-	case MODEL_RTN12A1:
-		reset_mask = 1 << 1;
-		ses_mask = 1 << 0;
-		brau_mask = (1 << 4) | (1 << 5) | (1 << 6);
-		break;
-	case MODEL_RTN12B1:
-	case MODEL_RTN12C1:
-	case MODEL_RTN12D1:
-	case MODEL_RTN12VP:
-	case MODEL_RTN12K:
-	case MODEL_RTN12HP:
-		reset_mask = 1 << 22; /* reset button (active LOW) */
-		ses_mask = 1 << 23; /* wps button (active LOW) */
-		ses_led = LED_AOSS; /* Use LED AOSS (Power LED for Asus Router) for feedback if a button is pushed */
-		break;
-	case MODEL_RTN15U:
-		reset_mask = 1 << 5;
-		ses_mask = 1 << 8;
 		break;
 	case MODEL_RTN16:
 		reset_mask = 1 << 6;
 		ses_mask = 1 << 8;
 		break;
-	case MODEL_RTN53:
-		reset_mask = 1 << 3;
-		ses_mask = 1 << 7;
-		break;
-	case MODEL_RTN53A1:
-		reset_mask = 1 << 7;
-		ses_mask = 1 << 3;
-		break;
-	case MODEL_RTN66U:
-		reset_mask = 1 << 9;
-		ses_mask = 1 << 4;
-		break;
-	case MODEL_R6300V1:
-	case MODEL_WNDR4500:
-	case MODEL_WNDR4500V2:
-		reset_mask = 1 << 6;
-		ses_mask = 1 << 5; // gpio 5, inversed
-		break;
-	case MODEL_DIR865L:
-		reset_mask = 1 << 5;
-		ses_mask = 1 << 14;
-		ses_led = LED_AOSS;
-		break;
-	case MODEL_EA6500V1:
-		reset_mask = 1 << 3;
-		ses_mask = 1 << 4;
-		break;
-	case MODEL_TDN80:
-		reset_mask = 1 << 14;
-		break;
-	case MODEL_W1800R:
-		reset_mask = 1 << 14;
-		break;
-	case MODEL_D1800H:
-		reset_mask = 1 << 5;
-		break;
 	case MODEL_WNR3500L:
+#ifdef TCONFIG_BLINK /* RT-N/RTAC */
 	case MODEL_WNR3500LV2:
+#endif
 		reset_mask = 1 << 4;
 		ses_mask = 1 << 6;
 		ses_led = LED_AOSS;
@@ -230,22 +161,6 @@ int buttons_main(int argc, char *argv[])
 		ses_mask = 1 << 0;
 		ses_led = LED_AOSS;
 		break;
-	case MODEL_WNDR4000:
-	case MODEL_WNDR3700v3:
-		reset_mask = 1 << 3;
-		ses_mask = 1 << 2;
-		ses_led = LED_AOSS;
-		break;
-	case MODEL_WNDR3400:
-		reset_mask = 1 << 4;
-		ses_mask = 1 << 8;
-		break;
-	case MODEL_WNDR3400v2:
-	case MODEL_WNDR3400v3:
-		reset_mask = 1 << 12;
-		ses_mask = 1 << 23;
-		ses_led = LED_AOSS; /* Use LED AOSS for feedback if a button is pushed */
-		break;
 	case MODEL_F7D3301:
 	case MODEL_F7D3302:
 	case MODEL_F7D4301:
@@ -254,26 +169,6 @@ int buttons_main(int argc, char *argv[])
 		reset_mask = 1 << 6;
 		ses_mask = 1 << 8;
 		ses_led = LED_AOSS;
-		break;
-	case MODEL_F9K1102:
-#if 0 /* FIX me: gpio 3 signal not stable / not use-able (can cause reboots), something is missing (pull-up enable for ex. ??) */
-		reset_mask = 1 << 3;
-		ses_mask = 1 << 7;
-#else
-		reset_mask = 1 << 7; /* use wps button at tomato level for router reset */
-#endif
-		break;
-	case MODEL_E900:
-	case MODEL_E1000v2:
-	case MODEL_E1500:
-	case MODEL_E1550:
-	case MODEL_E2500:
-		reset_mask = 1 << 10;
-		ses_mask = 1 << 9;
-		break;
-	case MODEL_E3200:
-		reset_mask = 1 << 5;
-		ses_mask = 1 << 8;
 		break;
 	case MODEL_WRT160Nv3:
 		reset_mask = 1 << 6;
@@ -294,16 +189,6 @@ int buttons_main(int argc, char *argv[])
 		ses_mask = 1 << 4;
 		ses_led = LED_WHITE;
 		break;
-	case MODEL_L600N:
-		reset_mask = 1 << 21;
-		ses_mask = 1 << 20;
-		//wlan button = 1 >> 10
-		break;
-	case MODEL_DIR620C1:
-		reset_mask = 1 << 21;
-		ses_mask = 1 << 20;
-		break;
-#endif
 	case MODEL_WRT160Nv1:
 	case MODEL_WRT300N:
 		reset_mask = 1 << 6;
@@ -313,7 +198,105 @@ int buttons_main(int argc, char *argv[])
 		reset_mask = 1 << 6;
 		ses_mask = 1 << 8;
 		break;
-	// Added by BWQ
+#ifdef TCONFIG_BLINK /* RT-N/RTAC */
+	case MODEL_RTN12A1:
+#else
+	case MODEL_RTN12:
+#endif
+		reset_mask = 1 << 1;
+		ses_mask = 1 << 0;
+		brau_mask = (1 << 4) | (1 << 5) | (1 << 6);
+		break;
+#ifdef TCONFIG_BLINK /* RT-N/RTAC */
+	case MODEL_RTN10U:
+		reset_mask = 1 << 21;
+		ses_mask = 1 << 20;
+		ses_led = LED_AOSS;
+		break;
+	case MODEL_RTN10P:
+		reset_mask = 1 << 20;
+		ses_mask = 1 << 21;
+		ses_led = LED_AOSS;
+		break;
+	case MODEL_RTN12B1:
+	case MODEL_RTN12C1:
+	case MODEL_RTN12D1:
+	case MODEL_RTN12VP:
+	case MODEL_RTN12K:
+	case MODEL_RTN12HP:
+		reset_mask = 1 << 22; /* reset button (active LOW) */
+		ses_mask = 1 << 23; /* wps button (active LOW) */
+		ses_led = LED_AOSS; /* Use LED AOSS (Power LED for Asus Router) for feedback if a button is pushed */
+		break;
+	case MODEL_RTN15U:
+		reset_mask = 1 << 5;
+		ses_mask = 1 << 8;
+		break;
+	case MODEL_RTN53:
+		reset_mask = 1 << 3;
+		ses_mask = 1 << 7;
+		break;
+	case MODEL_RTN53A1:
+		reset_mask = 1 << 7;
+		ses_mask = 1 << 3;
+		break;
+	case MODEL_RTN66U:
+		reset_mask = 1 << 9;
+		ses_mask = 1 << 4;
+		break;
+	case MODEL_R6300V1:
+	case MODEL_WNDR4500:
+	case MODEL_WNDR4500V2:
+		reset_mask = 1 << 6;
+		ses_mask = 1 << 5; /* gpio 5, inversed */
+		break;
+	case MODEL_DIR865L:
+		reset_mask = 1 << 5;
+		ses_mask = 1 << 14;
+		ses_led = LED_AOSS;
+		break;
+	case MODEL_EA6500V1:
+		reset_mask = 1 << 3;
+		ses_mask = 1 << 4;
+		break;
+	case MODEL_TDN80:
+		reset_mask = 1 << 14;
+		break;
+	case MODEL_W1800R:
+		reset_mask = 1 << 14;
+		break;
+	case MODEL_D1800H:
+		reset_mask = 1 << 5;
+		break;
+	case MODEL_F9K1102:
+#if 0 /* FIX me: gpio 3 signal not stable / not use-able (can cause reboots), something is missing (pull-up enable for ex. ??) */
+		reset_mask = 1 << 3;
+		ses_mask = 1 << 7;
+#else
+		reset_mask = 1 << 7; /* use wps button at tomato level for router reset */
+#endif /* 0 */
+		break;
+	case MODEL_E900:
+	case MODEL_E1000v2:
+	case MODEL_E1500:
+	case MODEL_E1550:
+	case MODEL_E2500:
+		reset_mask = 1 << 10;
+		ses_mask = 1 << 9;
+		break;
+	case MODEL_E3200:
+		reset_mask = 1 << 5;
+		ses_mask = 1 << 8;
+		break;
+	case MODEL_L600N:
+		reset_mask = 1 << 21;
+		ses_mask = 1 << 20;
+		// wlan button = 1 >> 10
+		break;
+	case MODEL_DIR620C1:
+		reset_mask = 1 << 21;
+		ses_mask = 1 << 20;
+		break;
 	case MODEL_RG200E_CA:
 	case MODEL_H218N:
 		reset_mask = 1 << 30;
@@ -329,30 +312,48 @@ int buttons_main(int argc, char *argv[])
 	case MODEL_TDN6:
 		reset_mask = 1 << 20;
 		break;
-	// BWQ end
+	case MODEL_WNDR4000:
+	case MODEL_WNDR3700v3:
+		reset_mask = 1 << 3;
+		ses_mask = 1 << 2;
+		ses_led = LED_AOSS;
+		break;
+	case MODEL_WNDR3400:
+		reset_mask = 1 << 4;
+		ses_mask = 1 << 8;
+		break;
+	case MODEL_WNDR3400v2:
+	case MODEL_WNDR3400v3:
+		reset_mask = 1 << 12;
+		ses_mask = 1 << 23;
+		ses_led = LED_AOSS; /* Use LED AOSS for feedback if a button is pushed */
+		break;
+#endif /* TCONFIG_BLINK */
 	default:
 		get_btn("btn_ses", &ses_mask, &ses_pushed);
-		if (!get_btn("btn_reset", &reset_mask, &reset_pushed)) {
-//			fprintf(stderr, "Not supported.\n");
+		if (!get_btn("btn_reset", &reset_mask, &reset_pushed))
 			return 1;
-		}
+
 		break;
 	}
 	mask = reset_mask | ses_mask | brau_mask;
 
 #ifdef DEBUG_TEST
 	cprintf("reset_mask=0x%X reset_pushed=0x%X\n", reset_mask, reset_pushed);
-	cprintf("ses_mask=0x%X\n", ses_mask);
 	cprintf("brau_mask=0x%X\n", brau_mask);
+	cprintf("ses_mask=0x%X\n", ses_mask);
 	cprintf("ses_led=%d\n", ses_led);
 #else
-	if (fork() != 0) return 0;
+	if (fork() != 0)
+		return 0;
+
 	setsid();
-#endif
+#endif /* DEBUG_TEST */
 
 	signal(SIGCHLD, chld_reap);
 
-	if ((gf = gpio_open(mask)) < 0) return 1;
+	if ((gf = gpio_open(mask)) < 0)
+		return 1;
 
 	last = 0;
 	brau_count_stable = 0;
@@ -376,7 +377,8 @@ int buttons_main(int argc, char *argv[])
 			count = 0;
 			do {
 				sleep(1);
-				if (++count == 3) led(LED_DIAG, LED_ON);
+				if (++count == 3)
+					led(LED_DIAG, LED_ON);
 			} while (((gpio = _gpio_read(gf)) != ~0) && ((gpio & reset_mask) == reset_pushed));
 
 #ifdef DEBUG_TEST
@@ -384,8 +386,6 @@ int buttons_main(int argc, char *argv[])
 #else
 			if (count >= 3) {
 				eval("mtd-erase", "-d", "nvram");
-				//nvram_set("restore_defaults", "1");
-				//nvram_commit();
 				sync();
 				reboot(RB_AUTOBOOT);
 			}
@@ -395,14 +395,13 @@ int buttons_main(int argc, char *argv[])
 				kill(1, SIGTERM);
 			}
 			exit(0);
-#endif
+#endif /* DEBUG_TEST */
 		}
 
 		if ((ses_mask) && ((gpio & ses_mask) == ses_pushed)) {
 			count = 0;
 			do {
-				//	syslog(LOG_DEBUG, "ses-pushed: gpio=x%X, pushed=x%X, mask=x%X, count=%d", gpio, ses_pushed, ses_mask, count);
-
+				logmsg(LOG_DEBUG, "*** %s: ses-pushed: gpio=x%ld, pushed=x%X, mask=x%X, count=%d", __FUNCTION__, gpio, ses_pushed, ses_mask, count);
 				led(ses_led, LED_ON);
 				usleep(500000);
 				led(ses_led, LED_OFF);
@@ -411,20 +410,21 @@ int buttons_main(int argc, char *argv[])
 			} while (((gpio = _gpio_read(gf)) != ~0) && ((gpio & ses_mask) == ses_pushed));
 			gpio &= mask;
 
-			/* for WNDR3400/3700v3/4000, bwq518 */
-			if ((model == MODEL_WNDR3400) ||
-			    (model == MODEL_WNDR3700v3) ||
-			    (model == MODEL_WNDR4000)) led(ses_led, LED_ON);
+#ifdef TCONFIG_BLINK /* RT-N/RTAC */
+			/* for WNDR3400/3700v3/4000 */
+			if ((model == MODEL_WNDR3400) || (model == MODEL_WNDR3700v3) || (model == MODEL_WNDR4000))
+				led(ses_led, LED_ON);
 
 			/* turn LED_AOSS (WPS LED for WNDR3400v2/v3) back on if used for feedback (WPS Button); Check Startup LED setting (bit 2 used for LED_AOSS) */
-			if ((ses_led == LED_AOSS) && (nvram_get_int("sesx_led") & 0x04) &&
-			    ((model == MODEL_WNDR3400v2) ||
-			     (model == MODEL_WNDR3400v3))) led(ses_led, LED_ON);
+			if ((ses_led == LED_AOSS) && (nvram_get_int("sesx_led") & 0x04) && ((model == MODEL_WNDR3400v2) || (model == MODEL_WNDR3400v3)))
+				led(ses_led, LED_ON);
+#endif /* TCONFIG_BLINK */
 
-			if ((ses_led == LED_DMZ) && (nvram_get_int("dmz_enable") > 0)) led(LED_DMZ, LED_ON); /* turn LED_DMZ back on if used for feedback */
+			if ((ses_led == LED_DMZ) && (nvram_get_int("dmz_enable") > 0))
+				led(LED_DMZ, LED_ON); /* turn LED_DMZ back on if used for feedback */
 
-			//	syslog(LOG_DEBUG, "ses-released: gpio=x%X, pushed=x%X, mask=x%X, count=%d", gpio, ses_pushed, ses_mask, count);
-			syslog(LOG_INFO, "SES pushed. Count was %d.", count);
+			logmsg(LOG_DEBUG, "*** %s: ses-released: gpio=x%ld, pushed=x%X, mask=x%X, count=%d", __FUNCTION__, gpio, ses_pushed, ses_mask, count);
+			logmsg(LOG_INFO, "SES pushed. Count was %d", count);
 
 			if ((count != 3) && (count != 7) && (count != 11)) {
 				n = count >> 2;
@@ -439,32 +439,32 @@ int buttons_main(int argc, char *argv[])
 #ifdef DEBUG_TEST
 				cprintf("ses func=%d\n", n);
 #else
-				sprintf(s, "sesx_b%d", n);
-				//	syslog(LOG_DEBUG, "ses-func: count=%d %s='%s'", count, s, nvram_safe_get(s));
+				snprintf(s, sizeof(s), "sesx_b%d", n);
+				logmsg(LOG_DEBUG, "*** %s: ses-func: count=%d %s='%s'", __FUNCTION__, count, s, nvram_safe_get(s));
 				if ((p = nvram_get(s)) != NULL) {
 					switch (*p) {
-					case '1':	/* toggle wl */
+					case '1': /* toggle wl */
 						nvram_set("rrules_radio", "-1");
 						eval("radio", "toggle");
 						break;
-					case '2':	/* reboot */
+					case '2': /* reboot */
 						kill(1, SIGTERM);
 						break;
-					case '3':	/* shutdown */
+					case '3': /* shutdown */
 						kill(1, SIGQUIT);
 						break;
-					case '4':	/* run a script */
-						sprintf(s, "%d", count);
+					case '4': /* run a script */
+						snprintf(s, sizeof(s), "%d", count);
 						run_nvscript("sesx_script", s, 2);
 						break;
 #ifdef TCONFIG_USB
-					case '5':	/* !!TB: unmount all USB drives */
+					case '5': /* unmount all USB drives */
 						add_remove_usbhost("-2", 0);
 						break;
-#endif
+#endif /* TCONFIG_USB */
 					}
 				}
-#endif
+#endif /* DEBUG_TEST */
 
 			}
 		}
@@ -481,11 +481,13 @@ int buttons_main(int argc, char *argv[])
 			else if (brau_flag && ++brau_count_stable > 2) { /* stable for 2+ seconds */
 				brau_flag = 0;
 				switch (nvram_get_int("btn_override") ? MODEL_UNKNOWN : model) {
-#ifdef CONFIG_BCMWL5
+#ifdef TCONFIG_BLINK /* RT-N/RTAC */
 				case MODEL_RTN12A1:
+#else
+				case MODEL_RTN12:
+#endif
 					p = (brau_state & (1 << 4)) ? "ap" : (brau_state & (1 << 5)) ? "repeater" : "router";
 					break;
-#endif
 				default:
 					p = brau_state ? "auto" : "bridge";
 					break;
@@ -495,7 +497,7 @@ int buttons_main(int argc, char *argv[])
 				cprintf("bridge/auto state = %s\n", p);
 #else
 				run_nvscript("script_brau", p, 2);
-#endif
+#endif /* DEBUG_TEST */
 			}
 		}
 
