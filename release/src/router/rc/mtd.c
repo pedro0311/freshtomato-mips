@@ -46,6 +46,9 @@
 #include <error.h>
 #include <sys/ioctl.h>
 #include <sys/sysinfo.h>
+#if defined(TCONFIG_BLINK) || defined(CONFIG_BCMWL6) /* RT-N+ */
+#include <bcmendian.h>
+#endif
 #include <linux/compiler.h>
 #include <mtd/mtd-user.h>
 #include <stdint.h>
@@ -70,6 +73,26 @@ struct code_header {
 	unsigned char res3[10];
 } ;
 
+#ifdef TCONFIG_BLINK /* RT-N/RTAC */
+/*
+ * Netgear CHK Header -> contains needed checksum information (for Netgear)
+ * Information here is stored big endian (vs. later information in TRX header and linux / rootfs, which is little endian)
+ * First two entries are commented out, as they are read manually to determine the file format and header length (and rewind is not working?)
+ */
+struct chk_header {
+	// uint32_t magic;
+	// uint32_t header_len;
+	uint8_t  reserved[8];
+	uint32_t kernel_chksum;
+	uint32_t rootfs_chksum;
+	uint32_t kernel_len;
+	uint32_t rootfs_len;
+	uint32_t image_chksum;
+	uint32_t header_chksum;
+	/* char board_id[] - upto MAX_BOARD_ID_LEN, not NULL terminated! */
+};
+#endif /* TCONFIG_BLINK */
+
 // -----------------------------------------------------------------------------
 
 static uint32 *crc_table = NULL;
@@ -86,12 +109,16 @@ static int crc_init(void)
 	int i, j;
 
 	if (crc_table == NULL) {
-		if ((crc_table = malloc(sizeof(uint32) * 256)) == NULL) return 0;
+		if ((crc_table = malloc(sizeof(uint32) * 256)) == NULL)
+			return 0;
+
 		for (i = 255; i >= 0; --i) {
 			c = i;
 			for (j = 8; j > 0; --j) {
-				if (c & 1) c = (c >> 1) ^ 0xEDB88320L;
-					else c >>= 1;
+				if (c & 1)
+					c = (c >> 1) ^ 0xEDB88320L;
+				else
+					c >>= 1;
 			}
 			crc_table[i] = c;
 		}
@@ -136,10 +163,16 @@ static int _unlock_erase(const char *mtdname, int erase)
 	mtd_info_t mi;
 	erase_info_t ei;
 	int r;
+#ifdef TCONFIG_BLINK /* RT-N/RTAC */
+	int ret, skipbb = 0;
+#endif
 
-	if (!wait_action_idle(5)) return 0;
+	if (!wait_action_idle(5))
+		return 0;
+
 	set_action(ACT_ERASE_NVRAM);
-	if (erase) led(LED_DIAG, 1);
+	if (erase)
+		led(LED_DIAG, 1);
 
 	r = 0;
 	if ((mf = mtd_open(mtdname, &mi)) >= 0) {
@@ -150,10 +183,28 @@ static int _unlock_erase(const char *mtdname, int erase)
 				printf("%sing 0x%x - 0x%x\n", erase ? "Eras" : "Unlock", ei.start, (ei.start + ei.length) - 1);
 				fflush(stdout);
 
+#ifdef TCONFIG_BLINK /* RT-N/RTAC */
+				if (!skipbb) {
+					loff_t offset = ei.start;
+
+					if ((ret = ioctl(mf, MEMGETBADBLOCK, &offset)) > 0) {
+						printf("Skipping bad block at 0x%08x\n", ei.start);
+						continue;
+					} else if (ret < 0) {
+						if (errno == EOPNOTSUPP) {
+							skipbb = 1; /* not supported by this device */
+						} else {
+							perror("MEMGETBADBLOCK");
+							r = 0;
+							break;
+						}
+					}
+				}
+#endif /* TCONFIG_BLINK */
 				if (ioctl(mf, MEMUNLOCK, &ei) != 0) {
-//					perror("MEMUNLOCK");
-//					r = 0;
-//					break;
+					// perror("MEMUNLOCK");
+					// r = 0;
+					// break;
 				}
 				if (erase) {
 					if (ioctl(mf, MEMERASE, &ei) != 0) {
@@ -180,19 +231,23 @@ static int _unlock_erase(const char *mtdname, int erase)
 					r = 0;
 				}
 			}
-#endif
+#endif /* 1 */
 
-			// checkme:
+			/* checkme: */
 			char buf[2];
 			read(mf, &buf, sizeof(buf));
 			close(mf);
 	}
 
-	if (erase) led(LED_DIAG, 0);
+	if (erase)
+		led(LED_DIAG, 0);
+
 	set_action(ACT_IDLE);
 
-	if (r) printf("\"%s\" successfully %s.\n", mtdname, erase ? "erased" : "unlocked");
-        else printf("\nError %sing MTD\n", erase ? "eras" : "unlock");
+	if (r)
+		printf("\"%s\" successfully %s.\n", mtdname, erase ? "erased" : "unlocked");
+	else
+		printf("\nError %sing MTD\n", erase ? "eras" : "unlock");
 
 	sleep(1);
 	return r;
@@ -236,6 +291,10 @@ int mtd_write_main(int argc, char *argv[])
 	uint32 sig;
 	struct trx_header trx;
 	struct code_header cth;
+#ifdef TCONFIG_BLINK /* RT-N/RTAC */
+	struct chk_header netgear_hdr;
+	uint32 netgear_chk_len;
+#endif
 	uint32 crc;
 	FILE *f;
 	char *buf = NULL;
@@ -284,25 +343,37 @@ int mtd_write_main(int argc, char *argv[])
 	if (safe_fread(&sig, 1, sizeof(sig), f) != sizeof(sig)) {
 		goto ERROR;
 	}
+
 	switch (sig) {
-	case 0x47343557: // W54G	G, GL
-	case 0x53343557: // W54S	GS
-	case 0x73343557: // W54s	GS v4
-	case 0x55343557: // W54U	SL
-	case 0x31345257: // WR41	WRH54G
-	case 0x4E303233: // 320N	WRT320N
-	case 0x4E583233: // 32XN	E2000
-	case 0x4E303136: // 610N	WRT610N v2
-	case 0x4E583136: // 61XN	E3000
-	case 0x30303145: // E100	E1000
-	case 0x3031304D: // M010	M10
-	case 0x3032304D: // M020	M20
-	case 0x3036314E: // N160	WRT160N
-	case 0x42435745: // EWCB	WRT300N v1
-	case 0x4E303133: // 310N	WRT310N v1/v2
-//	case 0x32435745: // EWC2	WRT300N?
-	case 0x3035314E: // N150	WRT150N
-	case 0x30303234: // 4200	E4200
+	case 0x47343557: /* W54G	G, GL */
+	case 0x53343557: /* W54S	GS */
+	case 0x73343557: /* W54s	GS v4 */
+	case 0x55343557: /* W54U	SL */
+	case 0x31345257: /* WR41	WRH54G */
+	case 0x4E303233: /* 320N	WRT320N */
+	case 0x4E583233: /* 32XN	E2000 */
+	case 0x4E303136: /* 610N	WRT610N v2 */
+	case 0x4E583136: /* 61XN	E3000 */
+	case 0x30303145: /* E100	E1000 */
+	case 0x3031304D: /* M010	M10 */
+	case 0x3032304D: /* M020	M20 */
+	case 0x3036314E: /* N160	WRT160N */
+	case 0x42435745: /* EWCB	WRT300N v1 */
+	case 0x4E303133: /* 310N	WRT310N v1/v2 */
+//	case 0x32435745: /* EWC2	WRT300N? */
+	case 0x3035314E: /* N150	WRT150N */
+	case 0x30303234: /* 4200	E4200 */
+#ifdef TCONFIG_BLINK /* RT-N/RTAC */
+	case 0x30303845: /* E800	E800 */
+	case 0x30303945: /* E900	E900 */
+	case 0x30323145: /* E120	E1200v1 */
+	case 0x32323145: /* E122	E1200v2 */
+	case 0x30353145: /* E150	E1500 */
+	case 0x30353531: /* 1550	E1550 */
+	case 0x58353245: /* E25X	E2500 */
+	case 0x33563532: /* 25V3	E2500v3 */
+	case 0x30303233: /* 3200	E3200 */
+#endif /* TCONFIG_BLINK */
 		if (safe_fread(((char *)&cth) + 4, 1, sizeof(cth) - 4, f) != (sizeof(cth) - 4)) {
 			goto ERROR;
 		}
@@ -310,17 +381,32 @@ int mtd_write_main(int argc, char *argv[])
 			goto ERROR;
 		}
 
-		// trx should be next...
+		/* trx should be next... */
 		if (safe_fread(&sig, 1, sizeof(sig), f) != sizeof(sig)) {
 			goto ERROR;
 		}
 		break;
-	case 0x5E24232A: // Netgear
-		// header length is next
+	case 0x5E24232A: /* Netgear */
+		/* get the Netgear header length */
 		if (safe_fread(&n, 1, sizeof(n), f) != sizeof(n)) {
 			goto ERROR;
 		}
-		// skip the header - we can't use seek() for fifo, so read the rest of the header
+#ifdef TCONFIG_BLINK /* RT-N/RTAC */
+		else {
+			/* and Byte Swap, Netgear header is big endian, machine is little endian */
+			n = BCMSWAP32(n);
+			logmsg(LOG_DEBUG, "*** %s: read Netgear header length: 0x%x", __FUNCTION__, n);
+		}
+
+		/* read (formatted) Netgear CHK header (now that we know how long it is) */
+		// rewind(f); /* disabled, not working for some reason? Adjust structure above to account for this */
+		if (safe_fread(&netgear_hdr, 1, n-sizeof(sig)-sizeof(n), f) != (int) (n-sizeof(sig)-sizeof(n))) {
+			goto ERROR;
+		}
+		else
+			logmsg(LOG_DEBUG, "*** %s: read Netgear header, magic=0x%x, length=0x%x", __FUNCTION__, sig, n);
+#else
+		/* skip the header - we can't use seek() for fifo, so read the rest of the header */
 		n = ntohl(n) - sizeof(sig) - sizeof(n);
 		if ((buf = malloc(n + 1)) == NULL) {
 			error = "Not enough memory";
@@ -331,14 +417,17 @@ int mtd_write_main(int argc, char *argv[])
 		}
 		free(buf);
 		buf = NULL;
-		// trx should be next...
+#endif /* TCONFIG_BLINK */
+		/* TRX (MAGIC) should be next... */
 		if (safe_fread(&sig, 1, sizeof(sig), f) != sizeof(sig)) {
 			goto ERROR;
 		}
+		else
+			logmsg(LOG_DEBUG, "*** %s: read TRX header, magic=0x%x", __FUNCTION__, sig);
 		break;
 	case TRX_MAGIC:
 		break;
-#ifdef CONFIG_BCMWL5
+#ifndef CONFIG_BCMWL6
 	case TRX_MAGIC_F7D3301:
 	case TRX_MAGIC_F7D3302:
 	case TRX_MAGIC_F7D4302:
@@ -346,15 +435,15 @@ int mtd_write_main(int argc, char *argv[])
 	case TRX_MAGIC_QA:
 		sig = TRX_MAGIC;
 		break;
-#endif
+#endif /* !CONFIG_BCMWL6 */
 	default:
-		// moto
+		/* moto */
 		if (safe_fread(&sig, 1, sizeof(sig), f) != sizeof(sig)) {
 			goto ERROR;
 		}
 		switch (sig) {
-		case 0x50705710:	// WR850G
-			// trx
+		case 0x50705710: /* WR850G */
+			/* trx */
 			if (safe_fread(&sig, 1, sizeof(sig), f) != sizeof(sig)) {
 				goto ERROR;
 			}
@@ -375,7 +464,7 @@ int mtd_write_main(int argc, char *argv[])
 	model = get_model();
 
 	switch (model) {
-#ifdef CONFIG_BCMWL5
+#ifndef CONFIG_BCMWL6
 	case MODEL_F7D3301:
 		trx.magic = TRX_MAGIC_F7D3301;
 		break;
@@ -388,7 +477,7 @@ int mtd_write_main(int argc, char *argv[])
 	case MODEL_F5D8235v3:
 		trx.magic = TRX_MAGIC_F5D8235V3;
 		break;
-#endif
+#endif /* !CONFIG_BCMWL6 */
 	default:
 		trx.magic = sig;
 		break;
@@ -430,7 +519,7 @@ int mtd_write_main(int argc, char *argv[])
 		ei.length = total;
 	}
 	else {
-//		ei.length = ROUNDUP((si.freeram - (256 * 1024)), mi.erasesize);
+		// ei.length = ROUNDUP((si.freeram - (256 * 1024)), mi.erasesize);
 		ei.length = mi.erasesize;
 	}
 	logmsg(LOG_DEBUG, "*** %s: freeram=%ld ei.length=%d total=%u", __FUNCTION__, si.freeram, ei.length, total);
@@ -446,7 +535,7 @@ int mtd_write_main(int argc, char *argv[])
 		error = "Error creating test file";
 		goto ERROR;
 	}
-#endif
+#endif /* DEBUG_SIMULATE */
 
 	if (trx.flag_version & TRX_NO_HEADER) {
 		ofs = 0;
@@ -456,6 +545,9 @@ int mtd_write_main(int argc, char *argv[])
 		ofs = sizeof(trx);
 	}
 	logmsg(LOG_DEBUG, "*** %s: trx.len=%ub 0x%x ofs=%ub 0x%x", __FUNCTION__, trx.len, trx.len, ofs, ofs);
+#ifdef TCONFIG_BLINK /* RT-N/RTAC */
+	netgear_chk_len = trx.len;
+#endif
 
 	error = NULL;
 
@@ -496,53 +588,93 @@ int mtd_write_main(int argc, char *argv[])
 		}
 #else
 		ioctl(mf, MEMUNLOCK, &ei);
-		if (ioctl(mf, MEMERASE, &ei) != 0) {
+		if (ioctl(mf, MEMERASE, &ei) != 0
+#ifdef TCONFIG_BLINK /* RT-N/RTAC */
+		    && model != MODEL_WNR3500LV2
+#endif
+		) {
 			error = "Error erasing MTD block";
 			break;
-		} 
+		}
 		if (write(mf, buf, n) != (int) n) {
 			error = "Error writing to MTD device";
 			break;
 		}
-#endif
+#endif /* DEBUG_SIMULATE */
 		ofs = 0;
 	}
 
-	// Netgear WNR3500L: write fake len and checksum at the end of mtd
-
+	/* Netgear WNR3500L: write fake len and checksum at the end of mtd */
+	/* Netgear WNDR4000, WNDR3700v3, WNDR3400, WNDR3400v2, WNDR3400v3 - write real len and checksum */
 	char *tmp;
 	char imageInfo[8];
 
 	switch (model) {
 	case MODEL_WNR3500L:
 	case MODEL_WNR2000v2:
-		error = "Error writing fake Netgear crc";
+#ifdef TCONFIG_BLINK /* RT-N/RTAC */
+	case MODEL_WNDR4000:
+	case MODEL_WNDR3700v3:
+	case MODEL_WNDR3400:
+	case MODEL_WNDR3400v2:
+	case MODEL_WNDR3400v3:
+#endif /* TCONFIG_BLINK */
+		error = "Error writing Netgear CRC";
 
-		// Netgear CFE has the offset of the checksum hardcoded as
-		// 0x78FFF8 on 8MB flash, and 0x38FFF8 on 4MB flash - in both
-		// cases this is 8 last bytes in the block exactly 6 blocks to the end.
-		// We rely on linux partition to be sized correctly by the kernel,
-		// so the checksum area doesn't fall outside of the linux partition,
-		// and doesn't override the rootfs.
-		ofs = (mi.size > (4 *1024 * 1024) ? 0x78FFF8 : 0x38FFF8) - 0x040000;
+		/*
+		 * Netgear CFE has the offset of the checksum hardcoded as
+		 * 0x78FFF8 on 8MB flash, and 0x38FFF8 on 4MB flash - in both
+		 * cases this is 8 last bytes in the block exactly 6 blocks to the end.
+		 * We rely on linux partition to be sized correctly by the kernel,
+		 * so the checksum area doesn't fall outside of the linux partition,
+		 * and doesn't override the rootfs.
+		 * Note: For WNDR4000/WNDR3700v3/WNDR3400v2/WNDR3400v2/WNDR3400v3, the target address (offset) inside Linux is 0x6FFFF8 (displayed by CFE when programmed via tftp)
+		 * Note: For WNDR3400, the target address (offset) inside Linux is 0x6CFFF8 (displayed by CFE when programmed via tftp)
+		 */
+#ifdef TCONFIG_BLINK /* RT-N/RTAC */
+		if ((model == MODEL_WNDR4000) || (model == MODEL_WNDR3700v3) || (model == MODEL_WNDR3400) || (model == MODEL_WNDR3400v2) || (model == MODEL_WNDR3400v3)) {
+			if (model == MODEL_WNDR3400)
+				ofs = 0x6CFFF8;
+			else
+				ofs = 0x6FFFF8;
+			/* Endian "convert" - machine is little endian, but header is big endian */
+			crc = BCMSWAP32(netgear_hdr.kernel_chksum);
+			n = netgear_chk_len;
+		}
+		else {
+#endif /* TCONFIG_BLINK */
+			ofs = (mi.size > (4 *1024 * 1024) ? 0x78FFF8 : 0x38FFF8) - 0x040000;
+			n   = 0x00000004; /* fake length - little endian */
+			crc = 0x02C0010E; /* fake crc - little endian */
+#ifdef TCONFIG_BLINK /* RT-N/RTAC */
+		}
+#endif
 
-		n   = 0x00000004;	// fake length - little endian
-		crc = 0x02C0010E;	// fake crc - little endian
+		logmsg(LOG_DEBUG, "*** %s: Netgear CRC, data to write: CRC=0x%x, len=0x%x, offset=0x%x", __FUNCTION__, crc, n, ofs);
 		memcpy(&imageInfo[0], (char *)&n,   4);
 		memcpy(&imageInfo[4], (char *)&crc, 4);
 
 		ei.start = (ofs / mi.erasesize) * mi.erasesize;
 		ei.length = mi.erasesize;
+		logmsg(LOG_DEBUG, "*** %s: Netgear CRC: erase start=0x%x, length=0x%x", __FUNCTION__, ei.start, ei.length);
 
-		if (lseek(mf, ei.start, SEEK_SET) < 0)
+		if (lseek(mf, ei.start, SEEK_SET) < 0) {
+			logmsg(LOG_DEBUG, "*** %s: Netgear CRC: lseek() error", __FUNCTION__);
 			goto ERROR2;
+		}
 		if (buf) free(buf);
-		if (!(buf = malloc(mi.erasesize)))
+		if (!(buf = malloc(mi.erasesize))) {
+			logmsg(LOG_DEBUG, "*** %s: Netgear CRC: malloc() error", __FUNCTION__);
 			goto ERROR2;
-		if (read(mf, buf, mi.erasesize) != (int) mi.erasesize)
+		}
+		if (read(mf, buf, mi.erasesize) != (int) mi.erasesize) {
+			logmsg(LOG_DEBUG, "*** %s: Netgear CRC: read() error", __FUNCTION__);
 			goto ERROR2;
-		if (lseek(mf, ei.start, SEEK_SET) < 0)
+		}
+		if (lseek(mf, ei.start, SEEK_SET) < 0) {
+			logmsg(LOG_DEBUG, "*** %s: Netgear CRC: lseed() error", __FUNCTION__);
 			goto ERROR2;
+		}
 
 		tmp = buf + (ofs % mi.erasesize);
 		memcpy(tmp, imageInfo, sizeof(imageInfo));
@@ -552,18 +684,23 @@ int mtd_write_main(int argc, char *argv[])
 			goto ERROR2;
 		if (fwrite(buf, 1, mi.erasesize, of) != n)
 			goto ERROR2;
+		error = NULL;
 #else
 		ioctl(mf, MEMUNLOCK, &ei);
-		if (ioctl(mf, MEMERASE, &ei) != 0)
+		if (ioctl(mf, MEMERASE, &ei) != 0) {
+			logmsg(LOG_DEBUG, "*** %s: Netgear CRC: ioctl() error", __FUNCTION__);
 			goto ERROR2;
-
-		if (write(mf, buf, mi.erasesize) != (int) mi.erasesize)
+		}
+		if (write(mf, buf, mi.erasesize) != (int) mi.erasesize) {
+			logmsg(LOG_DEBUG, "*** %s: Netgear CRC: write() error", __FUNCTION__);
 			goto ERROR2;
-#endif
+		}
+		error = NULL;
+#endif /* DEBUG_SIMULATE */
 
 ERROR2:
-		logmsg(LOG_DEBUG, "*** %s: %s", __FUNCTION__, error ? : "Write Netgear fake len/crc completed");
-		// ignore crc write errors
+		logmsg(LOG_DEBUG, "*** %s: %s", __FUNCTION__, error ? : "write Netgear fake len/crc completed");
+		/* ignore crc write errors */
 		error = NULL;
 		break;
 	}
@@ -573,13 +710,15 @@ ERROR2:
 #endif
 
 ERROR:
-	if (buf) free(buf);
+	if (buf)
+		free(buf);
 	if (mf >= 0) {
-		// dummy read to ensure chip(s) are out of lock/suspend state
+		/* dummy read to ensure chip(s) are out of lock/suspend state */
 		read(mf, &n, sizeof(n));
 		close(mf);
 	}
-	if (f) fclose(f);
+	if (f)
+		fclose(f);
 
 	crc_done();
 
@@ -588,6 +727,7 @@ ERROR:
 #endif
 
 	printf("%s\n",  error ? error : "Image successfully flashed");
-	logmsg(LOG_DEBUG, "*** %s: %s", __FUNCTION__, error ? error : "Image successfully flashed");
+	logmsg(LOG_DEBUG, "*** %s: %s", __FUNCTION__, error ? error : "image successfully flashed");
+
 	return (error ? 1 : 0);
 }
