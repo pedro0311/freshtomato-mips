@@ -301,7 +301,7 @@ static void shutdn(int rb)
 	int act;
 	sigset_t ss;
 
-	logmsg(LOG_DEBUG, "*** %s: shutdn rb=%d", __FUNCTION__, rb);
+	_dprintf("shutdn rb=%d\n", rb);
 
 	sigemptyset(&ss);
 	for (i = 0; i < sizeof(fatalsigs) / sizeof(fatalsigs[0]); i++)
@@ -314,7 +314,7 @@ static void shutdn(int rb)
 		if (((act = check_action()) == ACT_IDLE) || (act == ACT_REBOOT))
 			break;
 
-		logmsg(LOG_DEBUG, "*** %s: busy with %d. Waiting before shutdown... %d", __FUNCTION__, act, i);
+		_dprintf("Busy with %d. Waiting before shutdown... %d\n", act, i);
 		sleep(1);
 	}
 	set_action(ACT_REBOOT);
@@ -323,12 +323,12 @@ static void shutdn(int rb)
 	killall("xl2tpd", SIGTERM);
 	killall("pppd", SIGTERM);
 
-	logmsg(LOG_DEBUG, "*** %s: TERM", __FUNCTION__);
+	_dprintf("TERM\n");
 	kill(-1, SIGTERM);
 	sleep(3);
 	sync();
 
-	logmsg(LOG_DEBUG, "*** %s: KILL", __FUNCTION__);
+	_dprintf("KILL\n");
 	kill(-1, SIGKILL);
 	sleep(1);
 	sync();
