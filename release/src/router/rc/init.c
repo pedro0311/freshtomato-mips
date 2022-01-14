@@ -2200,13 +2200,8 @@ static int init_nvram(void)
 			nvram_set("wl_ifname", "eth1");
 			nvram_set("wl0_ifname", "eth1");
 			nvram_set("wl1_ifname", "eth2");
-			nvram_set("wl0_bw_cap", "7");
-			nvram_set("wl0_chanspec", "36/80");
-			nvram_set("wl1_bw_cap", "3");
-			nvram_set("wl1_chanspec", "1l");
-			nvram_set("blink_5g_interface", "eth1");
-			//nvram_set("landevs", "vlan1 wl0 wl1");
-			//nvram_set("wandevs", "vlan2");
+			nvram_set("landevs", "vlan1 wl0 wl1");
+			nvram_set("wandevs", "vlan2");
 
 			struct nvram_tuple dir865l_pci_2_1_params[] = {
 				/* init wireless power DIR865L defaults */
@@ -2400,21 +2395,40 @@ static int init_nvram(void)
 			set_extra_param(dir865l_pci_1_1_params, "pci/1/1/%s");
 			set_extra_param(dir865l_pci_2_1_params, "pci/2/1/%s");
 
-			/* fix WL mac's */
-			//strlcpy(s, nvram_safe_get("et0macaddr"), sizeof(s));
-			//nvram_set("wl0_hwaddr", nvram_safe_get("0:macaddr"));
-			//nvram_set("wl1_hwaddr", nvram_safe_get("1:macaddr"));
-			strlcpy(s, nvram_safe_get("et0macaddr"), sizeof(s));
+			/* fix MAC addresses */
+			strlcpy(s, nvram_safe_get("et0macaddr"), sizeof(s));	/* get et0 MAC address for LAN */
 			inc_mac(s, +2);
+			nvram_set("pci/1/1/macaddr", s);			/* fix WL mac for 5G (eth1) */
 			nvram_set("wl0_hwaddr", s);
-			nvram_set("pci/1/1/macaddr", s);
-			inc_mac(s, +1);
+			inc_mac(s, +4);						/* do not overlap with VIFs */
+			nvram_set("pci/2/1/macaddr", s);			/* fix WL mac for 2,4G (eth2) */
 			nvram_set("wl1_hwaddr", s);
-			nvram_set("pci/2/1/macaddr", s);
 
+			/* wifi settings/channels */
+			/* 5G settings */
+			nvram_set("wl0_bw_cap", "7");
+			nvram_set("wl0_chanspec", "36/80");
+			nvram_set("wl0_channel", "36");
+			nvram_set("wl0_nband", "1");
+			nvram_set("wl0_nbw","80");
+			nvram_set("wl0_nbw_cap","3");
+			nvram_set("wl0_nctrlsb", "lower");
 
-			/* fix ssid according to 5G(eth1) and 2.4G(eth2) */
-			//nvram_set("wl_ssid", "FreshTomato50");
+			/* 2G settings */
+			nvram_set("wl1_bw_cap","3");
+			nvram_set("wl1_chanspec","6u");
+			nvram_set("wl1_channel","6");
+			nvram_set("wl1_nband", "2");
+			nvram_set("wl1_nbw","40");
+			nvram_set("wl1_nctrlsb", "upper");
+
+			/* wifi country settings */
+			nvram_set("pci/1/1/regrev", "12");
+			nvram_set("pci/2/1/regrev", "12");
+			nvram_set("pci/1/1/ccode", "SG");
+			nvram_set("pci/2/1/ccode", "SG");
+
+			/* fix ssid according to 5G (eth1) and 2.4G (eth2) */
 			nvram_set("wl0_ssid", "FreshTomato50");
 			nvram_set("wl1_ssid", "FreshTomato24");
 		}
