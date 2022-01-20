@@ -301,7 +301,7 @@ static void shutdn(int rb)
 	int act;
 	sigset_t ss;
 
-	logmsg(LOG_DEBUG, "*** %s: shutdn rb=%d", __FUNCTION__, rb);
+	_dprintf("shutdn rb=%d\n", rb);
 
 	sigemptyset(&ss);
 	for (i = 0; i < sizeof(fatalsigs) / sizeof(fatalsigs[0]); i++)
@@ -314,7 +314,7 @@ static void shutdn(int rb)
 		if (((act = check_action()) == ACT_IDLE) || (act == ACT_REBOOT))
 			break;
 
-		logmsg(LOG_DEBUG, "*** %s: busy with %d. Waiting before shutdown... %d", __FUNCTION__, act, i);
+		_dprintf("Busy with %d. Waiting before shutdown... %d\n", act, i);
 		sleep(1);
 	}
 	set_action(ACT_REBOOT);
@@ -323,12 +323,12 @@ static void shutdn(int rb)
 	killall("xl2tpd", SIGTERM);
 	killall("pppd", SIGTERM);
 
-	logmsg(LOG_DEBUG, "*** %s: TERM", __FUNCTION__);
+	_dprintf("TERM\n");
 	kill(-1, SIGTERM);
 	sleep(3);
 	sync();
 
-	logmsg(LOG_DEBUG, "*** %s: KILL", __FUNCTION__);
+	_dprintf("KILL\n");
 	kill(-1, SIGKILL);
 	sleep(1);
 	sync();
@@ -1038,14 +1038,11 @@ static void check_bootnv(void)
 		strlcpy(mac, nvram_safe_get("et0macaddr"), sizeof(mac));
 		unsigned int i;
 		for (i = 0; i < strlen(mac); i ++) {
-			if (mac[i] =='-') mac[i] = ':';
+			if (mac[i] == '-')
+				mac[i] = ':';
 			mac[i] = toupper(mac[i]);
 		}
-		nvram_set("et0macaddr",mac);
-		inc_mac(mac, 3);
-		dirty |= check_nv("pci/1/1/macaddr", mac);
-		inc_mac(mac, 2);
-		dirty |= check_nv("pci/2/1/macaddr", mac);
+		nvram_set("et0macaddr", mac);
 		nvram_unset("vlan0hwname");
 		break;
 	case MODEL_EA6500V1:
@@ -2200,13 +2197,8 @@ static int init_nvram(void)
 			nvram_set("wl_ifname", "eth1");
 			nvram_set("wl0_ifname", "eth1");
 			nvram_set("wl1_ifname", "eth2");
-			nvram_set("wl0_bw_cap", "7");
-			nvram_set("wl0_chanspec", "36/80");
-			nvram_set("wl1_bw_cap", "3");
-			nvram_set("wl1_chanspec", "1l");
-			nvram_set("blink_5g_interface", "eth1");
-			//nvram_set("landevs", "vlan1 wl0 wl1");
-			//nvram_set("wandevs", "vlan2");
+			nvram_set("landevs", "vlan1 wl0 wl1");
+			nvram_set("wandevs", "vlan2");
 
 			struct nvram_tuple dir865l_pci_2_1_params[] = {
 				/* init wireless power DIR865L defaults */
@@ -2400,21 +2392,40 @@ static int init_nvram(void)
 			set_extra_param(dir865l_pci_1_1_params, "pci/1/1/%s");
 			set_extra_param(dir865l_pci_2_1_params, "pci/2/1/%s");
 
-			/* fix WL mac's */
-			//strlcpy(s, nvram_safe_get("et0macaddr"), sizeof(s));
-			//nvram_set("wl0_hwaddr", nvram_safe_get("0:macaddr"));
-			//nvram_set("wl1_hwaddr", nvram_safe_get("1:macaddr"));
-			strlcpy(s, nvram_safe_get("et0macaddr"), sizeof(s));
+			/* fix MAC addresses */
+			strlcpy(s, nvram_safe_get("et0macaddr"), sizeof(s));	/* get et0 MAC address for LAN */
 			inc_mac(s, +2);
+			nvram_set("pci/1/1/macaddr", s);			/* fix WL mac for 5G (eth1) */
 			nvram_set("wl0_hwaddr", s);
-			nvram_set("pci/1/1/macaddr", s);
-			inc_mac(s, +1);
+			inc_mac(s, +4);						/* do not overlap with VIFs */
+			nvram_set("pci/2/1/macaddr", s);			/* fix WL mac for 2,4G (eth2) */
 			nvram_set("wl1_hwaddr", s);
-			nvram_set("pci/2/1/macaddr", s);
 
+			/* wifi settings/channels */
+			/* 5G settings */
+			nvram_set("wl0_bw_cap", "7");
+			nvram_set("wl0_chanspec", "36/80");
+			nvram_set("wl0_channel", "36");
+			nvram_set("wl0_nband", "1");
+			nvram_set("wl0_nbw","80");
+			nvram_set("wl0_nbw_cap","3");
+			nvram_set("wl0_nctrlsb", "lower");
 
-			/* fix ssid according to 5G(eth1) and 2.4G(eth2) */
-			//nvram_set("wl_ssid", "FreshTomato50");
+			/* 2G settings */
+			nvram_set("wl1_bw_cap","3");
+			nvram_set("wl1_chanspec","6u");
+			nvram_set("wl1_channel","6");
+			nvram_set("wl1_nband", "2");
+			nvram_set("wl1_nbw","40");
+			nvram_set("wl1_nctrlsb", "upper");
+
+			/* wifi country settings */
+			nvram_set("pci/1/1/regrev", "12");
+			nvram_set("pci/2/1/regrev", "12");
+			nvram_set("pci/1/1/ccode", "SG");
+			nvram_set("pci/2/1/ccode", "SG");
+
+			/* fix ssid according to 5G (eth1) and 2.4G (eth2) */
 			nvram_set("wl0_ssid", "FreshTomato50");
 			nvram_set("wl1_ssid", "FreshTomato24");
 		}
@@ -2571,22 +2582,21 @@ static int init_nvram(void)
 			nvram_set("wan_ifnameX", "vlan2");
 			nvram_set("wl_ifnames", "eth1 eth2");
 			nvram_set("wl_ifname", "eth1");
-			/* 4331, 2.4G */
 			nvram_set("wl0_ifname", "eth1");
-			nvram_set("wl0_bw_cap", "3");
-			nvram_set("wl0_chanspec", "1l");
-			nvram_set("wl0_country_code", "US");
-			/* 4360, 2.4G/5G */
 			nvram_set("wl1_ifname", "eth2");
-			nvram_set("wl1_bw_cap", "7");
-			nvram_set("wl1_chanspec", "36/80");
-			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
 			nvram_set("landevs", "vlan1 wl0 wl1");
 			nvram_set("wandevs", "vlan2");
-			nvram_set("lan_invert", "1");
 
-			nvram_set("wl0_hwaddr", nvram_safe_get("pci/1/1/macaddr"));
-			nvram_set("wl1_hwaddr", nvram_safe_get("pci/2/1/macaddr"));
+			/* fix MAC addresses */
+			strlcpy(s, nvram_safe_get("et0macaddr"), sizeof(s));	/* get et0 MAC address for LAN */
+			inc_mac(s, +2);
+			nvram_set("pci/1/1/macaddr", s);			/* fix WL mac for 2,4G */
+			nvram_set("wl0_hwaddr", s);
+			inc_mac(s, +4);						/* do not overlap with VIFs */
+			nvram_set("pci/2/1/macaddr", s);			/* fix WL mac for 5G */
+			nvram_set("wl1_hwaddr", s);
+
+			nvram_set("lan_invert", "1");
 
 			struct nvram_tuple r6300_pci_1_1_params[] = {
 				{"aa2g", "7", 0},
@@ -2816,34 +2826,32 @@ static int init_nvram(void)
 			set_extra_param(r6300_pci_1_1_params, "pci/1/1/%s");
 			set_extra_param(r6300_pci_2_1_params, "pci/2/1/%s");
 
-			if (nvram_match("wl0_country_code", "US"))
-				set_regulation(0, "US", "0");
-			else if (nvram_match("wl0_country_code", "Q2"))
-				set_regulation(0, "US", "0");
-			else if (nvram_match("wl0_country_code", "TW"))
-				set_regulation(0, "TW", "13");
-			else if (nvram_match("wl0_country_code", "CN"))
-				set_regulation(0, "CN", "1");
-			else
-				set_regulation(0, "DE", "0");
+			/* wifi settings/channels */
+			nvram_set("wl0_bw_cap", "3");
+			nvram_set("wl0_chanspec", "6u");
+			nvram_set("wl0_channel", "6");
+			nvram_set("wl0_nbw", "40");
+			nvram_set("wl0_nctrlsb", "upper");
+			nvram_set("wl1_bw_cap", "7");
+			nvram_set("wl1_chanspec", "36/80");
+			nvram_set("wl1_channel", "36");
+			nvram_set("wl1_nbw", "80");
+			nvram_set("wl1_nbw_cap", "3");
+			nvram_set("wl1_nctrlsb", "lower");
 
-			if (nvram_match("wl1_country_code", "Q2"))
-				set_regulation(1, "US", "0");
-			else if (nvram_match("wl1_country_code", "EU"))
-				set_regulation(1, "EU", "13");
-			else if (nvram_match("wl1_country_code", "TW"))
-				set_regulation(1, "TW", "13");
-			else if (nvram_match("wl1_country_code", "CN"))
-				set_regulation(1, "CN", "1");
-			else
-				set_regulation(1, "US", "0");
+			/* wifi country settings SDK6 */
+			nvram_set("pci/1/1/regrev", "12");
+			nvram_set("pci/2/1/regrev", "12");
+			nvram_set("pci/1/1/ccode", "SG");
+			nvram_set("pci/2/1/ccode", "SG");
 
+			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
 		}
 		break;
-	case MODEL_WNDR4500:
+	case MODEL_WNDR4500: /* N900 Wireless Dual Band (2x BCM4331) Gigabit Router with BCM4706 and BCM53115 */
 		mfr = "Netgear";
 		name = "WNDR4500 V1";
-		features = SUP_SES | SUP_AOSS_LED | SUP_80211N | SUP_1000ET | SUP_80211AC;
+		features = SUP_SES | SUP_AOSS_LED | SUP_80211N | SUP_1000ET;
 #ifdef TCONFIG_USB
 		nvram_set("usb_uhci", "-1");
 #endif
@@ -2852,28 +2860,21 @@ static int init_nvram(void)
 			nvram_set("wan_ifnameX", "vlan2");
 			nvram_set("wl_ifnames", "eth1 eth2");
 			nvram_set("wl_ifname", "eth1");
-			/* 4331, 2.4G */
 			nvram_set("wl0_ifname", "eth1");
-			nvram_set("wl0_bw_cap", "3");
-			nvram_set("wl0_chanspec", "1l");
-			nvram_set("wl0_country_code", "US");
-			/* 4330, 5G */
 			nvram_set("wl1_ifname", "eth2");
-			nvram_set("wl1_bw_cap", "7");
-			nvram_set("wl1_chanspec", "36/80");
-			nvram_set("wl1_country_code", "US");
-			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
 			nvram_set("landevs", "vlan1 wl0 wl1");
 			nvram_set("wandevs", "vlan2");
+
+			/* fix MAC addresses */
+			strlcpy(s, nvram_safe_get("et0macaddr"), sizeof(s));	/* get et0 MAC address for LAN */
+			inc_mac(s, +2);
+			nvram_set("pci/1/1/macaddr", s);			/* fix WL mac for 2,4G */
+			nvram_set("wl0_hwaddr", s);
+			inc_mac(s, +4);						/* do not overlap with VIFs */
+			nvram_set("pci/2/1/macaddr", s);			/* fix WL mac for 5G */
+			nvram_set("wl1_hwaddr", s);
+
 			nvram_set("lan_invert", "1");
-
-			nvram_set("wl0_hwaddr", nvram_safe_get("pci/1/1/macaddr"));
-			nvram_set("wl1_hwaddr", nvram_safe_get("pci/2/1/macaddr"));
-
-			/* fix ssid according to 5G(eth2) and 2.4G(eth1) */
-			//nvram_set("wl_ssid", "FreshTomato50");
-			//nvram_set("wl0_ssid", "FreshTomato50");
-			//nvram_set("wl1_ssid", "FreshTomato24");
 
 			struct nvram_tuple wndr4500_pci_1_1_params[] = {
 				{"pa2gw1a0", "0x1DFC", 0},
@@ -3017,34 +3018,32 @@ static int init_nvram(void)
 			set_extra_param(wndr4500_pci_1_1_params, "pci/1/1/%s");
 			set_extra_param(wndr4500_pci_2_1_params, "pci/2/1/%s");
 
-			if (nvram_match("wl0_country_code", "US"))
-				set_regulation(0, "US", "0");
-			else if (nvram_match("wl0_country_code", "Q2"))
-				set_regulation(0, "US", "0");
-			else if (nvram_match("wl0_country_code", "TW"))
-				set_regulation(0, "TW", "13");
-			else if (nvram_match("wl0_country_code", "CN"))
-				set_regulation(0, "CN", "1");
-			else
-				set_regulation(0, "DE", "0");
+			/* wifi settings/channels */
+			nvram_set("wl0_bw_cap", "3");
+			nvram_set("wl0_chanspec", "6u");
+			nvram_set("wl0_channel", "6");
+			nvram_set("wl0_nbw", "40");
+			nvram_set("wl0_nctrlsb", "upper");
+			nvram_set("wl1_bw_cap", "3");
+			nvram_set("wl1_chanspec", "36l");
+			nvram_set("wl1_channel", "36");
+			nvram_set("wl1_nbw", "40");
+			nvram_set("wl1_nbw_cap", "1");
+			nvram_set("wl1_nctrlsb", "lower");
 
-			if (nvram_match("wl1_country_code", "Q2"))
-				set_regulation(1, "US", "0");
-			else if (nvram_match("wl1_country_code", "EU"))
-				set_regulation(1, "EU", "13");
-			else if (nvram_match("wl1_country_code", "TW"))
-				set_regulation(1, "TW", "13");
-			else if (nvram_match("wl1_country_code", "CN"))
-				set_regulation(1, "CN", "1");
-			else
-				set_regulation(1, "US", "0");
+			/* wifi country settings SDK6 */
+			nvram_set("pci/1/1/regrev", "12");
+			nvram_set("pci/2/1/regrev", "12");
+			nvram_set("pci/1/1/ccode", "SG");
+			nvram_set("pci/2/1/ccode", "SG");
 
+			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
 		}
 		break;
-	case MODEL_WNDR4500V2:
+	case MODEL_WNDR4500V2: /* N900 Wireless Dual Band (2x BCM4331) Gigabit Router with BCM4706 and BCM53125 */
 		mfr = "Netgear";
 		name = "WNDR4500 V2";
-		features = SUP_SES | SUP_AOSS_LED | SUP_80211N | SUP_1000ET | SUP_80211AC;
+		features = SUP_SES | SUP_AOSS_LED | SUP_80211N | SUP_1000ET;
 #ifdef TCONFIG_USB
 		nvram_set("usb_uhci", "-1");
 #endif
@@ -3053,22 +3052,21 @@ static int init_nvram(void)
 			nvram_set("wan_ifnameX", "vlan2");
 			nvram_set("wl_ifnames", "eth1 eth2");
 			nvram_set("wl_ifname", "eth1");
-			/* 4331, 2.4G */
 			nvram_set("wl0_ifname", "eth1");
-			nvram_set("wl0_bw_cap", "3");
-			nvram_set("wl0_chanspec", "1l");
-			nvram_set("wl0_country_code", "US");
-			/* 4331, 5G */
 			nvram_set("wl1_ifname", "eth2");
-			nvram_set("wl0_bw_cap", "7");
-			nvram_set("wl0_chanspec", "36/80");
-			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
 			nvram_set("landevs", "vlan1 wl0 wl1");
 			nvram_set("wandevs", "vlan2");
-			nvram_set("lan_invert", "1");
 
-			nvram_set("wl0_hwaddr", nvram_safe_get("pci/1/1/macaddr"));
-			nvram_set("wl1_hwaddr", nvram_safe_get("pci/2/1/macaddr"));
+			/* fix MAC addresses */
+			strlcpy(s, nvram_safe_get("et0macaddr"), sizeof(s));	/* get et0 MAC address for LAN */
+			inc_mac(s, +2);
+			nvram_set("pci/1/1/macaddr", s);			/* fix WL mac for 2,4G */
+			nvram_set("wl0_hwaddr", s);
+			inc_mac(s, +4);						/* do not overlap with VIFs */
+			nvram_set("pci/2/1/macaddr", s);			/* fix WL mac for 5G */
+			nvram_set("wl1_hwaddr", s);
+
+			nvram_set("lan_invert", "1");
 
 			struct nvram_tuple wndr4500v2_pci_1_1_params[] = {
 				{"pa2gw1a0", "0x1791", 0},
@@ -3212,28 +3210,26 @@ static int init_nvram(void)
 			set_extra_param(wndr4500v2_pci_1_1_params, "pci/1/1/%s");
 			set_extra_param(wndr4500v2_pci_2_1_params, "pci/2/1/%s");
 
-			if (nvram_match("wl0_country_code", "US"))
-				set_regulation(0, "US", "0");
-			else if (nvram_match("wl0_country_code", "Q2"))
-				set_regulation(0, "US", "0");
-			else if (nvram_match("wl0_country_code", "TW"))
-				set_regulation(0, "TW", "13");
-			else if (nvram_match("wl0_country_code", "CN"))
-				set_regulation(0, "CN", "1");
-			else
-				set_regulation(0, "DE", "0");
+			/* wifi settings/channels */
+			nvram_set("wl0_bw_cap", "3");
+			nvram_set("wl0_chanspec", "6u");
+			nvram_set("wl0_channel", "6");
+			nvram_set("wl0_nbw", "40");
+			nvram_set("wl0_nctrlsb", "upper");
+			nvram_set("wl1_bw_cap", "3");
+			nvram_set("wl1_chanspec", "36l");
+			nvram_set("wl1_channel", "36");
+			nvram_set("wl1_nbw", "40");
+			nvram_set("wl1_nbw_cap", "1");
+			nvram_set("wl1_nctrlsb", "lower");
 
-			if (nvram_match("wl1_country_code", "Q2"))
-				set_regulation(1, "US", "0");
-			else if (nvram_match("wl1_country_code", "EU"))
-				set_regulation(1, "EU", "13");
-			else if (nvram_match("wl1_country_code", "TW"))
-				set_regulation(1, "TW", "13");
-			else if (nvram_match("wl1_country_code", "CN"))
-				set_regulation(1, "CN", "1");
-			else
-				set_regulation(1, "US", "0");
+			/* wifi country settings SDK6 */
+			nvram_set("pci/1/1/regrev", "12");
+			nvram_set("pci/2/1/regrev", "12");
+			nvram_set("pci/1/1/ccode", "SG");
+			nvram_set("pci/2/1/ccode", "SG");
 
+			nvram_set("blink_wl", "1"); /* Enable WLAN LED if wireless interface is enabled, and turn on blink */
 		}
 		break;
 	case MODEL_EA6500V1:
