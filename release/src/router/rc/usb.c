@@ -258,6 +258,11 @@ void start_usb(void)
 				modprobe("thfsplus");
 #endif
 
+#ifdef TCONFIG_ZFS
+			if (nvram_get_int("usb_fs_zfs"))
+				modprobe("zfs");
+#endif
+
 #ifdef TCONFIG_MICROSD
 			if (nvram_get_int("usb_mmc") == 1) {
 				/* insert SD/MMC modules if present */
@@ -412,6 +417,9 @@ void remove_usb_storage_module(void)
 #endif
 #ifdef TCONFIG_TUXERA_HFS
 	modprobe_r("thfsplus");
+#endif
+#ifdef TCONFIG_ZFS
+	modprobe_r("zfs");
 #endif
 
 	modprobe_r("fuse");
@@ -1078,6 +1086,7 @@ static inline void usbled_proc(char *device, int add)
 		case MODEL_R6400v2:
 		case MODEL_R6700v1:
 		case MODEL_R6700v3:
+		case MODEL_R6900:
 		case MODEL_R7000:
 		case MODEL_XR300:
 #ifdef TCONFIG_BCM7
