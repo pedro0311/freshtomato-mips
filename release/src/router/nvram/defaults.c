@@ -876,6 +876,7 @@ const defaults_t defaults[] = {
 	{ "sesx_script",
 		"[ $1 -ge 20 ] && telnetd -p 233 -l /bin/sh\n"
 	},
+#ifndef TCONFIG_BCMARM
 #if defined(TCONFIG_NVRAM_32K) || defined(TCONFIG_OPTIMIZE_SIZE)
 	{ "script_brau",		""				},
 #else
@@ -894,6 +895,7 @@ const defaults_t defaults[] = {
 		"fi\n"
 	},
 #endif
+#endif /* !TCONFIG_BCMARM */
 
 /* admin-log */
 	{ "log_remote",			"0"				},
