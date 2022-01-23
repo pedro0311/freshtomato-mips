@@ -493,6 +493,12 @@ const defaults_t defaults[] = {
 	{ "wl_ampdu_rtylimit_tid",	"5 5 5 5 5 5 5 5"		},	// Default AMPDU retry limit per-tid setting
 	{ "wl_ampdu_rr_rtylimit_tid",	"2 2 2 2 2 2 2 2"		},	// Default AMPDU regular rate retry limit per-tid setting
 	{ "wl_amsdu",			"auto"				},	// Default AMSDU setting
+#ifdef TCONFIG_ROAM
+	{ "wl_user_rssi",		"0"				},	/* roaming assistant: disabled by default, GUI setting range: -90 ~ -45 */
+#ifdef TCONFIG_BCMARM
+	{ "rast_idlrt",			"2"				},	/* roaming assistant: idle rate (Kbps) - default: 2 */
+#endif
+#endif
 	/* power save */
 	{ "wl_rxchain_pwrsave_enable",	"0"				},	// Rxchain powersave enable
 	{ "wl_rxchain_pwrsave_quiet_time","1800"			},	// Quiet time for power save
