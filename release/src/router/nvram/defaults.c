@@ -495,6 +495,12 @@ const defaults_t defaults[] = {
 	{ "wl_ampdu_rtylimit_tid",	"5 5 5 5 5 5 5 5"		},	// Default AMPDU retry limit per-tid setting
 	{ "wl_ampdu_rr_rtylimit_tid",	"2 2 2 2 2 2 2 2"		},	// Default AMPDU regular rate retry limit per-tid setting
 	{ "wl_amsdu",			"auto"				},	// Default AMSDU setting
+#ifdef TCONFIG_ROAM
+	{ "wl_user_rssi",		"0"				},	/* roaming assistant: disabled by default, GUI setting range: -90 ~ -45 */
+#ifdef TCONFIG_BCMARM
+	{ "rast_idlrt",			"2"				},	/* roaming assistant: idle rate (Kbps) - default: 2 */
+#endif
+#endif
 	/* power save */
 #ifdef TCONFIG_BCMWL6
 	{ "wl_bss_opmode_cap_reqd",	"0"				},	// 0 = no requirements on joining devices
@@ -885,6 +891,7 @@ const defaults_t defaults[] = {
 	{ "sesx_script",
 		"[ $1 -ge 20 ] && telnetd -p 233 -l /bin/sh\n"
 	},
+#ifndef TCONFIG_BCMARM
 #if defined(TCONFIG_NVRAM_32K) || defined(TCONFIG_OPTIMIZE_SIZE)
 	{ "script_brau",		""				},
 #else
@@ -903,6 +910,7 @@ const defaults_t defaults[] = {
 		"fi\n"
 	},
 #endif
+#endif /* !TCONFIG_BCMARM */
 
 /* admin-log */
 	{ "log_remote",			"0"				},
