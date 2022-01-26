@@ -3625,7 +3625,10 @@ static int init_nvram(void)
 		if (!nvram_match("t_fix1", (char *)name)) {
 			nvram_set("lan_ifnames", "vlan1 eth1 eth2");
 			nvram_set("wan_ifnameX", "vlan2");
+			nvram_set("wl_ifnames", "eth1 eth2");
 			nvram_set("wl_ifname", "eth1");
+			nvram_set("wl0_ifname", "eth1");
+			nvram_set("wl1_ifname", "eth2");
 		}
 
 		/* Set Key Parameters for Wireless Interfaces: SB (Southbridge) and PCI, to configure HW (as Netgear intends)
@@ -3711,7 +3714,10 @@ static int init_nvram(void)
 		if (!nvram_match("t_fix1", (char *)name)) {
 			nvram_set("lan_ifnames", "vlan1 eth1 eth2");
 			nvram_set("wan_ifnameX", "vlan2");
+			nvram_set("wl_ifnames", "eth1 eth2");
 			nvram_set("wl_ifname", "eth1");
+			nvram_set("wl0_ifname", "eth1");
+			nvram_set("wl1_ifname", "eth2");
 		}
 
 		/* Set Key Parameters for Wireless Interfaces: SB (Southbridge) and PCI, to configure HW (as Netgear intends)
@@ -3797,7 +3803,10 @@ static int init_nvram(void)
 		if (!nvram_match("t_fix1", (char *)name)) {
 			nvram_set("lan_ifnames", "vlan1 eth1 eth2");
 			nvram_set("wan_ifnameX", "vlan2");
+			nvram_set("wl_ifnames", "eth1 eth2");
 			nvram_set("wl_ifname", "eth1");
+			nvram_set("wl0_ifname", "eth1");
+			nvram_set("wl1_ifname", "eth2");
 		}
 
 		/* Set Key Parameters for Wireless Interfaces: SB (Southbridge) and PCI, to configure HW (as Netgear intends)
