@@ -3525,7 +3525,9 @@ static int init_nvram(void)
 		if (!nvram_match("t_fix1", (char *)name)) {
 			nvram_set("lan_ifnames", "vlan1 eth1");
 			nvram_set("wan_ifnameX", "vlan2");
+			nvram_set("wl_ifnames", "eth1");
 			nvram_set("wl_ifname", "eth1");
+			nvram_set("wl0_ifname", "eth1");
 		}
 		break;
 	case MODEL_E1550:
@@ -3539,7 +3541,9 @@ static int init_nvram(void)
 		if (!nvram_match("t_fix1", (char *)name)) {
 			nvram_set("lan_ifnames", "vlan1 eth1");
 			nvram_set("wan_ifnameX", "vlan2");
+			nvram_set("wl_ifnames", "eth1");
 			nvram_set("wl_ifname", "eth1");
+			nvram_set("wl0_ifname", "eth1");
 		}
 		break;
 	case MODEL_E2500:

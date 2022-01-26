@@ -1239,7 +1239,7 @@ f7d:
 
 ## Linksys E-Series with 64K NVRAM ##
 n64m:
-	@$(MAKE) m MIPS32=r2 NVRAM_SIZE=64 NO_KEYGEN=y LINKSYS_E_64k=y
+	@$(MAKE) m MIPS32=r2 NVRAM_SIZE=64 NO_KEYGEN=y LINKSYS_E_64k=y ROAM=y
 
 
 ## Linksys E-Series with 4MB Flash (Max Flashsize=3866624) ##
