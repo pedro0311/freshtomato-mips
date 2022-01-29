@@ -2946,8 +2946,7 @@ function displayOUI(i) {
 
 function wikiLink() {
 	const url = "https://wiki.freshtomato.org/doku.php"
-	var path = window.location.pathname;
-	var page = path.split("/").pop();
+	var page = myName();
 	if (page)
 		page = page.replace(/\.asp$/, "");
 	else
