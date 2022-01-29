@@ -2659,7 +2659,7 @@ function navi() {
 		null,
 		['About',			'about.asp'],
 		['Reboot...',			'javascript:reboot()'],
-		['Shutdown...',			'javascript:shutdown()'],
+		['Halt...',			'javascript:halt()'],
 		['Logout',			'javascript:logout()']
 	];
 	var name, base;
@@ -2894,9 +2894,9 @@ function reboot() {
 	if (confirm("Reboot?")) form.submitHidden('tomato.cgi', { _reboot: 1, _commit: 0, _nvset: 0 });
 }
 
-function shutdown() {
-	if (!confirm("Shutdown?")) return;
-	if (confirm("Are you really sure you want to Shutdown??\nThis will require a manual power cycle to boot again.")) form.submitHidden('shutdown.cgi', { });
+function halt() {
+	if (!confirm("Halt?")) return;
+	if (confirm("Are you really sure you want to Halt??\nThis will require a manual power cycle to boot again.")) form.submitHidden('shutdown.cgi', { });
 }
 
 function logout() {
