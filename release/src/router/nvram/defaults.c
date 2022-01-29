@@ -676,7 +676,7 @@ const defaults_t defaults[] = {
 	{ "ne_syncookies",		"0"				},	// tcp_syncookies
 	{ "DSCP_fix_enable",		"1"				},	// Comacst DSCP fix
 	{ "ne_snat",			"0"				},	// use SNAT instead of MASQUERADE
-	{ "dhcp_pass",			"1"				},	// allow DHCP responses
+	{ "wan_dhcp_pass",		"0"				},	/* allow DHCP responses */
 	{ "ne_shlimit",			"1,3,60"			},	//shibby - enable limit connection attempts for sshd
 
 /* advanced-routing */
