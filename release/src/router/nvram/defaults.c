@@ -691,8 +691,8 @@ const defaults_t defaults[] = {
 	{ "ne_syncookies",		"0"				},	// tcp_syncookies
 	{ "DSCP_fix_enable",		"1"				},	// Comacst DSCP fix
 	{ "ne_snat",			"0"				},	// use SNAT instead of MASQUERADE
-	{ "dhcp_pass",			"1"				},	// allow DHCP responses
-	{ "ne_shlimit",			"1,3,60"			},	//shibby - enable limit connection attempts for sshd
+	{ "wan_dhcp_pass",		"0"				},	/* allow DHCP responses */
+	{ "fw_blackhole",		"1"				},	/* MTU black hole detection */
 
 /* advanced-routing */
 	{ "routes_static",		""				},
@@ -855,6 +855,7 @@ const defaults_t defaults[] = {
 	{ "sshd_ecdsakey",		""				},
 	{ "sshd_forwarding",		"1"				},
 	{ "rmgt_sip",			""				},	// remote management: source ip address
+	{ "ne_shlimit",			"1,3,60"			},	/* enable limit connection attempts for sshd */
 
 	{ "http_id",			""				},
 	{ "web_mx",			"status,bwm"			},
