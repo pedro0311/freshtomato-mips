@@ -1609,33 +1609,98 @@ static int init_nvram(void)
 	case MODEL_F7D4302:
 	case MODEL_F5D8235v3:
 		mfr = "Belkin";
-		features = SUP_SES | SUP_80211N;
 		switch (model) {
-		case MODEL_F7D3301:
+		case MODEL_F7D3301: /* N300 and Gigabit BCM53115 */
 			name = "Share Max N300 (F7D3301/F7D7301) v1";
+			features = SUP_SES | SUP_80211N | SUP_1000ET;
+			if (!nvram_match("t_fix1", (char *)name)) {
+				nvram_set("vlan1hwname", "et0");
+				nvram_set("vlan2hwname", "et0");
+				nvram_set("lan_ifname", "br0");
+				nvram_set("landevs", "vlan1 wl0");
+				nvram_set("lan_ifnames", "vlan1 eth1");
+				nvram_set("wan_ifnames", "vlan2");
+				nvram_set("wan_ifnameX", "vlan2");
+				nvram_set("wandevs", "vlan2");
+				nvram_set("wl_ifnames", "eth1");
+				nvram_set("wl_ifname", "eth1");
+				nvram_set("wl0_ifname", "eth1");
+			}
 			break;
-		case MODEL_F7D3302:
+		case MODEL_F7D3302: /* N300 and Fast Ethernet BCM5325E */
 			name = "Share N300 (F7D3302/F7D7302) v1";
+			features = SUP_SES | SUP_80211N;
+			if (!nvram_match("t_fix1", (char *)name)) {
+				nvram_set("vlan1hwname", "et0");
+				nvram_set("vlan2hwname", "et0");
+				nvram_set("lan_ifname", "br0");
+				nvram_set("landevs", "vlan1 wl0");
+				nvram_set("lan_ifnames", "vlan1 eth1");
+				nvram_set("wan_ifnames", "vlan2");
+				nvram_set("wan_ifnameX", "vlan2");
+				nvram_set("wandevs", "vlan2");
+				nvram_set("wl_ifnames", "eth1");
+				nvram_set("wl_ifname", "eth1");
+				nvram_set("wl0_ifname", "eth1");
+			}
 			break;
-		case MODEL_F7D4301:
+		case MODEL_F7D4301: /* N600 Dual Band and Gigabit BCM53115 */
 			name = "Play Max / N600 HD (F7D4301/F7D8301) v1";
+			features = SUP_SES | SUP_80211N | SUP_1000ET;
+			if (!nvram_match("t_fix1", (char *)name)) {
+				nvram_set("vlan1hwname", "et0");
+				nvram_set("vlan2hwname", "et0");
+				nvram_set("lan_ifname", "br0");
+				nvram_set("landevs", "vlan1 wl0 wl1");
+				nvram_set("lan_ifnames", "vlan1 eth1 eth2");
+				nvram_set("wan_ifnames", "vlan2");
+				nvram_set("wan_ifnameX", "vlan2");
+				nvram_set("wandevs", "vlan2");
+				nvram_set("wl_ifnames", "eth1 eth2");
+				nvram_set("wl_ifname", "eth1");
+				nvram_set("wl0_ifname", "eth1");
+				nvram_set("wl1_ifname", "eth2");
+			}
 			break;
-		case MODEL_F7D4302:
+		case MODEL_F7D4302: /* N600 Dual Band and Fast Ethernet BCM5325E */
 			name = "Play N600 (F7D4302/F7D8302) v1";
+			features = SUP_SES | SUP_80211N;
+			if (!nvram_match("t_fix1", (char *)name)) {
+				nvram_set("vlan1hwname", "et0");
+				nvram_set("vlan2hwname", "et0");
+				nvram_set("lan_ifname", "br0");
+				nvram_set("landevs", "vlan1 wl0 wl1");
+				nvram_set("lan_ifnames", "vlan1 eth1 eth2");
+				nvram_set("wan_ifnames", "vlan2");
+				nvram_set("wan_ifnameX", "vlan2");
+				nvram_set("wandevs", "vlan2");
+				nvram_set("wl_ifnames", "eth1 eth2");
+				nvram_set("wl_ifname", "eth1");
+				nvram_set("wl0_ifname", "eth1");
+				nvram_set("wl1_ifname", "eth2");
+			}
 			break;
-		case MODEL_F5D8235v3:
+		case MODEL_F5D8235v3: /* N300 and Gigabit BCM53115 */
 			name = "N F5D8235-4 v3";
+			features = SUP_SES | SUP_80211N | SUP_1000ET;
+			if (!nvram_match("t_fix1", (char *)name)) {
+				nvram_set("vlan1hwname", "et0");
+				nvram_set("vlan2hwname", "et0");
+				nvram_set("lan_ifname", "br0");
+				nvram_set("landevs", "vlan1 wl0");
+				nvram_set("lan_ifnames", "vlan1 eth1");
+				nvram_set("wan_ifnames", "vlan2");
+				nvram_set("wan_ifnameX", "vlan2");
+				nvram_set("wandevs", "vlan2");
+				nvram_set("wl_ifnames", "eth1");
+				nvram_set("wl_ifname", "eth1");
+				nvram_set("wl0_ifname", "eth1");
+			}
 			break;
 		}
 #ifdef TCONFIG_USB
 		nvram_set("usb_uhci", "-1");
 #endif
-		if (!nvram_match("t_fix1", (char *)name)) {
-			nvram_set("lan_ifnames", "vlan1 eth1 eth2");
-			nvram_set("wan_ifnameX", "vlan2");
-			nvram_set("landevs", "vlan1 wl0 wl1");
-			nvram_set("wandevs", "vlan2");
-		}
 		break;
 #ifdef TCONFIG_BLINK /* RTN/RTAC */
 	case MODEL_E1000v2:
