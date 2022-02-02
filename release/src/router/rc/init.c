@@ -983,11 +983,15 @@ static void check_bootnv(void)
 	case MODEL_F5D8235v3:
 		if (nvram_match("sb/1/macaddr", nvram_safe_get("et0macaddr"))) {
 			strlcpy(mac, nvram_safe_get("et0macaddr"), sizeof(mac));
-			inc_mac(mac, 2);
+			inc_mac(mac, +2);
 			dirty |= check_nv("sb/1/macaddr", mac);
-			inc_mac(mac, 1);
-			dirty |= check_nv("pci/1/1/macaddr", mac);
+			if ((model == MODEL_F7D4301) || /* N600 Dual Band */
+			    (model == MODEL_F7D4302)) {
+				inc_mac(mac, +4);
+				dirty |= check_nv("pci/1/1/macaddr", mac);
+			}
 		}
+		break;
 	case MODEL_E4200:
 		dirty |= check_nv("vlan2hwname", "et0");
 		if (strncasecmp(nvram_safe_get("pci/1/1/macaddr"), "00:90:4c", 8) == 0 ||
@@ -1608,6 +1612,9 @@ static int init_nvram(void)
 	case MODEL_F7D4301:
 	case MODEL_F7D4302:
 	case MODEL_F5D8235v3:
+#ifdef TCONFIG_USB
+		nvram_set("usb_uhci", "-1");
+#endif
 		mfr = "Belkin";
 		switch (model) {
 		case MODEL_F7D3301: /* N300 and Gigabit BCM53115 */
@@ -1698,9 +1705,42 @@ static int init_nvram(void)
 			}
 			break;
 		}
-#ifdef TCONFIG_USB
-		nvram_set("usb_uhci", "-1");
-#endif
+
+		if (!nvram_match("t_fix1", (char *)name)) {
+			/* fix MAC addresses */
+			strlcpy(s, nvram_safe_get("et0macaddr"), sizeof(s));	/* get et0 MAC address for LAN */
+			inc_mac(s, +2);
+			nvram_set("sb/1/macaddr", s);				/* fix WL mac for 2,4G */
+			if ((model == MODEL_F7D4301) ||				/* N600 Dual Band */
+			    (model == MODEL_F7D4302)) {
+				inc_mac(s, +4);					/* do not overlap with VIFs */
+				nvram_set("pci/1/1/macaddr", s);		/* fix WL mac for 5G */
+			}
+
+			/* adjust cfe wifi country settings */
+			nvram_set("sb/1/ccode", "ALL");
+			nvram_set("sb/1/regrev", "0");
+			if ((model == MODEL_F7D4301) ||				/* N600 Dual Band */
+			    (model == MODEL_F7D4302)) {
+				nvram_set("pci/1/1/ccode", "ALL");
+				nvram_set("pci/1/1/regrev", "0");
+			}
+
+			/* default wifi settings/channels */
+			nvram_set("wl0_country_code", "SG");
+			nvram_set("wl0_channel", "6");
+			nvram_set("wl0_nbw", "40");
+			nvram_set("wl0_nbw_cap", "1");
+			nvram_set("wl0_nctrlsb", "upper");
+			if ((model == MODEL_F7D4301) ||				/* N600 Dual Band */
+			    (model == MODEL_F7D4302)) {
+				nvram_set("wl1_country_code", "SG");
+				nvram_set("wl1_channel", "36");
+				nvram_set("wl1_nbw", "40");
+				nvram_set("wl1_nbw_cap", "1");
+				nvram_set("wl1_nctrlsb", "lower");
+			}
+		}
 		break;
 #ifdef TCONFIG_BLINK /* RTN/RTAC */
 	case MODEL_E1000v2:
