@@ -608,6 +608,8 @@ const defaults_t defaults[] = {
 #endif
 	{ "adblock_blacklist_custom",	""				},
 	{ "adblock_whitelist",		""				},
+	{ "adblock_limit",		""				},
+	{ "adblock_path",		""				},
 
 /* advanced-mac */
 	{ "wan_mac",			""				},
