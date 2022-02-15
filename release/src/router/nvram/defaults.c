@@ -1425,7 +1425,7 @@ const defaults_t defaults[] = {
 	{"nginx_docroot",		"/www"				},	// path for server files
 	{"nginx_port",			"85"				},	// port to listen
 	{"nginx_remote",		"0"				},	// open port from WAN site
-	{"nginx_fqdn",			"Tomato"			},	// server name
+	{"nginx_fqdn",			"FreshTomato"			},	/* server name */
 	{"nginx_upload",		"100"				},	// upload file size limit
 	{"nginx_priority",		"10"				},	// server priority = worker_priority
 	{"nginx_custom",		""				},	// additional lines for nginx.conf
