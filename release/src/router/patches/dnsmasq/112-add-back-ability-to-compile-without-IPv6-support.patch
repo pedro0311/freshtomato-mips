@@ -1646,7 +1646,7 @@
  	    else
  	      {
  		char *canon = canonicalise_opt(arg);
-@@ -5603,8 +5640,10 @@
+@@ -5597,8 +5634,10 @@
  	  {
  	    if (tmp->source_addr.sa.sa_family == AF_INET)
  	      tmp->source_addr.in.sin_port = htons(daemon->query_port);
@@ -1657,7 +1657,7 @@
  	  }
      } 
    
-@@ -5665,8 +5704,10 @@
+@@ -5659,8 +5698,10 @@
        for(tmp = daemon->if_addrs; tmp; tmp = tmp->next)
  	if (tmp->addr.sa.sa_family == AF_INET)
  	  tmp->addr.in.sin_port = htons(daemon->port);
