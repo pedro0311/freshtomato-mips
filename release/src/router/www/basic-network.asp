@@ -1252,7 +1252,6 @@ REMOVE-END */
 			wmode.options[2].disabled = 1;
 			wmode.options[3].disabled = 0;
 			wmode.options[4].disabled = 0;
-			wmode.options[5].disabled = 0;
 			s_mode = E('_'+u+'_security_mode');
 			s_mode.options[2].disabled = 0;
 			s_mode.options[3].disabled = 0;
@@ -1285,7 +1284,6 @@ REMOVE-END */
 			wmode.options[2].disabled = 0;
 			wmode.options[3].disabled = 1;
 			wmode.options[4].disabled = 1;
-			wmode.options[5].disabled = 1;
 			s_mode = E('_'+sta_wl+'_security_mode');
 			s_mode.options[2].disabled = 1;
 			s_mode.options[3].disabled = 1;
