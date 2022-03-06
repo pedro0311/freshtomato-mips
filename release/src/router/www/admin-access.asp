@@ -18,7 +18,7 @@
 
 <script>
 
-//	<% nvram("http_enable,https_enable,http_lanport,https_lanport,remote_management,remote_mgt_https,remote_upgrade,web_wl_filter,web_css,web_adv_scripts,web_dir,ttb_css,ttb_loc,ttb_url,sshd_eas,sshd_pass,sshd_remote,telnetd_eas,http_wanport,http_wanport_bfm,sshd_authkeys,sshd_port,sshd_rport,sshd_forwarding,telnetd_port,rmgt_sip,https_crt_cn,https_crt_save,lan_ipaddr,ne_shlimit,sshd_motd,http_username"); %>
+//	<% nvram("http_enable,https_enable,http_lanport,https_lanport,remote_management,remote_mgt_https,remote_upgrade,web_wl_filter,web_css,web_adv_scripts,web_dir,ttb_css,ttb_loc,ttb_url,sshd_eas,sshd_pass,sshd_remote,telnetd_eas,http_wanport,http_wanport_bfm,sshd_authkeys,sshd_port,sshd_rport,sshd_forwarding,telnetd_port,rmgt_sip,https_crt_cn,https_crt_save,lan_ipaddr,ne_shlimit,sshd_motd,http_username,jffs2_auto_unmount"); %>
 
 </script>
 <script src="isup.jsx?_http_id=<% nv(http_id); %>"></script>
@@ -290,6 +290,9 @@ function save() {
 /* SIZEOPTMORE-BEGIN */
 	fom.sshd_forwarding.value = fom._f_sshd_forwarding.checked ? 1 : 0;
 /* SIZEOPTMORE-END */
+/* JFFS2-BEGIN */
+	fom.jffs2_auto_unmount.value = fom._f_jffs2_auto_unmount.checked ? 1 : 0;
+/* JFFS2-END */
 
 	/* do not restart sshd if no changes in its configuration */
 	if ((fom.sshd_pass.value == nvram.sshd_pass) && (fom.sshd_remote.value == nvram.sshd_remote) && (fom.sshd_motd.value == nvram.sshd_motd) &&
@@ -376,6 +379,9 @@ function init() {
 <input type="hidden" name="sshd_forwarding">
 <!-- SIZEOPTMORE-END -->
 <input type="hidden" name="web_mx">
+<!-- JFFS2-BEGIN -->
+<input type="hidden" name="jffs2_auto_unmount">
+<!-- JFFS2-END -->
 
 <!-- / / / -->
 
@@ -399,6 +405,9 @@ function init() {
 /* HTTPS-END */
 				{ title: 'Allow Wireless Access', indent: 2, name: 'f_http_wireless', type: 'checkbox', value: nvram.web_wl_filter == 0 },
 			null,
+/* JFFS2-BEGIN */
+			{ title: 'Unmount JFFS during upgrade', name: 'f_jffs2_auto_unmount', type: 'checkbox', suffix: '&nbsp;<small>Warning! In some peculiar cases the content of JFFS might not be preserved after a firmware upgrade<\/small>', value: nvram.jffs2_auto_unmount == 1 },
+/* JFFS2-END */
 			{ title: 'Allow Remote Upgrade', name: 'f_remote_upgrade', type: 'checkbox', suffix: '&nbsp;<small>keep disabled for smaller memory footprint during upgrade<\/small>', value: nvram.remote_upgrade == 1 },
 			{ title: 'Remote Access', name: 'f_http_remote', type: 'select', options: [[0,'Disabled'],[1,'HTTP']
 /* HTTPS-BEGIN */
