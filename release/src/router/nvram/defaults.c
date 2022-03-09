@@ -84,6 +84,8 @@ const defaults_t defaults[] = {
 	/* WAN H/W parameters */
 	{ "wan_hwname",			""				},	// WAN driver name (e.g. et1)
 	{ "wan_hwaddr",			""				},	// WAN interface MAC address
+	{ "wan_iface",			""				},
+	{ "wan_ifname",			""				},
 	{ "wan_ifnameX",		NULL				},	// real wan if; see wan.c:start_wan
 
 	/* WAN TCP/IP parameters */
@@ -111,6 +113,8 @@ const defaults_t defaults[] = {
 	{ "wan2_weight",		"1"				},
 	{ "wan2_hwname",		""				},	// WAN driver name (e.g. et1)
 	{ "wan2_hwaddr",		""				},	// WAN interface MAC address
+	{ "wan2_iface",			""				},
+	{ "wan2_ifname",		""				},
 	{ "wan2_ifnameX",		NULL				},	// real wan if; see wan.c:start_wan
 #ifdef TCONFIG_USB
 	{ "wan2_hilink_ip",		"0.0.0.0"			},
@@ -129,6 +133,8 @@ const defaults_t defaults[] = {
 	{ "wan3_weight",		"1"				},
 	{ "wan3_hwname",		""				},	// WAN driver name (e.g. et1)
 	{ "wan3_hwaddr",		""				},	// WAN interface MAC address
+	{ "wan3_iface",			""				},
+	{ "wan3_ifname",		""				},
 	{ "wan3_ifnameX",		NULL				},	// real wan if; see wan.c:start_wan
 #ifdef TCONFIG_USB
 	{ "wan3_hilink_ip",		"0.0.0.0"			},
@@ -146,6 +152,8 @@ const defaults_t defaults[] = {
 	{ "wan4_weight",		"1"				},
 	{ "wan4_hwname",		""				},	// WAN driver name (e.g. et1)
 	{ "wan4_hwaddr",		""				},	// WAN interface MAC address
+	{ "wan4_iface",			""				},
+	{ "wan4_ifname",		""				},
 	{ "wan4_ifnameX",		NULL				},	// real wan if; see wan.c:start_wan
 #ifdef TCONFIG_USB
 	{ "wan4_hilink_ip",		"0.0.0.0"			},
