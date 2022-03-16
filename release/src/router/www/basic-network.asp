@@ -1277,7 +1277,7 @@ REMOVE-END */
 			wmode.options[2].disabled = 1;
 			wmode.options[3].disabled = 0;
 			wmode.options[4].disabled = 0;
-			s_mode = E('_'+u+'_security_mode');
+			s_mode = E('_wl'+u+'_security_mode');
 			s_mode.options[2].disabled = 0;
 			s_mode.options[3].disabled = 0;
 			s_mode.options[4].disabled = 0;
