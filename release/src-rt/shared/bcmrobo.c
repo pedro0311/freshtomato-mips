@@ -19,10 +19,12 @@
  */
 
 
+#include <bcm_cfg.h>
 #include <typedefs.h>
 #include <osl.h>
 #include <bcmutils.h>
 #include <siutils.h>
+#include <sbchipc.h>
 #include <hndsoc.h>
 #include <bcmutils.h>
 #include <bcmendian.h>
@@ -741,17 +743,22 @@ bcm_robo_attach(si_t *sih, void *h, char *vars, miird_f miird, miiwr_f miiwr)
 
 	/* Enable switch leds */
 	if (sih->chip == BCM5356_CHIP_ID) {
-		si_pmu_chipcontrol(sih, 2, (1 << 25), (1 << 25));
+		if (PMUCTL_ENAB(sih)) {
+			si_pmu_chipcontrol(sih, 2, (1 << 25), (1 << 25));
+			/* also enable fast MII clocks */
+			si_pmu_chipcontrol(sih, 0, (1 << 1), (1 << 1));
+		}
 	} else if ((sih->chip == BCM5357_CHIP_ID) || (sih->chip == BCM53572_CHIP_ID)) {
 		uint32 led_gpios = 0;
-		char *var;
+		const char *var;
 
-		if ((sih->chippkg != BCM47186_PKG_ID) && (sih->chippkg != BCM47188_PKG_ID))
+		if (((sih->chip == BCM5357_CHIP_ID) && (sih->chippkg != BCM47186_PKG_ID)) ||
+		    ((sih->chip == BCM53572_CHIP_ID) && (sih->chippkg != BCM47188_PKG_ID)))
 			led_gpios = 0x1f;
 		var = getvar(vars, "et_swleds");
 		if (var)
 			led_gpios = bcm_strtoul(var, NULL, 0);
-		if (led_gpios)
+		if (PMUCTL_ENAB(sih) && led_gpios)
 			si_pmu_chipcontrol(sih, 2, (0x3ff << 8), (led_gpios << 8));
 	}
 
