@@ -295,6 +295,7 @@ int buttons_main(int argc, char *argv[])
 #else
 		reset_mask = 1 << 7; /* use wps button at tomato level for router reset */
 #endif /* 0 */
+		ses_led = LED_AOSS;
 		break;
 	case MODEL_E900:
 	case MODEL_E1000v2:
