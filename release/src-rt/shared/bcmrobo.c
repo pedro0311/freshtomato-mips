@@ -584,6 +584,9 @@ bcm_robo_attach(si_t *sih, void *h, char *vars, miird_f miird, miiwr_f miiwr)
 {
 	robo_info_t *robo;
 	uint32 reset, idx;
+	char *boardnum = nvram_get("boardnum");
+	char *boardrev = nvram_get("boardrev");
+	char *boardtype = nvram_get("boardtype");
 #ifndef	_CFE_
 	char *et1port, *et1phyaddr;
 	int mdcport = 0, phyaddr = 0, lan_portenable = 0;
@@ -741,6 +744,17 @@ bcm_robo_attach(si_t *sih, void *h, char *vars, miird_f miird, miiwr_f miiwr)
 		mii_wreg(robo, PAGE_CTRL, REG_CTRL_SRST, &srst_ctrl, sizeof(uint8));
 	}
 
+	/* Belkin F9K1102 v1/v3 special case */
+	if (boardnum != NULL &&
+	    boardtype != NULL &&
+	    boardrev != NULL &&
+	    !strcmp(boardnum, "2040") &&
+	    !strcmp(boardtype, "0x0550") &&
+	    !strcmp(boardrev, "0x1200")) {
+		/* nothing to do here --> skip enable switch leds! (see belkin src) */
+		printk(KERN_EMERG "bcmrobo: Belkin F9K1102 v1/v3 special case - skip enable switch leds!\n");
+	}
+	else { /* default */
 	/* Enable switch leds */
 	if (sih->chip == BCM5356_CHIP_ID) {
 		if (PMUCTL_ENAB(sih)) {
@@ -760,6 +774,7 @@ bcm_robo_attach(si_t *sih, void *h, char *vars, miird_f miird, miiwr_f miiwr)
 			led_gpios = bcm_strtoul(var, NULL, 0);
 		if (PMUCTL_ENAB(sih) && led_gpios)
 			si_pmu_chipcontrol(sih, 2, (0x3ff << 8), (led_gpios << 8));
+	}
 	}
 
 #ifndef	_CFE_
