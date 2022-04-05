@@ -1,6 +1,6 @@
 --- dropbear/localoptions.h
 +++ dropbear/localoptions.h
-@@ -0,0 +1,43 @@
+@@ -0,0 +1,45 @@
 +/* Override SSH 2.0 ident */
 +#define LOCAL_IDENT "SSH-2.0-dropbear"
 +
@@ -30,6 +30,8 @@
 +#define DROPBEAR_DSS 0
 +#define DROPBEAR_ECDSA 0
 +#define DROPBEAR_ED25519 0
++#define DROPBEAR_SK_ECDSA 0
++#define DROPBEAR_SK_ED25519 0
 +
 +#else /* NO_OPTSIZE */
 +
