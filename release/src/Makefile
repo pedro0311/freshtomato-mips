@@ -1488,7 +1488,6 @@ help:
 	@echo "n6             Tenda N6"
 	@echo "n60            Tenda N60 w/o minidlna"
 	@echo "wndr3400v2     Netgear WNDR3400v2/v3 miniIPv6 w/o minidlna"
-	@echo "wndr3400v2-vpn Netgear WNDR3400v2/v3 VPN w/o Samba"
 	@echo ""
 	@echo "       Netgear WNDR3400/3700v3/4000"
 	@echo "wndr64         Netgear WNDR3400/3700v3/4000 miniIPv6 w/o miniDLNA"
