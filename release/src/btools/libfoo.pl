@@ -606,7 +606,7 @@ else {
 genSO("${root}/usr/lib/libzebra.so", "${router}/zebra/lib/libzebra.a");
 genSO("${root}/usr/lib/libz.so.1", "${router}/zlib/libz.a");
 genSO("${root}/usr/lib/libjpeg.so", "${router}/jpeg/libjpeg.a");
-genSO("${root}/usr/lib/libsqlite3.so.0.8.6", "${router}/sqlite/.libs/libsqlite3.a");
+genSO("${root}/usr/lib/libsqlite3.so.0.8.6", "${router}/sqlite/.libs/libsqlite3.a", "", "-L${router}/zlib");
 genSO("${root}/usr/lib/libvorbis.so.0", "${router}/libvorbis/lib/.libs/libvorbis.a", "", "-L${router}/libogg/src/.libs");
 genSO("${root}/usr/lib/libid3tag.so.0", "${router}/libid3tag/.libs/libid3tag.a", "", "-L${router}/zlib");
 genSO("${root}/usr/lib/libexif.so.12", "${router}/libexif/libexif/.libs/libexif.a");
