@@ -122,20 +122,20 @@
 #if defined __GNUC__ && !defined _GCC_LIMITS_H_
 /* `_GCC_LIMITS_H_' is what GCC's file defines.  */
 # include_next <limits.h>
+#endif
 
 /* The <limits.h> files in some gcc versions don't define LLONG_MIN,
    LLONG_MAX, and ULLONG_MAX.  Instead only the values gcc defined for
    ages are available.  */
-# ifdef __USE_ISOC99
-#  ifndef LLONG_MIN
-#   define LLONG_MIN	LONG_LONG_MIN
-#  endif
-#  ifndef LLONG_MAX
-#   define LLONG_MAX	LONG_LONG_MAX
-#  endif
-#  ifndef ULLONG_MAX
-#   define ULLONG_MAX	ULONG_LONG_MAX
-#  endif
+#if defined __USE_ISOC99 && defined __GNUC__
+# ifndef LLONG_MIN
+#  define LLONG_MIN	LONG_LONG_MIN
+# endif
+# ifndef LLONG_MAX
+#  define LLONG_MAX	LONG_LONG_MAX
+# endif
+# ifndef ULLONG_MAX
+#  define ULLONG_MAX	ULONG_LONG_MAX
 # endif
 #endif
 
