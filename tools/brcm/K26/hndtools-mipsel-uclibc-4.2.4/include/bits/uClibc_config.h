@@ -7,7 +7,7 @@
 #define __UCLIBC_SUBLEVEL__ 30
 /* Automatically generated make config: don't edit */
 /* Version: 0.9.30.1 */
-/* Tue Jun  7 17:49:36 2022 */
+/* Wed Jun  8 00:48:14 2022 */
 #undef __TARGET_alpha__
 #undef __TARGET_arm__
 #undef __TARGET_avr32__
