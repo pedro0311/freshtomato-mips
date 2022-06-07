@@ -883,13 +883,16 @@ define extrawlConfig
 	@( \
 	if [ "$(USBAP)" = "y" ]; then \
 		cp -f $(SRCBASE)/wl/linux/100/wl_apsta.o $(SRCBASE)/wl/linux/wl_apsta.o ; \
+		cp -f $(SRCBASE)/wl/linux/100/wl_high.o $(SRCBASE)/wl/linux/wl_high.o ; \
 		cp -f $(SRCBASE)/include/100/epivers.h $(SRCBASE)/include/epivers.h ; \
 	else \
 		if [ "$(CONFIG_BCMWL6)" = "y" ]; then \
 			cp -f $(SRCBASE)/../src-rt/wl/linux/110/wl_apsta.o $(SRCBASE)/../src-rt/wl/linux/wl_apsta.o ; \
+			cp -f $(SRCBASE)/../src-rt/wl/linux/110/wl_high.o $(SRCBASE)/../src-rt/wl/linux/wl_high.o ; \
 			cp -f $(SRCBASE)/../src-rt/include/110/epivers.h $(SRCBASE)/../src-rt/include/epivers.h ; \
 		else \
 			cp -f $(SRCBASE)/wl/linux/110/wl_apsta.o $(SRCBASE)/wl/linux/wl_apsta.o ; \
+			cp -f $(SRCBASE)/wl/linux/110/wl_high.o $(SRCBASE)/wl/linux/wl_high.o ; \
 			cp -f $(SRCBASE)/include/110/epivers.h $(SRCBASE)/include/epivers.h ; \
 		fi; \
 	fi; \
