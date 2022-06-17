@@ -604,6 +604,7 @@ const defaults_t defaults[] = {
 	{ "fw_nat_tuning",		"0"				},	/* tcp/udp buffers: 0 - small (default), 1 - medium, 2 - large */
 
 /* advanced-adblock */
+#ifdef TCONFIG_HTTPS
 	{ "adblock_enable",		"0"				},
 #if defined(TCONFIG_NVRAM_32K) || defined(TCONFIG_OPTIMIZE_SIZE_MORE)
 	{ "adblock_blacklist",		""				},
@@ -614,6 +615,7 @@ const defaults_t defaults[] = {
 	{ "adblock_whitelist",		""				},
 	{ "adblock_limit",		""				},
 	{ "adblock_path",		""				},
+#endif /* TCONFIG_HTTPS */
 
 /* advanced-mac */
 	{ "wan_mac",			""				},
