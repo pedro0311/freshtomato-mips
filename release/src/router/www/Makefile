@@ -86,6 +86,11 @@ ifneq ($(TCONFIG_NTFS),y)
 	sed -i $(INSTALLDIR)/www/nas-usb.asp -e "/NTFS-BEGIN/,/NTFS-END/d"
 endif
 
+# Only include sd/mmc card support if MICROSD is configured in.
+ifneq ($(TCONFIG_MICROSD),y)
+	sed -i $(INSTALLDIR)/www/nas-usb.asp -e "/MICROSD-BEGIN/,/MICROSD-END/d"
+endif
+
 # Only include the FTP pages if FTP Server is configured in.
 ifneq ($(TCONFIG_FTP),y)
 	rm -f $(INSTALLDIR)/www/nas-ftp.asp
@@ -442,6 +447,11 @@ else
 endif
 endif
 
+# add a note about WL Survey issue only on ARM routers
+ifneq ($(TCONFIG_BCMARM),y)
+	sed -i $(INSTALLDIR)/www/tools-survey.asp -e "/BCMARM-BEGIN/,/BCMARM-END/d"
+endif
+
 # clean up
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp *.js *.jsx *.html); do \
@@ -479,6 +489,7 @@ endif
 		-e "/DNSSEC-BEGIN/d"	-e "/DNSSEC-END/d" \
 		-e "/STORSEC-BEGIN/d"	-e "/STORSEC-END/d" \
 		-e "/TOR-BEGIN/d"	-e "/TOR-END/d" \
+		-e "/MICROSD-BEGIN/d"	-e "/MICROSD-END/d" \
 		-e "/TINC-BEGIN/d"	-e "/TINC-END/d" \
 		-e "/MULTIWAN-BEGIN/d"	-e "/MULTIWAN-END/d" \
 		-e "/DUALWAN-BEGIN/d"	-e "/DUALWAN-END/d" \
