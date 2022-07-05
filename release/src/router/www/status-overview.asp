@@ -277,6 +277,7 @@ function show() {
 	anon_update();
 
 	c('cpu', stats.cpuload);
+	c('wlsense', stats.wlsense);
 	c('uptime', stats.uptime);
 	c('time', stats.time);
 	c('memory', stats.memory);
@@ -481,6 +482,8 @@ function init() {
 		{ title: 'Used / Total RAM', rid: 'memory', text: stats.memory },
 		{ title: 'Used / Total Swap', rid: 'swap', text: stats.swap, hidden: (stats.swap == '') },
 		{ title: 'Used / Total NVRAM', rid: 'nvram_stat', text: scaleSize(nvstat.size - nvstat.free)+' / '+scaleSize(nvstat.size)+' <small>('+((nvstat.size - nvstat.free) / nvstat.size * 100.0).toFixed(2)+'%)<\/small><div class="progress-wrapper"><div class="progress-container"><div class="progress-bar" style="background-color:'+setColor(((nvstat.size - nvstat.free) / nvstat.size * 100.0).toFixed(2))+';width:'+((nvstat.size - nvstat.free) / nvstat.size * 100.0).toFixed(2)+'%"><\/div><\/div><\/div>' },
+		null,
+		{ title: 'Wireless Temperature', rid: 'wlsense', text: stats.wlsense }
 	]);
 </script>
 </div>
