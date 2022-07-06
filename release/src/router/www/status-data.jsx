@@ -44,6 +44,9 @@ stats.systemtype = sysinfo.systemtype;
 stats.cfeversion = sysinfo.cfeversion;
 stats.cpuload = ((sysinfo.loads[0] / 65536.0).toFixed(2)+'<small> / </small> '+(sysinfo.loads[1] / 65536.0).toFixed(2)+'<small> / </small>'+(sysinfo.loads[2] / 65536.0).toFixed(2));
 stats.uptime = sysinfo.uptime_s;
+/* RTNPLUS-BEGIN */
+stats.wlsense = sysinfo.wlsense;
+/* RTNPLUS-END */
 
 a = sysinfo.totalram;
 b = sysinfo.totalfreeram;
