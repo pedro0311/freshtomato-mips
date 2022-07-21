@@ -698,7 +698,6 @@ const defaults_t defaults[] = {
 	{ "routes_static",		""				},
 	{ "dhcp_routes",		"1"				},
 	{ "force_igmpv2",		"0"				},
-	{ "wk_mode",			"gateway"			},	// Network mode [gateway|router]
 #ifdef TCONFIG_ZEBRA
 	{ "dr_setting",			"0"				},	// [ Disable | WAN | LAN | Both ]
 	{ "dr_lan_tx",			"0"				},	// Dynamic-Routing LAN out
