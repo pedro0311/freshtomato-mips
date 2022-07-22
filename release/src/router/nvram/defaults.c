@@ -706,7 +706,6 @@ const defaults_t defaults[] = {
 	{ "routes_static",		""				},
 	{ "dhcp_routes",		"1"				},
 	{ "force_igmpv2",		"0"				},
-	{ "wk_mode",			"gateway"			},	// Network mode [gateway|router]
 #ifdef TCONFIG_ZEBRA
 	{ "dr_setting",			"0"				},	// [ Disable | WAN | LAN | Both ]
 	{ "dr_lan_tx",			"0"				},	// Dynamic-Routing LAN out
@@ -1317,7 +1316,7 @@ const defaults_t defaults[] = {
 #endif
 
 #ifdef TCONFIG_TINC
-	{"tinc_wanup",			"0"				},
+	{"tinc_enable",			"0"				},
 	{"tinc_name",			""				},
 	{"tinc_devicetype",		"tun"				},	// tun, tap
 	{"tinc_mode",			"switch"			},	// switch, hub
@@ -1354,7 +1353,7 @@ const defaults_t defaults[] = {
 	{ "bt_incomplete",		"1"				},
 	{ "bt_autoadd",			"1"				},
 	{ "bt_settings",		"down_dir"			},
-	{ "bt_settings_custom",		"/tmp/btclient"			},
+	{ "bt_settings_custom",		"/etc/transmission"		},
 	{ "bt_rpc_enable",		"1"				},
 	{ "bt_rpc_wan",			"0"				},
 	{ "bt_auth",			"1"				},
