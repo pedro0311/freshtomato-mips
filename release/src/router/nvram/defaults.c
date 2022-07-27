@@ -359,7 +359,6 @@ const defaults_t defaults[] = {
 	{ "ipv6_vlan",			"0"				},	// Enable IPv6 on LAN1 (bit 0) and/or LAN2 (bit 1) and/or LAN3 (bit 2)
 	{ "ipv6_isp_opt",		"0"				},	// see router/rc/wan.c --> add default route ::/0
 	{ "ipv6_pdonly",		"0"				},	// Request DHCPv6 Prefix Delegation Only
-	{ "ipv6_ipsec",			"1"				},	// Enable Incoming IPv6 IPSec
 	{ "ipv6_wan_addr",		""				},	// Static IPv6 WAN Address
 	{ "ipv6_prefix_len_wan",	"64"				},	// Static IPv6 WAN Prefix Length
 	{ "ipv6_isp_gw",		""				},	// Static IPv6 ISP Gateway
@@ -857,6 +856,7 @@ const defaults_t defaults[] = {
 	{ "sshd_forwarding",		"1"				},
 	{ "rmgt_sip",			""				},	// remote management: source ip address
 	{ "ne_shlimit",			"1,3,60"			},	/* enable limit connection attempts for sshd */
+	{ "ipsec_pass",			"1"				},	/* Enable IPSec Passthrough 0=Disabled, 1=IPv4 + IPv6, 2=IPv6 only, 3=IPv4 only */
 
 	{ "http_id",			""				},
 	{ "web_mx",			"status,bwm"			},
