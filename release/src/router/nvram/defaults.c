@@ -334,6 +334,9 @@ const defaults_t defaults[] = {
 #ifdef TCONFIG_IPV6
 	/* IPv6 parameters */
 	{ "ipv6_service",		""				},	// [''|native|native-pd|6to4|sit|other]
+#if defined(TCONFIG_BLINK) || defined(TCONFIG_BCMARM) /* RT-N+ */
+	{ "ipv6_debug",			"0"				},	/* enable/show debug infos */
+#endif
 	{ "ipv6_duid_type",		"3"				},	/* see RFC8415 Section 11; DUID-LLT = 1, DUID-EN = 2, DUID-LL = 3 (default), DUID-UUID = 4 */	
 	{ "ipv6_prefix",		""				},	// The global-scope IPv6 prefix to route/advertise
 	{ "ipv6_prefix_length",		"64"				},	// The bit length of the prefix. Used by dhcp6c. For radvd, /64 is always assumed.

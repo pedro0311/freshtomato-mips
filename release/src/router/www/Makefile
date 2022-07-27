@@ -448,10 +448,11 @@ ifeq ($(TCONFIG_FTP)$(TCONFIG_SAMBASRV)$(TCONFIG_MEDIA_SERVER)$(TCONFIG_PPTPD)$(
 	rm -f $(INSTALLDIR)/www/isup.js
 endif
 
-# only add wlsense on RT-N+ routers
+# only add for RT-N+ routers
 ifeq ($(filter y,$(TCONFIG_BLINK) $(TCONFIG_BCMARM)),)
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
 	sed -i $(INSTALLDIR)/www/status-data.jsx -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
+	sed -i $(INSTALLDIR)/www/basic-ipv6.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
 endif
 
 # clean up
