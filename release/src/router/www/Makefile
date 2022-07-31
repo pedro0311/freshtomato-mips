@@ -143,6 +143,13 @@ ifneq ($(TCONFIG_HFS),y)
 	sed -i $(INSTALLDIR)/www/about.asp -e "/HFS-BEGIN/,/HFS-END/d"
 endif
 
+# only add for RT-N+ routers
+ifeq ($(filter y,$(TCONFIG_BLINK) $(TCONFIG_BCMARM)),)
+	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
+	sed -i $(INSTALLDIR)/www/status-data.jsx -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
+	sed -i $(INSTALLDIR)/www/basic-ipv6.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
+endif
+
 # Only include IPv6 options if IPv6 is configured in.
 ifneq ($(TCONFIG_IPV6),y)
 	cd $(INSTALLDIR)/www && \
@@ -464,12 +471,6 @@ endif
 # only include isup.js helper if it is needed
 ifeq ($(TCONFIG_FTP)$(TCONFIG_SAMBASRV)$(TCONFIG_MEDIA_SERVER)$(TCONFIG_PPTPD)$(TCONFIG_NGINX)$(TCONFIG_BT),)
 	rm -f $(INSTALLDIR)/www/isup.js
-endif
-
-# only add wlsense on RT-N+ routers
-ifeq ($(filter y,$(TCONFIG_BLINK) $(TCONFIG_BCMARM)),)
-	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
-	sed -i $(INSTALLDIR)/www/status-data.jsx -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
 endif
 
 # clean up
