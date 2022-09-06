@@ -748,8 +748,6 @@ static int init_vlan_ports(void)
 	case MODEL_F9K1102:
 		dirty |= check_nv("vlan2ports", "0 1 2 3 5*");
 		dirty |= check_nv("vlan1ports", "4 5");
-		dirty |= check_nv("boot_wait", "on");
-		dirty |= check_nv("wait_time", "3");
 		break;
 	case MODEL_RTN53A1:
 		dirty |= check_nv("vlan1ports", "4 5");
@@ -1010,20 +1008,6 @@ static void check_bootnv(void)
 			inc_mac(mac, +4);
 			dirty |= check_nv("pci/1/1/macaddr", mac);
 		}
-	case MODEL_E3200:
-		dirty |= check_nv("vlan2hwname", "et0");
-		if (nvram_match("sb/1/macaddr", nvram_safe_get("et0macaddr"))) {
-			strcpy(mac, nvram_safe_get("et0macaddr"));
-			inc_mac(mac, 2);
-			dirty |= check_nv("sb/1/macaddr", mac);
-			inc_mac(mac, 1);
-			dirty |= check_nv("wl0_hwaddr", mac);
-#ifdef TCONFIG_USBAP
-		inc_mac(mac, 1);
-			dirty |= check_nv("wl1_hwaddr", mac);
-			dirty |= check_nv("usb/0xBD17/macaddr", mac);
-#endif
-		}
 		break;
 	case MODEL_WRT160Nv3:
 #ifdef TCONFIG_BLINK /* RTN/RTAC */
@@ -1032,6 +1016,7 @@ static void check_bootnv(void)
 	case MODEL_E1500:
 	case MODEL_E1550:
 	case MODEL_E2500:
+	case MODEL_E3200:
 	case MODEL_L600N:
 	case MODEL_DIR620C1:
 #endif
@@ -1141,8 +1126,6 @@ static void check_bootnv(void)
 		dirty |= check_nv("reset_gpio", "30");
 		break;
 	case MODEL_F9K1102:
-		dirty |= check_nv("vlan2hwname", "et0");
-		dirty |= check_nv("gpio7", "wps_button");
 		if (nvram_match("sb/1/macaddr", nvram_safe_get("et0macaddr"))) {
 			strlcpy(mac, nvram_safe_get("et0macaddr"), sizeof(mac));
 			inc_mac(mac, 2);
@@ -3832,6 +3815,12 @@ static int init_nvram(void)
 		nvram_set("usb_uhci", "-1");
 #endif
 		if (!nvram_match("t_fix1", (char *)name)) {
+			nvram_set("vlan1hwname", "et0");
+			nvram_set("vlan2hwname", "et0");
+			nvram_set("wan_ifnameX", "vlan1");
+			nvram_set("wandevs", "vlan1");
+			nvram_set("wan_ifname", "vlan1");
+			nvram_set("wl0_ifname", "eth1");
 #ifdef TCONFIG_USBAP
 			nvram_set("ehciirqt", "3");
 			nvram_set("qtdc_pid", "48407");
@@ -3840,6 +3829,7 @@ static int init_nvram(void)
 			nvram_set("qtdc0_sz", "5");
 			nvram_set("qtdc1_ep", "18");
 			nvram_set("qtdc1_sz", "10");
+			nvram_set("br0_ifnames", "vlan2 eth1 eth2");
 			nvram_set("lan_ifnames", "vlan2 eth1 eth2");
 			nvram_set("landevs", "vlan2 wl0 wl1");
 			nvram_set("wl1_ifname", "eth2");
@@ -3847,17 +3837,7 @@ static int init_nvram(void)
 			nvram_set("wl1_nbw", "40");
 			nvram_set("wl1_nbw_cap", "1");
 			nvram_set("wl1_nctrlsb", "lower");
-#else
-			nvram_set("wan_ifnameX", "vlan1");
-			nvram_set("wandevs", "vlan1");
-			nvram_set("wan_ifnames", "vlan1");
-			nvram_set("wan_iface", "vlan1");
 #endif
-			nvram_set("wl0_ifname", "eth1");
-			nvram_set("wl0_nbw", "20");
-			nvram_set("wl0_nbw_cap", "0");
-			nvram_set("wl0_channel", "6");
-			nvram_set("wl0_nctrlsb", "lower");
 		}
 		break;
 	case MODEL_E900:
@@ -3933,6 +3913,7 @@ static int init_nvram(void)
 #endif
 		if (!nvram_match("t_fix1", (char *)name)) {
 #ifdef TCONFIG_USBAP
+			nvram_set("wl1_hwaddr", nvram_safe_get("usb/0xBD17/macaddr"));
 			nvram_set("ehciirqt", "3");
 			nvram_set("qtdc_pid", "48407");
 			nvram_set("qtdc_vid", "2652");
@@ -3947,10 +3928,10 @@ static int init_nvram(void)
 			nvram_set("wl0_ifname", "eth1");
 			nvram_set("wl1_ifname", "eth2");
 #else
-			nvram_set("wan_ifnames", "vlan2");
-			nvram_set("wandevs", "vlan2");
+			nvram_set("lan_ifnames", "vlan1 eth1");
+			nvram_set("landevs", "vlan1 wl0");
 #endif
-			nvram_set("wan_ifname", "eth2");
+			nvram_set("wl_ifname", "eth1");
 			nvram_set("wan_ifnameX", "vlan2");
 		}
 		break;
