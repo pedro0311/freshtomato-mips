@@ -75,7 +75,7 @@ const defaults_t defaults[] = {
 	{ "mwan_num",			"1"				},
 	{ "mwan_init",			"0"				},
 	{ "mwan_cktime",		"0"				},
-	{ "mwan_ckdst",			"google.com,microsoft.com"	},	// target1,target2
+	{ "mwan_ckdst",			"google.com,1.1.1.1"		},	// target1,target2
 	{ "mwan_debug",			"0"				},
 	{ "mwan_tune_gc",		"0"				},	/* tune route cache for multiwan in load balancing */
 	{ "mwan_state_init",		"1"				},	/* init wan state files with this value */
