@@ -204,9 +204,7 @@ const defaults_t defaults[] = {
 #endif
 
 	/* DHCP server parameters */
-	{ "dhcp_start",			"2"				},	//
-	{ "dhcp_num",			"50"				},	//
-	{ "dhcpd_startip",		"" 				},	// if empty, tomato will use dhcp_start/dchp_num for better compatibility
+	{ "dhcpd_startip",		"" 				},
 	{ "dhcpd_endip",		"" 				},	//
 	{ "dhcp_lease",			"1440"				},	// LAN lease time in minutes
 	{ "dhcp_domain",		"wan"				},	// Use WAN domain name first if available (wan|lan)
@@ -214,18 +212,12 @@ const defaults_t defaults[] = {
 	{ "wan_routes",			""				},
 	{ "wan_msroutes",		""				},
 
-	{ "dhcp1_start",		""				},
-	{ "dhcp1_num",			""				},
 	{ "dhcpd1_startip",		"" 				},
 	{ "dhcpd1_endip",		"" 				},
 	{ "dhcp1_lease",		"1440"				},
-	{ "dhcp2_start",		""				},
-	{ "dhcp2_num",			""				},
 	{ "dhcpd2_startip",		"" 				},
 	{ "dhcpd2_endip",		"" 				},
 	{ "dhcp2_lease",		"1440"				},
-	{ "dhcp3_start",		""				},
-	{ "dhcp3_num",			""				},
 	{ "dhcpd3_startip",		"" 				},
 	{ "dhcpd3_endip",		"" 				},
 	{ "dhcp3_lease",		"1440"				},
