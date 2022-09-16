@@ -207,6 +207,7 @@ const defaults_t defaults[] = {
 	{ "dhcpd_startip",		"" 				},
 	{ "dhcpd_endip",		"" 				},	//
 	{ "dhcp_lease",			"1440"				},	// LAN lease time in minutes
+	{ "dhcp_moveip",		"0"				},	/* GUI helper for automatic IP change */
 	{ "dhcp_domain",		"wan"				},	// Use WAN domain name first if available (wan|lan)
 	{ "wan_get_dns",		""				},	// DNS IP address which get by dhcpc
 	{ "wan_routes",			""				},
