@@ -4471,7 +4471,7 @@ static int init_nvram(void)
 			nvram_set("sb/1/macaddr", s); 			/* fix WL mac for 2,4G eth1 */
 			nvram_set("wl0_hwaddr", s);
 			inc_mac(s, +4); 				/* do not overlap with VIFs */
-			nvram_set("pci/1/1/macaddr", s);		/* fix WL mac for 5G eth2 */
+			nvram_set("0:macaddr", s);			/* fix WL mac for 5G eth2 */
 			nvram_set("wl1_hwaddr", s);
 
 			nvram_set("boardflags", "0x710");
@@ -4672,7 +4672,7 @@ static int init_nvram(void)
 			nvram_set("sb/1/macaddr", s); 			/* fix WL mac for 2,4G eth1 */
 			nvram_set("wl0_hwaddr", s);
 			inc_mac(s, +4); 				/* do not overlap with VIFs */
-			nvram_set("pci/1/1/macaddr", s);		/* fix WL mac for 5G eth2 */
+			nvram_set("0:macaddr", s);			/* fix WL mac for 5G eth2 */
 			nvram_set("wl1_hwaddr", s);
 
 			nvram_set("boardflags", "0x80001710");
