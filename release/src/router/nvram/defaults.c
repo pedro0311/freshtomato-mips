@@ -1452,8 +1452,7 @@ const defaults_t defaults[] = {
 /* bwq518 - MySQL */
 	{ "mysql_enable",		"0"				},
 	{ "mysql_sleep",		"2"				},
-	{ "mysql_check",		"1"				},
-	{ "mysql_check_time",		"1"				},
+	{ "mysql_check_time",		"5"				},
 	{ "mysql_binary",		"internal"			},
 	{ "mysql_binary_custom",	"/mnt/sda1/mysql/bin"		},
 	{ "mysql_usb_enable",		"1"				},
