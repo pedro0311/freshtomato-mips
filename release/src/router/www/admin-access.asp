@@ -413,9 +413,9 @@ function init() {
 				{ title: 'Save In NVRAM', indent: 2, name: 'f_https_crt_save', type: 'checkbox', value: nvram.https_crt_save == 1 },
 /* HTTPS-END */
 			null,
-			{ title: 'Directory with GUI files', name: 'web_dir', type: 'select',
+			{ title: 'UI files path', name: 'web_dir', type: 'select',
 				options: [['default','Default: /www'], ['jffs', 'Custom: /jffs/www (Experts Only!)'], ['opt', 'Custom: /opt/www (Experts Only!)'], ['tmp', 'Custom: /tmp/www (Experts Only!)']], suffix: '<br>&nbsp;<small>Please be sure of your decision before change this settings!<\/small>', value: nvram.web_dir },
-			{ title: 'Color Scheme', name: 'web_css', type: 'select',
+			{ title: 'Theme UI', name: 'web_css', type: 'select',
 				options: [['default','Default'],['red','Tomato'],
 /* ADVTHEMES-BEGIN */
 					  ['at-dark','Advanced Dark'],['at-red','Advanced Red'],['at-blue','Advanced Blue'],['at-green','Advanced Green'],
