@@ -116,6 +116,7 @@ int serialize_restart(char *service, int start)
 	char s[32];
 	char *pos;
 	unsigned int index = 0;
+	pid_t pid, pid_rc = getpid();
 
 	/* replace '-' with '_' otherwise exec_service() will fail */
 	strlcpy(s, service, sizeof(s));
@@ -125,28 +126,68 @@ int serialize_restart(char *service, int start)
 		strlcat(s, "_", sizeof(s));
 		strlcat(s, service + index + 1, sizeof(s));
 	}
-	logmsg(LOG_DEBUG, "*** %s: service: %s %s - pid: %d", __FUNCTION__, service, (start ? "start" : "stop"), getpid());
+	logmsg(LOG_DEBUG, "*** %s: service: %s %s - PID[rc]: %d", __FUNCTION__, service, (start ? "start" : "stop"), pid_rc);
 
 	if (start == 1) {
-		if (getpid() != 1) {
-			logmsg(LOG_DEBUG, "*** %s: start_service(%s) - pid: %d", __FUNCTION__, s, getpid());
+		if (pid_rc != 1) {
+			logmsg(LOG_DEBUG, "*** %s: start_service(%s) - PID[rc]: %d", __FUNCTION__, s, pid_rc);
 			start_service(s);
 			return 1;
 		}
-		if (pidof(service) > 0) {
-			logmsg(LOG_WARNING, "service: %s already running", s);
+		if ((pid = pidof(service)) > 0) {
+			logmsg(LOG_WARNING, "service: %s already running; its PID: %d", s, pid);
 			return 1;
 		}
 	}
 	else {
-		if (getpid() != 1) {
-			logmsg(LOG_DEBUG, "*** %s: stop_service(%s) - pid: %d", __FUNCTION__, s, getpid());
+		if (pid_rc != 1) {
+			logmsg(LOG_DEBUG, "*** %s: stop_service(%s) - PID[rc]: %d", __FUNCTION__, s, pid_rc);
 			stop_service(s);
 			return 1;
 		}
 	}
 
 	return 0;
+}
+
+/* replace -A and -I in the FW script with -D */
+void run_del_firewall_script(char *infile, char *outfile)
+{
+	FILE *ifp, *ofp;
+	char read[128], temp[128];
+	char *pos;
+	int index = 0;
+
+	ifp = fopen(infile, "r");
+	ofp = fopen(outfile, "w+");
+	if (ifp == NULL || ofp == NULL) {
+		if (ifp != NULL) fclose(ifp);
+		if (ofp != NULL) {
+			fclose(ofp);
+			unlink(outfile);
+		}
+		return;
+	}
+
+	while (fgets(read, sizeof(read), ifp) != NULL) {
+		if ((strstr(read, "-A") != NULL) || (strstr(read, "-I") != NULL)) {
+			while (((pos = strstr(read, "-A")) != NULL) || ((pos = strstr(read, "-I")) != NULL)) {
+				strlcpy(temp, read, sizeof(temp));
+				index = pos - read;
+				read[index] = '\0';
+				strlcat(read, "-D", sizeof(read));
+				strlcat(read, temp + index + 2, sizeof(read));
+			}
+		}
+		fputs(read, ofp);
+	}
+	fclose(ifp);
+	fclose(ofp);
+
+	chmod(outfile, 0744);
+	logmsg(LOG_DEBUG, "*** %s: removing existing firewall rules: %s", __FUNCTION__, infile);
+	eval(outfile);
+	unlink(outfile);
 }
 
 typedef struct {

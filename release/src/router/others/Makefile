@@ -25,11 +25,6 @@ endif
 	install -m 0700 wwansignal $(INSTALLDIR)/usr/sbin
 endif # TCONFIG_USB
 
-ifeq ($(TCONFIG_NGINX),y)
-# MySQL
-	install -D -m 755 mycheck $(INSTALLDIR)/usr/bin
-endif
-
 # MultiWAN watchdog script
 	install -m 0700 watchdog $(INSTALLDIR)/usr/sbin
 
@@ -141,11 +136,6 @@ endif
 
 # system info
 	install -m 0700 sysinfo $(INSTALLDIR)/usr/sbin
-
-# BTGUI
-ifeq ($(TCONFIG_BT),y)
-	install -m 0755 btcheck $(INSTALLDIR)/usr/bin
-endif
 
 # network discovery script for status-devices page
 ifeq ($(or $(TCONFIG_BCMARM),$(TCONFIG_MIPSR2)),y)

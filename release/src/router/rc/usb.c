@@ -94,6 +94,30 @@ void start_usb(void)
 #ifdef TCONFIG_BCMSMP
 	int fd;
 #endif
+#ifdef TCONFIG_BCM714
+	/* get router model */
+	int model = get_model();
+	static int usb_reset_once = 0;
+
+	if (!usb_reset_once) {
+		switch(model) {
+			case MODEL_RTAC3100:
+#ifdef TCONFIG_AC5300
+			case MODEL_RTAC5300:
+#endif
+				set_gpio(GPIO_09, T_LOW); /* disable USB power */
+				usleep(25 * 1000); /* wait 25 ms */
+				set_gpio(GPIO_09, T_HIGH); /* enable USB power */
+				usleep(25 * 1000); /* wait 25 ms (again) */
+				usb_reset_once = 1;
+				logmsg(LOG_INFO, "%s: FreshTomato - reset USB Power Supply (done)", nvram_safe_get("t_model_name"));
+				break;
+			default:
+				/* nothing to do right now! */
+				break;
+		}
+	}
+#endif /* TCONFIG_BCM714 */
 	/* nothing to do right now for ARM! */
 	/* enable USB2/3 power by default - see file bcm5301x_pcie.c */
 
@@ -991,7 +1015,7 @@ void hotplug_usb_storage_device(int host_no, int action_add, uint flags)
 			 * or hotplug_usb() already did.
 			 */
 			if (exec_for_host(host_no, 0x00, flags, mount_partition))
-				restart_nas_services(0, 1); /* restart all NAS applications */
+				restart_nas_services(1, 1); /* restart all NAS applications */
 		}
 	}
 	else {
@@ -1003,7 +1027,7 @@ void hotplug_usb_storage_device(int host_no, int action_add, uint flags)
 			/* Restart NAS applications (they could be killed by umount_mountpoint),
 			 * or just re-read the configuration.
 			 */
-			restart_nas_services(0, 1);
+			restart_nas_services(1, 1);
 		}
 	}
 }
@@ -1316,7 +1340,7 @@ void hotplug_usb(void)
 					return;
 				}
 				if (mount_partition(devname, host, NULL, device, EFH_HP_ADD))
-					restart_nas_services(0, 1); /* restart all NAS applications */
+					restart_nas_services(1, 1); /* restart all NAS applications */
 			}
 		}
 		else {
@@ -1325,7 +1349,7 @@ void hotplug_usb(void)
 			/* Restart NAS applications (they could be killed by umount_mountpoint),
 			 * or just re-read the configuration.
 			 */
-			restart_nas_services(0, 1);
+			restart_nas_services(1, 1);
 		}
 		file_unlock(lock);
 	}
