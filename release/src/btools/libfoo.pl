@@ -183,7 +183,7 @@ sub fixDyn
 	fixDynDep("minidlna", "libvorbis.so.0");
 	fixDynDep("minidlna", "libid3tag.so.0");
 	fixDynDep("minidlna", "libexif.so.12");
-	fixDynDep("minidlna", "libFLAC.so.8");
+	fixDynDep("minidlna", "libFLAC.so.12");
 	fixDynDep("minidlna", "libsqlite3.so.0.8.6");
 	fixDynDep("libjpeg.so", "libc.so.0");
 	fixDynDep("libavcodec.so.52", "libpthread.so.0");
@@ -610,7 +610,7 @@ genSO("${root}/usr/lib/libsqlite3.so.0.8.6", "${router}/sqlite/.libs/libsqlite3.
 genSO("${root}/usr/lib/libvorbis.so.0", "${router}/libvorbis/lib/.libs/libvorbis.a", "", "-L${router}/libogg/src/.libs");
 genSO("${root}/usr/lib/libid3tag.so.0", "${router}/libid3tag/.libs/libid3tag.a", "", "-L${router}/zlib");
 genSO("${root}/usr/lib/libexif.so.12", "${router}/libexif/libexif/.libs/libexif.a");
-genSO("${root}/usr/lib/libFLAC.so.8", "${router}/flac/src/libFLAC/.libs/libFLAC.a", "", "-L${router}/libogg/src/.libs");
+genSO("${root}/usr/lib/libFLAC.so.12", "${router}/flac/src/libFLAC/.libs/libFLAC.a", "", "-L${router}/libogg/src/.libs");
 genSO("${root}/usr/lib/libavcodec.so.52", "${router}/ffmpeg/libavcodec/libavcodec.a", "", "-L${router}/ffmpeg/libavutil -L${router}/zlib");
 genSO("${root}/usr/lib/libavutil.so.50", "${router}/ffmpeg/libavutil/libavutil.a", "-L${router}/zlib");
 genSO("${root}/usr/lib/libavformat.so.52", "${router}/ffmpeg/libavformat/libavformat.a", "", "-L${router}/ffmpeg/libavutil -L${router}/ffmpeg/libavcodec -L${router}/zlib");
