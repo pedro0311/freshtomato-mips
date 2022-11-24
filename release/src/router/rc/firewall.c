@@ -1146,11 +1146,6 @@ static void filter_input(void)
 	strlcpy(s, nvram_safe_get("ne_shlimit"), sizeof(s));
 
 	if ((vstrsep(s, ",", &en, &hit, &sec) == 3) && ((n = atoi(en) & 3) != 0)) {
-/*
-		? what if the user uses the start button in GUI ?
-		if (nvram_get_int("telnetd_eas"))
-		if (nvram_get_int("sshd_eas"))
-*/
 		modprobe("xt_recent");
 
 		ipt_write("-N shlimit\n"
@@ -1328,6 +1323,10 @@ static void filter_input(void)
 	/* if logging */
 	if (*chain_in_drop == 'l')
 		ipt_write("-A INPUT -j %s\n", chain_in_drop);
+
+	/* NTP server LAN & WAN */
+	if (nvram_get_int("ntpd_enable") == 2)
+		ipt_write("-A INPUT -p udp -m udp --dport 123 -j %s\n", chain_in_accept);
 
 	/* default policy: DROP */
 }

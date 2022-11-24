@@ -296,8 +296,8 @@ static void ovpn_kill_switch(void)
 					memset(buf, 0, sizeof(buf)); /* reset */
 					snprintf(buf, sizeof(buf), "tun1%d", i); /* find the appropriate tun IF */
 
-					eval("iptables", "-I", "FORWARD", "!", "-o", buf, "-d", val, "-j", "REJECT");
-					eval("iptables", "-I", "FORWARD", "-o", wan_if, "-d", val, "-j", "REJECT");
+					xstart("iptables", "-I", "FORWARD", "!", "-o", buf, "-d", val, "-j", "REJECT");
+					xstart("iptables", "-I", "FORWARD", "-o", wan_if, "-d", val, "-j", "REJECT");
 				}
 
 			}
@@ -1520,6 +1520,7 @@ void stop_ovpn_all()
 void run_ovpn_firewall_scripts(void)
 {
 	DIR *dir;
+	struct stat fs;
 	struct dirent *file;
 	char *fa;
 	char buf[64];
@@ -1543,12 +1544,18 @@ void run_ovpn_firewall_scripts(void)
 		snprintf(buf, sizeof(buf), "%s/fw/", OVPN_DIR);
 		strlcat(buf, fa, sizeof(buf));
 
-		/* first remove existing firewall rule(s) */
-		run_del_firewall_script(buf, OVPN_DIR_DEL_SCRIPT);
+		/* check exe permission (in case vpnrouting.sh is still working on routing file) */
+		stat(buf, &fs);
+		if (fs.st_mode & S_IXUSR) {
+			/* first remove existing firewall rule(s) */
+			run_del_firewall_script(buf, OVPN_DIR_DEL_SCRIPT);
 
-		/* then (re-)add firewall rule(s) */
-		logmsg(LOG_DEBUG, "*** %s: running firewall script: %s", __FUNCTION__, buf);
-		eval(buf);
+			/* then (re-)add firewall rule(s) */
+			logmsg(LOG_DEBUG, "*** %s: running firewall script: %s", __FUNCTION__, buf);
+			eval(buf);
+		}
+		else
+			logmsg(LOG_DEBUG, "*** %s: skipping firewall script (not executable): %s", __FUNCTION__, buf);
 	}
 	logmsg(LOG_DEBUG, "*** %s: done with all firewall scripts...", __FUNCTION__);
 

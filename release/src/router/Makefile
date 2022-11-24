@@ -268,7 +268,7 @@ else
 obj-$(TCONFIG_DPSTA) += dpsta
 obj-$(TCONFIG_DHDAP) += dhd $(if $(TCONFIG_BCM7),pciefd)
 endif # TCONFIG_BCM714
-obj-y += igmpproxy
+obj-$(TCONFIG_PROXY) += igmpproxy
 obj-y += rc
 obj-y += rom
 obj-y += others
@@ -280,7 +280,7 @@ obj-y += rp-pppoe
 obj-y += utils$(BCMEX)
 obj-y += rstats
 obj-y += cstats
-obj-y += udpxy
+obj-$(TCONFIG_PROXY) += udpxy
 obj-y += hotplug2
 obj-y += udevtrigger
 obj-$(TCONFIG_BCMARM) += libnfnetlink
@@ -2424,11 +2424,11 @@ libpng: libpng/stamp-h1
 	@rm -f $(TOP)/libpng/staged/usr/lib/libpng12.la
 
 libpng-install:
-	install -D libpng/.libs/libpng16.so.16.37.0 $(INSTALLDIR)/libpng/usr/lib/libpng16.so.16.37.0
-	$(STRIP) $(INSTALLDIR)/libpng/usr/lib/libpng16.so.16.37.0
+	install -D libpng/.libs/libpng16.so.16.38.0 $(INSTALLDIR)/libpng/usr/lib/libpng16.so.16.38.0
+	$(STRIP) $(INSTALLDIR)/libpng/usr/lib/libpng16.so.16.38.0
 	cd $(INSTALLDIR)/libpng/usr/lib && \
-		ln -sf libpng16.so.16.37.0 libpng16.so && \
-		ln -sf libpng16.so.16.37.0 libpng16.so.16
+		ln -sf libpng16.so.16.38.0 libpng16.so && \
+		ln -sf libpng16.so.16.38.0 libpng16.so.16
 
 libpng-clean:
 	-@$(MAKE) -C libpng clean
