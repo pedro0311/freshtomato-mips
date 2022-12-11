@@ -1848,12 +1848,12 @@ iproute2-3.x-clean:
 dropbear/config.h:
 	$(call patch_files,dropbear)
 	cd dropbear && autoreconf -fsi && \
-		CFLAGS="$(if $(TCONFIG_BCMARM),-O2,-Os) -Wall $(EXTRACFLAGS) -DARGTYPE=3 -ffunction-sections -fdata-sections $(OPTSIZE_MORE_FLAG)" \
+		CFLAGS="$(if $(TCONFIG_BCMARM),-O3,-Os) -Wall $(EXTRACFLAGS) -DARGTYPE=3 -ffunction-sections -fdata-sections $(OPTSIZE_MORE_FLAG)" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
 		ac_cv_func_logout=no ac_cv_func_logwtmp=no \
 		$(CONFIGURE) --disable-zlib --enable-syslog --disable-lastlog --disable-utmp \
 			--disable-utmpx --disable-wtmp --disable-wtmpx --disable-pututline --disable-pututxline \
-			--disable-loginfunc --disable-pam --enable-openpty --enable-bundled-libtom
+			--disable-loginfunc --disable-pam --enable-openpty --enable-bundled-libtom $(if $(TCONFIG_OPTIMIZE_SIZE_MORE),LTM_CFLAGS=-Os,)
 	@$(MAKE) -C dropbear clean
 
 dropbear: dropbear/config.h
@@ -1976,7 +1976,7 @@ flac/stamp-h1:
 		CFLAGS="-Os $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections --param max-inline-insns-single=3000 --param large-function-growth=500" \
 		CPPFLAGS="-I$(TOP)/libogg/include -I$(LINUXDIR)/include -fPIC --param max-inline-insns-single=3000 --param large-function-growth=500" \
 		LDFLAGS="-L$(TOP)/libogg/src/.libs -fPIC -ffunction-sections -fdata-sections -Wl,--gc-sections" \
-		$(CONFIGURE) --prefix='' --enable-shared --with-ogg=$(TOP)/libogg/src/.libs \
+		$(CONFIGURE) --prefix='' --enable-shared --enable-static --with-ogg=$(TOP)/libogg/src/.libs \
 			--disable-doxygen-docs --disable-examples --disable-cpplibs \
 			--disable-oggtest --disable-thorough-tests --disable-stack-smash-protection \
 			--disable-altivec --disable-vsx --disable-avx --enable-debug=no \
