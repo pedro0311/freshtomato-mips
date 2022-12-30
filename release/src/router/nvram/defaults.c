@@ -617,6 +617,7 @@ const defaults_t defaults[] = {
 #endif
 	{ "adblock_blacklist_custom",	""				},
 	{ "adblock_whitelist",		""				},
+	{ "adblock_logs",		"3"				},
 	{ "adblock_limit",		""				},
 	{ "adblock_path",		""				},
 #endif /* TCONFIG_HTTPS */
