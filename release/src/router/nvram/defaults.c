@@ -1068,6 +1068,8 @@ const defaults_t defaults[] = {
 	{ "ms_tivo",			"0"				},
 	{ "ms_stdlna",			"0"				},
 	{ "ms_sas",			"0"				},
+	{ "ms_autoscan",		"1"				},
+	{ "ms_custom",			""				},
 #endif
 
 #ifdef TCONFIG_SDHC
