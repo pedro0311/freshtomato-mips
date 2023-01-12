@@ -2176,7 +2176,7 @@ TomatoRefresh.prototype = {
 
 function genStdTimeList(id, zero, min) {
 	var b = [];
-	var t = [0.5,1,2,3,4,5,10,15,30,60,120,180,240,300,10*60,15*60,20*60,30*60];
+	var t = [1,2,3,4,5,6,7,8,9,10,12,15,20,30,60,2*60,3*60,4*60,5*60];
 	var i, v;
 
 	if (min >= 0) {
@@ -2200,7 +2200,7 @@ function genStdTimeList(id, zero, min) {
 function genStdRefresh(spin, min, exec) {
 	W('<div style="text-align:right">');
 	if (spin) W('<img src="spin.gif" id="refresh-spinner" alt=""> ');
-	genStdTimeList('refresh-time', 'Refresh Every', min);
+	genStdTimeList('refresh-time', 'One off', min);
 	W('<input type="button" value="Refresh" onclick="' + (exec ? exec : 'refreshClick()') + '" id="refresh-button"></div>');
 }
 

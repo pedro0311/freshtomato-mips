@@ -739,14 +739,14 @@
    struct udphdr {
      u16 uh_sport;               /* source port */
      u16 uh_dport;               /* destination port */
-@@ -151,6 +153,7 @@
-   else
-     family = dst->sa.sa_family;
- 
+@@ -146,6 +148,7 @@
+      a spurious getsockname() call. */
+   udp.uh_sport = udp.uh_dport = htons(port < 0 ? 0 : port);
+   
 +#ifdef HAVE_IPV6
-   if (family == AF_INET6)
-     {
-       iphdr = &ip6;
+   if (src)
+     family = src->sa.sa_family;
+   else
 @@ -188,6 +191,7 @@
  	}
      }

@@ -653,6 +653,7 @@ static const nvset_t nvset_list[] = {
 	{ "adblock_blacklist",		V_LENGTH(0, 4096)		},
 	{ "adblock_blacklist_custom",	V_LENGTH(0, 4096)		},
 	{ "adblock_whitelist",		V_LENGTH(0, 4096)		},
+	{ "adblock_logs",		V_RANGE(0, 7)			},
 	{ "adblock_limit",		V_LENGTH(0, 32)			},
 	{ "adblock_path",		V_LENGTH(0, 64)			},
 #endif
@@ -1192,6 +1193,8 @@ static const nvset_t nvset_list[] = {
 	{ "ms_stdlna",			V_01				},
 	{ "ms_rescan",			V_01				},
 	{ "ms_sas",			V_01				},
+	{ "ms_autoscan",		V_01				},
+	{ "ms_custom",			V_TEXT(0, 4096)			},
 #endif
 
 /* qos */
