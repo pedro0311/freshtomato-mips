@@ -1716,7 +1716,8 @@ pptpd-clean:
 pppd/Makefile: pppd/linux/Makefile.top
 	$(call patch_files,pppd)
 	cd pppd && \
-		$(CONFIGURE) --prefix=/usr --sysconfdir=/tmp
+		LDFLAGS="-Wl,--gc-sections" \
+		$(CONFIGURE) --prefix=/usr --sysconfdir=/tmp --cc=$(CC) --cflags="$(if $(TCONFIG_BCMARM),-O2,$(if $(TCONFIG_AIO),-O3,-Os)) -Wall -ffunction-sections -fdata-sections"
 
 pppd: pppd/Makefile
 	@$(SEP)
