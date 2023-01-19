@@ -1,8 +1,10 @@
+diff --git pppd/chat/chat.c pppd/chat/chat.c
+index 183009e..fc1e5db 100644
 --- pppd/chat/chat.c
 +++ pppd/chat/chat.c
-@@ -485,9 +485,11 @@ char *chat_file;
+@@ -455,9 +455,11 @@ void do_file (char *chat_file)
   */
- void usage()
+ void usage(void)
  {
 +#ifdef NO_OPTSIZE
      fprintf(stderr, "\
@@ -12,7 +14,7 @@
      exit(1);
  }
  
-@@ -512,7 +514,11 @@ void msgf __V((const char *fmt, ...))
+@@ -476,7 +478,11 @@ void msgf(const char *fmt, ...)
      if (to_log)
  	syslog(LOG_INFO, "%s", line);
      if (to_stderr)
@@ -24,7 +26,7 @@
      va_end(args);
  }
  
-@@ -538,7 +544,11 @@ void fatal __V((int code, const char *fm
+@@ -494,7 +500,11 @@ void fatal(int code, const char *fmt, ...)
      if (to_log)
  	syslog(LOG_ERR, "%s", line);
      if (to_stderr)
@@ -36,9 +38,11 @@
      va_end(args);
      terminate(code);
  }
+diff --git pppd/pppd/main.c pppd/pppd/main.c
+index c2971eb..2c79dc1 100644
 --- pppd/pppd/main.c
 +++ pppd/pppd/main.c
-@@ -1756,7 +1756,11 @@ device_script(program, in, out, dont_wai
+@@ -1708,7 +1708,11 @@ device_script(char *program, int in, int out, int dont_wait)
      setgid(getgid());
      setuid(uid);
      if (getuid() != uid) {
@@ -50,10 +54,12 @@
  	exit(1);
      }
      update_system_environment();
+diff --git pppd/pppd/options.c pppd/pppd/options.c
+index 14853f8..91457ac 100644
 --- pppd/pppd/options.c
 +++ pppd/pppd/options.c
-@@ -1075,7 +1075,11 @@ static void
- usage()
+@@ -1051,7 +1051,11 @@ static void
+ usage(void)
  {
      if (phase == PHASE_INITIALIZE)
 +#ifdef NO_OPTSIZE
@@ -64,19 +70,19 @@
  }
  
  /*
-@@ -1100,7 +1104,11 @@ showversion(argv)
-     char **argv;
+@@ -1074,7 +1078,11 @@ static int
+ showversion(char **argv)
  {
      if (phase == PHASE_INITIALIZE) {
 +#ifdef NO_OPTSIZE
- 	fprintf(stderr, "pppd version %s\n", VERSION);
+ 	fprintf(stdout, "pppd version %s\n", VERSION);
 +#else
 +	printf("pppd version %s\n", VERSION);
 +#endif
  	exit(0);
      }
      return 0;
-@@ -1127,7 +1135,11 @@ option_error __V((char *fmt, ...))
+@@ -1095,7 +1103,11 @@ option_error(char *fmt, ...)
      vslprintf(buf, sizeof(buf), fmt, args);
      va_end(args);
      if (phase == PHASE_INITIALIZE)
@@ -88,9 +94,11 @@
      syslog(LOG_ERR, "%s", buf);
  }
  
---- pppd/pppd/plugins/rp-pppoe/pppoe-discovery.c
-+++ pppd/pppd/plugins/rp-pppoe/pppoe-discovery.c
-@@ -57,13 +57,17 @@
+diff --git pppd/pppd/plugins/pppoe/pppoe-discovery.c pppd/pppd/plugins/pppoe/pppoe-discovery.c
+index e41d286..81811cb 100644
+--- pppd/pppd/plugins/pppoe/pppoe-discovery.c
++++ pppd/pppd/plugins/pppoe/pppoe-discovery.c
+@@ -53,6 +53,7 @@ void die(int status)
  	exit(status);
  }
  
@@ -98,17 +106,15 @@
  void error(char *fmt, ...)
  {
      va_list pvar;
-     va_start(pvar, fmt);
+@@ -60,6 +61,7 @@ void error(char *fmt, ...)
      vfprintf(stderr, fmt, pvar);
      va_end(pvar);
  }
-+#else
-+#define error(a,...)
 +#endif
  
  /* Initialize frame types to RFC 2516 values.  Some broken peers apparently
     use different frame types... sigh... */
-@@ -91,7 +95,11 @@
+@@ -87,7 +89,11 @@ etherType(PPPoEPacket *packet)
  {
      UINT16_t type = (UINT16_t) ntohs(packet->ethHdr.h_proto);
      if (type != Eth_PPPOE_Discovery && type != Eth_PPPOE_Session) {
@@ -120,7 +126,7 @@
      }
      return type;
  }
-@@ -172,9 +180,17 @@
+@@ -162,9 +168,17 @@ openInterface(char const *ifname, UINT16_t type, unsigned char *hwaddr)
  	fatalSys("ioctl(SIOCGIFMTU)");
      }
      if (ifr.ifr_mtu < ETH_DATA_LEN) {
@@ -138,7 +144,7 @@
      }
  
  #ifdef HAVE_STRUCT_SOCKADDR_LL
-@@ -277,19 +293,31 @@
+@@ -267,19 +281,31 @@ parsePacket(PPPoEPacket *packet, ParseFunc *func, void *extra)
      UINT16_t tagType, tagLen;
  
      if (PPPOE_VER(packet->vertype) != 1) {
@@ -170,7 +176,7 @@
  	return -1;
      }
  
-@@ -303,7 +331,11 @@
+@@ -293,7 +319,11 @@ parsePacket(PPPoEPacket *packet, ParseFunc *func, void *extra)
  	    return 0;
  	}
  	if ((curTag - packet->payload) + tagLen + TAG_HDR_SIZE > len) {
@@ -182,7 +188,7 @@
  	    return -1;
  	}
  	func(tagType, tagLen, curTag+TAG_HDR_SIZE, extra);
-@@ -565,7 +597,11 @@
+@@ -551,7 +581,11 @@ waitForPADO(PPPoEConnection *conn, int timeout)
  
  	/* Check length */
  	if (ntohs(packet.length) + HDR_SIZE > len) {
@@ -194,7 +200,7 @@
  		   (unsigned int) ntohs(packet.length));
  	    continue;
  	}
-@@ -585,18 +621,30 @@
+@@ -571,18 +605,30 @@ waitForPADO(PPPoEConnection *conn, int timeout)
  
  	if (packet.code == CODE_PADO) {
  	    if (BROADCAST(packet.ethHdr.h_source)) {
@@ -225,7 +231,7 @@
  		continue;
  	    }
  	    conn->numPADOs++;
-@@ -641,7 +689,11 @@
+@@ -627,7 +673,11 @@ discovery(PPPoEConnection *conn)
      do {
  	padiAttempts++;
  	if (padiAttempts > conn->discoveryAttempts) {
@@ -237,7 +243,7 @@
  	    close(conn->discoverySocket);
  	    conn->discoverySocket = -1;
  	    return;
-@@ -717,7 +769,11 @@
+@@ -703,7 +753,11 @@ int main(int argc, char *argv[])
  	case 'D':
  	    conn->debugFile = fopen(optarg, "w");
  	    if (!conn->debugFile) {
@@ -249,19 +255,23 @@
  			optarg, strerror(errno));
  		exit(1);
  	    }
-@@ -756,7 +812,11 @@
- 
- void rp_fatal(char const *str)
- {
-+#ifdef NO_OPTSIZE
-     fprintf(stderr, "%s\n", str);
-+#else
-+    printf("%s\n", str);
-+#endif
-     exit(1);
+@@ -740,6 +794,7 @@ int main(int argc, char *argv[])
+ 	exit(0);
  }
  
-@@ -781,6 +841,7 @@
++#ifdef NO_OPTSIZE
+ void fatal(char * fmt, ...)
+ {
+     va_list ap;
+@@ -749,6 +804,7 @@ void fatal(char * fmt, ...)
+     fputc('\n', stderr);
+     exit(1);
+ }
++#endif
+ 
+ void fatalSys(char const *str)
+ {
+@@ -766,6 +822,7 @@ char *xstrdup(const char *s)
  
  void usage(void)
  {
@@ -269,30 +279,34 @@
      fprintf(stderr, "Usage: pppoe-discovery [options]\n");
      fprintf(stderr, "Options:\n");
      fprintf(stderr, "   -I if_name     -- Specify interface (default eth0)\n");
-@@ -796,4 +857,5 @@
+@@ -781,4 +838,5 @@ void usage(void)
  	    "   -W hexvalue    -- Set the Host-Unique to the supplied hex string.\n"
  	    "   -h             -- Print usage information.\n");
-     fprintf(stderr, "\nVersion " RP_VERSION "\n");
+     fprintf(stderr, "\npppoe-discovery from pppd " VERSION "\n");
 +#endif
  }
+diff --git pppd/pppd/pppd.h pppd/pppd/pppd.h
+index 4f1322a..1d9ab8f 100644
 --- pppd/pppd/pppd.h
 +++ pppd/pppd/pppd.h
-@@ -554,9 +554,15 @@ size_t strlcat __P((char *, const char *
- void dbglog __P((char *, ...));	/* log a debug message */
- void info __P((char *, ...));	/* log an informational message */
- void notice __P((char *, ...));	/* log a notice-level message */
+@@ -548,9 +548,15 @@ size_t strlcat(char *, const char *, size_t);	/* safe strncpy */
+ void dbglog(char *, ...);	/* log a debug message */
+ void info(char *, ...);	/* log an informational message */
+ void notice(char *, ...);	/* log a notice-level message */
 +#ifdef NO_OPTSIZE
- void warn __P((char *, ...));	/* log a warning message */
- void error __P((char *, ...));	/* log an error message */
- void fatal __P((char *, ...));	/* log an error message and die(1) */
+ void warn(char *, ...);	/* log a warning message */
+ void error(char *, ...);	/* log an error message */
+ void fatal(char *, ...);	/* log an error message and die(1) */
 +#else
 +#define warn(a,...)
 +#define error(a,...)
 +#define fatal(a,...) die(1)
 +#endif
- void init_pr_log __P((const char *, int)); /* initialize for using pr_log */
- void pr_log __P((void *, char *, ...));	/* printer fn, output to syslog */
- void end_pr_log __P((void));	/* finish up after using pr_log */
+ void init_pr_log(const char *, int); /* initialize for using pr_log */
+ void pr_log(void *, char *, ...);	/* printer fn, output to syslog */
+ void end_pr_log(void);	/* finish up after using pr_log */
+diff --git pppd/pppd/srp-entry.c pppd/pppd/srp-entry.c
+index 8c0e297..9750f92 100644
 --- pppd/pppd/srp-entry.c
 +++ pppd/pppd/srp-entry.c
 @@ -85,8 +85,10 @@ static const char *myname;
