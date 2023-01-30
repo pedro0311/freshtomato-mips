@@ -250,6 +250,11 @@ ifneq ($(TCONFIG_BLINK),y)
 	sed -i $(INSTALLDIR)/www/advanced-wireless.asp -e "/BCMWL6-BEGIN/,/BCMWL6-END/d"
 endif
 
+# Remove for BCMWL6 SDK and up
+ifeq ($(CONFIG_BCMWL6),y)
+	sed -i $(INSTALLDIR)/www/advanced-wireless.asp -e "/NO-BCMWL6-BEGIN/,/NO-BCMWL6-END/d"
+endif
+
 # Only for BCMWL6 SDK / RT-AC branch
 ifneq ($(CONFIG_BCMWL6),y)
 	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/BCMWL6-BEGIN/,/BCMWL6-END/d"
@@ -501,6 +506,7 @@ endif
 		-e "/CTF-BEGIN/d"	-e "/CTF-END/d" \
 		-e "/BCMNAT-BEGIN/d"	-e "/BCMNAT-END/d" \
 		-e "/BCMWL6-BEGIN/d"	-e "/BCMWL6-END/d" \
+		-e "/NO-BCMWL6-BEGIN/d"	-e "/NO-BCMWL6-END/d" \
 		-e "/ROAM-BEGIN/d"	-e "/ROAM-END/d" \
 		-e "/BBT-BEGIN/d"	-e "/BBT-END/d" \
 		-e "/BT-BEGIN/d"	-e "/BT-END/d" \
