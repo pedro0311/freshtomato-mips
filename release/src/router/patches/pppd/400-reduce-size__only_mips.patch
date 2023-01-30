@@ -285,12 +285,16 @@ index e41d286..81811cb 100644
      fprintf(stderr, "\npppoe-discovery from pppd " VERSION "\n");
 +#endif
  }
-diff --git pppd/pppd/pppd.h pppd/pppd/pppd.h
-index 4f1322a..1d9ab8f 100644
+diff -daurN pppd/pppd/pppd.h pppd/pppd/pppd.h
 --- pppd/pppd/pppd.h
 +++ pppd/pppd/pppd.h
-@@ -548,9 +548,15 @@ size_t strlcat(char *, const char *, size_t);	/* safe strncpy */
+@@ -545,12 +545,21 @@
+ int vslprintf(char *, int, char *, va_list);	/* vsprintf++ */
+ size_t strlcpy(char *, const char *, size_t);	/* safe strcpy */
+ size_t strlcat(char *, const char *, size_t);	/* safe strncpy */
++#ifdef NO_OPTSIZE
  void dbglog(char *, ...);	/* log a debug message */
++#endif
  void info(char *, ...);	/* log an informational message */
  void notice(char *, ...);	/* log a notice-level message */
 +#ifdef NO_OPTSIZE
@@ -298,6 +302,7 @@ index 4f1322a..1d9ab8f 100644
  void error(char *, ...);	/* log an error message */
  void fatal(char *, ...);	/* log an error message and die(1) */
 +#else
++#define dbglog(a,...)
 +#define warn(a,...)
 +#define error(a,...)
 +#define fatal(a,...) die(1)
@@ -332,3 +337,38 @@ index 8c0e297..9750f92 100644
  		    idx);
  		exit(1);
  	}
+diff -daurN pppd/pppd/utils.c pppd/pppd/utils.c
+--- pppd/pppd/utils.c
++++ pppd/pppd/utils.c
+@@ -615,6 +615,7 @@
+ /*
+  * fatal - log an error message and die horribly.
+  */
++#ifdef NO_OPTSIZE
+ void
+ fatal(char *fmt, ...)
+ {
+@@ -656,6 +657,7 @@
+     logit(LOG_WARNING, fmt, pvar);
+     va_end(pvar);
+ }
++#endif
+ 
+ /*
+  * notice - log a notice-level message.
+@@ -688,6 +690,7 @@
+ /*
+  * dbglog - log a debug message.
+  */
++#ifdef NO_OPTSIZE
+ void
+ dbglog(char *fmt, ...)
+ {
+@@ -698,6 +701,7 @@
+     logit(LOG_DEBUG, fmt, pvar);
+     va_end(pvar);
+ }
++#endif
+ 
+ /*
+  * dump_packet - print out a packet in readable form if it is interesting.
