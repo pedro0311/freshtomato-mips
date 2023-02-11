@@ -1,5 +1,5 @@
---- openvpn/src/openvpn/options.h
-+++ openvpn/src/openvpn/options.h
+--- openvpn-2.5/src/openvpn/options.h
++++ openvpn-2.5/src/openvpn/options.h
 @@ -106,6 +106,9 @@
      int connect_retry_seconds;
      int connect_retry_seconds_max;

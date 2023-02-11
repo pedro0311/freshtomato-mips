@@ -1,5 +1,5 @@
---- openvpn/src/openvpn/forward.c
-+++ openvpn/src/openvpn/forward.c
+--- openvpn-2.5/src/openvpn/forward.c
++++ openvpn-2.5/src/openvpn/forward.c
 @@ -812,7 +812,10 @@
  
      status = link_socket_read(c->c2.link_socket,

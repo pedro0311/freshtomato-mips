@@ -1,5 +1,5 @@
---- openvpn/src/openvpn/lladdr.h
-+++ openvpn/src/openvpn/lladdr.h
+--- openvpn-2.5/src/openvpn/lladdr.h
++++ openvpn-2.5/src/openvpn/lladdr.h
 @@ -4,6 +4,7 @@
  
  #include "misc.h"

@@ -1,5 +1,5 @@
---- openvpn/src/openvpn/networking_sitnl.c
-+++ openvpn/src/openvpn/networking_sitnl.c
+--- openvpn-2.5/src/openvpn/networking_sitnl.c
++++ openvpn-2.5/src/openvpn/networking_sitnl.c
 @@ -25,6 +25,10 @@
  #endif
  
@@ -11,8 +11,8 @@
  
  #include "syshead.h"
  
---- openvpn/src/openvpn/route.c
-+++ openvpn/src/openvpn/route.c
+--- openvpn-2.5/src/openvpn/route.c
++++ openvpn-2.5/src/openvpn/route.c
 @@ -46,6 +46,10 @@
  #include "memdbg.h"
  

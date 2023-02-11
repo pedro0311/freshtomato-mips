@@ -1,5 +1,5 @@
---- openvpn/src/openvpn/options.c
-+++ openvpn/src/openvpn/options.c
+--- openvpn-2.5/src/openvpn/options.c
++++ openvpn-2.5/src/openvpn/options.c
 @@ -825,6 +825,9 @@
      o->resolve_retry_seconds = RESOLV_RETRY_INFINITE;
      o->resolve_in_advance = false;

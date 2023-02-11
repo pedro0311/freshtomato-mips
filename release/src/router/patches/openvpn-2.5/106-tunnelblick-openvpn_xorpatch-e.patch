@@ -1,5 +1,5 @@
---- openvpn/src/openvpn/socket.h
-+++ openvpn/src/openvpn/socket.h
+--- openvpn-2.5/src/openvpn/socket.h
++++ openvpn-2.5/src/openvpn/socket.h
 @@ -249,6 +249,10 @@
  #endif
  };
