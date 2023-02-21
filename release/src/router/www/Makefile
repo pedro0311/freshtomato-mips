@@ -148,6 +148,7 @@ ifeq ($(filter y,$(TCONFIG_BLINK) $(TCONFIG_BCMARM)),)
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
 	sed -i $(INSTALLDIR)/www/status-data.jsx -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
 	sed -i $(INSTALLDIR)/www/basic-ipv6.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
+	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
 endif
 
 # Only include IPv6 options if IPv6 is configured in.
