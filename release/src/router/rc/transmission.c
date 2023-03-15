@@ -62,7 +62,9 @@ static void build_tr_firewall(void)
 
 	/* open BT port */
 	fprintf(p, "#!/bin/sh\n"
-	           "iptables -A INPUT -p tcp --dport %s -j %s\n",
+	           "iptables -A INPUT -p tcp --dport %s -j %s\n"
+	           "iptables -A INPUT -p udp --dport %s -j %s\n",
+	            nvram_safe_get("bt_port"), chain_in_accept,
 	            nvram_safe_get("bt_port"), chain_in_accept);
 
 	/* GUI WAN access */
@@ -146,18 +148,9 @@ void start_bittorrent(int force)
 	            "\"speed-limit-up-enabled\": %s,\n"
 	            "\"speed-limit-down\": %s,\n"
 	            "\"speed-limit-up\": %s,\n"
-	            "\"rpc-enabled\": %s,\n",
-	            nvram_safe_get( "bt_port"),
-	            pc,
-	            pd,
-	            nvram_safe_get("bt_dl"),
-	            nvram_safe_get("bt_ul"),
-	            pb);
-
-	if (strstr(nvram_safe_get("bt_custom"), "bind") == NULL) /* only add bind if it's not already added in custom config */
-		fprintf(fp, "\"rpc-bind-address\": \"0.0.0.0\",\n");
-
-	fprintf(fp, "\"rpc-port\": %s,\n"
+	            "\"rpc-enabled\": %s,\n"
+	            "\"rpc-port\": %s,\n"
+	            "\"rpc-bind-address\": \"0.0.0.0\",\n"
 	            "\"rpc-whitelist\": \"*\",\n"
 	            "\"rpc-whitelist-enabled\": %s,\n"
 	            "\"rpc-host-whitelist\": \"*\",\n"
@@ -190,6 +183,12 @@ void start_bittorrent(int force)
 	            "%s%s"
 	            "\"rpc-authentication-required\": %s\n"
 	            "}\n",
+	            nvram_safe_get( "bt_port"),
+	            pc,
+	            pd,
+	            nvram_safe_get("bt_dl"),
+	            nvram_safe_get("bt_ul"),
+	            pb,
 	            nvram_safe_get("bt_port_gui"),
 	            whitelistEnabled,
 	            whitelistEnabled,
@@ -318,11 +317,14 @@ void start_bittorrent(int force)
 
 void stop_bittorrent(void)
 {
+	pid_t pid;
 	char buf[16];
 	int m = atoi(nvram_safe_get("bt_sleep")) + 10;
 
 	if (serialize_restart("transmission-da", 0))
 		return;
+
+	pid = pidof("transmission-da");
 
 	/* wait for child of start_bittorrent to finish (if any) */
 	memset(buf, 0, sizeof(buf));
@@ -335,7 +337,8 @@ void stop_bittorrent(void)
 
 	killall_and_waitfor("transmission-da", 10, 50);
 
-	logmsg(LOG_INFO, "transmission-daemon stopped");
+	if (pid > 0)
+		logmsg(LOG_INFO, "transmission-daemon stopped");
 
 	run_del_firewall_script(tr_fw_script, tr_fw_del_script);
 
@@ -364,5 +367,6 @@ void run_bt_firewall_script(void)
 		fclose(fp);
 		logmsg(LOG_DEBUG, "*** %s: running firewall script: %s", __FUNCTION__, tr_fw_script);
 		eval(tr_fw_script);
+		fix_chain_in_drop();
 	}
 }
