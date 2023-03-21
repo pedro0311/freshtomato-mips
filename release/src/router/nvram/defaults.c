@@ -36,6 +36,16 @@
 #include "tomato_profile.h"
 #include "defaults.h"
 
+const defaults_t rstats_defaults[] = {
+	{ "rstats_path",		""				},
+	{ "rstats_stime",		"48"				},
+	{ "rstats_offset",		"1"				},
+	{ "rstats_data",		""				},
+	{ "rstats_exclude",		""				},
+	{ "rstats_sshut",		"1"				},
+	{ "rstats_bak",			"0"				},
+	{ NULL, NULL }
+};
 
 const defaults_t defaults[] = {
 	{ "restore_defaults",		"0"				},	// Set to 0 to not restore defaults on boot
@@ -879,13 +889,7 @@ const defaults_t defaults[] = {
 
 /* admin-bwm */
 	{ "rstats_enable",		"1"				},
-	{ "rstats_path",		""				},
-	{ "rstats_stime",		"48"				},
-	{ "rstats_offset",		"1"				},
-	{ "rstats_data",		""				},
-	{ "rstats_exclude",		""				},
-	{ "rstats_sshut",		"1"				},
-	{ "rstats_bak",			"0"				},
+	/* all other rstats_xyz variables, see rstats_defaults */
 
 /* admin-ipt */
 	{ "cstats_enable",		"0"				},
