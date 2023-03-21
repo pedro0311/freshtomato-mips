@@ -47,6 +47,19 @@ const defaults_t rstats_defaults[] = {
 	{ NULL, NULL }
 };
 
+const defaults_t cstats_defaults[] = {
+	{ "cstats_path",		""				},
+	{ "cstats_stime",		"48"				},
+	{ "cstats_offset",		"1"				},
+	{ "cstats_labels",		"0"				},
+	{ "cstats_exclude",		""				},
+	{ "cstats_include",		""				},
+	{ "cstats_all",			"1"				},
+	{ "cstats_sshut",		"1"				},
+	{ "cstats_bak",			"0"				},
+	{ NULL, NULL }
+};
+
 const defaults_t defaults[] = {
 	{ "restore_defaults",		"0"				},	// Set to 0 to not restore defaults on boot
 
@@ -893,15 +906,7 @@ const defaults_t defaults[] = {
 
 /* admin-ipt */
 	{ "cstats_enable",		"0"				},
-	{ "cstats_path",		""				},
-	{ "cstats_stime",		"48"				},
-	{ "cstats_offset",		"1"				},
-	{ "cstats_labels",		"0"				},
-	{ "cstats_exclude",		""				},
-	{ "cstats_include",		""				},
-	{ "cstats_all",			"1"				},
-	{ "cstats_sshut",		"1"				},
-	{ "cstats_bak",			"0"				},
+	/* all other cstats_xyz variables, see cstats_defaults */
 
 /* advanced-buttons */
 	{ "sesx_led",			"0"				},

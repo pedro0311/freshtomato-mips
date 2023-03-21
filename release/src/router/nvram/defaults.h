@@ -7,6 +7,7 @@ typedef struct {
 } defaults_t;
 
 extern const defaults_t rstats_defaults[];
+extern const defaults_t cstats_defaults[];
 
 extern const defaults_t defaults[];
 extern const defaults_t if_generic[];
