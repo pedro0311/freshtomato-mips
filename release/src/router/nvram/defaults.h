@@ -8,6 +8,9 @@ typedef struct {
 
 extern const defaults_t rstats_defaults[];
 extern const defaults_t cstats_defaults[];
+#ifdef TCONFIG_FTP
+extern const defaults_t ftp_defaults[];
+#endif /* TCONFIG_FTP */
 
 extern const defaults_t defaults[];
 extern const defaults_t if_generic[];

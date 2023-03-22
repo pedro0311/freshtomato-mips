@@ -60,6 +60,31 @@ const defaults_t cstats_defaults[] = {
 	{ NULL, NULL }
 };
 
+#ifdef TCONFIG_FTP
+/* nas-ftp - !!TB */
+const defaults_t ftp_defaults[] = {
+	{ "ftp_super",			"0"				},
+	{ "ftp_anonymous",		"0"				},
+	{ "ftp_dirlist",		"0"				},
+	{ "ftp_port",			"21"				},
+	{ "ftp_max",			"0"				},
+	{ "ftp_ipmax",			"0"				},
+	{ "ftp_staytimeout",		"300"				},
+	{ "ftp_rate",			"0"				},
+	{ "ftp_anonrate",		"0"				},
+	{ "ftp_anonroot",		""				},
+	{ "ftp_pubroot",		""				},
+	{ "ftp_pvtroot",		""				},
+	{ "ftp_users",			""				},
+	{ "ftp_custom",			""				},
+	{ "ftp_sip",			""				},	/* wan ftp access: source ip address(es) */
+	{ "ftp_limit",			"0,3,60"			},
+	{ "ftp_tls",			"0"				},
+	{ "log_ftp",			"0"				},
+	{ NULL, NULL }
+};
+#endif
+
 const defaults_t defaults[] = {
 	{ "restore_defaults",		"0"				},	// Set to 0 to not restore defaults on boot
 
@@ -1034,24 +1059,7 @@ const defaults_t defaults[] = {
 #ifdef TCONFIG_FTP
 /* nas-ftp - !!TB */
 	{ "ftp_enable",			"0"				},
-	{ "ftp_super",			"0"				},
-	{ "ftp_anonymous",		"0"				},
-	{ "ftp_dirlist",		"0"				},
-	{ "ftp_port",			"21"				},
-	{ "ftp_max",			"0"				},
-	{ "ftp_ipmax",			"0"				},
-	{ "ftp_staytimeout",		"300"				},
-	{ "ftp_rate",			"0"				},
-	{ "ftp_anonrate",		"0"				},
-	{ "ftp_anonroot",		""				},
-	{ "ftp_pubroot",		""				},
-	{ "ftp_pvtroot",		""				},
-	{ "ftp_users",			""				},
-	{ "ftp_custom",			""				},
-	{ "ftp_sip",			""				},	// wan ftp access: source ip address(es)
-	{ "ftp_limit",			"0,3,60"			},
-	{ "ftp_tls",			"0"				},
-	{ "log_ftp",			"0"				},
+	/* all other ftp_xyz variables, see ftp_defaults */
 #endif
 
 #ifdef TCONFIG_SNMP
