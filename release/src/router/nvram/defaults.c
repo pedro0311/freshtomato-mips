@@ -85,6 +85,18 @@ const defaults_t ftp_defaults[] = {
 };
 #endif
 
+#ifdef TCONFIG_SNMP
+const defaults_t snmp_defaults[] = {
+	{ "snmp_port",			"161"				},
+	{ "snmp_remote",		"0"				},
+	{ "snmp_remote_sip",		""				},
+	{ "snmp_location",		"router"			},
+	{ "snmp_contact",		"admin@tomato"			},
+	{ "snmp_ro",			"rocommunity"			},
+	{ NULL, NULL }
+};
+#endif
+
 const defaults_t defaults[] = {
 	{ "restore_defaults",		"0"				},	// Set to 0 to not restore defaults on boot
 
@@ -1064,12 +1076,7 @@ const defaults_t defaults[] = {
 
 #ifdef TCONFIG_SNMP
 	{ "snmp_enable",		"0"				},
-	{ "snmp_port",			"161"				},
-	{ "snmp_remote",		"0"				},
-	{ "snmp_remote_sip",		""				},
-	{ "snmp_location",		"router"			},
-	{ "snmp_contact",		"admin@tomato"			},
-	{ "snmp_ro",			"rocommunity"			},
+	/* all other snmp_xyz variables, see snmp_defaults */
 #endif
 
 #ifdef TCONFIG_SAMBASRV
