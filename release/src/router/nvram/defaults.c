@@ -97,6 +97,26 @@ const defaults_t snmp_defaults[] = {
 };
 #endif
 
+const defaults_t upnp_defaults[] = {
+	{ "upnp_secure",		"1"				},
+	{ "upnp_port",			"0"				},
+	{ "upnp_ssdp_interval",		"60"				},	/* SSDP interval */
+	{ "upnp_mnp",			"0"				},
+	{ "upnp_custom",		""				},
+	{ "upnp_lan",			""				},
+	{ "upnp_lan1",			""				},
+	{ "upnp_lan2",			""				},
+	{ "upnp_lan3",			""				},
+	{ "upnp_clean",			"1"				},	/* 0:Disable 1:Enable */
+	{ "upnp_clean_interval",	"600"				},	/* Cleaning interval in seconds */
+	{ "upnp_clean_threshold",	"20"				},	/* Threshold for cleaning unused rules */
+#if 0	/* disabled for miniupnpd */
+	{ "upnp_max_age",		"180"				},	/* Max age */
+	{ "upnp_config",		"0"				},
+#endif
+	{ NULL, NULL }
+};
+
 const defaults_t defaults[] = {
 	{ "restore_defaults",		"0"				},	// Set to 0 to not restore defaults on boot
 
@@ -823,19 +843,7 @@ const defaults_t defaults[] = {
 
 /* forward-upnp */
 	{ "upnp_enable",		"0"				},
-	{ "upnp_secure",		"1"				},
-	{ "upnp_port",			"0"				},
-	{ "upnp_ssdp_interval",		"60"				},	// SSDP interval
-	{ "upnp_mnp",			"0"				},
-	{ "upnp_custom",		""				},
-
-	{ "upnp_clean",			"1"				},	/* 0:Disable 1:Enable */
-	{ "upnp_clean_interval",	"600"				},	/* Cleaning interval in seconds */
-	{ "upnp_clean_threshold",	"20"				},	/* Threshold for cleaning unused rules */
-#if 0	/* disabled for miniupnpd */
-	{ "upnp_max_age",		"180"				},	// Max age
-	{ "upnp_config",		"0"				},
-#endif
+	/* all other upnp_xyz variables, see upnp_defaults */
 
 /* qos */
 	{ "qos_enable",			"0"				},

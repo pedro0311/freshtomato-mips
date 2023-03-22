@@ -14,6 +14,7 @@ extern const defaults_t ftp_defaults[];
 #ifdef TCONFIG_SNMP
 extern const defaults_t snmp_defaults[];
 #endif /* TCONFIG_SNMP */
+extern const defaults_t upnp_defaults[];
 
 extern const defaults_t defaults[];
 extern const defaults_t if_generic[];
