@@ -803,6 +803,7 @@ const defaults_t defaults[] = {
 	{ "ddnsx1_cache",		""				},
 	{ "ddnsx_save",			"1"				},
 	{ "ddnsx_refresh",		"28"				},
+	{ "ddnsx_cktime",		"10"				},
 
 /* basic-ident */
 	{ "router_name",		"FreshTomato"			},
