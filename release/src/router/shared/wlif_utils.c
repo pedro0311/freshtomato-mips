@@ -389,7 +389,7 @@ get_wsec(wsec_info_t *info, unsigned char *mac, char *osifname)
 	memset(info, 0, sizeof(wsec_info_t));
 
 	/* if dwds is enabled then dont configure the wds interface */
-	dwds = atoi(nvram_safe_get(strcat_r(wl_prefix, "dwds", comb)));
+	dwds = atoi(nvram_safe_get(strlcat_r(wl_prefix, "dwds", comb, sizeof(comb))));
 	if (dwds)
 		wds = 0;
 
