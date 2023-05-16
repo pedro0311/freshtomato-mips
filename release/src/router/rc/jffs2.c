@@ -120,10 +120,12 @@ void start_jffs2(void)
 		return;
 	}
 
+#ifndef TCONFIG_BCMARM
 	if (!mtd_unlock(JFFS2_PARTITION)) {
 		error("unlocking");
 		return;
 	}
+#endif
 
 	modprobe(JFFS_NAME);
 
@@ -131,17 +133,9 @@ void start_jffs2(void)
 	snprintf(s, sizeof(s), MTD_BLKDEV(%d), part);
 
 	if (mount(s, "/jffs", JFFS_NAME, MS_NOATIME, "") != 0) {
-		if (mtd_erase(JFFS2_PARTITION)) {
-			error("formatting");
-			return;
-		}
-		format = 1;
-
-		if (mount(s, "/jffs", JFFS_NAME, MS_NOATIME, "") != 0) {
-			modprobe_r(JFFS_NAME);
-			error("mounting 2nd time");
-			return;
-		}
+		modprobe_r(JFFS_NAME);
+		error("mounting");
+		return;
 	}
 
 #ifdef TEST_INTEGRITY
@@ -190,6 +184,8 @@ void stop_jffs2(void)
 	}
 
 	notice_set("jffs", "Stopped");
-	umount2("/jffs", MNT_DETACH);
-	modprobe_r(JFFS_NAME);
+	if (umount("/jffs"))
+		umount2("/jffs", MNT_DETACH);
+	else
+		modprobe_r(JFFS_NAME);
 }

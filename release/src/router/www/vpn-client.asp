@@ -170,8 +170,8 @@ RouteGrid.prototype.verifyFields = function(row, quiet) {
 		ferror.set(f[2], 'Value cannot contain "<" or ">" characters', quiet || !ok);
 		ok = 0;
 	}
-	else if (f[2].value.indexOf(' ') >= 0 || f[2].value.indexOf(',') >= 0 || f[2].value.indexOf('\t') >= 0) {
-		ferror.set(f[2], 'Value cannot contain "space", "tab"  or "," characters. Only one IP or Domain per entry', quiet || !ok);
+	else if (f[2].value.indexOf(' ') >= 0 || f[2].value.indexOf(',') >= 0 || f[2].value.indexOf('\t') >= 0 || f[2].value.indexOf('/') >= 0 || f[2].value.indexOf(':') >= 0) {
+		ferror.set(f[2], 'Value cannot contain "space", "tab", "/" , ":" or "," characters. Only one IP or Domain per entry', quiet || !ok);
 		ok = 0;
 	}
 	else if (f[2].value.indexOf('-') >= 0 && f[1].value == 2) {
@@ -180,7 +180,6 @@ RouteGrid.prototype.verifyFields = function(row, quiet) {
 	}
 	else
 		ferror.clear(f[2]);
-
 
 	if (f[1].value != 3 && (!v_iptaddr(f[2], quiet || !ok)))
 		ok = 0;
@@ -299,6 +298,7 @@ function verifyFields(focused, quiet) {
 		elem.display(E('client_'+t+'_cn'), (auth == 'tls') && (E('_vpn_'+t+'_tlsvername').value > 0));
 
 		var keyHelp = E(t+'-keyhelp');
+		keyHelp.className = 'new_window';
 		switch (auth) {
 		case 'tls':
 			keyHelp.href = helpURL['TLSKeys'];
@@ -400,6 +400,7 @@ function earlyInit() {
 
 function init() {
 	up.initPage(250, 5);
+	eventHandler();
 }
 </script>
 </head>
