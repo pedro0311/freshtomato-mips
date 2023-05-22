@@ -1600,6 +1600,7 @@ ntfs-3g-clean:
 	$(call unpatch_files,ntfs-3g)
 
 libusb10/Makefile: libusb10/Makefile.in
+	$(call patch_files,libusb10)
 	cd libusb10 && autoreconf -fsi && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
@@ -1618,6 +1619,7 @@ libusb10-install:
 libusb10-clean:
 	-@$(MAKE) -C $@ clean
 	@rm -rf libusb10/Makefile
+	$(call unpatch_files,libusb10)
 
 usbmodeswitch:
 	@$(SEP)
@@ -3736,7 +3738,7 @@ gettext-tiny-clean:
 
 util-linux/stamp-h1:
 	cd util-linux && ./autogen.sh && \
-		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+		CFLAGS="-Os -Wall $(EXTRACFLAGS) -std=gnu99 -ffunction-sections -fdata-sections" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
 		$(CONFIGURE) \
 			--prefix=/usr \
