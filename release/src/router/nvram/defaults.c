@@ -415,6 +415,7 @@ const defaults_t defaults[] = {
 	{ "ipv6_tun_ttl",		"255"				},	/* Tunnel TTL */
 	{ "ipv6_dns",			""				},	/* DNS server(s) IPs */
 	{ "ipv6_get_dns",		""				},	/* DNS IP address which get by dhcp6c */
+	{ "ipv6_dns_lan",		""				},	/* DNS Server (option6 dnsmasq) */
 	{ "ipv6_6rd_prefix",		"2602:100::"			},	/* 6RD prefix (Charter) */
 	{ "ipv6_6rd_prefix_length",	"32"				},	/* 6RD prefix length (32-62) checkme */
 	{ "ipv6_6rd_borderrelay",	"68.113.165.1"			},	/* 6RD border relay address */
@@ -1087,7 +1088,7 @@ const defaults_t defaults[] = {
 	{ "http_lanport",		"80"				},	/* LAN port to listen on */
 	{ "http_enable",		"1"				},	/* HTTP server enable/disable */
 	{ "remote_upgrade",		"1"				},	/* allow remote upgrade [1|0] - for brave guys */
-	{ "http_wanport_bfm",		"0"				},	/* enable/disable brute force mitigation rule for WAN port */
+	{ "http_wanport_bfm",		"1"				},	/* enable/disable brute force mitigation rule for WAN port */
 #ifdef TCONFIG_HTTPS
 	{ "remote_mgt_https",		"0"				},	/* Remote Management use https [1|0] */
 	{ "https_lanport",		"443"				},	/* LAN port to listen on */
