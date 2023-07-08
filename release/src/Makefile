@@ -1291,6 +1291,9 @@ n60:
 n60init:
 	@$(MAKE) bin MIPS32=r2 B=E USB="" NO_JFFS=y NO_ZEBRA=y NO_HTTPS=y NO_CIFS=y NO_XXTP=y NO_SSH=y BCMNAT=y PROXY=y BUILD_DESC="TendaN60-init"
 
+f9kinit:
+	@$(MAKE) bin MIPS32=r2 B=V MULTIWAN=y USB="USB" NVRAM_SIZE=64 USBEXTRAS=y USBAP=y NO_JFFS=y NO_ZEBRA=y NO_CIFS=y ADVTHEMES=y OPENSSL11=y  NO_SAMBA=y BUILD_DESC="F9K1102-init"
+
 f9k:
 	@$(MAKE) bin MIPS32=r2 B=V MULTIWAN=y USB="USB" NVRAM_SIZE=32 USBEXTRAS=y USBAP=y NO_JFFS=y NO_ZEBRA=y NO_CIFS=y NFS=y IPV6SUPP=y OPENVPN=y PPTPD=y ADVTHEMES=y OPENSSL11=y PROXY=y BUILD_DESC="F9K1102"
 
@@ -1466,6 +1469,7 @@ help:
 	@echo "       $ patch -R -p4 < fix4usbap.patch"
 	@echo ""
 	@echo "rtn53          Asus RT-N53"
+	@echo "f9kinit        Belkin F9K1102 (v1/v3) initial flash"
 	@echo "f9k            Belkin F9K1102 (v1/v3)"
 	@echo "e2500          Linksys E2500"
 	@echo "e3200          Linksys E3200/E2500v3 / max 16MB VPN"
