@@ -1,32 +1,32 @@
 /*
-
-	Copyright 2003, CyberTAN  Inc.  All Rights Reserved
-
-	This is UNPUBLISHED PROPRIETARY SOURCE CODE of CyberTAN Inc.
-	the contents of this file may not be disclosed to third parties,
-	copied or duplicated in any form without the prior written
-	permission of CyberTAN Inc.
-
-	This software should be used as a reference only, and it not
-	intended for production use!
-
-	THIS SOFTWARE IS OFFERED "AS IS", AND CYBERTAN GRANTS NO WARRANTIES OF ANY
-	KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE.  CYBERTAN
-	SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
-	FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE
-
-*/
+ *
+ * Copyright 2003, CyberTAN  Inc.  All Rights Reserved
+ *
+ * This is UNPUBLISHED PROPRIETARY SOURCE CODE of CyberTAN Inc.
+ * the contents of this file may not be disclosed to third parties,
+ * copied or duplicated in any form without the prior written
+ * permission of CyberTAN Inc.
+ *
+ * This software should be used as a reference only, and it not
+ * intended for production use!
+ *
+ * THIS SOFTWARE IS OFFERED "AS IS", AND CYBERTAN GRANTS NO WARRANTIES OF ANY
+ * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE.  CYBERTAN
+ * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE
+ *
+ */
 /*
-
-	Copyright 2005, Broadcom Corporation
-	All Rights Reserved.
-
-	THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
-	KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
-	SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
-	FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
-
-*/
+ *
+ * Copyright 2005, Broadcom Corporation
+ * All Rights Reserved.
+ *
+ * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
+ * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
+ * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
+ *
+ */
 /*
  *
  * Modified for Tomato Firmware
@@ -289,7 +289,7 @@ void start_dnsmasq_wet()
 		if (br != 0)
 			bridge[0] += br;
 		else
-			strcpy(bridge, "");
+			memset(bridge, 0, sizeof(bridge));
 
 		snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
 		nv = nvram_safe_get(lanN_ifname);
@@ -495,7 +495,7 @@ void start_dnsmasq()
 		if (br != 0)
 			bridge[0] += br;
 		else
-			strcpy(bridge, "");
+			memset(bridge, 0, sizeof(bridge));
 
 		snprintf(lanN_proto, sizeof(lanN_proto), "lan%s_proto", bridge);
 		snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
@@ -551,7 +551,7 @@ void start_dnsmasq()
 						buf[0] = 0;
 						for (n = 0 ; n < dns->count; ++n) {
 							if (dns->dns[n].port == 53) /* check: option 6 doesn't seem to support other ports */
-								sprintf(buf + strlen(buf), ",%s", inet_ntoa(dns->dns[n].addr));
+								snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), ",%s", inet_ntoa(dns->dns[n].addr));
 						}
 						fprintf(f, "dhcp-option=tag:%s,6%s\n", nvram_safe_get(lanN_ifname), buf); /* dns-server */
 					}
@@ -813,8 +813,7 @@ void start_dnsmasq()
 			 */
 			foreach (word, nvram_safe_get("ipv6_dns_lan"), next) {
 				if ((cntdns < MAX_DNS6_SERVER_LAN) && (inet_pton(AF_INET6, word, &addr) == 1)) {
-					strncpy(dns6[cntdns], ipv6_address(word), INET6_ADDRSTRLEN-1);
-					dns6[cntdns][INET6_ADDRSTRLEN-1] = '\0';
+					strlcpy(dns6[cntdns], ipv6_address(word), INET6_ADDRSTRLEN);
 					cntdns++;
 				}
 			}
@@ -1845,7 +1844,7 @@ void start_upnp(void)
 		if (br != 0)
 			bridge[0] += br;
 		else
-			strcpy(bridge, "");
+			memset(bridge, 0, sizeof(bridge));
 
 		snprintf(lanN_ipaddr, sizeof(lanN_ipaddr), "lan%s_ipaddr", bridge);
 		snprintf(lanN_netmask, sizeof(lanN_netmask), "lan%s_netmask", bridge);
@@ -2299,7 +2298,7 @@ void start_igmp_proxy(void)
 				if (br != 0)
 					bridge[0] += br;
 				else
-					strcpy(bridge, "");
+					memset(bridge, 0, sizeof(bridge));
 
 				snprintf(lanN_ifname, sizeof(lanN_ifname), "lan%s_ifname", bridge);
 				snprintf(multicast_lanN, sizeof(multicast_lanN), "multicast_lan%s", bridge);
@@ -2662,9 +2661,9 @@ static void start_media_server(int force)
 					snprintf(buffer2, sizeof(buffer2), "br%d", i);
 					if ((strlen(nvram_safe_get(buffer)) > 0) && (strstr(msi, buffer2) != NULL)) { /* bridge is up & present in 'ms_ifname' */
 						if (strlen(buffer3) > 0)
-							strcat(buffer3, ",");
+							strlcat(buffer3, ",", sizeof(buffer3));
 
-						strcat(buffer3, buffer2);
+						strlcat(buffer3, buffer2, sizeof(buffer3));
 					}
 				}
 				msi = buffer3;
