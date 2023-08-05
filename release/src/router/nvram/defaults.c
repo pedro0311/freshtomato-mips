@@ -142,6 +142,7 @@ const defaults_t defaults[] = {
 	{ "mwan_debug",			"0"				},
 	{ "mwan_tune_gc",		"0"				},	/* tune route cache for multiwan in load balancing */
 	{ "mwan_state_init",		"1"				},	/* init wan state files with this value */
+	{ "mwan_diff",			"800"				},	/* declare the minimum number of bytes indicating a working WAN (only for tracert) */
 	{ "pbr_rules",			""				},
 
 	/* WAN H/W parameters */
