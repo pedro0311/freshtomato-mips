@@ -4195,6 +4195,10 @@ static int init_nvram(void)
 			nvram_set("qtdc1_ep", "18");
 			nvram_set("qtdc1_sz", "10");
 		}
+		/* E3200 adjust default values for wl_txq_thresh, et_txq_thresh and wl_rpcq_rxthresh (--> not explicitly for WiFi modules) */
+		nvram_set("et_txq_thresh", "256");
+		nvram_set("wl_txq_thresh", "256");
+		nvram_set("wl_rpcq_rxthresh", "256");
 		break;
 	case MODEL_WNDR4000:
 		mfr = "Netgear";
