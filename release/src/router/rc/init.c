@@ -4059,7 +4059,16 @@ static int init_nvram(void)
 			nvram_set("qtdc1_ep", "18");
 			nvram_set("qtdc1_sz", "10");
 		}
+		/* F9K1102(v3) adjust default values for wl_txq_thresh, et_txq_thresh and wl_rpcq_rxthresh (--> explicitly for WiFi modules) */
+		nvram_set("et_txq_thresh", "512");
+		nvram_set("wl_txq_thresh", "512");
+		nvram_set("wl_rpcq_rxthresh", "512");
 
+		nvram_set("wl0_txq_thresh", "512");
+		nvram_set("wl0_rpcq_rxthresh", "512");
+
+		nvram_set("wl1_txq_thresh", "512");
+		nvram_set("wl1_rpcq_rxthresh", "512");
 		break;
 	case MODEL_E900:
 	case MODEL_E1500:
