@@ -182,10 +182,10 @@ connect() {
 				disconnect
 				[ "$(NV mwan_cktime)" -gt 0 ] && {
 					modemReset
-					watchdog add
-					wayOut "4G MODEM - connection failed: watchdog enabled"
+					mwwatchdog add
+					wayOut "4G MODEM - connection failed: mwwatchdog enabled"
 				} || {
-					watchdog del
+					mwwatchdog del
 					wayOut "4G MODEM - connection failed: process terminated!"
 				}
 			}
@@ -286,10 +286,10 @@ connect() {
 
 				[ "$(NV mwan_cktime)" -gt 0 ] && {
 					modemReset
-					watchdog add
-					wayOut "4G MODEM - connection failed: watchdog enabled"
+					mwwatchdog add
+					wayOut "4G MODEM - connection failed: mwwatchdog enabled"
 				} || {
-					watchdog del
+					mwwatchdog del
 					wayOut "4G MODEM - connection failed: process terminated!"
 				}
 			}
@@ -302,10 +302,10 @@ connect() {
 
 			[ "$(NV mwan_cktime)" -gt 0 ] && {
 				modemReset
-				watchdog add
-				wayOut "4G MODEM - no data link: watchdog enabled"
+				mwwatchdog add
+				wayOut "4G MODEM - no data link: mwwatchdog enabled"
 			} || {
-				watchdog del
+				mwwatchdog del
 				wayOut "4G MODEM - no data link: process terminated!"
 			}
 		}
@@ -340,16 +340,16 @@ connect() {
 
 	[ "$DONE" -eq 0 ] && {
 		[ "$(NV mwan_cktime)" -gt 0 ] && {
-			watchdog add
-			wayOut "4G MODEM - WAN IFACE failed: watchdog enabled"
+			mwwatchdog add
+			wayOut "4G MODEM - WAN IFACE failed: mwwatchdog enabled"
 		} || {
-			watchdog del
+			mwwatchdog del
 			wayOut "4G MODEM - WAN IFACE failed: connection process terminated!"
 		}
 	}
 
 	echo "1" > $STATEFILE
-	watchdog add
+	mwwatchdog add
 }
 
 disconnect() {
@@ -360,7 +360,7 @@ disconnect() {
 	local DEVALL j
 
 	$LOGS "4G MODEM - disconnecting ..."
-	watchdog del
+	mwwatchdog del
 	dhcpc-release $PREFIX
 
 	if [ "$MTYPE" == "non-hilink" -o "$MTYPE" == "huawei-non-hilink" -o "$MTYPE" == "hw-ether" ]; then
@@ -389,10 +389,10 @@ disconnect() {
 switchMode() {
 	VENDOR="" PRODUCT="" MTYPE="" MODULE="" DEVICENAME="" SWITCHED=0 # global
 # BCMARM-BEGIN
-	MODULES="qmi_wwan cdc_ether huawei_cdc_ncm cdc_ncm rndis_host"
+	MODULES="qmi_wwan huawei_cdc_ncm cdc_ncm rndis_host cdc_ether"
 # BCMARM-END
 # BCMARMNO-BEGIN
-	MODULES="qmi_wwan cdc_ether huawei_ether cdc_ncm rndis_host"
+	MODULES="qmi_wwan huawei_ether cdc_ncm rndis_host cdc_ether"
 # BCMARMNO-END
 
 	# first remove modules
@@ -414,14 +414,14 @@ switchMe() {
 	DEVICES=$(lsusb | awk '{print $6}')
 
 	for SWITCH in $DEVICES; do
-		[ "$(ls /etc/usb_modeswitch.d/"$SWITCH" 2> /dev/null | wc -l)" -eq 1 ] && {
+		[ "$(ls /etc/usb_modeswitch.d/"$SWITCH" 2>/dev/null | wc -l)" -eq 1 ] && {
 			# search for devicename & other data
 			for DEVICENAME in $(ls "$PATHDIAG"/ | grep -v ":" | grep "-"); do
 				PATHDEV="$PATHDIAG/$DEVICENAME"
 				[ -f $PATHDEV/idVendor -a -f $PATHDEV/idProduct -a -f $PATHDEV/uevent ] || continue # skip
 
-				DV=$(cat "$PATHDEV"/idVendor)					# vendor
-				DP=$(cat "$PATHDEV"/idProduct)					# product
+				DV=$(cat "$PATHDEV"/idVendor 2>/dev/null)			# vendor
+				DP=$(cat "$PATHDEV"/idProduct 2>/dev/null)			# product
 				DB=$(grep -s ^BUSNUM "$PATHDEV"/uevent | cut -d "=" -f2)	# BUSNUM
 				DG=$(grep -s ^DEVNUM "$PATHDEV"/uevent | cut -d "=" -f2)	# DEVNUM
 
@@ -459,9 +459,9 @@ switchMe() {
 				sleep 1
 
 				VENDOR=$(cat /etc/usb_modeswitch.d/"$SWITCH" | grep TargetVendor | cut -d "=" -f2 | cut -d "x" -f2)
-				[ -z "$VENDOR" ] && VENDOR=$(cat "$PATHDEV"/idVendor)
+				[ -z "$VENDOR" ] && VENDOR=$(cat "$PATHDEV"/idVendor 2>/dev/null)
 
-				PRODUCT=$(cat "$PATHDEV"/idProduct)
+				PRODUCT=$(cat "$PATHDEV"/idProduct 2>/dev/null)
 				[ -n "$PRODUCT" ] && {
 					$LOGS "4G MODEM - ready: $VENDOR:$PRODUCT"
 					SWITCHED=1
@@ -507,10 +507,10 @@ searchWAN() {
 		$LOGS "4G MODEM - WAN ($MTYPE) found: using $MODULE module and $WAN as WAN"
 	} || {
 		[ "$(NV mwan_cktime)" -gt 0 ] && {
-			watchdog add
-			wayOut "4G MODEM - WAN not found: watchdog enabled"
+			mwwatchdog add
+			wayOut "4G MODEM - WAN not found: mwwatchdog enabled"
 		} || {
-			watchdog del
+			mwwatchdog del
 			wayOut "4G MODEM - WAN not found: connection process terminated!"
 		}
 	}
@@ -525,9 +525,9 @@ searchDiag() {
 	local TTYS="" UQMIRET="" UQMIPID=""
 	local PATHDEV WAN IFACE TTY
 
-	[ -z "$DEVICENAME" ] && DEVICENAME=$(ls -d /sys/class/net/$WAN/device/driver/*[0-9-:\.] | tr "\n" " " | sed -e "s/.*\/\//.*/g" -e "s/.*\///g" -e "s/:.*//g")
-	[ -z "$VENDOR" ] && VENDOR=$(cat "$PATHDIAG"/"$DEVICENAME"/idVendor)
-	[ -z "$PRODUCT" ] && PRODUCT=$(cat "$PATHDIAG"/"$DEVICENAME"/idProduct)
+	[ -z "$DEVICENAME" ] && DEVICENAME=$(ls -d $PATHWAN/$WAN/device/driver/*[0-9-:\.] 2>/dev/null | tr "\n" " " | sed -e "s/.*\/\//.*/g" -e "s/.*\///g" -e "s/:.*//g")
+	[ -z "$VENDOR" ] && VENDOR=$(cat "$PATHDIAG"/"$DEVICENAME"/idVendor 2>/dev/null)
+	[ -z "$PRODUCT" ] && PRODUCT=$(cat "$PATHDIAG"/"$DEVICENAME"/idProduct 2>/dev/null)
 
 	if [ "$MTYPE" == "non-hilink" -o "$MTYPE" == "huawei-non-hilink" -o "$MTYPE" == "hw-ether" ]; then
 		isDiag # --> TTYS
@@ -546,8 +546,8 @@ searchDiag() {
 						PATHDEV="$PATHDIAG/$DEVICENAME"
 						[ -f $PATHDEV/idVendor -a -f $PATHDEV/idProduct -a -f $PATHDEV/uevent ] || continue # skip
 
-						VENDOR=$(cat "$PATHDEV"/idVendor)	# vendor
-						PRODUCT=$(cat "$PATHDEV"/idProduct)	# product
+						VENDOR=$(cat "$PATHDEV"/idVendor 2>/dev/null)	# vendor
+						PRODUCT=$(cat "$PATHDEV"/idProduct 2>/dev/null)	# product
 						$LOGS "4G MODEM - try to load usbserial module ($VENDOR:$PRODUCT) for device $DEVICENAME ..."
 
 						modprobe -r usbserial
@@ -624,11 +624,11 @@ searchDiag() {
 
 	[ -z "$TTYS" ] && {
 		[ "$(NV mwan_cktime)" -gt 0 ] && {
-			watchdog add
+			mwwatchdog add
 			modemReset
-			wayOut "4G MODEM - DIAG(s) not found: watchdog enabled"
+			wayOut "4G MODEM - DIAG(s) not found: mwwatchdog enabled"
 		} || {
-			watchdog del
+			mwwatchdog del
 			wayOut "4G MODEM - DIAG(s) not found: connection process terminated!"
 		}
 	}
@@ -658,7 +658,7 @@ modemReset() {
 
 	$LOGS "4G MODEM - resetting the modem $DNAME ..."
 
-	rm -f $READYFILE > /dev/null 2>&1
+	rm -f $READYFILE &>/dev/null
 
 	echo 0 > "$PATHDIAG"/"$DNAME"/authorized
 	sleep 1
@@ -716,7 +716,7 @@ setPIN() {
 	}
 
 	[ "$IS_PIN" -eq 1 -a "$IS_DONE" -ne 1 ] && {
-		watchdog del
+		mwwatchdog del
 		wayOut "4G MODEM - SIM locked: connection process terminated!"
 	} || {
 		$LOGS "4G MODEM - SIM ready"
@@ -728,7 +728,7 @@ checkPid() {
 
 	[ -f $PIDFILE ] && {
 		PIDNO=$(cat $PIDFILE)
-		cat "/proc/$PIDNO/cmdline" > /dev/null 2>&1
+		cat "/proc/$PIDNO/cmdline" &>/dev/null
 
 		[ $? -eq 0 ] && {
 			$LOGS "4G MODEM - another process in action: exiting"
@@ -756,7 +756,7 @@ uqmiCall() {
 	# for now, it's the only way to prevent uqmi hangups on two different calls at the same time and on the same device: https://forum.openwrt.org/viewtopic.php?id=63559
 	# OPTION: 1 - connect, 2 - background, no option - normal use
 	local COUNT=1 COMMAND="$1" OPTION="$2" UQMIPID=""
-	[[ -z $OPTION ]] && OPTION=0
+	[ -z "$OPTION" ] && OPTION=0
 
 	# wait for another uqmi process to exit...
 	while [ "$COUNT" -lt 7 ]; do
@@ -771,7 +771,7 @@ uqmiCall() {
 					${AUTOCONNECT:+--autoconnect}
 				return
 			elif [ "$OPTION" -eq 2 ]; then
-				uqmi -s -d "$DEVNR" $COMMAND 1> /dev/null &
+				uqmi -s -d "$DEVNR" $COMMAND 1>/dev/null &
 				return
 			else
 				uqmi -s -d "$DEVNR" $COMMAND
@@ -795,11 +795,11 @@ uqmiCall() {
 
 wayOut() {
 	local TEXT="$1"
-	[[ -z $TEXT ]] && TEXT="4G Modem - exiting"
+	[ -z "$TEXT" ] && TEXT="4G Modem - exiting"
 
 	$LOGS "$TEXT"
-	rm -f $READYFILE > /dev/null 2>&1
-	rm -f $PIDFILE > /dev/null 2>&1
+	rm -f $READYFILE &>/dev/null
+	rm -f $PIDFILE &>/dev/null
 	exit 0
 }
 
@@ -837,4 +837,4 @@ else
 	connect
 fi
 
-rm -f $PIDFILE > /dev/null 2>&1
+rm -f $PIDFILE &>/dev/null

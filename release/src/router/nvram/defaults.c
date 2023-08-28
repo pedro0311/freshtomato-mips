@@ -142,6 +142,7 @@ const defaults_t defaults[] = {
 	{ "mwan_debug",			"0"				},
 	{ "mwan_tune_gc",		"0"				},	/* tune route cache for multiwan in load balancing */
 	{ "mwan_state_init",		"1"				},	/* init wan state files with this value */
+	{ "mwan_diff",			"200"				},	/* declare the minimum number of bytes indicating a working WAN (only for tracert) */
 	{ "pbr_rules",			""				},
 
 	/* WAN H/W parameters */
@@ -165,7 +166,7 @@ const defaults_t defaults[] = {
 	{ "wan_status_script",		"0"				},
 #endif
 	{ "wan_ckmtd",			"2"				},
-	{ "wan_ck_pause",		"0"				},	/* skip watchdog for this wan 0|1 */
+	{ "wan_ck_pause",		"0"				},	/* skip mwwatchdog for this wan 0|1 */
 
 	{ "wan2_proto",			"disabled"			},	/* [static|dhcp|pppoe|disabled] */
 	{ "wan2_ipaddr",		"0.0.0.0"			},	/* WAN IP address */
@@ -184,7 +185,7 @@ const defaults_t defaults[] = {
 	{ "wan2_status_script",		"0"				},
 #endif
 	{ "wan2_ckmtd",			"2"				},
-	{ "wan2_ck_pause",		"0"				},	/* skip watchdog for this wan 0|1 */
+	{ "wan2_ck_pause",		"0"				},	/* skip mwwatchdog for this wan 0|1 */
 
 #ifdef TCONFIG_MULTIWAN
 	{ "wan3_proto",			"disabled"			},	/* [static|dhcp|pppoe|disabled] */
@@ -204,7 +205,7 @@ const defaults_t defaults[] = {
 	{ "wan3_status_script",		"0"				},
 #endif
 	{ "wan3_ckmtd",			"2"				},
-	{ "wan3_ck_pause",		"0"				},	/* skip watchdog for this wan 0|1 */
+	{ "wan3_ck_pause",		"0"				},	/* skip mwwatchdog for this wan 0|1 */
 
 	{ "wan4_proto",			"disabled"			},	/* [static|dhcp|pppoe|disabled] */
 	{ "wan4_ipaddr",		"0.0.0.0"			},	/* WAN IP address */
@@ -223,7 +224,7 @@ const defaults_t defaults[] = {
 	{ "wan4_status_script",		"0"				},
 #endif
 	{ "wan4_ckmtd",			"2"				},
-	{ "wan4_ck_pause",		"0"				},	/* skip watchdog for this wan 0|1 */
+	{ "wan4_ck_pause",		"0"				},	/* skip mwwatchdog for this wan 0|1 */
 #endif /* TCONFIG_MULTIWAN */
 
 #if defined(TCONFIG_DNSSEC) || defined(TCONFIG_STUBBY)

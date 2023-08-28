@@ -3,14 +3,18 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/home/root:
 #
 # Copyright (C) 2015 shibby
 #
-# changes/fixes: 2018 - 2022 by pedro
+# changes/fixes: 2018 - 2023 by pedro
 #
 
 
+NV() {
+	nvram get "$1"
+}
+
 PID=$$
-PIDFILE="/var/run/watchdog.pid"
-IPLISTFILE="/tmp/watchdog.iplist"
-MWAN=$(nvram get mwan_num)
+PIDFILE="/var/run/mwwatchdog.pid"
+IPLISTFILE="/tmp/mwwatchdog.iplist"
+MWAN=$(NV mwan_num)
 IPLIST=""
 MWANTABLE="wan"
 
@@ -20,8 +24,9 @@ while [ $i -le $MWAN ]; do
 	i=$((i+1))
 done
 
-LOGS="logger -t watchdog[$PID]"
-[ "$(nvram get mwan_debug)" -gt 0 ] && DEBUG="logger -p DEBUG -t watchdog[$PID]" || DEBUG="echo"
+LOGS="logger -t mwwatchdog[$PID]"
+[ "$(NV mwan_debug)" -gt 0 ] && DEBUG="logger -p DEBUG -t mwwatchdog[$PID]" || DEBUG="echo"
+
 
 timeout() {
 	local cmd_pid sleep_pid retval
@@ -37,7 +42,7 @@ timeout() {
 
 findHost() {
 	local host ip
-	local dst=$(nvram get mwan_ckdst)
+	local dst=$(NV mwan_ckdst)
 	local hostlist=$(echo $dst | sed 's/,/ /')
 
 	for host in $hostlist; do
@@ -56,35 +61,44 @@ dhcpFix() {
 	dhcpc-renew $PREFIX
 }
 
-watchdogRun() {
+ifconfigChk() {
+	[ $(ifconfig $IFACE 2>/dev/null | grep inet | grep -Eo '((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)' | grep -v '0.0.0.0' | wc -l) -eq 0 ] && ret_ifchk=0 || ret_ifchk=1
+}
+
+mwwatchdogRun() {
 	for PREFIX in $MWANTABLE; do
-		IFACE=$(nvram get "$PREFIX"_iface)
+		IFACE=$(NV "$PREFIX"_iface)
 		ISPPPD=$([ -f /tmp/ppp/pppd$PREFIX ] && echo 1 || echo 0)
-		WEIGHT=$(nvram get "$PREFIX"_weight)
-		METHOD=$(nvram get "$PREFIX"_ckmtd)
-		PROTO=$(nvram get "$PREFIX"_proto)
-		DEMAND=$(nvram get "$PREFIX"_ppp_demand)
+		WEIGHT=$(NV "$PREFIX"_weight)
+		METHOD=$(NV "$PREFIX"_ckmtd)
+		PROTO=$(NV "$PREFIX"_proto)
+		DEMAND=$(NV "$PREFIX"_ppp_demand)
 		RESULT=0
 		PREFIX_MWAN=$PREFIX
 		PREFIX_LOG="WAN"$(echo $PREFIX"0" | cut -c 4- | tr '[234]' '[123]' | cut -c -1)
 		STATE_FILE="/var/lib/misc/"$PREFIX"_state"
+		local ret_ifchk
 
-		[ "$(nvram get "$PREFIX"_ck_pause)" -eq 1 ] && {
-			$DEBUG "Watchdog paused for $PREFIX_LOG - skipping ..."
+		[ "$(NV "$PREFIX"_ck_pause)" -eq 1 ] && {
+			$DEBUG "MWWatchdog paused for $PREFIX_LOG - skipping ..."
 			continue
 		}
 
 		[ "$PROTO" != "disabled" ] && {
-			[ "$(nvram get mwan_debug)" -gt 0 ] && {
+			[ "$(NV mwan_debug)" -gt 0 ] && {
 				ISUP=$(wanuptime "$PREFIX")
 				ISGW=$(ip route | grep $IFACE | grep -v link | wc -l)
 				$DEBUG "prefix=$PREFIX_LOG, iface=$IFACE, uptime=$ISUP, ISGW=$ISGW, WEIGHT=$WEIGHT"
 			}
 
-			[ "$PROTO" == "dhcp" -a $(ifconfig $IFACE | grep inet | grep -Eo '((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)' | grep -v '0.0.0.0' | wc -l) -eq 0 ] && { dhcpFix $PREFIX; sleep 3; }
+			[ "$PROTO" == "dhcp" ] && {
+				ifconfigChk
+				[ "$ret_ifchk" -eq 0 ] && { dhcpFix $PREFIX; sleep 3; }
+			}
 
 			[ "$PROTO" != "lte" ] && {
-				[ $(ifconfig $IFACE | grep inet | grep -Eo '((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)' | grep -v '0.0.0.0' | wc -l) -eq 0 ] && { 
+				ifconfigChk
+				[ "$ret_ifchk" -eq 0 ] && {
 					$DEBUG "$PREFIX doesn't have an IP address. Skipping..."
 					echo "0" > $STATE_FILE
 					continue
@@ -92,17 +106,17 @@ watchdogRun() {
 			}
 
 			DEFAULT_ROUTE_FRAGMENT=$(ip route | grep default | cut -d' ' -f2-)
-			GATEWAY_FRAGMENT="via $(nvram get "$PREFIX"_gateway)"
+			GATEWAY_FRAGMENT="via $(NV "$PREFIX"_gateway)"
 			[ "$ISPPPD" -eq 1 ] && GATEWAY_FRAGMENT=""
 			for IP in $IPLIST; do
 				[ ! -z "$DEFAULT_ROUTE_FRAGMENT" ] && {
 					ROUTE_EXEC="ip route add $IP $DEFAULT_ROUTE_FRAGMENT"
 					$DEBUG $ROUTE_EXEC
-					$ROUTE_EXEC
+					$ROUTE_EXEC &>/dev/null
 				}
 				ROUTE_EXEC="ip route add $IP dev $IFACE $GATEWAY_FRAGMENT metric 50000"
 				$DEBUG $ROUTE_EXEC
-				$ROUTE_EXEC
+				$ROUTE_EXEC &>/dev/null
 			done
 
 			$DEBUG "start test for: $IFACE ..."
@@ -118,11 +132,11 @@ watchdogRun() {
 				[ ! -z "$DEFAULT_ROUTE_FRAGMENT" ] && {
 					ROUTE_EXEC="ip route del $IP $DEFAULT_ROUTE_FRAGMENT"
 					$DEBUG $ROUTE_EXEC
-					$ROUTE_EXEC
+					$ROUTE_EXEC &>/dev/null
 				}
 				ROUTE_EXEC="ip route del $IP dev $IFACE $GATEWAY_FRAGMENT metric 50000"
 				$DEBUG $ROUTE_EXEC
-				$ROUTE_EXEC
+				$ROUTE_EXEC &>/dev/null
 			done
 
 			# wan is down
@@ -134,7 +148,7 @@ watchdogRun() {
 				} || {
 					[ "$PREFIX" == "wan" -a "$MWAN" -gt 1 ] && PREFIX_MWAN="wan1" # "wan" means restart all WANs, but we only want restart one
 
-					[ "$(nvram get action_service)" == "wan-restart" -o "$(nvram get action_service)" == $PREFIX_MWAN"-restart" -o "$(nvram get action_service)" == "wan-restart-c" -o "$(nvram get action_service)" == $PREFIX_MWAN"-restart-c" ] && {
+					[ "$(NV action_service)" == "wan-restart" -o "$(NV action_service)" == $PREFIX_MWAN"-restart" -o "$(NV action_service)" == "wan-restart-c" -o "$(NV action_service)" == $PREFIX_MWAN"-restart-c" ] && {
 						$LOGS "Connection $PREFIX_LOG DOWN - Reconnect is already in progress ..."
 					} || {
 						echo "0" > $STATE_FILE
@@ -169,14 +183,15 @@ watchdogRun() {
 
 cktracert() {
 	local RXBYTES1 RXBYTES2 IP
+	local RXBYTES_MIN_DIFF=$(NV mwan_diff) # declare the minimum number of bytes indicating a working WAN
 
 	for IP in $IPLIST; do
-		RXBYTES1=$(cat /sys/class/net/$IFACE/statistics/rx_bytes)
+		RXBYTES1=$(cat /sys/class/net/$IFACE/statistics/rx_bytes 2>/dev/null)
 		# we need only send/receive few packages to be sure if connection works
-		traceroute -i $IFACE -n -w 1 -m 4 -q 1 -z 1 $IP > /dev/null 2>&1
+		traceroute -i $IFACE -n -w 1 -m 4 -q 1 -z 1 $IP &>/dev/null
 		usleep 200
-		RXBYTES2=$(cat /sys/class/net/$IFACE/statistics/rx_bytes)
-		[ "$RXBYTES2" -gt "$RXBYTES1" ] && { RESULT=1; break; }
+		RXBYTES2=$(cat /sys/class/net/$IFACE/statistics/rx_bytes 2>/dev/null)
+		[ "$RXBYTES2" -gt "$(($RXBYTES1 + $RXBYTES_MIN_DIFF))" ] && { RESULT=1; break; }
 	done
 
 	[ "$RESULT" -gt 0 ] && $DEBUG "tracert test result for: $IFACE - OK" || $DEBUG "tracert test result for: $IFACE - FAILED!"
@@ -212,21 +227,21 @@ ckcurl() {
 	[ "$RESULT" -gt 0 ] && $DEBUG "curl test result for: $IFACE - OK" || $DEBUG "curl test result for: $IFACE - FAILED!"
 }
 
-watchdogAdd() {
-	local CKTIME=$(nvram get mwan_cktime)
+mwwatchdogAdd() {
+	local CKTIME=$(NV mwan_cktime)
 	local MINS=$((CKTIME/60))
 
 	[ "$MINS" -gt 0 ] && {
-		cru l | grep watchdogJob >/dev/null || cru a watchdogJob "*/$MINS * * * * /usr/sbin/watchdog"
+		cru l | grep mwwatchdogJob >/dev/null || cru a mwwatchdogJob "*/$MINS * * * * /usr/sbin/mwwatchdog"
 	}
 }
 
-watchdogDel() {
-	cru l | grep watchdogJob >/dev/null && cru d watchdogJob
+mwwatchdogDel() {
+	cru l | grep mwwatchdogJob >/dev/null && cru d mwwatchdogJob
 }
 
 mwanJob() {
-	cru l | grep mwanJob >/dev/null && cru d mwanJob || cru a mwanJob "*/1 * * * * /usr/sbin/watchdog alive"
+	cru l | grep mwanJob >/dev/null && cru d mwanJob || cru a mwanJob "*/1 * * * * /usr/sbin/mwwatchdog alive"
 }
 
 mwanAlive() {
@@ -243,7 +258,7 @@ checkPid() {
 
 	[ -f $PIDFILE ] && {
 		PIDNO=$(cat $PIDFILE)
-		cat "/proc/$PIDNO/cmdline" > /dev/null 2>&1
+		cat "/proc/$PIDNO/cmdline" &>/dev/null
 
 		[ $? -eq 0 ] && {
 			$LOGS "Another process in action - Exiting ..."
@@ -275,7 +290,7 @@ checkPidSwitch() {
 				rm /var/run/switch3g_$SPREFIX.pid
 			} || {
 				$LOGS "Switch3g ($SPREFIX) script in action - Exiting ..."
-				rm -f $PIDFILE > /dev/null 2>&1
+				rm -f $PIDFILE &>/dev/null
 				exit 0
 			}
 		}
@@ -286,7 +301,7 @@ checkPidSwitch() {
 				rm /var/run/switch4g_$SPREFIX.pid
 			} || {
 				$LOGS "Switch4g ($SPREFIX) script in action - Exiting ..."
-				rm -f $PIDFILE > /dev/null 2>&1
+				rm -f $PIDFILE &>/dev/null
 				exit 0
 			}
 		}
@@ -298,13 +313,13 @@ checkPidSwitch() {
 
 
 if [ "$1" == "add" ]; then
-	watchdogAdd
+	mwwatchdogAdd
 	mwanJob
 elif [ "$1" == "del" ]; then
-	watchdogDel
+	mwwatchdogDel
 elif [ "$1" == "alive" ]; then
 	mwanAlive
-elif [ "$(nvram get g_upgrade)" != "1" -a "$(nvram get g_reboot)" != "1" ]; then
+elif [ "$(NV g_upgrade)" != "1" -a "$(NV g_reboot)" != "1" ]; then
 	checkPid
 
 	checkPidSwitch
@@ -326,9 +341,9 @@ elif [ "$(nvram get g_upgrade)" != "1" -a "$(nvram get g_reboot)" != "1" ]; then
 		IPLIST=$IIPLIST
 	}
 
-	watchdogRun
+	mwwatchdogRun
 
 	[ -f $IPLISTFILE ] && rm $IPLISTFILE
 fi
 
-rm -f $PIDFILE > /dev/null 2>&1
+rm -f $PIDFILE &>/dev/null
