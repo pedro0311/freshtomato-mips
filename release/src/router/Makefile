@@ -366,7 +366,6 @@ obj-$(TCONFIG_BBT) += libcurl
 obj-$(TCONFIG_BBT) += transmission
 obj-$(TCONFIG_MEDIA_SERVER) += zlib
 obj-$(TCONFIG_MEDIA_SERVER) += sqlite
-obj-$(TCONFIG_MEDIA_SERVER) += ffmpeg
 ifeq ($(TCONFIG_BCMARM),y)
  obj-$(TCONFIG_MEDIA_SERVER) += libiconv
 endif
@@ -376,6 +375,7 @@ obj-$(TCONFIG_MEDIA_SERVER) += libjpeg-turbo
 obj-$(TCONFIG_MEDIA_SERVER) += libexif
 obj-$(TCONFIG_MEDIA_SERVER) += libid3tag
 obj-$(TCONFIG_MEDIA_SERVER) += libvorbis
+obj-$(TCONFIG_MEDIA_SERVER) += ffmpeg
 obj-$(TCONFIG_MEDIA_SERVER) += minidlna
 obj-$(TCONFIG_CONNTRACK_TOOL) += libnetfilter_conntrack
 obj-$(TCONFIG_CONNTRACK_TOOL) += libnetfilter_log
@@ -2087,7 +2087,7 @@ libvorbis-clean:
 ffmpeg/stamp-h1:
 	$(call patch_files,ffmpeg)
 	cd ffmpeg && \
-		./configure --prefix='' --enable-cross-compile --arch=$(ARCH) --target-os=linux $(if $(TCONFIG_BCMARM),--cpu=cortex-a9,) \
+		./configure --prefix='' --enable-cross-compile --arch=$(ARCH) --target-os=linux \
 		--cross-prefix=$(CROSS_COMPILE) --pkg-config="pkg-config" \
 		--enable-pthreads --enable-small --enable-shared --enable-gpl \
 		--disable-doc --disable-ffmpeg --disable-ffplay --disable-ffserver --disable-ffprobe --disable-symver \
@@ -2378,11 +2378,11 @@ libxml2: libxml2/stamp-h1
 	@$(MAKE) -C $@ DESTDIR=$(TOP)/libxml2/staged install
 
 libxml2-install:
-	install -D libxml2/.libs/libxml2.so.2.11.4 $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.11.4
-	$(STRIP) $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.11.4
+	install -D libxml2/.libs/libxml2.so.2.11.5 $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.11.5
+	$(STRIP) $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.11.5
 	cd $(INSTALLDIR)/libxml2/usr/lib && \
-		ln -sf libxml2.so.2.11.4 libxml2.so.2 && \
-		ln -sf libxml2.so.2.11.4 libxml2.so
+		ln -sf libxml2.so.2.11.5 libxml2.so.2 && \
+		ln -sf libxml2.so.2.11.5 libxml2.so
 
 libxml2-clean:
 	-@$(MAKE) -C libxml2 clean
@@ -2406,11 +2406,11 @@ libpng: libpng/stamp-h1
 	@rm -f $(TOP)/libpng/staged/usr/lib/libpng12.la
 
 libpng-install:
-	install -D libpng/.libs/libpng16.so.16.39.0 $(INSTALLDIR)/libpng/usr/lib/libpng16.so.16.39.0
-	$(STRIP) $(INSTALLDIR)/libpng/usr/lib/libpng16.so.16.39.0
+	install -D libpng/.libs/libpng16.so.16.40.0 $(INSTALLDIR)/libpng/usr/lib/libpng16.so.16.40.0
+	$(STRIP) $(INSTALLDIR)/libpng/usr/lib/libpng16.so.16.40.0
 	cd $(INSTALLDIR)/libpng/usr/lib && \
-		ln -sf libpng16.so.16.39.0 libpng16.so && \
-		ln -sf libpng16.so.16.39.0 libpng16.so.16
+		ln -sf libpng16.so.16.40.0 libpng16.so && \
+		ln -sf libpng16.so.16.40.0 libpng16.so.16
 
 libpng-clean:
 	-@$(MAKE) -C libpng clean
