@@ -9,7 +9,6 @@ FreshTomato-MIPS Changelog
 ---------------------------
 
 - busybox: update to 1.36.1
-- openvpn: update to 2.6.5
 - libcurl: update to 8.1.2
 - sqlite: update to 3.42.0
 - libxml2: update to 2.11.4
