@@ -3380,7 +3380,7 @@ getdns-clean:
 
 tor/stamp-h1:
 	cd tor && autoreconf -fsi && \
-		CFLAGS="$(if $(TCONFIG_BCMARM),-O2,-Os) -Wall $(EXTRACFLAGS) -I$(TOP)/$(OPENSSLDIR)/staged/usr/include -ffunction-sections -fdata-sections $(if $(TCONFIG_KEYGEN),,-DOPENSSL_NO_ENGINE)" \
+		CFLAGS="$(if $(TCONFIG_BCMARM),-O3,-Os) -Wall $(EXTRACFLAGS) -I$(TOP)/$(OPENSSLDIR)/staged/usr/include -ffunction-sections -fdata-sections $(if $(TCONFIG_KEYGEN),,-DOPENSSL_NO_ENGINE)" \
 		CPPFLAGS="-I$(TOP)/$(OPENSSLDIR)/staged/usr/include" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
 		$(CONFIGURE) --prefix=/usr --with-libevent-dir=$(TOP)/libevent/staged/usr/local \
@@ -3966,8 +3966,9 @@ diskdev_cmds-332.25-clean:
 
 libffi/stamp-h1:
 	cd libffi && \
-		CFLAGS="-Os -Wall $(EXTRACFLAGS) -fPIC" \
-		$(CONFIGURE) --prefix=/usr --libdir=/usr/lib --disable-builddir --disable-dependency-tracking
+		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC" \
+		LDFLAGS="-Wl,--gc-sections -fPIC" \
+		$(CONFIGURE) --prefix=/usr --libdir=/usr/lib --disable-builddir --disable-docs --disable-dependency-tracking
 	@touch $@
 
 libffi: libffi/stamp-h1
@@ -3977,11 +3978,11 @@ libffi: libffi/stamp-h1
 	@rm -f libffi/staged/usr/lib/libffi.la
 
 libffi-install:
-	install -D $(TOP)/libffi/.libs/libffi.so.6.0.4 $(INSTALLDIR)/libffi/usr/lib/libffi.so.6.0.4
-	$(STRIP) $(INSTALLDIR)/libffi/usr/lib/libffi.so.6.0.4
+	install -D $(TOP)/libffi/.libs/libffi.so.8.1.2 $(INSTALLDIR)/libffi/usr/lib/libffi.so.8.1.2
+	$(STRIP) $(INSTALLDIR)/libffi/usr/lib/libffi.so.8.1.2
 	cd $(INSTALLDIR)/libffi/usr/lib && \
-		ln -sf libffi.so.6.0.4 libffi.so.6 && \
-		ln -sf libffi.so.6.0.4 libffi.so
+		ln -sf libffi.so.8.1.2 libffi.so.8 && \
+		ln -sf libffi.so.8.1.2 libffi.so
 
 libffi-clean:
 	-@$(MAKE) -C libffi distclean
@@ -3991,12 +3992,15 @@ glib2/stamp-h1:
 	$(call patch_files,glib2)
 	cd glib2 && ./autogen.sh && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC" \
-		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC -I$(TOP)/libiconv/staged/usr/include -I$(TOP)/zlib/staged/usr/include -I$(TOP)/glib2" \
-		LDFLAGS="-Wl,--gc-sections -fPIC -L$(TOP)/libiconv/staged/usr/lib -L$(TOP)/libffi/staged/usr/lib -L$(TOP)/zlib/staged/usr/lib -ldl -lpthread -lz -liconv -lffi" \
-		LIBFFI_CFLAGS="-I$(TOP)/libffi/staged/usr/lib/libffi-3.2.1/include" \
+		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC -I$(TOP)/libiconv/staged/usr/include -I$(TOP)/zlib/staged/usr/include \
+			-I$(TOP)/glib2 $(if $(TCONFIG_NGINX),-I$(TOP)/pcre,)" \
+		LDFLAGS="-Wl,--gc-sections -fPIC -L$(TOP)/libiconv/staged/usr/lib -L$(TOP)/libffi/staged/usr/lib -L$(TOP)/zlib/staged/usr/lib $(if $(TCONFIG_NGINX),-L$(TOP)/pcre/.libs,) \
+			-ldl -lpthread -lz -liconv -lffi $(if $(TCONFIG_NGINX),-lpcre,)" \
+		LIBFFI_CFLAGS="-I$(TOP)/libffi/staged/usr/include" \
 		LIBFFI_LIBS="$(TOP)/libffi/staged/usr/lib/libffi.so" \
+		$(if $(TCONFIG_NGINX),PCRE_CFLAGS="-I$(TOP)/pcre" PCRE_LIBS="$(TOP)/pcre/.libs/libpcre.so",) \
 		LIBS="$(TOP)/libffi/staged/usr/lib/libffi.so $(TOP)/libiconv/staged/usr/lib/libiconv.so" \
-		$(CONFIGURE) --prefix=/usr --libdir=/usr/lib --enable-debug=no --enable-man=no \
+		$(CONFIGURE) --prefix=/usr --libdir=/usr/lib --enable-debug=no --enable-man=no $(if $(TCONFIG_NGINX),--with-pcre=system,--with-pcre=internal) \
 			--disable-selinux --disable-fam --with-libiconv=gnu --disable-dependency-tracking
 	@touch $@
 
@@ -4023,9 +4027,10 @@ irqbalance/stamp-h1:
 	$(call patch_files,irqbalance)
 	cd irqbalance && ./autogen.sh && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
-		CPPFLAGS="-I$(TOP)/glib2/staged/usr/include/glib-2.0 -I$(TOP)/glib2/staged/usr/lib/glib-2.0/include -I$(TOP)/libiconv/staged/usr/include -I$(TOP)/libffi/staged/usr/lib/libffi-3.2.1/include" \
-		LDFLAGS="-Wl,--gc-sections -L$(TOP)/libiconv/staged/usr/lib -L$(TOP)/libffi/staged/usr/lib" \
-		LIBS="$(TOP)/libffi/staged/usr/lib/libffi.so $(TOP)/libiconv/staged/usr/lib/libiconv.so" \
+		CPPFLAGS="-I$(TOP)/glib2/staged/usr/include/glib-2.0 -I$(TOP)/glib2/staged/usr/lib/glib-2.0/include -I$(TOP)/libiconv/staged/usr/include \
+			-I$(TOP)/libffi/staged/usr/lib/libffi-3.2.1/include $(if $(TCONFIG_NGINX),-I$(TOP)/pcre,)" \
+		LDFLAGS="-Wl,--gc-sections -L$(TOP)/libiconv/staged/usr/lib -L$(TOP)/libffi/staged/usr/lib $(if $(TCONFIG_NGINX),-L$(TOP)/pcre/.libs,)" \
+		LIBS="$(TOP)/libffi/staged/usr/lib/libffi.so $(TOP)/libiconv/staged/usr/lib/libiconv.so $(if $(TCONFIG_NGINX),$(TOP)/pcre/.libs/libpcre.so,)" \
 		GLIB2_CFLAGS="-I$(TOP)/glib2/staged/usr/include/glib-2.0 -I$(TOP)/glib2" \
 		GLIB2_LIBS="-L$(TOP)/glib2/staged/usr/lib -lglib-2.0" \
 		$(CONFIGURE) --prefix=/usr --enable-static=glib2 --with-libcap_ng=no \
