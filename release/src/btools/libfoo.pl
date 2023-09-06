@@ -173,7 +173,6 @@ sub fixDyn
 	fixDynDep("libpcreposix.so.0.0.7", "libpcre.so.1.2.12");
 
 	fixDynDep("minidlna", "libz.so.1");
-	fixDynDep("minidlna", "libz.so.1");
 	fixDynDep("minidlna", "libstdc.so.6");
 	fixDynDep("minidlna", "libiconv.so.2.6.1");
 #	fixDynDep("minidlna", "libssl.so.1.0.0");
