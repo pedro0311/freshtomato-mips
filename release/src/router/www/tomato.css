@@ -16,6 +16,10 @@ a:hover {
 	color: #fff;
 }
 
+a:hover.status_devices {
+	background-color: inherit !important;
+}
+
 table {
 	empty-cells: show;
 }
@@ -239,7 +243,8 @@ ul.tabs a:hover,
 
 .tabs-bottom {
 	clear: both;
-	border-top: 12px solid #fff;
+	border-top: 12px solid;
+	opacity: 0;
 	padding: 0;
 }
 
