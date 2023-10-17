@@ -6,6 +6,15 @@ body {
 	color: #000;
 }
 
+.alt-mode {
+	position: relative;
+	height: 100%;
+	width: 100%;
+	filter: brightness(80%) sepia(10%);
+	background-color: black;
+	background-image: none;
+}
+
 a {
 	text-decoration: none;
 	color: #af4141;

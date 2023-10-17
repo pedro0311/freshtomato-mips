@@ -300,6 +300,12 @@ void start_dnsmasq_wet()
 		}
 	}
 
+	if (nvram_get_int("dnsmasq_debug"))
+		fprintf(f, "log-queries\n");
+
+	if ((nvram_get_int("adblock_enable")) && (f_exists("/etc/dnsmasq.adblock")))
+		fprintf(f, "conf-file=/etc/dnsmasq.adblock\n");
+
 	if (!nvram_get_int("dnsmasq_safe")) {
 		fprintf(f, "%s\n", nvram_safe_get("dnsmasq_custom"));
 		fappend(f, "/etc/dnsmasq.custom");
@@ -2696,7 +2702,7 @@ static void start_media_server(int force)
 			           nvram_get_int("ms_autoscan") ? "yes" : "no",
 			           serial,
 			           uuident,
-			           nvram_safe_get("os_version"),
+			           tomato_version,
 			           nvram_safe_get("ms_custom"));
 
 			/* media directories */
