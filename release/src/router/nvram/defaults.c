@@ -583,7 +583,7 @@ const defaults_t defaults[] = {
 	{ "wl_security_mode",		"disabled"			},	/* WPA mode (disabled|radius|wpa_personal|wpa_enterprise|wep|wpa2_personal|wpa2_enterprise) for WEB */
 	{ "wl_auth_mode",		"none"				},	/* Network authentication mode (radius|none) */
 	{ "wl_wpa_psk",			""				},	/* WPA pre-shared key */
-	{ "wl_wpa_gtk_rekey",		"3600"				},	/* WPA GTK rekey interval */
+	{ "wl_wpa_gtk_rekey",		"3600"				},	/* WPA GTK rekey interval; default: 3600 sec; 0 - disabled; range 1 sec up to 30 days (2592000 sec) */
 	{ "wl_radius_ipaddr",		""				},	/* RADIUS server IP address */
 	{ "wl_radius_key",		""				},	/* RADIUS shared secret */
 	{ "wl_radius_port",		"1812"				},	/* RADIUS server UDP port */
