@@ -59,8 +59,8 @@ static void help(void)
 	       "export <--quote|--c|--set|--tab> [--nodefaults] |\n"
 	       "export <--dump|--dump0> | import [--forceall] <filename> |\n"
 	       "setfb64 <key> <filename> | getfb64 <key> <filename> |\n"
-	       "setfile <key> <filename> | getfile <key> <filename> | setfile2nvram <filename>"
-	       "\n");
+	       "setfile <key> <filename> | getfile <key> <filename> | setfile2nvram <filename> |\n"
+	       "convert <infile.cfg> <outfile.txt>\n");
 
 	exit(1);
 }
@@ -889,12 +889,8 @@ static int backup_main(int argc, char **argv)
 	return 0;
 }
 
-static int restore_main(int argc, char **argv)
+static int restore(char *infile, FILE *ofp, int test, int force, int commit)
 {
-	char *name;
-	int test;
-	int force;
-	int commit;
 	backup_t data;
 	unsigned int size;
 	char s[512];
@@ -907,37 +903,14 @@ static int restore_main(int argc, char **argv)
 	int nunset;
 	int nsame;
 	int cmp;
-	int i;
-
-	test = 0;
-	force = 0;
-	commit = 1;
-	name = NULL;
-	for (i = 1; i < argc; ++i) {
-		if (argv[i][0] == '-') {
-			if (strcmp(argv[i], "--test") == 0)
-				test = 1;
-			else if (strcmp(argv[i], "--force") == 0)
-				force = 1;
-			else if (strcmp(argv[i], "--forceall") == 0)
-				force = 2;
-			else if (strcmp(argv[i], "--nocommit") == 0)
-				commit = 0;
-			else
-				help();
-		}
-		else
-			name = argv[i];
-	}
-	if (!name)
-		help();
+	unsigned long nbytes = 0;
 
 	strlcpy(tmp, "/tmp/nvramXXXXXX", sizeof(tmp));
 	mktemp(tmp);
-	snprintf(s, sizeof(s), "gzip -d < %s > %s", name, tmp);
+	snprintf(s, sizeof(s), "gzip -d < %s > %s", infile, tmp);
 	if (system(s) != 0) {
 		unlink(tmp);
-		printf("Error decompressing file.\n");
+		printf("Error decompressing input file.\n");
 		return 1;
 	}
 
@@ -1011,7 +984,9 @@ CORRUPT:
 		bv = strchr(bk, '=');
 		*bv++ = 0;
 
-		if ((force != 1) || (in_defaults(bk))) {
+		if (force == 3)
+			nbytes += fprintf(ofp, "%s=%s\n", bk, bv);
+		else if ((force != 1) || (in_defaults(bk))) {
 			if (!nvram_match(bk, bv)) {
 				if (test)
 					printf("nvram set \"%s=%s\"\n", bk, bv);
@@ -1038,7 +1013,9 @@ CORRUPT:
 		}
 		*cv++ = 0;
 
-		if ((force != 1) || (in_defaults(ck))) {
+		if (force == 3)
+			nbytes += fprintf(ofp, "%s=\n", ck);
+		else if ((force != 1) || (in_defaults(ck))) {
 			cmp = 1;
 			b = data.buffer;
 			while (*b) {
@@ -1064,7 +1041,9 @@ CORRUPT:
 	if ((nset == 0) && (nunset == 0))
 		commit = 0;
 
-	printf("\nPerformed %d set and %d unset operations. %d required no changes.\n%s\n", nset, nunset, nsame, commit ? "Committing..." : "Not commiting.");
+	if (force != 3)
+		printf("\nPerformed %d set and %d unset operations. %d required no changes.\n%s\n", nset, nunset, nsame, commit ? "Committing..." : "Not commiting.");
+
 	fflush(stdout);
 
 	if (!test) {
@@ -1072,6 +1051,69 @@ CORRUPT:
 		if (commit)
 			nvram_commit();
 	}
+
+	return (force == 3) ? nbytes : 0;
+}
+
+static int restore_main(int argc, char **argv)
+{
+	char *infile;
+	int test;
+	int force;
+	int commit;
+	int i, ret;
+
+	test = 0;
+	force = 0;
+	commit = 1;
+	infile = NULL;
+	for (i = 1; i < argc; ++i) {
+		if (argv[i][0] == '-') {
+			if (strcmp(argv[i], "--test") == 0)
+				test = 1;
+			else if (strcmp(argv[i], "--force") == 0)
+				force = 1;
+			else if (strcmp(argv[i], "--forceall") == 0)
+				force = 2;
+			else if (strcmp(argv[i], "--nocommit") == 0)
+				commit = 0;
+			else
+				help();
+		}
+		else
+			infile = argv[i];
+	}
+	if (!infile)
+		help();
+
+	ret = restore(infile, NULL, test, force, commit);
+
+	return ret;
+}
+
+static int restore_to_file_main(int argc, char **argv)
+{
+	char *infile;
+	char *outfile;
+	FILE *ofp;
+	int ret;
+
+	infile = argv[1];
+	outfile = argv[2];
+
+	if ((ofp = fopen(outfile, "w+")) == NULL) {
+		fprintf(stderr, "Cannot write to output file \"%s\"\n", outfile);
+		return 1;
+	}
+
+	//ret = restore(infile, buf, ofp);
+	ret = restore(infile, ofp, 2, 3, 0);
+	// --> restore(infile, outfile, test, force, commit);
+
+	fclose(ofp);
+
+	if (ret > 1)
+		fprintf(stderr, "Wrote %d bytes to %s\n", ret, outfile);
 
 	return 0;
 }
@@ -1128,6 +1170,7 @@ static const applets_t applets[] = {
 #ifdef CONFIG_BCMWL6
 	{ "default_get",	3,	default_get_main	},
 #endif
+	{ "convert",		4,	restore_to_file_main	},
 	{ NULL, 		0,	NULL			}
 };
 
