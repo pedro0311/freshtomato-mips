@@ -10,7 +10,7 @@
  #include <libxml/xmlschemas.h>
 --- php5/ext/libxml/php_libxml.h
 +++ php5/ext/libxml/php_libxml.h
-@@ -39,6 +39,7 @@
+@@ -36,6 +36,7 @@
  
  #include "ext/standard/php_smart_str.h"
  #include <libxml/tree.h>
