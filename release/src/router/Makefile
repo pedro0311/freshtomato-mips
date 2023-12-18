@@ -1911,6 +1911,7 @@ sqlite/stamp-h1:
 sqlite: sqlite/stamp-h1
 	@$(SEP)
 	@$(MAKE) -C $@ all $(PARALLEL_BUILD)
+	@$(MAKE) -C $@ DESTDIR=$(TOP)/sqlite/staged install
 
 sqlite-install:
 ifeq ($(INSTALL_SQLITE),y)
@@ -1925,6 +1926,7 @@ endif
 sqlite-clean:
 	-@$(MAKE) -C sqlite clean
 	@rm -f sqlite/stamp-h1
+	@rm -rf sqlite/staged
 
 libogg/stamp-h1:
 	cd libogg && autoreconf -fsi && \
@@ -1999,6 +2001,7 @@ libjpeg-turbo/build/Makefile:
 libjpeg-turbo: libjpeg-turbo/build/Makefile
 	@$(SEP)
 	$(MAKE) -C libjpeg-turbo/build $(PARALLEL_BUILD)
+	@$(MAKE) -C libjpeg-turbo/build DESTDIR=$(TOP)/libjpeg-turbo/staged install
 
 libjpeg-turbo-install:
 ifneq ($(MEDIA_SERVER_STATIC),y)
@@ -2013,6 +2016,7 @@ endif
 
 libjpeg-turbo-clean:
 	@rm -rf libjpeg-turbo/build
+	@rm -rf libjpeg-turbo/staged
 	@rm -f libjpeg-turbo/jconfig.h
 
 libexif/stamp-h1:
@@ -2350,12 +2354,13 @@ pcre/stamp-h1:
 pcre: pcre/stamp-h1
 	@$(SEP)
 	@$(MAKE) -C $@ $(PARALLEL_BUILD)
+	@$(MAKE) -C $@ DESTDIR=$(TOP)/pcre/staged install
 
 pcre-install:
-	install -D pcre/.libs/libpcre.so.1 $(INSTALLDIR)/pcre/usr/lib/libpcre.so.1.2.12
-	$(STRIP) -s $(INSTALLDIR)/pcre/usr/lib/libpcre.so.1.2.12
+	install -D pcre/.libs/libpcre.so.1 $(INSTALLDIR)/pcre/usr/lib/libpcre.so.1.2.13
+	$(STRIP) -s $(INSTALLDIR)/pcre/usr/lib/libpcre.so.1.2.13
 	cd $(INSTALLDIR)/pcre/usr/lib/ && \
-		ln -sf libpcre.so.1.2.12 libpcre.so.1
+		ln -sf libpcre.so.1.2.13 libpcre.so.1
 ifeq ($(TCONFIG_BCMARM),y)
 	install -D pcre/.libs/libpcreposix.so.0.0.7 $(INSTALLDIR)/pcre/usr/lib/libpcreposix.so.0.0.7
 	$(STRIP) -s $(INSTALLDIR)/pcre/usr/lib/libpcreposix.so.0.0.7
@@ -2366,6 +2371,7 @@ endif
 pcre-clean:
 	-@$(MAKE) -C pcre clean
 	@rm -f pcre/stamp-h1
+	@rm -rf pcre/staged
 	$(call unpatch_files,pcre)
 
 libxml2/stamp-h1:
@@ -2426,72 +2432,74 @@ $(PHP_TARGET)/stamp-h1:
 	$(call patch_files,$(PHP_TARGET))
 	cd $(PHP_TARGET) && \
 		PKG_CONFIG_LIBDIR="" \
-		CFLAGS="-Os -Wall $(EXTRACFLAGS) -I$(TOP)/zlib/staged/usr/include -I$(TOP)/libxml2/include/libxml -I$(TOP)/libxml2/include -I$(TOP)/pcre -I$(TOP)/libiconv/staged/usr/include \
-			-I$(TOP)/libpng/staged/usr/include -I$(TOP)/libcurl/staged/usr/include -I$(TOP)/libjpeg-turbo/build" \
-		LDFLAGS="-L$(TOP)/pcre/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/zlib/staged/usr/lib -L$(TOP)/libxml2/.libs -L$(TOP)/libiconv/staged/usr/lib \
-			-L$(TOP)/libpng/.libs -L$(TOP)/libcurl/staged/usr/lib -L$(TOP)/$(OPENSSLDIR)/staged/usr/lib -L$(TOP)/libjpeg-turbo/build" \
-		CPPFLAGS="-L$(TOP)/pcre/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/zlib/staged/usr/lib -L$(TOP)/libxml2/.libs -L$(TOP)/libiconv/staged/usr/lib -L$(TOP)/libpng/.libs -L$(TOP)/libjpeg-turbo/build" \
-		LIBS="-L$(TOP)/pcre/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/zlib/staged/usr/lib -L$(TOP)/libxml2/.libs -L$(TOP)/libiconv/staged/usr/lib -L$(TOP)/libpng/.libs -L$(TOP)/libcurl/lib/.libs -L$(TOP)/$(OPENSSLDIR)/staged/usr/lib -L$(TOP)/libjpeg-turbo/build \
-			-lz -lsqlite3 -ldl -lpthread -liconv -lxml2 -lstdc++ -lcurl -lssl -lcrypto -ljpeg" \
-		PHP_FCGI_LIBXML_DIR="$(TOP)/libxml2/staged/usr" \
+		CFLAGS="-Os -Wall $(EXTRACFLAGS) -I$(TOP)/zlib/staged/usr/include -I$(TOP)/libxml2/include/libxml -I$(TOP)/libxml2/include -I$(TOP)/pcre/staged/usr/include -I$(TOP)/libiconv/staged/usr/include \
+			-I$(TOP)/libpng/staged/usr/include -I$(TOP)/libcurl/staged/usr/include -I$(TOP)/libjpeg-turbo/staged/usr/include -I$(TOP)/sqlite/staged/usr/include -ffunction-sections -fdata-sections" \
+		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -I$(TOP)/zlib/staged/usr/include -I$(TOP)/libxml2/include/libxml -I$(TOP)/libxml2/include -I$(TOP)/pcre/staged/usr/include -I$(TOP)/libiconv/staged/usr/include \
+			-I$(TOP)/libpng/staged/usr/include -I$(TOP)/libcurl/staged/usr/include -I$(TOP)/libjpeg-turbo/staged/use/include -I$(TOP)/sqlite/staged/usr/include -ffunction-sections -fdata-sections" \
+		LDFLAGS="-L$(TOP)/pcre/staged/usr/lib -L$(TOP)/sqlite/staged/usr/lib -L$(TOP)/zlib/staged/usr/lib -L$(TOP)/libxml2/staged/usr/lib -L$(TOP)/libiconv/staged/usr/lib \
+			-L$(TOP)/libpng/staged/usr/lib -L$(TOP)/libcurl/staged/usr/lib -L$(TOP)/libjpeg-turbo/staged/usr/lib -L$(TOP)/$(OPENSSLDIR)/staged/usr/lib -Wl,--gc-sections" \
+		LIBS="-L$(TOP)/pcre/staged/usr/lib -L$(TOP)/sqlite/staged/usr/lib -L$(TOP)/zlib/staged/usr/lib -L$(TOP)/libxml2/staged/usr/lib -L$(TOP)/libiconv/staged/usr/lib -L$(TOP)/libpng/staged/usr/lib \
+			-L$(TOP)/libcurl/staged/usr/lib -L$(TOP)/libjpeg-turbo/staged/usr/lib -L$(TOP)/$(OPENSSLDIR)/staged/usr/lib -lz -lsqlite3 -ldl -lpthread -liconv -lxml2 -lstdc++ -lcurl -ljpeg -lssl -lcrypto" \
 		ac_cv_func_memcmp_working=yes \
-		cv_php_mbstring_stdarg=yes \
 		$(CONFIGURE) --prefix=/usr \
 			--enable-shared \
 			--disable-static \
 			--disable-rpath \
 			--disable-debug \
-			--without-pear \
 			--with-config-file-path=/etc \
 			--with-config-file-scan-dir=/etc/php5 \
-			--disable-short-tags \
 			--with-zlib \
 			--with-zlib-dir="$(TOP)/zlib/staged/usr" \
-			--disable-phar \
-			--enable-cli \
-			--enable-cgi \
-			--disable-calendar \
-			--enable-ctype \
+			--with-jpeg-dir="$(TOP)/libjpeg-turbo/staged/usr" \
 			--with-curl="$(TOP)/libcurl/staged/usr" \
-			--enable-fileinfo \
-			--without-gettext \
-			--enable-dom \
-			--enable-exif \
-			--disable-ftp \
-			--without-gmp \
-			--with-gd \
 			--with-png-dir="$(TOP)/libpng/staged/usr" \
-			--enable-hash \
 			--with-iconv="$(TOP)/libiconv/staged/usr" \
 			--with-iconv-dir="$(TOP)/libiconv/staged/usr" \
+			--with-pcre-dir="$(TOP)/pcre/staged/usr" \
+			--with-pcre-regex="$(TOP)/pcre/staged/usr" \
+			--with-libxml-dir="$(TOP)/libxml2/staged/usr" \
+			--with-pdo-sqlite="$(TOP)/sqlite/staged/usr" \
+			--with-sqlite3="$(TOP)/sqlite/staged/usr" \
+			--enable-cli \
+			--enable-cgi \
+			--enable-ctype \
+			--enable-fileinfo \
+			--enable-dom \
+			--enable-exif \
+			--enable-hash \
 			--enable-json \
-			--without-ldap \
 			--enable-mbstring \
-			--without-openssl \
-			--disable-pcntl \
 			--with-mysqli \
 			--with-mysql-sock="/var/run/mysqld.sock" \
 			--with-pdo-mysql \
-			--without-pdo-pgsql \
-			--with-pdo-sqlite \
 			--enable-pdo \
-			--without-pgsql \
 			--enable-session \
-			--disable-shmop \
 			--enable-simplexml \
-			--disable-soap \
-			--disable-sockets \
-			--with-sqlite3 \
-			--disable-sysvmsg \
-			--disable-sysvsem \
-			--disable-sysvshm \
-			--disable-tokenizer \
 			--enable-xml \
 			--enable-xmlreader \
 			--enable-xmlwriter \
 			--enable-zip \
 			$(if $(TCONFIG_BCMARM),--without-valgrind,) \
-			--with-libxml-dir="$(TOP)/libxml2/staged/usr"
+			--with-gd \
+			--without-pear \
+			--disable-short-tags \
+			--disable-phar \
+			--disable-calendar \
+			--without-gettext \
+			--disable-ftp \
+			--without-gmp \
+			--without-ldap \
+			--without-openssl \
+			--disable-pcntl \
+			--without-pdo-pgsql \
+			--without-pgsql \
+			--disable-shmop \
+			--disable-soap \
+			--disable-sockets \
+			--disable-sysvmsg \
+			--disable-sysvsem \
+			--disable-sysvshm \
+			--disable-tokenizer
 	@touch $@
 
 $(PHP_TARGET): $(PHP_TARGET)/stamp-h1
@@ -2500,9 +2508,9 @@ $(PHP_TARGET): $(PHP_TARGET)/stamp-h1
 
 $(PHP_TARGET)-install:
 	install -d $(INSTALLDIR)/$(PHP_TARGET)/usr/sbin
-	install -D $(PHP_TARGET)/sapi/cli/.libs/php $(INSTALLDIR)/$(PHP_TARGET)/usr/sbin/php-cli && chmod 0755 $(INSTALLDIR)/$(PHP_TARGET)/usr/sbin/php-cli
+	install -D $(PHP_TARGET)/sapi/cli/php $(INSTALLDIR)/$(PHP_TARGET)/usr/sbin/php-cli && chmod 0755 $(INSTALLDIR)/$(PHP_TARGET)/usr/sbin/php-cli
 	$(STRIP) $(INSTALLDIR)/$(PHP_TARGET)/usr/sbin/php-cli
-	install -D $(PHP_TARGET)/sapi/cgi/.libs/php-cgi $(INSTALLDIR)/$(PHP_TARGET)/usr/sbin/php-cgi && chmod 0755 $(INSTALLDIR)/$(PHP_TARGET)/usr/sbin/php-cgi
+	install -D $(PHP_TARGET)/sapi/cgi/php-cgi $(INSTALLDIR)/$(PHP_TARGET)/usr/sbin/php-cgi && chmod 0755 $(INSTALLDIR)/$(PHP_TARGET)/usr/sbin/php-cgi
 	cd $(INSTALLDIR)/$(PHP_TARGET)/usr/sbin && ln -sf php-cgi php-fcgi
 	$(STRIP) $(INSTALLDIR)/$(PHP_TARGET)/usr/sbin/php-cgi
 
@@ -2522,8 +2530,7 @@ libatomic_ops: libatomic_ops/stamp-h1
 	@$(MAKE) -C $@ $(PARALLEL_BUILD)
 
 libatomic_ops-install:
-	install -D libatomic_ops/src/.libs/libatomic_ops.so.1.0.3 $(INSTALLDIR)/libatomic_ops/usr/lib/libatomic_ops.so.1.0.3
-	$(STRIP) $(INSTALLDIR)/libatomic_ops/usr/lib/libatomic_ops.so.1.0.3
+	@true
 
 libatomic_ops-clean:
 	-@$(MAKE) -C libatomic_ops clean
@@ -2640,7 +2647,8 @@ mysql/target/Makefile:
 			-DCMAKE_INSTALL_PREFIX=/usr -DINSTALL_MYSQLSHAREDIR=share/mysql \
 			-DCMAKE_BUILD_TYPE=$(if $(TCONFIG_BCMARM),Release,MinSizeRel) -DCMAKE_SKIP_RPATH=TRUE \
 			-DCMAKE_C_FLAGS="-Wall $(EXTRACFLAGS) -fno-delete-null-pointer-checks -funit-at-a-time -ffunction-sections -fdata-sections -fPIC" \
-			-DCMAKE_CXX_FLAGS="-Wall $(EXTRACFLAGS) -fno-delete-null-pointer-checks -funit-at-a-time -ffunction-sections -fdata-sections -fPIC" \
+			-DCMAKE_CXX_FLAGS="-Wall $(if $(TCONFIG_BCMARM),-fno-strict-aliasing -fno-delete-null-pointer-checks -marm -march=armv7-a -mtune=cortex-a9,-funit-at-a-time -Wno-pointer-sign \
+					$(if $(TCONFIG_MIPSR2),-march=mips32r2 -mips32r2 -mtune=mips32r2,-march=mips32 -mips32 -mtune=mips32)) -ffunction-sections -fdata-sections -fPIC" \
 			-DCMAKE_EXE_LINKER_FLAGS="-Wl,--gc-sections -fPIC" \
 			-DDISABLE_SHARED=FALSE \
 			-DHAVE_LIBPTHREAD=TRUE \
@@ -2975,7 +2983,9 @@ transmission/build/Makefile:
 			-DCMAKE_INSTALL_PREFIX=/usr \
 			-DCMAKE_BUILD_TYPE=Release -DCMAKE_SKIP_RPATH=TRUE \
 			-DCMAKE_C_FLAGS="-Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC --param large-function-growth=800 --param max-inline-insns-single=3600" \
-			-DCMAKE_CXX_FLAGS="-Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC --param large-function-growth=800 --param max-inline-insns-single=3600 -fno-exceptions -fno-rtti" \
+			-DCMAKE_CXX_FLAGS="-Wall $(if $(TCONFIG_BCMARM),-fno-strict-aliasing -fno-delete-null-pointer-checks -marm -march=armv7-a -mtune=cortex-a9,-funit-at-a-time -Wno-pointer-sign \
+					$(if $(TCONFIG_MIPSR2),-march=mips32r2 -mips32r2 -mtune=mips32r2,-march=mips32 -mips32 -mtune=mips32)) \
+					-ffunction-sections -fdata-sections -fPIC --param large-function-growth=800 --param max-inline-insns-single=3600 -fno-exceptions -fno-rtti" \
 			-DCMAKE_EXE_LINKER_FLAGS="-Wl,--gc-sections -fPIC" \
 			-DENABLE_LIGHTWEIGHT=TRUE -DENABLE_UTP=TRUE -DENABLE_NLS=FALSE -DENABLE_CLI=FALSE -DENABLE_GTK=FALSE -DENABLE_TESTS=FALSE \
 			-DENABLE_NLS=FALSE -DINSTALL_DOC=FALSE -DUSE_SYSTEM_UTP=FALSE -DUSE_SYSTEM_DHT=FALSE -DUSE_SYSTEM_B64=FALSE -DWITH_SYSTEMD=FALSE \
