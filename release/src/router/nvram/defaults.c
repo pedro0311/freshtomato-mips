@@ -1087,6 +1087,10 @@ const defaults_t defaults[] = {
 	{ "http_wanport",		"8080"				},	/* WAN port to listen on */
 	{ "http_lanport",		"80"				},	/* LAN port to listen on */
 	{ "http_enable",		"1"				},	/* HTTP server enable/disable */
+	{ "http_lan_listeners",		"7"				},	/* Enable listeners: bit 0 = LAN1, bit 1 = LAN2, bit 2 = LAN3 */
+#ifdef TCONFIG_IPV6
+	{ "http_ipv6",			"1"				},	/* Start httpd on IPv6 interfaces */	
+#endif
 	{ "remote_upgrade",		"1"				},	/* allow remote upgrade [1|0] - for brave guys */
 	{ "http_wanport_bfm",		"1"				},	/* enable/disable brute force mitigation rule for WAN port */
 #ifdef TCONFIG_HTTPS
