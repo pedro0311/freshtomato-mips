@@ -180,7 +180,7 @@ sub fixDyn
 	fixDynDep("minidlna", "libjpeg.so.8.3.2");
 	fixDynDep("minidlna", "libogg.so.0");
 	fixDynDep("minidlna", "libvorbis.so.0");
-	fixDynDep("minidlna", "libid3tag.so.0");
+	fixDynDep("minidlna", "libid3tag.so.0.16.3");
 	fixDynDep("minidlna", "libexif.so.12");
 	fixDynDep("minidlna", "libFLAC.so.12.1.0");
 	fixDynDep("minidlna", "libsqlite3.so.0.8.6");
@@ -261,7 +261,7 @@ sub fixDyn
 
 	fixDynDep("nginx", "libpcre.so.1.2.13");
 	fixDynDep("nginx", "libpcreposix.so.0.0.7");
-	fixDynDep("php-cgi", "libxml2.so.2.12.2");
+	fixDynDep("php-cgi", "libxml2.so.2.12.3");
 	fixDynDep("php-cgi", "libpng16.so.16.40.0");
 	fixDynDep("php-cgi", "libiconv.so.2.6.1");
 	fixDynDep("php-cgi", "libsqlite3.so.0.8.6");
@@ -269,7 +269,7 @@ sub fixDyn
 	fixDynDep("php-cgi", "libjpeg.so.8.3.2");
 	fixDynDep("php-cgi", "libpcre.so.1.2.13");
 	fixDynDep("php-cgi", "libpcreposix.so.0.0.7");
-	fixDynDep("php-cli", "libxml2.so.2.12.2");
+	fixDynDep("php-cli", "libxml2.so.2.12.3");
 	fixDynDep("php-cli", "libpng16.so.16.40.0");
 	fixDynDep("php-cli", "libiconv.so.2.6.1");
 	fixDynDep("php-cli", "libsqlite3.so.0.8.6");
@@ -608,7 +608,7 @@ genSO("${root}/usr/lib/libz.so.1", "${router}/zlib/libz.a");
 genSO("${root}/usr/lib/libjpeg.so.8.3.2", "${router}/libjpeg-turbo/build/libjpeg.a");
 genSO("${root}/usr/lib/libsqlite3.so.0.8.6", "${router}/sqlite/.libs/libsqlite3.a", "", "-L${router}/zlib");
 genSO("${root}/usr/lib/libvorbis.so.0", "${router}/libvorbis/lib/.libs/libvorbis.a", "", "-L${router}/libogg/src/.libs");
-genSO("${root}/usr/lib/libid3tag.so.0", "${router}/libid3tag/.libs/libid3tag.a", "", "-L${router}/zlib");
+genSO("${root}/usr/lib/libid3tag.so.0.16.3", "${router}/libid3tag/.libs/libid3tag.a", "", "-L${router}/zlib");
 genSO("${root}/usr/lib/libexif.so.12", "${router}/libexif/libexif/.libs/libexif.a");
 genSO("${root}/usr/lib/libFLAC.so.12.1.0", "${router}/flac/src/libFLAC/.libs/libFLAC.a", "", "-L${router}/libogg/src/.libs");
 genSO("${root}/usr/lib/libavcodec.so.54", "${router}/ffmpeg/libavcodec/libavcodec.a", "", "-L${router}/ffmpeg/libavutil -L${router}/zlib");
@@ -630,7 +630,7 @@ genSO("${root}/usr/lib/libiconv.so.2.6.1", "${router}/libiconv/lib/.libs/libicon
 genSO("${root}/usr/lib/libnfnetlink.so.0.2.0", "${router}/libnfnetlink/src/.libs/libnfnetlink.a");
 genSO("${root}/usr/lib/libsodium.so.23.3.0", "${router}/libsodium/src/libsodium/.libs/libsodium.a");
 genSO("${root}/usr/lib/libpng16.so.16.40.0", "${router}/libpng/.libs/libpng16.a", "", "-L${router}/zlib");
-genSO("${root}/usr/lib/libxml2.so.2.12.2", "${router}/libxml2/.libs/libxml2.a", "", "-L${router}/zlib");
+genSO("${root}/usr/lib/libxml2.so.2.12.3", "${router}/libxml2/.libs/libxml2.a", "", "-L${router}/zlib");
 genSO("${root}/usr/lib/libpcre.so.1.2.13", "${router}/pcre/.libs/libpcre.a");
 genSO("${root}/usr/lib/libpcreposix.so.0.0.7", "${router}/pcre/.libs/libpcreposix.a");
 genSO("${root}/usr/lib/libatomic_ops.so.1.0.3", "${router}/libatomic_ops/src/.libs/libatomic_ops.a");
