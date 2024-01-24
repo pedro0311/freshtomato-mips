@@ -25,61 +25,29 @@
 char port[BUF_SIZE_8];
 
 
-int wg_quick_iface_up(char *iface, char *file)
+int wg_quick_iface(char *iface, char *file, int up)
 {
-	int buf_size = 32;
-	char buf[buf_size];
+	char buffer[BUF_SIZE_32];
+	char *up_down = (up == 1 ? "up" : "down");
 	FILE *f;
 
 	/* copy config to wg dir with proper name */
-	memset(buf, 0, buf_size);
-	snprintf(buf, buf_size, WG_DIR"/%s.conf", iface);
-	if ((f = fopen(buf, "w")) != NULL) {
+	memset(buffer, 0, BUF_SIZE_32);
+	snprintf(buffer, BUF_SIZE_32, WG_DIR"/%s.conf", iface);
+	if ((f = fopen(buffer, "w")) != NULL) {
 		fappend(f, file);
 		fclose(f);
 	}
 	else
 		logmsg(LOG_WARNING, "unable to open wireguard configuration file %s for interface %s!", iface, file);
 
-	/* write wg config to file */
-	if (eval("wg-quick", "up", iface, "--norestart")) {
-		logmsg(LOG_WARNING, "unable to set up wireguard interface %s from file %s!", iface, file);
+	/* set up/down wireguard IF */
+	if (eval("wg-quick", up_down, buffer, iface, "--norestart")) {
+		logmsg(LOG_WARNING, "unable to set %s wireguard interface %s from file %s!", up_down, iface, file);
 		return -1;
 	}
 	else
-		logmsg(LOG_DEBUG, "wireguard interface %s from file %s set up", iface, file);
-
-	stop_dnsmasq();
-	start_dnsmasq();
-
-	return 0;
-}
-
-int wg_quick_iface_down(char *iface, char *file)
-{
-	int buf_size = 32;
-	char buf[buf_size];
-	FILE *f;
-
-	/* copy config to wg dir with proper name */
-	memset(buf, 0, buf_size);
-	snprintf(buf, buf_size, WG_DIR"/%s.conf", iface);
-	if ((f = fopen(buf, "w")) != NULL) {
-		fappend(f, file);
-		fclose(f);
-	}
-	else {
-		logmsg(LOG_WARNING, "unable to open wireguard configuration file %s for interface %s!", iface, file);
-		return -1;
-	}
-
-	/* write wg config to file */
-	if (eval("wg-quick", "down", buf, "--norestart")) {
-		logmsg(LOG_WARNING, "unable to set down wireguard interface %s from file %s!", iface, file);
-		return -1;
-	}
-	else
-		logmsg(LOG_DEBUG, "wireguard interface %s from file %s set down", iface, file);
+		logmsg(LOG_DEBUG, "wireguard interface %s from file %s set %s", iface, file, up_down);
 
 	stop_dnsmasq();
 	start_dnsmasq();
@@ -128,23 +96,26 @@ void wg_setup_dirs(void) {
 		}
 	}
 
-	/* script to add iptable rules for wireguard device */
+	/* script to add iptable rules for wireguard device (port, iface) */
 	if (!(f_exists(WG_SCRIPTS_DIR"/fw-add.sh"))) {
 		if ((fp = fopen(WG_SCRIPTS_DIR"/fw-add.sh", "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
+			            "# bypass CTF for wireguard\n"
 			            "if [ $(nvram get ctf_disable) -eq 0 ]; then\n"
 			            " iptables -t mangle -nvL PREROUTING | grep -q '.*MARK.*all.*$2.*0x1/0x7' || iptables -t mangle -A PREROUTING -i $2 -j MARK --set-mark 0x01/0x7\n"
 			            "fi\n"
+			            "# open wireguard port\n"
 			            "iptables -nvL INPUT | grep -q \".*ACCEPT.*udp.dpt.$1$\" || iptables -A INPUT -p udp --dport \"$1\" -j ACCEPT\n"
+			            "# accept packets from WireGuard internal subnet\n"
 			            "iptables -nvL INPUT | grep -q \".*ACCEPT.*all.*$2\" || iptables -A INPUT -i \"$2\" -j ACCEPT\n"
+			            "# set up forwarding\n"
 			            "iptables -nvL FORWARD | grep -q \".*ACCEPT.*all.*$2\" || iptables -A FORWARD -i \"$2\" -j ACCEPT\n");
 			fclose(fp);
 			chmod(WG_SCRIPTS_DIR"/fw-add.sh", (S_IRUSR | S_IWUSR | S_IXUSR));
 		}
 	}
 
-	/* script to remove iptable rules for wireguard device */
-	/* will probably need to add rules to clean up default route rules either in this script or another */
+	/* script to remove iptable rules for wireguard device (port, iface) */
 	if (!(f_exists(WG_SCRIPTS_DIR"/fw-del.sh"))) {
 		if ((fp = fopen(WG_SCRIPTS_DIR"/fw-del.sh", "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
@@ -159,7 +130,7 @@ void wg_setup_dirs(void) {
 		}
 	}
 
-	/* script to add fw rules for dns servers */
+	/* script to add fw rules for dns servers (iface, dns) */
 	if (!(f_exists(WG_SCRIPTS_DIR"/fw-dns-set.sh"))) {
 		if ((fp = fopen(WG_SCRIPTS_DIR"/fw-dns-set.sh", "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
@@ -177,12 +148,11 @@ void wg_setup_dirs(void) {
 		}
 	}
 
-	/* script to remove fw rules for dns servers */
+	/* script to remove fw rules for dns servers (iface) */
 	if (!(f_exists(WG_SCRIPTS_DIR"/fw-dns-unset.sh"))) {
 		if ((fp = fopen(WG_SCRIPTS_DIR"/fw-dns-unset.sh", "w"))) {
 			fprintf(fp, "#!/bin/sh\n"
-			            "INTERFACE=\"${1}\"\n"
-			            "DNS_CHAIN=\"wg-ft-${INTERFACE}-dns\"\n"
+			            "DNS_CHAIN=\"wg-ft-${1}-dns\"\n"
 			            "iptables -D OUTPUT -j \"${DNS_CHAIN}\" || $(exit 0)\n"
 			            "iptables -F \"${DNS_CHAIN}\" || $(exit 0)\n"
 			            "iptables -X \"${DNS_CHAIN}\" || $(exit 0)\n");
@@ -191,10 +161,17 @@ void wg_setup_dirs(void) {
 		}
 	}
 
-	/* script excerpt from wg-quick to route default */
+	/* script excerpt from wg-quick to route default (iface, route, fwmark) */
 	if (!(f_exists(WG_SCRIPTS_DIR"/route-default.sh"))) {
 		if ((fp = fopen(WG_SCRIPTS_DIR"/route-default.sh", "w"))) {
-			fprintf(fp, "interface=\"${1}\"\n"
+			fprintf(fp, "#!/bin/sh\n"
+			            "cmd() {\n"
+			            "  echo \"[#] $*\" >&2\n"
+			            "  \"$@\"\n"
+			            "}\n\n"
+			            "NL='\n"
+			            "'\n"
+			            "interface=\"${1}\"\n"
 			            "route=\"${2}\"\n"
 			            "table=\"${3}\"\n"
 			            "case \"${route}\" in\n"
@@ -209,15 +186,16 @@ void wg_setup_dirs(void) {
 			            "    pf='ip'\n"
 			            "    ;;\n"
 			            "esac\n"
-			            "cmd ip \"${proto}\" route add \"${route}\" dev \"${interface}\" table \"${table}\"\n"
 			            "cmd ip \"${proto}\" rule add not fwmark \"${table}\" table \"${table}\"\n"
 			            "cmd ip \"${proto}\" rule add table main suppress_prefixlength 0\n"
+			            "cmd ip \"${proto}\" route add \"${route}\" dev \"${interface}\" table \"${table}\"\n"
 			            "restore=\"*raw${NL}\"\n"
 			            "ip -o \"${proto}\" addr show dev \"${interface}\" 2>/dev/null | {\n"
+			            "  match=''\n"
 			            "  while read -r line; do\n"
 			            "    match=\"$(\n"
 			            "      printf %s \"${line}\" |\n"
-			            "        sed -ne 's/^.*inet6\? \([0-9a-f:.]\\+\\)\\/[0-9]\\+.*$/\1/; t P; b; : P; p'\n"
+			            "        sed -ne 's/^.*inet6\\? \\([0-9a-f:.]\\+\\)\\/[0-9]\\+.*$/\\1/; t P; b; : P; p'\n"
 			            "    )\"\n"
 			            "    [ -n \"${match}\" ] ||\n"
 			            "      continue\n"
@@ -226,7 +204,7 @@ void wg_setup_dirs(void) {
 			            "  restore=\"${restore:+${restore}${NL}}COMMIT${NL}*mangle${NL}-I POSTROUTING -m mark --mark ${table} -p udp -j CONNMARK --save-mark${NL}-I PREROUTING -p udp -j CONNMARK --restore-mark${NL}COMMIT\"\n"
 			            "  ! [ \"${proto}\" = '-4' ] ||\n"
 			            "    echo 1 > /proc/sys/net/ipv4/conf/all/src_valid_mark\n"
-			            "  printf '%s\n' \"${restore}\" |\n"
+			            "  printf '%s\\n' \"${restore}\" |\n"
 			            "    cmd \"${iptables}-restore\" -n\n"
 			            "}\n", "%s", "%s");
 			fclose(fp);
@@ -256,20 +234,11 @@ int wg_create_iface(char *iface)
 	return 0;
 }
 
-int wg_add_iface_addr(char *iface, char *addr)
+int wg_set_iface_addr(char *iface, char *addr)
 {
-	if (eval("ip", "addr", "add", addr, "dev", iface)) {
-		logmsg(LOG_WARNING, "unable to add wireguard interface %s address of %s!", iface, addr);
-		return -1;
-	}
-	else
-		logmsg(LOG_DEBUG, "wireguard interface %s has had address %s add to it", iface, addr);
+	char *nv, *b;
 
-	return 0;
-}
-
-int wg_flush_iface_addr(char *iface)
-{
+	/* Flush all addresses from interface */
 	if (eval("ip", "addr", "flush", "dev", iface)) {
 		logmsg(LOG_WARNING, "unable to flush wireguard interface %s!", iface);
 		return -1;
@@ -277,21 +246,15 @@ int wg_flush_iface_addr(char *iface)
 	else
 		logmsg(LOG_DEBUG, "successfully flushed wireguard interface %s", iface);
 
-	return 0;
-}
-
-int wg_set_iface_addr(char *iface, char *addr)
-{
-	char *nv, *b;
-
-	/* Flush all addresses from interface */
-	wg_flush_iface_addr(iface);
-
 	/* Set wireguard interface address(es) */
 	nv = strdup(addr);
 	while ((b = strsep(&nv, ",")) != NULL) {
-		if (wg_add_iface_addr(iface, b))
+		if (eval("ip", "addr", "add", b, "dev", iface)) {
+			logmsg(LOG_WARNING, "unable to add wireguard interface %s address of %s!", iface, addr);
 			return -1;
+		}
+		else
+			logmsg(LOG_DEBUG, "wireguard interface %s has had address %s add to it", iface, addr);
 	}
 
 	if (nv)
@@ -384,7 +347,7 @@ int wg_set_iface_up(char *iface)
 		}
 		else if (retry < 4) {
 			logmsg(LOG_WARNING, "unable to bring up wireguard interface %s, retrying...", iface);
-			sleep(3);
+			sleep(4);
 		}
 		retry += 1;
 	}
@@ -416,15 +379,13 @@ int wg_set_iface_dns(char *iface, char *dns)
 	fp = fopen(fn, "w");
 
 	nv = strdup(dns);
-	while ((b = strsep(&nv, ",")) != NULL) {
+	while ((b = strsep(&nv, ",")) != NULL)
 		fprintf(fp, "server=%s\n", b);
-	}
 
 	fclose(fp);
 
 	if (nv)
 		free(nv);
-
 
 	stop_dnsmasq();
 	start_dnsmasq();
@@ -478,7 +439,7 @@ int wg_iface_script(int unit, char *script_name)
 			logmsg(LOG_WARNING, "unable to open %s for writing!", path);
 			return -1;
 		}
-		fprintf(fp, "%s\n", script);
+		fprintf(fp, "#!/bin/sh\n%s\n", script);
 		fclose(fp);
 		chmod(path, 0700);
 
@@ -494,7 +455,7 @@ int wg_iface_script(int unit, char *script_name)
 			logmsg(LOG_DEBUG, "interface substitution in %s script for wireguard interface wg%d has executed successfully", script_name, unit);
 
 		/* run script */
-		if (eval("/bin/sh", path)) {
+		if (eval(path)) {
 			logmsg(LOG_WARNING, "unable to execute %s script for wireguard interface wg%d!", script_name, unit);
 			return -1;
 		}
@@ -587,6 +548,18 @@ int wg_route_peer(char *iface, char *route)
 	return 0;
 }
 
+int wg_route_peer_default(char *iface, char *route, char *fwmark)
+{
+	if (eval(WG_SCRIPTS_DIR"/route-default.sh", iface, route, fwmark)) {
+		logmsg(LOG_WARNING, "unable to add default route of %s to table %s for wireguard interface %s!", route, fwmark, iface);
+		return -1;
+	}
+	else
+		logmsg(LOG_WARNING, "wireguard interface %s has had a default route added to table %s for %s", iface, fwmark, route);
+
+	return 0;
+}
+
 int wg_route_peer_custom(char *iface, char *route, char *table)
 {
 	if (eval("ip", "route", "add", route, "dev", iface, "table", table)) {
@@ -626,14 +599,13 @@ int wg_route_peer_allowed_ips(char *iface, char *allowed_ips, char *fwmark)
 					//wg_route_peer_default(iface, b, fwmark);
 				}
 			}
-			if (route_type == 1) {
+			if (route_type == 1) { /* Auto */
 				if (wg_route_peer(iface, b))
 					result = -1;
 			}
-			else {
+			else /* Custom Table */
 				if (wg_route_peer_custom(iface, b, table))
 					result = -1;
-			}
 		}
 		if (aip)
 			free(aip);
@@ -758,18 +730,6 @@ int wg_add_peer_privkey(char *iface, char *privkey, char *allowed_ips, char *pre
 	return wg_add_peer(iface, pubkey, allowed_ips, presharedkey, keepalive, endpoint, fwmark);
 }
 
-int wg_route_peer_default(char *iface, char *route, char *fwmark)
-{
-	if (eval("/bin/sh", WG_SCRIPTS_DIR"/route-default.sh", iface, route, fwmark)) {
-		logmsg(LOG_WARNING, "unable to add default route of %s to table %s for wireguard interface %s!", route, fwmark, iface);
-		return -1;
-	}
-	else
-		logmsg(LOG_WARNING, "wireguard interface %s has had a default route added to table %s for %s", iface, fwmark, route);
-
-	return 0;
-}
-
 int wg_set_iptables(char *iface, char *port)
 {
 	if (eval(WG_SCRIPTS_DIR"/fw-add.sh", port, iface))
@@ -860,9 +820,15 @@ void stop_wg_eas(void)
 void stop_wg_all(void)
 {
 	int unit;
+	char iface[IF_SIZE];
 
 	for (unit = 0; unit < WG_INTERFACE_MAX; unit++) {
-		stop_wireguard(unit);
+		memset(iface, 0, IF_SIZE);
+		snprintf(iface, IF_SIZE, "wg%d", unit);
+		if (eval("ip", "addr", "show", "dev", iface))
+			logmsg(LOG_DEBUG, "no such wg instance to stop: %s", iface);
+		else
+			stop_wireguard(unit);
 	}
 	wg_cleanup_dirs();
 
@@ -881,7 +847,7 @@ void start_wireguard(int unit)
 	/* set up directories for later use */
 	wg_setup_dirs();
 
-	/* Determine interface */
+	/* determine interface */
 	memset(iface, 0, IF_SIZE);
 	snprintf(iface, IF_SIZE, "wg%d", unit);
 
@@ -889,33 +855,26 @@ void start_wireguard(int unit)
 	find_port(unit, port);
 
 	/* check if file is specified */
-	if (getNVRAMVar("wg%d_file", unit)[0] != '\0')
-		wg_quick_iface_up(iface, getNVRAMVar("wg%d_file", unit));
+	if (getNVRAMVar("wg%d_file", unit)[0] != '\0') {
+		if (wg_quick_iface(iface, getNVRAMVar("wg%d_file", unit), 1))
+			goto out;
+	}
 	else {
-
 		/* create interface */
-		if (wg_create_iface(iface)) {
-			stop_wireguard(unit);
-			return;
-		}
+		if (wg_create_iface(iface))
+			goto out;
 
 		/* set interface address */
-		if (wg_set_iface_addr(iface, getNVRAMVar("wg%d_ip", unit))) {
-			stop_wireguard(unit);
-			return;
-		}
+		if (wg_set_iface_addr(iface, getNVRAMVar("wg%d_ip", unit)))
+			goto out;
 
 		/* set interface port */
-		if (wg_set_iface_port(iface, port)) {
-			stop_wireguard(unit);
-			return;
-		}
+		if (wg_set_iface_port(iface, port))
+			goto out;
 
 		/* set interface private key */
-		if (wg_set_iface_privkey(iface, getNVRAMVar("wg%d_key", unit))) {
-			stop_wireguard(unit);
-			return;
-		}
+		if (wg_set_iface_privkey(iface, getNVRAMVar("wg%d_key", unit)))
+			goto out;
 
 		/* set interface fwmark */
 		b = getNVRAMVar("wg%d_fwmark", unit);
@@ -925,22 +884,16 @@ void start_wireguard(int unit)
 		else
 			snprintf(fwmark, BUF_SIZE_16, "%s", b);
 
-		if (wg_set_iface_fwmark(iface, fwmark)) {
-			stop_wireguard(unit);
-			return;
-		}
+		if (wg_set_iface_fwmark(iface, fwmark))
+			goto out;
 
 		/* set interface mtu */
-		if (wg_set_iface_mtu(iface, getNVRAMVar("wg%d_mtu", unit))) {
-			stop_wireguard(unit);
-			return;
-		}
+		if (wg_set_iface_mtu(iface, getNVRAMVar("wg%d_mtu", unit)))
+			goto out;
 
 		/* set interface dns */
-		if (wg_set_iface_dns(iface, getNVRAMVar("wg%d_dns", unit))) {
-			stop_wireguard(unit);
-			return;
-		}
+		if (wg_set_iface_dns(iface, getNVRAMVar("wg%d_dns", unit)))
+			goto out;
 
 		/* check if keepalives are enabled from the router */
 		if (getNVRAMVar("wg%d_ka", unit)[0] == '1')
@@ -950,10 +903,8 @@ void start_wireguard(int unit)
 
 		/* bring up interface */
 		wg_iface_pre_up(unit);
-		if (wg_set_iface_up(iface)) {
-			stop_wireguard(unit);
-			return;
-		}
+		if (wg_set_iface_up(iface))
+			goto out;
 
 		/* add stored peers */
 		nvp = nv = strdup(getNVRAMVar("wg%d_peers", unit));
@@ -983,22 +934,29 @@ void start_wireguard(int unit)
 		wg_iface_post_up(unit);
 	}
 	/* set iptables rules */
-	if (wg_set_iptables(iface, port)) {
-		stop_wireguard(unit);
-		return;
-	}
+	if (wg_set_iptables(iface, port))
+		goto out;
+
+	logmsg(LOG_INFO, "wireguard (%s) started", iface);
+	return;
+
+out:
+	stop_wireguard(unit);
 }
 
 void stop_wireguard(int unit)
 {
 	char iface[IF_SIZE];
+	int is_dev;
 
 	/* determine interface */
 	memset(iface, 0, IF_SIZE);
 	snprintf(iface, IF_SIZE, "wg%d", unit);
 
+	is_dev = eval("ip", "addr", "show", "dev", iface);
+
 	if (getNVRAMVar("wg%d_file", unit)[0] != '\0')
-		wg_quick_iface_down(iface, getNVRAMVar("wg%d_file", unit));
+		wg_quick_iface(iface, getNVRAMVar("wg%d_file", unit), 0);
 	else {
 		/* remove interface */
 		wg_iface_pre_down(unit);
@@ -1010,6 +968,9 @@ void stop_wireguard(int unit)
 	/* remove iptables rules */
 	find_port(unit, port);
 	wg_remove_iptables(iface, port);
+
+	if (!is_dev)
+		logmsg(LOG_INFO, "wireguard (%s) stopped", iface);
 }
 
 void write_wg_dnsmasq_config(FILE* f)
@@ -1020,12 +981,12 @@ void write_wg_dnsmasq_config(FILE* f)
 	struct dirent *file;
 	int cur;
 
-	/* add interfaces to dns config */
+	/* add interface(s) to dns config */
 	strlcpy(buf, nvram_safe_get("wg_adns"), BUF_SIZE);
 	for (pos = strtok(buf, ","); pos != NULL; pos = strtok(NULL, ",")) {
 		cur = atoi(pos);
 		if (cur || cur == 0) {
-			logmsg(LOG_DEBUG, "*** %s: adding server %d interface to Dnsmasq config", __FUNCTION__, cur);
+			logmsg(LOG_DEBUG, "*** %s: adding server wg%d interface to Dnsmasq config", __FUNCTION__, cur);
 			fprintf(f, "interface=wg%d\n", cur);
 		}
 	}
