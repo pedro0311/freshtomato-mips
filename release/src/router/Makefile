@@ -2421,11 +2421,11 @@ libpng: libpng/stamp-h1
 	@rm -f $(TOP)/libpng/staged/usr/lib/libpng12.la
 
 libpng-install:
-	install -D libpng/.libs/libpng16.so.16.40.0 $(INSTALLDIR)/libpng/usr/lib/libpng16.so.16.40.0
-	$(STRIP) $(INSTALLDIR)/libpng/usr/lib/libpng16.so.16.40.0
+	install -D libpng/.libs/libpng16.so.16.41.0 $(INSTALLDIR)/libpng/usr/lib/libpng16.so.16.41.0
+	$(STRIP) $(INSTALLDIR)/libpng/usr/lib/libpng16.so.16.41.0
 	cd $(INSTALLDIR)/libpng/usr/lib && \
-		ln -sf libpng16.so.16.40.0 libpng16.so && \
-		ln -sf libpng16.so.16.40.0 libpng16.so.16
+		ln -sf libpng16.so.16.41.0 libpng16.so && \
+		ln -sf libpng16.so.16.41.0 libpng16.so.16
 
 libpng-clean:
 	-@$(MAKE) -C libpng clean
@@ -2724,7 +2724,7 @@ mysql-install:
 mysql-clean:
 	-@$(MAKE) -C mysql clean
 	@rm -f mysql/scripts/comp_sql
-	@rm -rf mysql/host mysql/target
+	@rm -rf mysql/host mysql/target mysql/staged
 	$(call unpatch_files,mysql)
 
 lzo/stamp-h1:
@@ -3531,7 +3531,7 @@ libubox/build/Makefile:
 		cmake -DCMAKE_TOOLCHAIN_FILE=crosscompiled.cmake \
 			-DCMAKE_INSTALL_PREFIX=/usr \
 			-DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_SKIP_RPATH=TRUE \
-			-DCMAKE_C_FLAGS="-Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -I$(TOP)/libjson-c $(if $(TCONFIG_BCMARM),-DTCONFIG_BCMARM,)" \
+			-DCMAKE_C_FLAGS="-Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -I$(TOP)/libjson-c -std=gnu99 -D_GNU_SOURCE $(if $(TCONFIG_BCMARM),-DTCONFIG_BCMARM,)" \
 			-DCMAKE_EXE_LINKER_FLAGS="-Wl,--gc-sections" \
 			-DBUILD_LUA=FALSE \
 			-Djson="$(TOP)/libjson-c/build/libjson-c.a" \
@@ -3656,6 +3656,7 @@ libdaemon-install:
 
 libdaemon-clean:
 	-@$(MAKE) -C libdaemon distclean
+	@rm -rf libdaemon/staged
 	@rm -f libdaemon/stamp-h1
 
 expat/stamp-h1:
@@ -3676,6 +3677,7 @@ expat-install:
 
 expat-clean:
 	-@$(MAKE) -C expat clean
+	@rm -rf expat/staged
 	@rm -f expat/stamp-h1
 
 avahi/stamp-h1:
@@ -3719,7 +3721,10 @@ avahi-clean:
 	$(call unpatch_files,avahi)
 
 wireguard-tools:
-	WITH_BASHCOMPLETION=no WITH_EMBEDDED=yes WITH_WGQUICK=yes WITH_SYSTEMDUNITS=no PREFIX=$(TOP)/wireguard-tools/staged CFLAGS="-I uapi/linux $(EXTRACFLAGS)" $(MAKE) -C wireguard-tools/src install
+	$(call patch_files,wireguard-tools)
+	WITH_BASHCOMPLETION=no WITH_EMBEDDED=yes WITH_WGQUICK=yes WITH_SYSTEMDUNITS=no PREFIX=$(TOP)/wireguard-tools/staged CFLAGS="-I uapi/linux $(EXTRACFLAGS)" \
+	$(MAKE) -C wireguard-tools/src install
+	@touch wireguard-tools/stamp-h1
 
 wireguard-tools-install:
 	install -D wireguard-tools/staged/bin/wg $(INSTALLDIR)/wireguard-tools/usr/sbin/wg
@@ -3730,8 +3735,9 @@ wireguard-tools-install:
 
 wireguard-tools-clean:
 	-@$(MAKE) -C wireguard-tools/src clean
-	@rm -f $(TOP)/wireguard-tools/staged/bin/wg
-	@rm -f $(TOP)/wireguard-tools/staged/bin/wg-quick
+	@rm -rf wireguard-tools/staged
+	@rm -f wireguard-tools/stamp-h1
+	$(call unpatch_files,wireguard-tools)
 
 gettext-tiny/stamp-h1:
 	$(MAKE) -C gettext-tiny \
@@ -4007,6 +4013,7 @@ libffi-install:
 
 libffi-clean:
 	-@$(MAKE) -C libffi distclean
+	@rm -rf libffi/staged
 	@rm -f libffi/stamp-h1
 
 glib2/stamp-h1:
@@ -4041,6 +4048,7 @@ glib2-install: glib2
 
 glib2-clean:
 	-@$(MAKE) -C glib2 distclean
+	@rm -rf glib2/staged
 	@rm -f glib2/stamp-h1
 	$(call unpatch_files,glib2)
 

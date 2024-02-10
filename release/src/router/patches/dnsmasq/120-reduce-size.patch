@@ -1,6 +1,6 @@
 --- dnsmasq/src/dnsmasq.h
 +++ dnsmasq/src/dnsmasq.h
-@@ -1497,15 +1497,25 @@
+@@ -1498,15 +1498,25 @@
  #endif
  
  /* log.c */
