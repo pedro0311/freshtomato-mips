@@ -328,7 +328,7 @@ sub fixDyn
 # avahi
 	fixDynDep("avahi-daemon", "libavahi-core.so.7.1.0");
 	fixDynDep("avahi-daemon", "libavahi-common.so.3.5.4");
-	fixDynDep("avahi-daemon", "libexpat.so.1.6.2");
+	fixDynDep("avahi-daemon", "libexpat.so.1.9.0");
 	fixDynDep("avahi-daemon", "libdaemon.so.0.5.0");
 }
 
