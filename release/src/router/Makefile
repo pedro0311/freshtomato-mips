@@ -445,6 +445,7 @@ obj-$(TCONFIG_SDHC) += mmc
 obj-$(TCONFIG_NANO) += libncurses
 obj-$(TCONFIG_NANO) += nano
 obj-y += miniupnpd
+obj-$(TCONFIG_BCMARM) += zlib
 obj-$(TCONFIG_BCMARM) += libcurl
 obj-y += mdu
 obj-$(TCONFIG_WIREGUARD) += wireguard-tools
@@ -2393,11 +2394,11 @@ libxml2: libxml2/stamp-h1
 	@$(MAKE) -C $@ DESTDIR=$(TOP)/libxml2/staged install
 
 libxml2-install:
-	install -D libxml2/.libs/libxml2.so.2.12.4 $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.12.4
-	$(STRIP) $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.12.4
+	install -D libxml2/.libs/libxml2.so.2.12.5 $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.12.5
+	$(STRIP) $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.12.5
 	cd $(INSTALLDIR)/libxml2/usr/lib && \
-		ln -sf libxml2.so.2.12.4 libxml2.so.2 && \
-		ln -sf libxml2.so.2.12.4 libxml2.so
+		ln -sf libxml2.so.2.12.5 libxml2.so.2 && \
+		ln -sf libxml2.so.2.12.5 libxml2.so
 
 libxml2-clean:
 	-@$(MAKE) -C libxml2 clean
@@ -3661,8 +3662,10 @@ libdaemon-clean:
 
 expat/stamp-h1:
 	cd expat && \
-		CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
-		$(CONFIGURE) --prefix=/usr
+		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+		CXXFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
+		$(CONFIGURE) --prefix=/usr --without-docbook --without-examples --without-tests --disable-dependency-tracking
 	touch $@
 
 expat: expat/stamp-h1
@@ -3671,9 +3674,9 @@ expat: expat/stamp-h1
 	@$(MAKE) -C $@ DESTDIR=$(TOP)/expat/staged install
 
 expat-install:
-	install -D expat/.libs/libexpat.so.1.6.2 $(INSTALLDIR)/expat/usr/lib/libexpat.so.1.6.2
-	$(STRIP) $(INSTALLDIR)/expat/usr/lib/libexpat.so.1.6.2
-	cd $(INSTALLDIR)/expat/usr/lib && ln -sf libexpat.so.1.6.2 libexpat.so.1
+	install -D expat/staged/usr/lib/libexpat.so.1.9.0 $(INSTALLDIR)/expat/usr/lib/libexpat.so.1.9.0
+	$(STRIP) $(INSTALLDIR)/expat/usr/lib/libexpat.so.1.9.0
+	cd $(INSTALLDIR)/expat/usr/lib && ln -sf libexpat.so.1.9.0 libexpat.so.1
 
 expat-clean:
 	-@$(MAKE) -C expat clean
@@ -3683,8 +3686,8 @@ expat-clean:
 avahi/stamp-h1:
 	$(call patch_files,avahi)
 	cd avahi && autoreconf -fsi && \
-		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -I$(TOP)/expat/lib" \
-		LDFLAGS="-L$(TOP)/expat/.libs -ldl -lpthread -ffunction-sections -fdata-sections -Wl,--gc-sections" \
+		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -I$(TOP)/expat/staged/usr/include" \
+		LDFLAGS="-L$(TOP)/expat/staged/usr/lib -ldl -lpthread -ffunction-sections -fdata-sections -Wl,--gc-sections" \
 		LIBDAEMON_CFLAGS="-I$(TOP)/libdaemon" \
 		LIBDAEMON_LIBS="-L$(TOP)/libdaemon/libdaemon/.libs -ldaemon $(EXTRALDFLAGS2)" \
 		$(CONFIGURE) --prefix=/usr --sysconfdir=/etc localstatedir=/var --with-distro=none \
