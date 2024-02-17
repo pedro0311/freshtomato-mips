@@ -269,7 +269,7 @@ sub fixDyn
 	fixDynDep("php-cgi", "libjpeg.so.8.3.2");
 	fixDynDep("php-cgi", "libpcre.so.1.2.13");
 	fixDynDep("php-cgi", "libpcreposix.so.0.0.7");
-	fixDynDep("php-cgi", "libzip.so.5.0");
+	fixDynDep("php-cgi", "libzip.so.5.5");
 	fixDynDep("php-cli", "libxml2.so.2.12.5");
 	fixDynDep("php-cli", "libpng16.so.16.41.0");
 	fixDynDep("php-cli", "libiconv.so.2.6.1");
@@ -278,7 +278,7 @@ sub fixDyn
 	fixDynDep("php-cli", "libjpeg.so.8.3.2");
 	fixDynDep("php-cli", "libpcre.so.1.2.13");
 	fixDynDep("php-cli", "libpcreposix.so.0.0.7");
-	fixDynDep("php-cli", "libzip.so.5.0");
+	fixDynDep("php-cli", "libzip.so.5.5");
 
 	fixDynDep("curl", "libcurl.so.4.8.0");
 	fixDynDep("mdu", "libcurl.so.4.8.0");
