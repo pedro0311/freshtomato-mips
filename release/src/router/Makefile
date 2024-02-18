@@ -139,19 +139,17 @@ else
  TCONFIG_RAID :=
 endif
 
-# Specify iptables/iproute2/ipset/libzip/pcre/php target
+# Specify iptables/iproute2/ipset/pcre/php target
 ifeq ($(TCONFIG_BCMARM),y)
  export IPTABLES_TARGET := iptables-1.8.x
  export IPROUTE_TARGET := iproute2-3.x
  export IPSET_TARGET := ipset
- export LIBZIP_TARGET := libzip
  export PCRE_TARGET := pcre
  export PHP_TARGET := php
 else
  export IPTABLES_TARGET := iptables
  export IPROUTE_TARGET := iproute2
  export IPSET_TARGET := ipset-6.24
- export LIBZIP_TARGET := libzip-1.5.1
  export PCRE_TARGET := pcre
  export PHP_TARGET := php7
 endif
@@ -439,7 +437,7 @@ obj-$(TCONFIG_NGINX) += libxml2
 obj-$(TCONFIG_NGINX) += libpng
 obj-$(TCONFIG_NGINX) += libjpeg-turbo
 obj-$(TCONFIG_NGINX) += mysql
-obj-$(TCONFIG_NGINX) += $(LIBZIP_TARGET)
+obj-$(TCONFIG_NGINX) += libzip
 obj-$(TCONFIG_NGINX) += $(PHP_TARGET)
 obj-$(TCONFIG_NGINX) += nginx
 ifeq ($(TCONFIG_BCMARM),y)
@@ -2057,7 +2055,7 @@ libid3tag/build/Makefile:
 			-DCMAKE_INSTALL_PREFIX=/usr \
 			-DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_SKIP_RPATH=TRUE \
 			-DCMAKE_C_FLAGS="-ffunction-sections -fdata-sections $(EXTRACFLAGS) -fPIC" \
-			-DCMAKE_CXX_FLAGS="-Wall $(if $(TCONFIG_BCMARM),-fno-strict-aliasing -fno-delete-null-pointer-checks -marm -march=armv7-a -mtune=cortex-a9,-funit-at-a-time -Wno-pointer-sign \
+			-DCMAKE_CXX_FLAGS="-Wall $(if $(TCONFIG_BCMARM),-fno-strict-aliasing -fno-delete-null-pointer-checks -marm -march=armv7-a -mtune=cortex-a9,-funit-at-a-time \
 					$(if $(TCONFIG_MIPSR2),-march=mips32r2 -mips32r2 -mtune=mips32r2,-march=mips32 -mips32 -mtune=mips32)) -ffunction-sections -fdata-sections -fPIC" \
 			-DCMAKE_EXE_LINKER_FLAGS="-Wl,--gc-sections -fPIC" \
 			-DCMAKE_C_FLAGS_RELEASE="-DNDEBUG" \
@@ -2280,8 +2278,7 @@ spawn-fcgi/stamp-h1:
 	cd spawn-fcgi && autoreconf -fsi && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
-		ac_cv_func_malloc_0_nonnull=yes \
-		$(CONFIGURE) --prefix=/usr
+		$(CONFIGURE) --prefix=/usr $(if $(TCONFIG_IPV6),,--disable-ipv6)
 	@touch $@
 
 spawn-fcgi: spawn-fcgi/stamp-h1
@@ -2437,9 +2434,9 @@ libpng-clean:
 	@rm -f libpng/stamp-h1
 	@rm -rf libpng/staged
 
-$(LIBZIP_TARGET)/build/Makefile:
-	@rm -rf $(LIBZIP_TARGET)/build && mkdir -p $(LIBZIP_TARGET)/build
-	cd $(LIBZIP_TARGET)/build && $(call CMAKE_CrossOptions, crosscompiled.cmake) && \
+libzip/build/Makefile:
+	@rm -rf libzip/build && mkdir -p libzip/build
+	cd libzip/build && $(call CMAKE_CrossOptions, crosscompiled.cmake) && \
 		cmake -DCMAKE_TOOLCHAIN_FILE=crosscompiled.cmake \
 			-DCMAKE_INSTALL_PREFIX=/usr \
 			-DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_SKIP_RPATH=TRUE \
@@ -2465,41 +2462,36 @@ $(LIBZIP_TARGET)/build/Makefile:
 			-DZLIB_LIBRARY="$(TOP)/zlib/staged/usr/lib/libz.so" \
 			..
 
-$(LIBZIP_TARGET): $(LIBZIP_TARGET)/build/Makefile
+libzip: libzip/build/Makefile
 	@$(SEP)
-	@$(MAKE) -C $(LIBZIP_TARGET)/build all $(PARALLEL_BUILD)
-	@$(MAKE) -C $(LIBZIP_TARGET)/build DESTDIR=$(TOP)/$(LIBZIP_TARGET)/staged install
+	@$(MAKE) -C libzip/build all $(PARALLEL_BUILD)
+	@$(MAKE) -C libzip/build DESTDIR=$(TOP)/libzip/staged install
 
-$(LIBZIP_TARGET)-install:
-ifeq ($(TCONFIG_BCMARM),y)
-	install -D $(LIBZIP_TARGET)/build/lib/libzip.so.5.5 $(INSTALLDIR)/$(LIBZIP_TARGET)/usr/lib/libzip.so.5.5
-	cd $(INSTALLDIR)/$(LIBZIP_TARGET)/usr/lib/ && $(STRIP) libzip.so.5.5 && ln -sf libzip.so.5.5 libzip.so && ln -sf libzip.so.5.5 libzip.so.5
-else
-	install -D $(LIBZIP_TARGET)/build/lib/libzip.so.5.0 $(INSTALLDIR)/$(LIBZIP_TARGET)/usr/lib/libzip.so.5.0
-	cd $(INSTALLDIR)/$(LIBZIP_TARGET)/usr/lib/ && $(STRIP) libzip.so.5.0 && ln -sf libzip.so.5.0 libzip.so && ln -sf libzip.so.5.0 libzip.so.5
-endif
+libzip-install:
+	install -D libzip/build/lib/libzip.so.5.5 $(INSTALLDIR)/libzip/usr/lib/libzip.so.5.5
+	cd $(INSTALLDIR)/libzip/usr/lib/ && $(STRIP) libzip.so.5.5 && ln -sf libzip.so.5.5 libzip.so && ln -sf libzip.so.5.5 libzip.so.5
 
-$(LIBZIP_TARGET)-clean:
-	@rm -rf $(LIBZIP_TARGET)/build
-	@rm -rf $(LIBZIP_TARGET)/staged
+libzip-clean:
+	@rm -rf libzip/build
+	@rm -rf libzip/staged
 
 $(PHP_TARGET)/stamp-h1:
 	$(call patch_files,$(PHP_TARGET))
 	cd $(PHP_TARGET) && \
 		PKG_CONFIG_LIBDIR="" \
-		PROF_FLAGS="-Os -Wall $(EXTRACFLAGS) -std=gnu99 -ffunction-sections -fdata-sections -Wl,--gc-sections" \
+		PROF_FLAGS="-Os -Wall $(EXTRACFLAGS) -std=gnu99 -DZIP_DISABLE_DEPRECATED -ffunction-sections -fdata-sections -Wl,--gc-sections" \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -std=gnu99 -I$(TOP)/zlib/staged/usr/include -I$(TOP)/libxml2/include/libxml -I$(TOP)/libxml2/include -I$(TOP)/$(PCRE_TARGET)/staged/usr/include -I$(TOP)/libiconv/staged/usr/include \
-			-I$(TOP)/libpng/staged/usr/include -I$(TOP)/libcurl/staged/usr/include -I$(TOP)/libjpeg-turbo/staged/usr/include -I$(TOP)/sqlite/staged/usr/include -I$(TOP)/$(LIBZIP_TARGET)/staged/usr/include \
+			-I$(TOP)/libpng/staged/usr/include -I$(TOP)/libcurl/staged/usr/include -I$(TOP)/libjpeg-turbo/staged/usr/include -I$(TOP)/sqlite/staged/usr/include -I$(TOP)/libzip/staged/usr/include \
 			$(if $(TCONFIG_BCMARM),-fno-builtin,) -ffunction-sections -fdata-sections" \
-		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -std=gnu99 -I$(TOP)/zlib/staged/usr/include -I$(TOP)/libxml2/include/libxml -I$(TOP)/libxml2/include -I$(TOP)/$(PCRE_TARGET)/staged/usr/include -I$(TOP)/libiconv/staged/usr/include \
-			-I$(TOP)/libpng/staged/usr/include -I$(TOP)/libcurl/staged/usr/include -I$(TOP)/libjpeg-turbo/staged/use/include -I$(TOP)/sqlite/staged/usr/include -I$(TOP)/$(LIBZIP_TARGET)/staged/usr/include \
+		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -std=gnu99 -DZIP_DISABLE_DEPRECATED -I$(TOP)/zlib/staged/usr/include -I$(TOP)/libxml2/include/libxml -I$(TOP)/libxml2/include -I$(TOP)/$(PCRE_TARGET)/staged/usr/include -I$(TOP)/libiconv/staged/usr/include \
+			-I$(TOP)/libpng/staged/usr/include -I$(TOP)/libcurl/staged/usr/include -I$(TOP)/libjpeg-turbo/staged/use/include -I$(TOP)/sqlite/staged/usr/include -I$(TOP)/libzip/staged/usr/include \
 			$(if $(TCONFIG_BCMARM),-fno-builtin,) -ffunction-sections -fdata-sections" \
-		CXXFLAGS="-Os -Wall $(EXTRACFLAGS) -std=gnu99 $(if $(TCONFIG_BCMARM),-fno-builtin,) -ffunction-sections -fdata-sections" \
+		CXXFLAGS="-Os -Wall $(EXTRACFLAGS) -std=gnu99 -DZIP_DISABLE_DEPRECATED $(if $(TCONFIG_BCMARM),-fno-builtin,) -ffunction-sections -fdata-sections" \
 		LDFLAGS="-L$(TOP)/$(PCRE_TARGET)/staged/usr/lib -L$(TOP)/sqlite/staged/usr/lib -L$(TOP)/zlib/staged/usr/lib -L$(TOP)/libxml2/staged/usr/lib -L$(TOP)/libiconv/staged/usr/lib \
-			-L$(TOP)/libpng/staged/usr/lib -L$(TOP)/libcurl/staged/usr/lib -L$(TOP)/libjpeg-turbo/staged/usr/lib -L$(TOP)/$(OPENSSLDIR)/staged/usr/lib -L$(TOP)/$(LIBZIP_TARGET)/staged/usr/lib \
+			-L$(TOP)/libpng/staged/usr/lib -L$(TOP)/libcurl/staged/usr/lib -L$(TOP)/libjpeg-turbo/staged/usr/lib -L$(TOP)/$(OPENSSLDIR)/staged/usr/lib -L$(TOP)/libzip/staged/usr/lib \
 			-Wl,--gc-sections" \
 		LIBS="-L$(TOP)/$(PCRE_TARGET)/staged/usr/lib -L$(TOP)/sqlite/staged/usr/lib -L$(TOP)/zlib/staged/usr/lib -L$(TOP)/libxml2/staged/usr/lib -L$(TOP)/libiconv/staged/usr/lib -L$(TOP)/libpng/staged/usr/lib \
-			-L$(TOP)/libcurl/staged/usr/lib -L$(TOP)/libjpeg-turbo/staged/usr/lib -L$(TOP)/$(OPENSSLDIR)/staged/usr/lib -L$(TOP)/$(LIBZIP_TARGET)/staged/usr/lib \
+			-L$(TOP)/libcurl/staged/usr/lib -L$(TOP)/libjpeg-turbo/staged/usr/lib -L$(TOP)/$(OPENSSLDIR)/staged/usr/lib -L$(TOP)/libzip/staged/usr/lib \
 			-lz -lsqlite3 -ldl -lpthread -liconv -lxml2 -lstdc++ -lcurl -ljpeg -lzip -lssl -lcrypto" \
 		ac_cv_func_memcmp_working=yes \
 		$(if $(TCONFIG_BCMARM),,ac_cv_header_atomic_h=no) \
@@ -2521,7 +2513,7 @@ $(PHP_TARGET)/stamp-h1:
 			--with-libxml-dir="$(TOP)/libxml2/staged/usr" \
 			--with-pdo-sqlite="$(TOP)/sqlite/staged/usr" \
 			--with-sqlite3="$(TOP)/sqlite/staged/usr" \
-			--with-libzip="$(TOP)/$(LIBZIP_TARGET)/staged/usr" \
+			--with-libzip="$(TOP)/libzip/staged/usr" \
 			--with-pcre-dir="$(TOP)/$(PCRE_TARGET)/staged/usr" \
 			--with-pcre-regex="$(TOP)/$(PCRE_TARGET)/staged/usr" \
 			--enable-cli \
@@ -2576,8 +2568,8 @@ $(PHP_TARGET)/stamp-h1:
 			ZLIB_LIBS="$(TOP)/zlib/staged/usr/lib -lz" \
 			CURL_CFLAGS="$(TOP)/libcurl/staged/usr/include" \
 			CURL_LIBS="$(TOP)/libcurl/staged/usr/lib -lcurl" \
-			LIBZIP_CFLAGS="$(TOP)/$(LIBZIP_TARGET)/staged/usr/include" \
-			LIBZIP_LIBS="$(TOP)/$(LIBZIP_TARGET)/staged/usr/lib -lzip" \
+			LIBZIP_CFLAGS="$(TOP)/libzip/staged/usr/include" \
+			LIBZIP_LIBS="$(TOP)/libzip/staged/usr/lib -lzip" \
 			JPEG_CFLAGS="$(TOP)/libjpeg-turbo/staged/usr/include" \
 			JPEG_LIBS="$(TOP)/libjpeg-turbo/staged/usr/lib -ljpeg" \
 			PNG_CFLAGS="(TOP)/libpng/staged/usr/include" \
@@ -2734,7 +2726,7 @@ mysql/target/Makefile:
 			-DCMAKE_INSTALL_PREFIX=/usr -DINSTALL_MYSQLSHAREDIR=share/mysql \
 			-DCMAKE_BUILD_TYPE=$(if $(TCONFIG_BCMARM),Release,MinSizeRel) -DCMAKE_SKIP_RPATH=TRUE \
 			-DCMAKE_C_FLAGS="-Wall $(EXTRACFLAGS) -fno-delete-null-pointer-checks -funit-at-a-time -ffunction-sections -fdata-sections -fPIC" \
-			-DCMAKE_CXX_FLAGS="-Wall $(if $(TCONFIG_BCMARM),-fno-strict-aliasing -fno-delete-null-pointer-checks -marm -march=armv7-a -mtune=cortex-a9,-funit-at-a-time -Wno-pointer-sign \
+			-DCMAKE_CXX_FLAGS="-Wall $(if $(TCONFIG_BCMARM),-fno-strict-aliasing -fno-delete-null-pointer-checks -marm -march=armv7-a -mtune=cortex-a9,-funit-at-a-time \
 					$(if $(TCONFIG_MIPSR2),-march=mips32r2 -mips32r2 -mtune=mips32r2,-march=mips32 -mips32 -mtune=mips32)) -ffunction-sections -fdata-sections -fPIC" \
 			-DCMAKE_EXE_LINKER_FLAGS="-Wl,--gc-sections -fPIC" \
 			-DDISABLE_SHARED=FALSE \
@@ -3070,7 +3062,7 @@ transmission/build/Makefile:
 			-DCMAKE_INSTALL_PREFIX=/usr \
 			-DCMAKE_BUILD_TYPE=Release -DCMAKE_SKIP_RPATH=TRUE \
 			-DCMAKE_C_FLAGS="-Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC --param large-function-growth=800 --param max-inline-insns-single=3600" \
-			-DCMAKE_CXX_FLAGS="-Wall $(if $(TCONFIG_BCMARM),-fno-strict-aliasing -fno-delete-null-pointer-checks -marm -march=armv7-a -mtune=cortex-a9,-funit-at-a-time -Wno-pointer-sign \
+			-DCMAKE_CXX_FLAGS="-Wall $(if $(TCONFIG_BCMARM),-fno-strict-aliasing -fno-delete-null-pointer-checks -marm -march=armv7-a -mtune=cortex-a9,-funit-at-a-time \
 					$(if $(TCONFIG_MIPSR2),-march=mips32r2 -mips32r2 -mtune=mips32r2,-march=mips32 -mips32 -mtune=mips32)) \
 					-ffunction-sections -fdata-sections -fPIC --param large-function-growth=800 --param max-inline-insns-single=3600 -fno-exceptions -fno-rtti" \
 			-DCMAKE_EXE_LINKER_FLAGS="-Wl,--gc-sections -fPIC" \
