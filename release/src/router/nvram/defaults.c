@@ -1824,9 +1824,12 @@ const defaults_t defaults[] = {
 	{"nginx_httpcustom",		""				},	/* additional lines for nginx.conf */
 	{"nginx_servercustom",		""				},	/* additional lines for nginx.conf */
 	{"nginx_phpconf",		""				},	/* additional lines for php.ini */
+#ifdef TCONFIG_BCMARM
+	{"nginx_phpfpmconf",		""				},	/* additional lines for php-fpm.conf */
+#endif
 	{"nginx_user",			"root"				},	/* user/group */
-	{"nginx_override",		"0"				},	/* additional lines for php.ini */
-	{"nginx_overridefile",		"/path/to/nginx.conf"		},	/* user/group */
+	{"nginx_override",		"0"				},	/* use user config */
+	{"nginx_overridefile",		"/path/to/nginx.conf"		},	/* path/to/user/nginx.conf */
 	{"nginx_h5aisupport",		"0"				},	/* enable h5ai support */
 
 	{ "mysql_enable",		"0"				},
