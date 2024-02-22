@@ -13,7 +13,7 @@ are normally built.  On Windows, read README_win32.txt instead.
 are implemented by header files included from it.  It is sometimes
 necessary, and always recommended to also link against libatomic_ops.a.
 To use the almost non-blocking stack or malloc implementations,
-see the corresponding README files, and also link against libatomic_gpl.a
+see the corresponding README files, and also link against libatomic_ops_gpl.a
 before linking against libatomic_ops.a.
 
 OVERVIEW:
@@ -25,9 +25,9 @@ by synthesis).  This is an attempt to replace various existing files with
 similar goals, since they usually do not handle differences in memory
 barrier styles with sufficient generality.
 
-If this is included after defining AO_REQUIRE_CAS, then the package
-will make an attempt to emulate compare-and-swap in a way that (at least
-on Linux) should still be async-signal-safe.  As a result, most other
+If this is included after defining AO_REQUIRE_CAS, then the package makes
+an attempt to emulate AO_compare_and_swap* (single-width) in a way that (at
+least on Linux) should still be async-signal-safe.  As a result, most other
 atomic operations will then be defined using the compare-and-swap
 emulation.  This emulation is slow, since it needs to disable signals.
 And it needs to block in case of contention.  If you care about performance
@@ -139,6 +139,16 @@ where AO_double_t is a structure containing AO_val1 and AO_val2 fields,
 both of type AO_t.  For compare_and_swap_double, we compare against
 the val1 field.  AO_double_t exists only if AO_HAVE_double_t
 is defined.
+
+Please note that AO_double_t (and AO_stack_t) variables should be properly
+aligned (8-byte alignment on 32-bit targets, 16-byte alignment on 64-bit ones)
+otherwise the behavior of a double-wide atomic primitive might be undefined
+(or an assertion violation might occur) if such a misaligned variable is
+passed (as a reference) to the primitive.  Global and static variables should
+already have proper alignment automatically but automatic variables (i.e.
+located on the stack) might be misaligned because the stack might be
+word-aligned (e.g. 4-byte stack alignment is the default one for x86).
+Luckily, stack-allocated AO variables is a rare case in practice.
 
 ORDERING CONSTRAINTS:
 
