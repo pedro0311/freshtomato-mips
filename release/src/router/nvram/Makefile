@@ -1,47 +1,34 @@
 include ../common.mak
 
-CFLAGS = -Os -Wall $(EXTRACFLAGS) -fPIC -Wsign-compare
-CFLAGS += -I$(TOP)/shared -I$(SRCBASE)/include -I.
+CFLAGS  = -Os -Wall $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections -Wsign-compare
+#CFLAGS += -g -DDEBUG
+CFLAGS  += -I$(TOP)/shared -I$(SRCBASE)/include -I.
+LDFLAGS  = -L. -L$(TOP)/shared -lshared -fPIC -Wl,--gc-sections
+
 ifeq ($(STATIC),1)
-CFLAGS += -static
+ CFLAGS += -static
 endif
 
-LDFLAGS = -L. -lnvram -L$(TOP)/shared -lshared
-
-all: libnvram.so libnvram.a nvram
+all: libnvram.so nvram
 
 libnvram.so: nvram_linux.o nvram_convert.o
 	@echo " [nvram] CC $@"
-	@$(CC) -shared $(CFLAGS) -o $@ $^
-
-libnvram.a: nvram_linux.o nvram_convert.o
-	@echo " [nvram] AR $@"
-	@$(AR) cruv $@ $^
+	@$(CC) $(CFLAGS) -shared -o $@ $^ $(LDFLAGS)
 
 nvram: nvram.o defaults.o libnvram.so
 	@echo " [nvram] CC $@"
-	@$(CC) $(CFLAGS) -o $@ nvram.o defaults.o $(LDFLAGS)
+	@$(CC) $(CFLAGS) -o $@ nvram.o defaults.o $(LDFLAGS) -lnvram
 	$(SIZECHECK)
 	$(CPTMP)
 
 install: all
-	install -D libnvram.so $(INSTALLDIR)/usr/lib/libnvram.so
-	install -D nvram $(INSTALLDIR)/bin/nvram
-	$(STRIP) $(INSTALLDIR)/usr/lib/libnvram.so
-	$(STRIP) $(INSTALLDIR)/bin/nvram
-	chmod 0555 $(INSTALLDIR)/bin/nvram
+	@echo " [nvram] Installing as $(INSTALLDIR)/usr/lib/libnvram.so"
+	@install -D libnvram.so $(INSTALLDIR)/usr/lib/libnvram.so
+	@$(STRIP) $(INSTALLDIR)/usr/lib/libnvram.so
+	@echo " [nvram] Installing as $(INSTALLDIR)/bin/nvram"
+	@install -D nvram $(INSTALLDIR)/bin/nvram
+	@$(STRIP) $(INSTALLDIR)/bin/nvram
+	@chmod 0555 $(INSTALLDIR)/bin/nvram
 
 clean:
-	rm -f nvram *.o *.a *.so
-
-%.o: %.c .%.depend
-	@echo " [nvram] CC $@"
-	@$(CC) $(CFLAGS) -o $@ -c $<
-
-.depend: $(OBJS:%.o=%.c)
-	@$(CC) $(CFLAGS) -M $^ > .depend
-
-.%.depend: %.c
-	@$(CC) $(CFLAGS) -M $< > $@
-
--include $(OBJS:%.o=.%.depend)
+	rm -f *.o *.so nvram
