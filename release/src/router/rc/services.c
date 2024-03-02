@@ -2552,6 +2552,39 @@ int ntpd_synced_main(int argc, char *argv[])
 #endif
 	}
 
+	FILE *file;
+	char message[300];
+	char *stratum = safe_getenv("stratum");
+	char *offset = safe_getenv("offset");
+	char *freq_drift_ppm = safe_getenv("freq_drift_ppm");
+	char *poll_interval = safe_getenv("poll_interval");
+	char *server_hostname = safe_getenv("server_hostname");
+	char *server_ip = safe_getenv("server_ip");
+	char *discipline_jitter = safe_getenv("discipline_jitter");
+
+	snprintf(message, sizeof(message), "Server: %s (%s)\n"
+					   "Poll Interval: %ss\n"
+					   "Stratum: %s\n"
+					   "Offset: %ss\n"
+					   "Jitter: %ss\n"
+					   "Frequency: %sppm\n",
+					    server_ip, server_hostname,
+					    poll_interval,
+					    stratum,
+					    offset,
+					    discipline_jitter,
+					    freq_drift_ppm);
+
+	int lock = file_lock("ntpd");
+
+	if (!(file = fopen("/tmp/ntpd", "w"))) {
+		file_unlock(lock);
+		return 1;
+	}
+
+	fprintf(file,"%s", message);
+	fclose(file);
+	file_unlock(lock);
 	return 0;
 }
 
