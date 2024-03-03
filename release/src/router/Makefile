@@ -274,6 +274,9 @@ obj-y += $(IPSET_TARGET)
 obj-$(TCONFIG_BCMARM) += taskset
 obj-$(TCONFIG_IPERF) += iperf
 obj-$(TCONFIG_BCMBSD) += bsd
+ifeq ($(TCONFIG_HAVEGED),y)
+ obj-y += haveged
+endif
 
 ifneq ($(TCONFIG_HTTPS),)
  ifeq ($(TCONFIG_OPENSSL11),y)
@@ -4222,6 +4225,27 @@ irqbalance-clean:
 	-@$(MAKE) -C irqbalance clean
 	@rm -f irqbalance/stamp-h1
 	$(call unpatch_files,irqbalance)
+
+haveged/stamp-h1:
+	$(call patch_files,haveged)
+	cd haveged && autoreconf -fsi && \
+		CFLAGS="-Wall -Os $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
+		$(CONFIGURE) --prefix=/usr --enable-static --disable-shared --enable-daemon --disable-tune --disable-olt
+	@touch $@
+
+haveged: haveged/stamp-h1
+	@$(SEP)
+	$(MAKE) -C $@ $(PARALLEL_BUILD)
+
+haveged-install:
+	install -D haveged/src/haveged $(INSTALLDIR)/haveged/usr/sbin/haveged
+	$(STRIP) $(INSTALLDIR)/haveged/usr/sbin/haveged
+
+haveged-clean:
+	-@$(MAKE) -C haveged clean
+	@rm -f haveged/stamp-h1
+	$(call unpatch_files,haveged)
 
 
 #
