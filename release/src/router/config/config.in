@@ -316,3 +316,7 @@ config TCONFIG_BCMWL6
 config TCONFIG_PROXY
 	bool "udpxy and igmpproxy"
 	default n
+
++config TCONFIG_HAVEGED
+	bool "Haveged, an entrophy daemon"
+	default n

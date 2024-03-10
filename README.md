@@ -61,8 +61,14 @@ For the following **MIPSR1** and **MIPSR2** routers: **Asus** WL500GP, N10U, N12
     $ sudo apt-get install re2c texlive libelf1 nodejs zip mc cmake ninja-build curl libglib2.0-dev-bin
     $ sudo apt-get install linux-headers-$(uname -r)
     ```
-    and for Debian 9/10: ```$ sudo apt-get install sqlite gconf-editor```
-    but for Debian 11: ```$ sudo apt-get install sqlite3 dconf-editor```
+     and for Debian 9/10:
+	```sh
+	$ sudo apt-get install sqlite gconf-editor
+	```
+     but for Debian 11/12:
+	```sh
+	$ sudo apt-get install sqlite3 dconf-editor
+	```
   
 8. Clone/download repository:
     ```sh

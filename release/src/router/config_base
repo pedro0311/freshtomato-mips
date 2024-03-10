@@ -73,3 +73,4 @@ TCONFIG_BLINK=y
 # TCONFIG_MDNS is not set
 # TCONFIG_BCMWL6 is not set
 # TCONFIG_PROXY is not set
+# TCONFIG_HAVEGED is not set
