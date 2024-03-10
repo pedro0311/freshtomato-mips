@@ -56,24 +56,24 @@ $(eval $(call Require,working-g++, \
 	Please install the GNU C++ Compiler (g++). \
 ))
 
-define Require/ncurses
-	echo 'int main(int argc, char **argv) { initscr(); return 0; }' | \
-		gcc -include ncurses.h -x c -o $(TMP_DIR)/a.out -lncurses -
-endef
-
-$(eval $(call Require,ncurses, \
-	Please install ncurses. (Missing libncurses.so or ncurses.h) \
-))
-
-
-define Require/zlib
-	echo 'int main(int argc, char **argv) { gzdopen(0, "rb"); return 0; }' | \
-		gcc -include zlib.h -x c -o $(TMP_DIR)/a.out -lz -
-endef
-
-$(eval $(call Require,zlib, \
-	Please install zlib. (Missing libz.so or zlib.h) \
-))
+# these checks do not work on Debian 11/12 (only on 10)
+#define Require/ncurses
+#	echo 'int main(int argc, char **argv) { initscr(); return 0; }' | \
+#		gcc -include ncurses.h -x c -o $(TMP_DIR)/a.out -lncurses -
+#endef
+#
+#$(eval $(call Require,ncurses, \
+#	Please install ncurses. (Missing libncurses.so or ncurses.h) \
+#))
+#
+#define Require/zlib
+#	echo 'int main(int argc, char **argv) { gzdopen(0, "rb"); return 0; }' | \
+#		gcc -include zlib.h -x c -o $(TMP_DIR)/a.out -lz -
+#endef
+#
+#$(eval $(call Require,zlib, \
+#	Please install zlib. (Missing libz.so or zlib.h) \
+#))
 
 $(eval $(call RequireCommand,gawk, \
 	Please install GNU awk. \
