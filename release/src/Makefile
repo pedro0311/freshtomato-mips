@@ -725,8 +725,8 @@ define KernelConfig
 	fi; \
 	if [ "$(CONFIG_RT)" = "" ]; then \
 		if [ "$(USBAP)" = "y" ]; then \
-			echo "CONFIG_WL_USBAP=y" >>$(1); \
-			echo 'CONFIG_WL_APSTA="wlconfig_lx_router_high"' >>$(1); \
+			sed -i "s/# CONFIG_WL_USBAP is not set/CONFIG_WL_USBAP=y/g" $(1); \
+			sed -i "s/CONFIG_WL_APSTA=\"wlconfig_lx_router_apsta\"/CONFIG_WL_APSTA=\"wlconfig_lx_router_high\"/g" $(1); \
 			sed -i "/CONFIG_USB_USBNET/d" $(1); \
 			echo "# CONFIG_USB_USBNET is not set" >>$(1); \
 			sed -i "/CONFIG_USB_NET_CDCETHER/d" $(1); \
@@ -745,10 +745,10 @@ define KernelConfig
 			echo "# CONFIG_USB_WDM is not set" >>$(1); \
 			sed -i "/CONFIG_USB_ACM/d" $(1); \
 			echo "# CONFIG_USB_ACM is not set" >>$(1); \
-		else \
-			echo "# CONFIG_WL_USBAP is not set" >>$(1); \
-			echo 'CONFIG_WL_APSTA="wlconfig_lx_router_apsta"' >>$(1); \
 		fi; \
+	else \
+		sed -i "s/# CONFIG_WL_USBAP is not set//g" $(1); \
+		sed -i "s/CONFIG_WL_APSTA=\"wlconfig_lx_router_apsta\"//g" $(1); \
 	fi; \
 	if [ "$(EBTABLES)" = "y" ]; then \
 		sed -i "/CONFIG_BRIDGE_NF_EBTABLES/d" $(1); \
@@ -759,12 +759,11 @@ define KernelConfig
 		fi; \
 	fi; \
 	if [ "$(CONFIG_RT)" = "" ]; then \
-		sed -i "/CONFIG_NVRAM_64K/d" $(1); \
 		if [ "$(NVRAM_64K)" = "y" ]; then \
-			echo "CONFIG_NVRAM_64K=y" >>$(1); \
-		else \
-			echo "# CONFIG_NVRAM_64K is not set" >>$(1); \
+			sed -i "s/# CONFIG_NVRAM_64K is not set/CONFIG_NVRAM_64K=y/g" $(1); \
 		fi; \
+	else \
+		sed -i "s/# CONFIG_NVRAM_64K is not set//g" $(1); \
 	fi; \
 	if [ "$(CONFIG_RT)" = "" ]; then \
 		if [ "$(BUILD_DESC)" = "AIO" ] || [ "$(BUILD_DESC)" = "Mega-VPN" ]; then \
