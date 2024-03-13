@@ -7,7 +7,7 @@
 #define __UCLIBC_SUBLEVEL__ 30
 /* Automatically generated make config: don't edit */
 /* Version: 0.9.30.1 */
-/* Sat Mar  9 11:53:14 2024 */
+/* Tue Mar 12 15:23:54 2024 */
 #undef __TARGET_alpha__
 #undef __TARGET_arm__
 #undef __TARGET_avr32__
@@ -45,8 +45,8 @@
 #undef __CONFIG_MIPS_ISA_2__
 #undef __CONFIG_MIPS_ISA_3__
 #undef __CONFIG_MIPS_ISA_4__
-#define __CONFIG_MIPS_ISA_MIPS32__ 1
-#undef __CONFIG_MIPS_ISA_MIPS32R2__
+#undef __CONFIG_MIPS_ISA_MIPS32__
+#define __CONFIG_MIPS_ISA_MIPS32R2__ 1
 #undef __CONFIG_MIPS_ISA_MIPS64__
 #define __TARGET_SUBARCH__ ""
 
