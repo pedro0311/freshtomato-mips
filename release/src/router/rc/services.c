@@ -1783,16 +1783,13 @@ void start_upnp(void)
 	char *lanip, *lanmask, *lanifname;
 	char br;
 
-	if (get_wan_proto() == WP_DISABLED)
+	enable = nvram_get_int("upnp_enable");
+
+	/* only if enabled and proto not disabled */
+	if ((enable == 0) || (get_wan_proto() == WP_DISABLED))
 		return;
 
 	if (serialize_restart("miniupnpd", 1))
-		return;
-
-	enable = nvram_get_int("upnp_enable");
-
-	/* only if enabled */
-	if (enable == 0)
 		return;
 
 	add_upnp_defaults(); /* backup: check nvram! */
@@ -2824,7 +2821,6 @@ static void stop_media_server(void)
 void start_haveged(void)
 {
 	pid_t pid;
-	int ret;
 
 	if (serialize_restart("haveged", 1))
 		return;
@@ -2838,12 +2834,7 @@ void start_haveged(void)
 #endif
 	                     NULL };
 
-	ret = _eval(cmd_argv, NULL, 0, &pid);
-
-	if (ret)
-		logmsg(LOG_ERR, "starting haveged failed ...");
-	else
-		logmsg(LOG_INFO, "haveged is started");
+	_eval(cmd_argv, NULL, 0, &pid);
 }
 
 void stop_haveged(void)
@@ -2851,10 +2842,8 @@ void stop_haveged(void)
 	if (serialize_restart("haveged", 0))
 		return;
 
-	if (pidof("haveged") > 0) {
+	if (pidof("haveged") > 0)
 		killall_tk_period_wait("haveged", 50);
-		logmsg(LOG_INFO, "haveged is stopped");
-	}
 }
 #endif /* TCONFIG_HAVEGED */
 
