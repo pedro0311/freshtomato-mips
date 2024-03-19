@@ -1158,7 +1158,6 @@ static const nvset_t nvset_list[] = {
 	{ "script_usbmount", 		V_TEXT(0, 2048)			},
 	{ "script_usbumount", 		V_TEXT(0, 2048)			},
 	{ "idle_enable",		V_01				},
-	{ "usb_3g",			V_01				},
 #endif /* TCONFIG_USB */
 
 /* nas-ftp */
@@ -2469,11 +2468,11 @@ const struct mime_handler mime_handlers[] = {
 	{ "ip6t/*.txt",			mime_binary,				0,	wi_generic,		wo_ip6tables,		1 },
 #endif
 	{ "cfg/*.cfg",			NULL,					0,	wi_generic,		wo_backup,		1 },
-	{ "cfg/restore.cgi",		mime_html,				0,	wi_restore,		wo_restore,		1 },
-	{ "cfg/defaults.cgi",		NULL,					0,	wi_generic,		wo_defaults,		1 },
+	{ "restore.cgi",		mime_html,				0,	wi_restore,		wo_restore,		1 },
+	{ "defaults.cgi",		mime_html,				0,	wi_generic,		wo_defaults,		1 },
 
 	{ "stats/*.gz",			NULL,					0,	wi_generic,		wo_statsbackup,		1 },
-	{ "stats/restore.cgi",		NULL,					0,	wi_statsrestore,	wo_statsrestore,	1 },
+	{ "restorestats.cgi",		NULL,					0,	wi_statsrestore,	wo_statsrestore,	1 },
 
 	{ "logs/view.cgi",		NULL,					0,	wi_generic,		wo_viewlog,		1 },
 	{ "logs/*.txt",			NULL,					0,	wi_generic,		wo_syslog,		1 },
