@@ -854,8 +854,8 @@ static int backup_main(int argc, char **argv)
 	unsigned int size;
 	char *p;
 	char s[512];
-	char tmp[128];
-	int r;
+	char tmp[] = "/tmp/nvramXXXXXX";
+	int r, fd;
 
 	getall(data.buffer);
 
@@ -868,14 +868,20 @@ static int backup_main(int argc, char **argv)
 
 	size = (sizeof(data) - sizeof(data.buffer)) + (p - data.buffer) + 1;
 
-	strlcpy(tmp, "/tmp/nvramXXXXXX", sizeof(tmp));
-	mktemp(tmp);
+	/* create unique file */
+	if ((fd = mkstemp(tmp) < 0)) {
+		printf("Unable to create file.\n");
+		return 1;
+	}
+
 	if (f_write(tmp, &data, size, 0, 0) != (int) size) {
+		close(fd);
 		printf("Error saving file.\n");
 		return 1;
 	}
 	snprintf(s, sizeof(s), "gzip < %s > %s", tmp, argv[1]);
 	r = system(s);
+	close(fd);
 	unlink(tmp);
 
 	if (r != 0) {
@@ -894,21 +900,22 @@ static int restore(char *infile, FILE *ofp, int test, int force, int commit)
 	backup_t data;
 	unsigned int size;
 	char s[512];
-	char tmp[128];
-	unsigned long hw;
+	char tmp[] = "/tmp/nvramXXXXXX";
 	char current[NVRAM_SPACE];
 	char *b, *bk, *bv;
 	char *c, *ck, *cv;
-	int nset;
-	int nunset;
-	int nsame;
-	int cmp;
-	unsigned long nbytes = 0;
+	int nset, nunset, nsame, cmp, fd;
+	unsigned long hw, nbytes = 0;
 
-	strlcpy(tmp, "/tmp/nvramXXXXXX", sizeof(tmp));
-	mktemp(tmp);
+	/* create unique file */
+	if ((fd = mkstemp(tmp) < 0)) {
+		printf("Unable to create file.\n");
+		return 1;
+	}
+
 	snprintf(s, sizeof(s), "gzip -d < %s > %s", infile, tmp);
 	if (system(s) != 0) {
+		close(fd);
 		unlink(tmp);
 		printf("Error decompressing input file.\n");
 		return 1;
@@ -916,11 +923,13 @@ static int restore(char *infile, FILE *ofp, int test, int force, int commit)
 
 	size = f_size(tmp);
 	if ((size <= (sizeof(data) - sizeof(data.buffer))) || (size > sizeof(data)) || (f_read(tmp, &data, sizeof(data)) != (int) size)) {
+		close(fd);
 		unlink(tmp);
 		printf("Invalid data size or read error.\n");
 		return 1;
 	}
 
+	close(fd);
 	unlink(tmp);
 
 	if (data.sig != V1) {
