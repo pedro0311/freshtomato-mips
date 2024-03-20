@@ -3759,7 +3759,6 @@ libdaemon-clean:
 	@rm -f libdaemon/stamp-h1
 
 expat/stamp-h1:
-	$(call patch_files,expat)
 	cd expat && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 		CXXFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
@@ -3773,15 +3772,14 @@ expat: expat/stamp-h1
 	@$(MAKE) -C $@ DESTDIR=$(TOP)/expat/staged install
 
 expat-install:
-	install -D expat/staged/usr/lib/libexpat.so.1.9.0 $(INSTALLDIR)/expat/usr/lib/libexpat.so.1.9.0
-	$(STRIP) $(INSTALLDIR)/expat/usr/lib/libexpat.so.1.9.0
-	cd $(INSTALLDIR)/expat/usr/lib && ln -sf libexpat.so.1.9.0 libexpat.so.1
+	install -D expat/staged/usr/lib/libexpat.so.1.9.2 $(INSTALLDIR)/expat/usr/lib/libexpat.so.1.9.2
+	$(STRIP) $(INSTALLDIR)/expat/usr/lib/libexpat.so.1.9.2
+	cd $(INSTALLDIR)/expat/usr/lib && ln -sf libexpat.so.1.9.2 libexpat.so.1
 
 expat-clean:
 	-@$(MAKE) -C expat clean
 	@rm -rf expat/staged
 	@rm -f expat/stamp-h1
-	$(call unpatch_files,expat)
 
 avahi/stamp-h1:
 	$(call patch_files,avahi)
