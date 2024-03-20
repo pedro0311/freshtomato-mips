@@ -2397,7 +2397,6 @@ $(PCRE_TARGET)-clean:
 	$(call unpatch_files,$(PCRE_TARGET))
 
 libxml2/stamp-h1:
-	$(call patch_files,libxml2)
 	cd libxml2 && autoreconf -fsi && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -fPIC -ffunction-sections -fdata-sections" \
 		LDFLAGS="-L$(TOP)/zlib/staged/usr/lib -lz -Wl,--gc-sections" \
@@ -2411,15 +2410,14 @@ libxml2: libxml2/stamp-h1
 	@$(MAKE) -C $@ DESTDIR=$(TOP)/libxml2/staged install
 
 libxml2-install:
-	install -D libxml2/.libs/libxml2.so.2.12.5 $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.12.5
-	$(STRIP) $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.12.5
-	cd $(INSTALLDIR)/libxml2/usr/lib && ln -sf libxml2.so.2.12.5 libxml2.so.2 && ln -sf libxml2.so.2.12.5 libxml2.so
+	install -D libxml2/.libs/libxml2.so.2.12.6 $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.12.6
+	$(STRIP) $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.12.6
+	cd $(INSTALLDIR)/libxml2/usr/lib && ln -sf libxml2.so.2.12.6 libxml2.so.2 && ln -sf libxml2.so.2.12.6 libxml2.so
 
 libxml2-clean:
 	-@$(MAKE) -C libxml2 clean
 	@rm -f libxml2/stamp-h1
 	@rm -rf libxml2/staged
-	$(call unpatch_files,libxml2)
 
 libpng/stamp-h1:
 	$(call patch_files,libpng)
@@ -3761,7 +3759,6 @@ libdaemon-clean:
 	@rm -f libdaemon/stamp-h1
 
 expat/stamp-h1:
-	$(call patch_files,expat)
 	cd expat && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 		CXXFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
@@ -3775,15 +3772,14 @@ expat: expat/stamp-h1
 	@$(MAKE) -C $@ DESTDIR=$(TOP)/expat/staged install
 
 expat-install:
-	install -D expat/staged/usr/lib/libexpat.so.1.9.0 $(INSTALLDIR)/expat/usr/lib/libexpat.so.1.9.0
-	$(STRIP) $(INSTALLDIR)/expat/usr/lib/libexpat.so.1.9.0
-	cd $(INSTALLDIR)/expat/usr/lib && ln -sf libexpat.so.1.9.0 libexpat.so.1
+	install -D expat/staged/usr/lib/libexpat.so.1.9.2 $(INSTALLDIR)/expat/usr/lib/libexpat.so.1.9.2
+	$(STRIP) $(INSTALLDIR)/expat/usr/lib/libexpat.so.1.9.2
+	cd $(INSTALLDIR)/expat/usr/lib && ln -sf libexpat.so.1.9.2 libexpat.so.1
 
 expat-clean:
 	-@$(MAKE) -C expat clean
 	@rm -rf expat/staged
 	@rm -f expat/stamp-h1
-	$(call unpatch_files,expat)
 
 avahi/stamp-h1:
 	$(call patch_files,avahi)
