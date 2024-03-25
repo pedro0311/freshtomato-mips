@@ -111,6 +111,17 @@ typedef struct {
     HANDLE device;
 } ring_buffer_handles_t;
 
+typedef union {
+    message_header_t header;
+    address_message_t address;
+    route_message_t route;
+    flush_neighbors_message_t flush_neighbors;
+    block_dns_message_t block_dns;
+    dns_cfg_message_t dns;
+    enable_dhcp_message_t dhcp;
+    register_ring_buffers_message_t rrb;
+    set_mtu_message_t mtu;
+} pipe_message_t;
 
 static DWORD
 AddListItem(list_item_t **pfirst, LPVOID data)
@@ -1444,18 +1455,7 @@ static VOID
 HandleMessage(HANDLE pipe, HANDLE ovpn_proc, ring_buffer_handles_t *ring_buffer_handles,
               DWORD bytes, DWORD count, LPHANDLE events, undo_lists_t *lists)
 {
-    DWORD read;
-    union {
-        message_header_t header;
-        address_message_t address;
-        route_message_t route;
-        flush_neighbors_message_t flush_neighbors;
-        block_dns_message_t block_dns;
-        dns_cfg_message_t dns;
-        enable_dhcp_message_t dhcp;
-        register_ring_buffers_message_t rrb;
-        set_mtu_message_t mtu;
-    } msg;
+    pipe_message_t msg;
     ack_message_t ack = {
         .header = {
             .type = msg_acknowledgement,
@@ -1465,7 +1465,7 @@ HandleMessage(HANDLE pipe, HANDLE ovpn_proc, ring_buffer_handles_t *ring_buffer_
         .error_number = ERROR_MESSAGE_DATA
     };
 
-    read = ReadPipeAsync(pipe, &msg, bytes, count, events);
+    DWORD read = ReadPipeAsync(pipe, &msg, bytes, count, events);
     if (read != bytes || read < sizeof(msg.header) || read != msg.header.size)
     {
         goto out;
@@ -1884,6 +1884,13 @@ RunOpenvpn(LPVOID p)
             break;
         }
 
+        if (bytes > sizeof(pipe_message_t))
+        {
+            /* process at the other side of the pipe is misbehaving, shut it down */
+            MsgToEventLog(MSG_FLAGS_ERROR, TEXT("OpenVPN process sent too large payload length to the pipe (%lu bytes), it will be terminated"), bytes);
+            break;
+        }
+
         HandleMessage(ovpn_pipe, proc_info.hProcess, &ring_buffer_handles, bytes, 1, &exit_event, &undo_lists);
     }
 
@@ -1994,7 +2001,7 @@ CreateClientPipeInstance(VOID)
 
     openvpn_sntprintf(pipe_name, _countof(pipe_name), TEXT("\\\\.\\pipe\\" PACKAGE "%s\\service"), service_instance);
     pipe = CreateNamedPipe(pipe_name, flags,
-                           PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE,
+                           PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_REJECT_REMOTE_CLIENTS,
                            PIPE_UNLIMITED_INSTANCES, 1024, 1024, 0, NULL);
     if (pipe == INVALID_HANDLE_VALUE)
     {
