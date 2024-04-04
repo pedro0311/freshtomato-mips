@@ -59,7 +59,7 @@
  #define PROGNAME "dropbear"
  
  #ifndef DROPBEAR_CLIENT
-@@ -360,7 +362,7 @@
+@@ -372,7 +374,7 @@
   * Currently server is enabled but client is disabled by default until there
   * is further compatibility testing */
  #ifdef __linux__
