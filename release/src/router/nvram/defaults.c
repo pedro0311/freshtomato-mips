@@ -2,6 +2,7 @@
  *
  * Tomato Firmware
  * Copyright (C) 2006-2009 Jonathan Zarate
+ * Fixes/updates (C) 2018 - 2024 pedro
  *
  */
 
@@ -215,6 +216,7 @@ const defaults_t defaults[] = {
 	{ "wan_gateway_get",		"0.0.0.0"			},	/* default gateway for PPP */
 	{ "wan_dns",			""				},	/* x.x.x.x x.x.x.x ... */
 	{ "wan_dns_auto",		"1"				},	/* wan auto dns to 1 after reset */
+	{ "wan_addget",			"0"				},
 	{ "wan_weight",			"1"				},
 #ifdef TCONFIG_USB
 	{ "wan_hilink_ip",		"0.0.0.0"			},
@@ -229,6 +231,7 @@ const defaults_t defaults[] = {
 	{ "wan2_gateway",		"0.0.0.0"			},	/* WAN gateway */
 	{ "wan2_dns",			""				},	/* x.x.x.x x.x.x.x ... */
 	{ "wan2_dns_auto",		"1"				},	/* wan2 auto dns to 1 after reset */
+	{ "wan2_addget",		"0"				},
 	{ "wan2_weight",		"1"				},
 	{ "wan2_hwname",		""				},	/* WAN driver name (e.g. et1) */
 	{ "wan2_hwaddr",		""				},	/* WAN interface MAC address */
@@ -249,6 +252,7 @@ const defaults_t defaults[] = {
 	{ "wan3_gateway",		"0.0.0.0"			},	/* WAN gateway */
 	{ "wan3_dns",			""				},	/* x.x.x.x x.x.x.x ... */
 	{ "wan3_dns_auto",		"1"				},	/* wan3 auto dns to 1 after reset */
+	{ "wan3_addget",		"0"				},
 	{ "wan3_weight",		"1"				},
 	{ "wan3_hwname",		""				},	/* WAN driver name (e.g. et1) */
 	{ "wan3_hwaddr",		""				},	/* WAN interface MAC address */
@@ -268,6 +272,7 @@ const defaults_t defaults[] = {
 	{ "wan4_gateway",		"0.0.0.0"			},	/* WAN gateway */
 	{ "wan4_dns",			""				},	/* x.x.x.x x.x.x.x ... */
 	{ "wan4_dns_auto",		"1"				},	/* wan4 auto dns to 1 after reset */
+	{ "wan4_addget",		"0"				},
 	{ "wan4_weight",		"1"				},
 	{ "wan4_hwname",		""				},	/* WAN driver name (e.g. et1) */
 	{ "wan4_hwaddr",		""				},	/* WAN interface MAC address */
@@ -329,7 +334,6 @@ const defaults_t defaults[] = {
 	{ "dhcp_lease",			"1440"				},	/* LAN lease time in minutes */
 	{ "dhcp_moveip",		"0"				},	/* GUI helper for automatic IP change */
 	{ "dhcp_domain",		"wan"				},	/* Use WAN domain name first if available (wan|lan) */
-	{ "wan_get_dns",		""				},	/* DNS IP address which get by dhcpc */
 	{ "wan_routes",			""				},
 	{ "wan_msroutes",		""				},
 
@@ -808,12 +812,46 @@ const defaults_t defaults[] = {
 /* basic-ddns */
 	{ "ddnsx0",			""				},
 	{ "ddnsx1",			""				},
-	{ "ddnsx_ip",			"wan"				},
+#if !defined(TCONFIG_NVRAM_32K) && !defined(TCONFIG_OPTIMIZE_SIZE)
+	{ "ddnsx2",			""				},
+	{ "ddnsx3",			""				},
+#endif
+	{ "ddnsx0_ip",			"wan"				},
+	{ "ddnsx1_ip",			"wan"				},
+#if !defined(TCONFIG_NVRAM_32K) && !defined(TCONFIG_OPTIMIZE_SIZE)
+	{ "ddnsx2_ip",			"wan"				},
+	{ "ddnsx3_ip",			"wan"				},
+#endif
 	{ "ddnsx0_cache",		""				},
 	{ "ddnsx1_cache",		""				},
-	{ "ddnsx_save",			"1"				},
-	{ "ddnsx_refresh",		"28"				},
-	{ "ddnsx_cktime",		"10"				},
+#if !defined(TCONFIG_NVRAM_32K) && !defined(TCONFIG_OPTIMIZE_SIZE)
+	{ "ddnsx2_cache",		""				},
+	{ "ddnsx3_cache",		""				},
+#endif
+	{ "ddnsx0_save",		"1"				},
+	{ "ddnsx1_save",		"1"				},
+#if !defined(TCONFIG_NVRAM_32K) && !defined(TCONFIG_OPTIMIZE_SIZE)
+	{ "ddnsx2_save",		"1"				},
+	{ "ddnsx3_save",		"1"				},
+#endif
+	{ "ddnsx0_refresh",		"28"				},
+	{ "ddnsx1_refresh",		"28"				},
+#if !defined(TCONFIG_NVRAM_32K) && !defined(TCONFIG_OPTIMIZE_SIZE)
+	{ "ddnsx2_refresh",		"28"				},
+	{ "ddnsx3_refresh",		"28"				},
+#endif
+	{ "ddnsx0_cktime",		"10"				},
+	{ "ddnsx1_cktime",		"10"				},
+#if !defined(TCONFIG_NVRAM_32K) && !defined(TCONFIG_OPTIMIZE_SIZE)
+	{ "ddnsx2_cktime",		"10"				},
+	{ "ddnsx3_cktime",		"10"				},
+#endif
+	{ "ddnsx0_opendns",		"0"				},	/* enable opendns as DNS for Dynamic DNS Client 1: bit 0 = WAN0, bit 1 = WAN1, bit 2 = WAN2, bit 3 = WAN3 */
+	{ "ddnsx1_opendns",		"0"				},	/* enable opendns as DNS for Dynamic DNS Client 2: bit 0 = WAN0, bit 1 = WAN1, bit 2 = WAN2, bit 3 = WAN3 */
+#if !defined(TCONFIG_NVRAM_32K) && !defined(TCONFIG_OPTIMIZE_SIZE)
+	{ "ddnsx2_opendns",		"0"				},	/* enable opendns as DNS for Dynamic DNS Client 3: bit 0 = WAN0, bit 1 = WAN1, bit 2 = WAN2, bit 3 = WAN3 */
+	{ "ddnsx3_opendns",		"0"				},	/* enable opendns as DNS for Dynamic DNS Client 4: bit 0 = WAN0, bit 1 = WAN1, bit 2 = WAN2, bit 3 = WAN3 */
+#endif
 
 /* basic-ident */
 	{ "router_name",		"FreshTomato"			},
@@ -889,7 +927,6 @@ const defaults_t defaults[] = {
 	{ "dhcpd_slt",			"0"				},
 	{ "dhcpd_gwmode",		""				},
 	{ "dhcpd_lmax",			""				},
-	{ "dns_addget",			"0"				},
 	{ "dns_intcpt",			"0"				},
 	{ "dhcpc_minpkt",		"1"				},
 	{ "dhcpc_custom",		""				},
