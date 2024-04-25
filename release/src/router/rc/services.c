@@ -456,7 +456,7 @@ void start_dnsmasq()
 	if ((nvram_get_int("tor_enable")) && (nvram_get_int("dnsmasq_onion_support"))) {
 		char *t_ip = nvram_safe_get("lan_ipaddr");
 
-		for(i = 1; i < BRIDGE_COUNT; i++ ) {
+		for (i = 1; i < BRIDGE_COUNT; i++ ) {
 			snprintf(buf, sizeof(buf), "br%d", i);
 			if (nvram_match("tor_iface", buf)) {
 				snprintf(buf, sizeof(buf), "lan%d_ipaddr", i);
@@ -1167,11 +1167,6 @@ void generate_mdns_config(void)
 {
 	FILE *fp;
 	char avahi_config[80];
-	char *wan2_ifname;
-#ifdef TCONFIG_MULTIWAN
-	char *wan3_ifname;
-	char *wan4_ifname;
-#endif
 
 	snprintf(avahi_config, sizeof(avahi_config), "%s/%s", AVAHI_CONFIG_PATH, AVAHI_CONFIG_FN);
 
@@ -1187,19 +1182,15 @@ void generate_mdns_config(void)
 	            "use-ipv6=%s\n"
 	            "deny-interfaces=%s",
 	            ipv6_enabled() ? "yes" : "no",
-	            nvram_safe_get("wan_ifname"));
+	            get_wanface("wan"));
 
-	wan2_ifname = nvram_safe_get("wan2_ifname");
-	if (*wan2_ifname)
-		fprintf(fp, ",%s", wan2_ifname);
-
+	if (check_wanup("wan2"))
+		fprintf(fp, ",%s", get_wanface("wan2"));
 #ifdef TCONFIG_MULTIWAN
-	wan3_ifname = nvram_safe_get("wan3_ifname");
-	if (*wan3_ifname)
-		fprintf(fp, ",%s", wan3_ifname);
-	wan4_ifname = nvram_safe_get("wan4_ifname");
-	if (*wan4_ifname)
-		fprintf(fp, ",%s", wan4_ifname);
+	if (check_wanup("wan3"))
+		fprintf(fp, ",%s", get_wanface("wan3"));
+	if (check_wanup("wan4"))
+		fprintf(fp, ",%s", get_wanface("wan4"));
 #endif
 
 	fprintf(fp, "\n"
@@ -1393,7 +1384,7 @@ void dns_to_resolv(void)
 			logmsg(LOG_DEBUG, "*** %s: exclusive: %d", __FUNCTION__, exclusive);
 			if (!exclusive) { /* exclusive check */
 #ifdef TCONFIG_IPV6
-				if ((write_ipv6_dns_servers(f, "nameserver ", nvram_safe_get("ipv6_dns"), "\n", 0) == 0) || (nvram_get_int("dns_addget")))
+				if ((write_ipv6_dns_servers(f, "nameserver ", nvram_safe_get("ipv6_dns"), "\n", 0) == 0) || (nvram_get_int("wan_addget"))) /* addget only for the first WAN */
 					if (append == 1) /* only once */
 						write_ipv6_dns_servers(f, "nameserver ", nvram_safe_get("ipv6_get_dns"), "\n", 0);
 #endif
