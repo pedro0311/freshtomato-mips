@@ -14,6 +14,8 @@
 #include <time.h>
 #include <arpa/inet.h>
 
+#define CRU_TMP_FILE	"/tmp/cru-ddns"
+
 /* needed by logmsg() */
 #define LOGMSG_DISABLE	DISABLE_SYSLOG_OS
 #define LOGMSG_NVDEBUG	"ddns_debug"
@@ -118,12 +120,20 @@ static void update(int num, int *dirty, int force)
 		logmsg(LOG_DEBUG, "*** %s: inet_addr ip: %s", __FUNCTION__, ip);
 	}
 
+	/* copy content of nvram cache to a file cache */
 	memset(cache_fn, 0, sizeof(cache_fn));
 	snprintf(cache_fn, sizeof(cache_fn), "%s.cache", ddnsx_path);
 	f_write_string(cache_fn, nvram_safe_get(cache_nv), 0, 0);
 
+	/* if nvram cache is empty, the 'Force next update' option is probably checked - reset also cache file .extip */
+	if (strcmp(nvram_safe_get(cache_nv), "") == 0) {
+		memset(s, 0, sizeof(s));
+		snprintf(s, sizeof(s), "%s.extip", ddnsx_path);
+		f_write(s, NULL, 0, 0, 0);
+	}
+
 	if (!f_exists(msg_fn)) {
-		logmsg(LOG_DEBUG, "*** %s: !f_exist(%s) - adding ...", __FUNCTION__, msg_fn);
+		logmsg(LOG_DEBUG, "*** %s: !f_exist(%s) - creating ...", __FUNCTION__, msg_fn);
 		f_write(msg_fn, NULL, 0, 0, 0);
 	}
 
@@ -164,6 +174,7 @@ static void update(int num, int *dirty, int force)
 
 	fclose(f);
 
+	logmsg(LOG_DEBUG, "*** mdu <<<<<<<");
 	exitcode = eval("mdu", "--service", serv, "--conf", conf_fn);
 	logmsg(LOG_DEBUG, "*** mdu >>>>>>> %s: service: %s config: %s; exitcode: %d", __FUNCTION__, serv, conf_fn, exitcode);
 
@@ -177,7 +188,7 @@ static void update(int num, int *dirty, int force)
 			if (errors < 1)
 				errors = 1;
 
-			if (errors >= 3) {
+			if (errors >= 10) { /* remove from cru, go to standby */
 				nvram_unset(s);
 				goto CLEANUP;
 			}
@@ -305,9 +316,16 @@ int ddns_update_main(int argc, char **argv)
 
 void start_ddns(void)
 {
-	stop_ddns();
+	char tmp[8];
 
 	logmsg(LOG_DEBUG, "*** %s: IN", __FUNCTION__);
+
+	system("cru l | grep ddns-update | wc -l >" CRU_TMP_FILE);
+	memset(tmp, 0, sizeof(tmp));
+	f_read(CRU_TMP_FILE, tmp, sizeof(tmp));
+
+	if ((pidof("ddns-update") > 0) || (pidof("mdu") > 0) || (atoi(tmp) > 0))
+		stop_ddns();
 
 	/* cleanup */
 	simple_unlock("ddns0");
@@ -324,7 +342,8 @@ void start_ddns(void)
 #endif
 
 	xstart("ddns-update");
-	logmsg(LOG_INFO, "ddns service (re-)started");
+
+	logmsg(LOG_INFO, "ddns is started");
 }
 
 void stop_ddns(void)
@@ -346,4 +365,6 @@ void stop_ddns(void)
 
 	killall("ddns-update", SIGKILL);
 	killall("mdu", SIGKILL);
+
+	logmsg(LOG_INFO, "ddns is stopped");
 }

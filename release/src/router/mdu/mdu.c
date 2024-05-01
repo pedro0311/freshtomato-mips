@@ -78,23 +78,23 @@ int f_argc = -1;
 static void save_cookie(void);
 
 /* this should be in nvram so you can add/edit/remove checkers, but we have so little nvram it's impossible... */
-static char services[][3][23] = { /* remember: the number in the third square bracket must be (len + 1) of the longest string */
-/*	  service name			service hostname		path */
-	{ "ipify.org",			"api.ipify.org",		"/"	},	/* txt */
-	{ "amazonaws.com",		"checkip.amazonaws.com",	"/"	},	/* txt */
-	{ "dyndns.org",			"checkip.dyndns.org",		"/"	},	/* "<html><head><title>Current IP Check</title></head><body>Current IP Address: 1.2.3.4</body></html>" */
-	{ "ipecho.net",			"ipecho.net",			"/plain"},	/* txt */
-	{ "trackip.net",		"trackip.net",			"/ip"	},	/* txt */
-	{ "changeip.com",		"ip.changeip.com",		"/"	},	/* "1.2.3.4\n<!--IPADDR=1.2.3.4-->" */
-	{ "ifconfig.co",		"ifconfig.co",			"/ip"	},	/* txt */
-	{ "ident.me",			"ident.me",			"/"	},	/* txt */
-	{ "eth0.me",			"eth0.me",			"/"	},	/* txt */
-	{ "myexternalip.com",		"myexternalip.com",		"/raw"	},	/* txt */
-	{ "tyk.nu",			"ip.tyk.nu",			"/"	},	/* txt */
-	{ "wgetip.com",			"wgetip.com",			"/"	},	/* txt */
-	{ "ipecho.net",			"ipecho.net",			"/plain"},	/* txt */
-	{ "ifconfig.me",		"ifconfig.me",			"/ip"	},	/* txt */
-	{ "icanhazip.com",		"icanhazip.com",		"/"	}	/* txt */
+static char services[][2][23] = { /* remember: the number in the third square bracket must be (len + 1) of the longest string */
+/*	  service			path */
+	{ "api.ipify.org",		"/"	},	/* txt */
+	{ "checkip.amazonaws.com",	"/"	},	/* txt */
+	{ "checkip.dyndns.org",		"/"	},	/* "<html><head><title>Current IP Check</title></head><body>Current IP Address: 1.2.3.4</body></html>" */
+	{ "ipecho.net",			"/plain"},	/* txt */
+	{ "trackip.net",		"/ip"	},	/* txt */
+	{ "ip.changeip.com",		"/"	},	/* "1.2.3.4\n<!--IPADDR=1.2.3.4-->" */
+	{ "ifconfig.co",		"/ip"	},	/* txt */
+	{ "ident.me",			"/"	},	/* txt */
+	{ "eth0.me",			"/"	},	/* txt */
+	{ "myexternalip.com",		"/raw"	},	/* txt */
+	{ "ip.tyk.nu",			"/"	},	/* txt */
+	{ "wgetip.com",			"/"	},	/* txt */
+	{ "ipecho.net",			"/plain"},	/* txt */
+	{ "ifconfig.me",		"/ip"	},	/* txt */
+	{ "icanhazip.com",		"/"	}	/* txt */
 };
 
 static void trimamp(char *s)
@@ -229,7 +229,7 @@ static void error(const char *fmt, ...)
 	exit(error_exitcode);
 }
 
-static void success_msg(const char *msg)
+static void success_msg(const char *msg, const unsigned int do_exit)
 {
 	save_cookie();
 
@@ -237,12 +237,13 @@ static void success_msg(const char *msg)
 	printf("%s\n", msg);
 	save_msg(msg);
 
-	exit(0);
+	if (do_exit == 1)
+		exit(0);
 }
 
 static void success(void)
 {
-	success_msg("Update successful.");
+	success_msg("Update successful.", 1);
 }
 
 static const char *get_dump_name(void)
@@ -553,6 +554,8 @@ static int http_req(int ssl, int static_host, const char *host, const char *req,
 	int trys;
 	long code = -1;
 
+	curl_setup();
+
 	if (!static_host)
 		host = get_option_or("server", host);
 
@@ -637,10 +640,10 @@ static int http_req(int ssl, int static_host, const char *host, const char *req,
 		memset(curl_err_str, 0, sizeof(curl_err_str));
 		snprintf(curl_err_str, sizeof(curl_err_str), "libcurl error (%d) - %s.", r, (len ? errbuf : curl_easy_strerror(r)));
 	}
-	else {
+	else
 		*body = blob;
-		curl_cleanup();
-	}
+
+	curl_cleanup();
 
 	return code;
 #else /* !USE_LIBCURL */
@@ -744,7 +747,7 @@ const char *get_address(int required)
 {
 	char *body;
 	struct in_addr ia;
-	const char *c, *d;
+	const char *c;
 	char *p, *q;
 	char s[64];
 	char cache_name[64];
@@ -758,8 +761,7 @@ const char *get_address(int required)
 		if (*c == '@') {
 			ut = get_uptime();
 
-			d = get_option_required("addrcache");
-			strlcpy(cache_name, d, sizeof(cache_name));
+			strlcpy(cache_name, get_option_required("addrcache"), sizeof(cache_name));
 
 			if (read_tmaddr(cache_name, &et, addr)) {
 				if ((et > ut) && ((et - ut) <= DDNS_IP_CACHE)) {
@@ -780,7 +782,7 @@ const char *get_address(int required)
 			while (n-- > 0) {
 				srand(time(0));
 				service_num = (rand() % (rows));
-				if (wget(0, 1, services[service_num][1], services[service_num][2], NULL, 0, &body, ifname) == 200) { /* do not use ssl */
+				if (wget(0, 1, services[service_num][0], services[service_num][1], NULL, 0, &body, ifname) == 200) { /* do not use ssl */
 
 					if ((p = strstr(body, "Address:")) != NULL) /* dyndns */
 						p += 8;
@@ -808,7 +810,7 @@ const char *get_address(int required)
 						f_write_string(cache_name, s, 0, 0);
 
 						logmsg(LOG_DEBUG, "*** %s: used %s service; time,address (%s) saved to %s", __FUNCTION__, services[service_num][0], s, cache_name);
-						success();
+						success_msg("Update successful.", 0); /* do not exit! */
 						return q;
 					}
 				}
@@ -828,6 +830,7 @@ const char *get_address(int required)
 #else
 						logmsg(LOG_DEBUG, "*** %s: " M_ERROR_GET_IP " (%s) - trying another one ...", __FUNCTION__, services[service_num][0]);
 #endif
+						sleep(1); /* for srand() */
 					}
 				}
 			}
@@ -1204,44 +1207,6 @@ static void update_dnsexit(int ssl)
 }
 
 /*
-	ieserver.net
-	http://www.ieserver.net/tools.html
-
-	---
-
-	http://ieserver.net/cgi-bin/dip.cgi?username=XXX&domain=XXX&password=XXX&updatehost=1
-
-	username = hostname
-	domain = dip.jp, fam.cx, etc.
-*/
-static void update_ieserver(int ssl)
-{
-	int r;
-	char *body;
-	char query[2048];
-	char *p;
-
-	/* +opt +opt */
-	memset(query, 0, sizeof(query));
-	snprintf(query, sizeof(query), "/cgi-bin/dip.cgi?username=%s&domain=%s&password=%s&updatehost=1", get_option_required("user"), get_option_required("host"), get_option_required("pass"));
-
-	r = wget(ssl, 0, "ieserver.net", query, NULL, 0, &body, NULL);
-	if (r == 200) {
-		if (strstr(body, "<title>Error")) {
-			/* <p>yuuzaa na mata pasuwoodo (EUC-JP) */
-			if ((p = strstr(body, "<p>\xA5\xE6\xA1\xBC\xA5\xB6\xA1\xBC")) != NULL) /* <p>user */
-				error(M_INVALID_AUTH);
-
-			error(M_UNKNOWN_RESPONSE__D, -1);
-		}
-
-		success();
-	}
-
-	error(M_UNKNOWN_ERROR__D, r);
-}
-
-/*
 	dyns.cx
 	http://www.dyns.cx/documentation/technical/protocol/v1.1.php
 
@@ -1412,7 +1377,7 @@ static void update_afraid(int ssl)
 			success();
 		else if ((strstr(body, "ERROR")) || (strstr(body, "fail"))) {
 			if (strstr(body, "has not changed"))
-				success();
+				success_msg(M_SAME_RECORD, 1); /* update cookie */
 
 			error(M_INVALID_AUTH);
 		}
@@ -1571,13 +1536,13 @@ static void update_cloudflare(int ssl)
 			if (strstr(body, "\"proxiable\":true") != NULL) {
 				if (strstr(body, "\"proxied\":true") != NULL) {
 					if (prox)
-						success_msg(M_SAME_RECORD); /* use success to update the cookie */
+						success_msg(M_SAME_RECORD, 1); /* use success to update the cookie */
 				}
 				else if (!prox)
-					success_msg(M_SAME_RECORD); /* use success to update the cookie */
+					success_msg(M_SAME_RECORD, 1); /* use success to update the cookie */
 			}
 			else
-				success_msg(M_SAME_RECORD); /* use success to update the cookie */
+				success_msg(M_SAME_RECORD, 1); /* use success to update the cookie */
 		}
 
 		find = "\"id\":\"";
@@ -1794,10 +1759,6 @@ int main(int argc, char *argv[])
 	mkdir("/var/lib/mdu", 0700);
 	chdir("/var/lib/mdu");
 
-#ifdef USE_LIBCURL
-	curl_setup();
-#endif
-
 	check_cookie();
 
 	p = get_option_required("service");
@@ -1830,8 +1791,6 @@ int main(int argc, char *argv[])
 		update_afraid(1);
 	else if (strcmp(p, "heipv6tb") == 0)
 		update_dua("heipv6tb", 1, "ipv4.tunnelbroker.net", "/nic/update", 1);
-	else if (strcmp(p, "ieserver") == 0)
-		update_ieserver(1); /* TLS 1.0 only... */
 	else if (strcmp(p, "namecheap") == 0)
 		update_namecheap(1);
 	else if (strcmp(p, "noip") == 0)
@@ -1854,10 +1813,6 @@ int main(int argc, char *argv[])
 		update_wget();
 	else
 		error("Unknown service");
-
-#ifdef USE_LIBCURL
-	curl_cleanup();
-#endif
 
 	logmsg(LOG_DEBUG, "*** %s: OUT", __FUNCTION__);
 
