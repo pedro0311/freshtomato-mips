@@ -420,4 +420,7 @@ extern int is_number(char *a);
 extern int isspacex(char c);
 extern char *shrink_space(char *dest, const char *src, int n);
 
+/* mdu.c/ddns.c */
+#define MDU_STOP_FN		"/var/lib/mdu/mdu-stop"
+
 #endif /* __SHARED_H__ */
