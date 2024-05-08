@@ -15,7 +15,6 @@
 
 #include <bcmdevs.h>
 #include <bcmnvram.h>
-#include <utils.h>
 #include <shutils.h>
 #include <shared.h>
 

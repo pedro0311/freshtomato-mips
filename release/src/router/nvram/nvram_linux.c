@@ -28,7 +28,6 @@
 #include <bcmnvram.h>
 #include <nvram_convert.h>
 #include <shutils.h>
-#include <utils.h>
 #include <shared.h>
 
 #define PATH_DEV_NVRAM		"/dev/nvram"
