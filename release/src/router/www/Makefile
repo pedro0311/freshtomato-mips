@@ -424,6 +424,7 @@ ifneq ($(TCONFIG_ADVTHEMES),y)
 	sed -i $(INSTALLDIR)/www/bwm-realtime.asp -e "/ADVTHEMES-BEGIN/,/ADVTHEMES-END/d"
 	sed -i $(INSTALLDIR)/www/ipt-24.asp -e "/ADVTHEMES-BEGIN/,/ADVTHEMES-END/d"
 	sed -i $(INSTALLDIR)/www/ipt-realtime.asp -e "/ADVTHEMES-BEGIN/,/ADVTHEMES-END/d"
+	sed -i $(INSTALLDIR)/www/tools-survey.asp -e "/ADVTHEMES-BEGIN/,/ADVTHEMES-END/d"
 	sed -i $(INSTALLDIR)/www/bwm-graph.svg -e "/ADVTHEMES-BEGIN/,/ADVTHEMES-END/d"
 	sed -i $(INSTALLDIR)/www/ipt-graph.svg -e "/ADVTHEMES-BEGIN/,/ADVTHEMES-END/d"
 	sed -i $(INSTALLDIR)/www/qos-graph.svg -e "/ADVTHEMES-BEGIN/,/ADVTHEMES-END/d"
