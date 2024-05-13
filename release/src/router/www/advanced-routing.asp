@@ -18,7 +18,7 @@
 
 <script>
 
-//	<% nvram("routes_static,dhcp_routes,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,wan_ifname,wan_iface,wan2_ifname,wan2_iface,wan3_ifname,wan3_iface,wan4_ifname,wan4_iface,dr_lan_rx,dr_lan1_rx,dr_lan2_rx,dr_lan3_rx,dr_wan_rx,dr_wan2_rx,dr_wan3_rx,dr_wan4_rx,wan_proto,wan2_proto,wan3_proto,wan4_proto,mwan_num"); %>
+//	<% nvram("routes_static,dhcpc_33,dhcpc_121,lan_ifname,lan1_ifname,lan2_ifname,lan3_ifname,wan_ifname,wan_iface,wan2_ifname,wan2_iface,wan3_ifname,wan3_iface,wan4_ifname,wan4_iface,dr_lan_rx,dr_lan1_rx,dr_lan2_rx,dr_lan3_rx,dr_wan_rx,dr_wan2_rx,dr_wan3_rx,dr_wan4_rx,wan_proto,wan2_proto,wan3_proto,wan4_proto,mwan_num"); %>
 
 //	<% activeroutes(); %>
 
@@ -191,6 +191,10 @@ function save() {
 		r.push(data[i].join('<'));
 
 	fom.routes_static.value = r.join('>');
+	fom.dhcpc_33.value = E('_f_dhcpc_33').checked ? '1' : '0';
+	fom.dhcpc_121.value = E('_f_dhcpc_121').checked ? '1' : '0';
+	fom._service.value = ((fom.dhcpc_33.value != nvram.dhcpc_33) || (fom.dhcpc_121.value != nvram.dhcpc_121)) ? 'wan-restart' : 'routing-restart';
+
 /* ZEBRA-BEGIN */
 	fom.dr_lan_tx.value = fom.dr_lan_rx.value = (E('_f_dr_lan').checked) ? '1 2' : '0';
 	fom.dr_lan1_tx.value = fom.dr_lan1_rx.value = (E('_f_dr_lan1').checked) ? '1 2' : '0';
@@ -203,9 +207,6 @@ function save() {
 	fom.dr_wan4_tx.value = fom.dr_wan4_rx.value = (E('_f_dr_wan4').checked) ? '1 2' : '0';
 /* MULTIWAN-END */
 /* ZEBRA-END */
-
-	fom.dhcp_routes.value = E('_f_dhcp_routes').checked ? '1' : '0';
-	fom._service.value = (fom.dhcp_routes.value != nvram.dhcp_routes) ? 'wan-restart' : 'routing-restart';
 
 	form.submit(fom, 1);
 }
@@ -238,7 +239,8 @@ function init() {
 <input type="hidden" name="_nextpage" value="advanced-routing.asp">
 <input type="hidden" name="_service" value="routing-restart">
 <input type="hidden" name="routes_static">
-<input type="hidden" name="dhcp_routes">
+<input type="hidden" name="dhcpc_33">
+<input type="hidden" name="dhcpc_121">
 <!-- ZEBRA-BEGIN -->
 <input type="hidden" name="dr_lan_tx">
 <input type="hidden" name="dr_lan_rx">
@@ -293,7 +295,8 @@ function init() {
 			{ title: 'WAN4', indent: 2, name: 'f_dr_wan4', type: 'checkbox', value: ((nvram.dr_wan4_rx != '0') && (nvram.dr_wan4_rx != '')) },
 /* MULTIWAN-END */
 /* ZEBRA-END */
-			{ title: 'Accept DHCP Routes<br>on WAN interface', name: 'f_dhcp_routes', type: 'checkbox', value: nvram.dhcp_routes != '0' }
+			{ title: 'Accept DHCP Static Route<br>(option 33)', name: 'f_dhcpc_33', type: 'checkbox', value: nvram.dhcpc_33 != 0 },
+			{ title: 'Accept DHCP Classless Routes<br>(option 121)', name: 'f_dhcpc_121', type: 'checkbox', value: nvram.dhcpc_121 != 0 }
 		]);
 	</script>
 </div>

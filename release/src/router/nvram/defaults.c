@@ -988,7 +988,8 @@ const defaults_t defaults[] = {
 
 /* advanced-routing */
 	{ "routes_static",		""				},
-	{ "dhcp_routes",		"1"				},
+	{ "dhcpc_33",			"1"				},	/* DHCPC Static Route (option 33) */
+	{ "dhcpc_121",			"1"				},	/* DHCPC Classless Static Route (option 121) */
 	{ "force_igmpv2",		"0"				},
 #ifdef TCONFIG_ZEBRA
 	{ "dr_setting",			"0"				},	/* [ Disable | WAN | LAN | Both ] */
