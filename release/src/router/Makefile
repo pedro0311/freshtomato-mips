@@ -194,17 +194,25 @@ FFMPEG_CONFIGURE_DECODERS := $(call FFMPEG_FILTER_CONFIG,enable-decoder,$(FFMPEG
 FFMPEG_CONFIGURE_PROTOCOLS := $(call FFMPEG_FILTER_CONFIG,enable-protocol,$(FFMPEG_PROTOCOLS))
 
 # openssl stuff
-OPENSSL_CIPHERS := no-ssl2 no-ssl3 no-gost no-heartbeats no-err no-unit-test no-tests
+OPENSSL_CIPHERS := no-ssl3 no-gost no-err no-unit-test no-tests no-comp no-sse2 no-afalgeng no-devcryptoeng
+ifeq ($(TCONFIG_OPENSSL30),)
+ OPENSSL_CIPHERS += no-ssl2 no-heartbeats
+else
+ OPENSSL_CIPHERS += no-crypto-mdebug no-fuzz-libfuzzer no-fuzz-afl no-nextprotoneg no-pinshared no-fips no-fips-securitychecks no-padlockeng
+endif
+# remove on MIPS if built without KEYGEN
 ifeq ($(TCONFIG_BCMARM),)
  ifeq ($(TCONFIG_KEYGEN),)
-  ifeq ($(TCONFIG_OPENSSL11),y)
-   OPENSSL_CIPHERS += no-camellia no-idea no-rc2 no-cast no-seed no-md4 no-mdc2 no-rmd160 no-cms no-engine no-ocsp no-srp no-ts no-afalgeng no-ocb \
-                      no-unit-test no-ui-console no-whirlpool no-blake2 no-cmac no-multiblock no-nextprotoneg no-comp no-ct no-scrypt no-sctp no-siphash no-ubsan \
-                      no-rc5 no-rdrand no-capieng no-rfc3779 no-hw no-zlib no-sse2 no-ssl-trace no-dtls1 no-psk no-md2 no-devcryptoeng no-dgram no-dtls
+  OPENSSL_CIPHERS += no-camellia no-seed no-mdc2 no-rmd160 no-ts no-capieng no-rfc3779 no-zlib no-ssl-trace no-dtls1 no-psk no-md2
+  ifeq ($(TCONFIG_OPENSSL30),)
+   OPENSSL_CIPHERS += no-hw
+  endif
+  ifeq ($(or $(TCONFIG_OPENSSL30),$(TCONFIG_OPENSSL11)),y)
+   OPENSSL_CIPHERS += no-idea no-rc2 no-cast no-md4 no-cms no-ocsp no-srp no-ocb no-unit-test no-ui-console no-whirlpool no-blake2 no-cmac \
+                      no-multiblock no-nextprotoneg no-ct no-scrypt no-sctp no-engine no-siphash no-ubsan no-rc5 no-rdrand no-devcryptoeng no-dgram no-dtls
   else
-   OPENSSL_CIPHERS += no-sha0 no-smime no-camellia no-krb5 no-rmd160 no-ripemd no-seed no-capieng no-gms no-gmp no-rfc3779 no-hw no-jpake no-zlib no-engines no-sse2 no-libunbound \
-                      no-ssl-trace no-dtls1 no-store no-psk no-md2 no-mdc2 no-ts enable-rc5
-  endif # TCONFIG_OPENSSL11
+   OPENSSL_CIPHERS += no-sha0 no-smime no-krb5 no-ripemd no-gms no-gmp no-jpake no-engines no-libunbound no-store enable-rc5
+  endif # TCONFIG_OPENSSL30 || TCONFIG_OPENSSL11
  endif # !TCONFIG_KEYGEN
  ifeq ($(TCONFIG_BBT),)
   OPENSSL_CIPHERS += no-rc4
@@ -278,13 +286,16 @@ ifeq ($(TCONFIG_HAVEGED),y)
 endif
 
 ifneq ($(TCONFIG_HTTPS),)
- ifeq ($(TCONFIG_OPENSSL11),y)
-  obj-y += openssl-1.1
-  export OPENSSLDIR = openssl-1.1
+ ifeq ($(TCONFIG_OPENSSL30),y)
+  export OPENSSLDIR = openssl-3.0
  else
-  obj-y += openssl
-  export OPENSSLDIR = openssl
+  ifeq ($(TCONFIG_OPENSSL11),y)
+   export OPENSSLDIR = openssl-1.1
+  else
+   export OPENSSLDIR = openssl
+  endif
  endif
+ obj-y += $(OPENSSLDIR)
 else
  obj-y += cyassl
 endif
@@ -659,13 +670,13 @@ install package: countInstallSteps $(obj-install) $(LINUXDIR)/.config
 		DEPMOD=/bin/true INSTALL_MOD_PATH=$(TARGETDIR)
 
 ifneq ($(TCONFIG_BCMARM),y)
-ifneq ($(CONFIG_BCMWL6)$(TCONFIG_BLINK),)
-ifneq ($(TCONFIG_USBAP),y)
+ ifneq ($(CONFIG_BCMWL6)$(TCONFIG_BLINK),)
+  ifneq ($(TCONFIG_USBAP),y)
 	-cd $(TARGETDIR)/lib/modules/*/kernel/drivers/net && mv diag/* . && rm -rf diag
 	-cd $(TARGETDIR)/lib/modules/*/kernel/drivers/net && mv et.4702/* . && rm -rf et.4702 || true
 	-cd $(TARGETDIR)/lib/modules/*/kernel/drivers/net && mv usb/* . && rm -rf usb
-endif
-endif
+  endif
+ endif
 else
 	-cd $(TARGETDIR)/lib/modules/*/kernel/drivers/net && mv diag/* . && rm -rf diag
 	-cd $(TARGETDIR)/lib/modules/*/kernel/drivers/net && mv et.4702/* . && rm -rf et.4702 || true
@@ -766,18 +777,18 @@ endif
 	install $(LIBDIR)/libnsl.so.0 $(TARGETDIR)/lib/
 	install $(LIBDIR)/libutil.so.0 $(TARGETDIR)/lib/
 ifeq ($(TCONFIG_USB),y)
-ifneq ($(TCONFIG_BCMARM),y)
+ ifneq ($(TCONFIG_BCMARM),y)
 	install $(LIBDIR)/librt-0.9.30.1.so $(TARGETDIR)/lib/librt.so.0
-else
+ else
 	install $(LIBDIR)/librt.so.0 $(TARGETDIR)/lib/librt.so.0
-endif
+ endif
 endif # TCONFIG_USB
 ifneq ($(TCONFIG_NGINX)$(TCONFIG_NANO),)
-ifneq ($(TCONFIG_BCMARM),y)
+ ifneq ($(TCONFIG_BCMARM),y)
 	install $(LIBDIR)/libstdc++.so.6 $(TARGETDIR)/lib/libstdc++.so.6
-else
+ else
 	install $(LIBDIR)/../arm-linux/lib/libstdc++.so.6 $(TARGETDIR)/lib/libstdc++.so.6
-endif # TCONFIG_BCMARM
+ endif # TCONFIG_BCMARM
 	cd $(TARGETDIR)/lib && ln -sf libstdc++.so.6 libstdc++.so
 	$(STRIP) $(TARGETDIR)/lib/libstdc++.so.6
 endif # TCONFIG_NGINX TCONFIG_NANO
@@ -791,17 +802,15 @@ endif
 ifneq ($(TCONFIG_BBT)$(TCONFIG_SAMBASRV),yy)
 	@cd $(TARGETDIR) && $(TOP)/others/rootprep.sh ln_usr_share
 else
-ifeq ($(TCONFIG_TOR),y)
+ ifeq ($(TCONFIG_TOR),y)
 	@cd $(TARGETDIR) && $(TOP)/others/rootprep.sh ln_tor_geoip
-endif
+ endif
 endif
 
 	@echo ---
 
 ifeq ($(TCONFIG_OPTIMIZE_SHARED_LIBS),y)
-ifneq ($(TCONFIG_BCMARM),y)
 	@$(SRCBASE)/btools/libfoo.pl
-endif
 else
 	@$(SRCBASE)/btools/libfoo.pl --noopt
 endif
@@ -1322,6 +1331,44 @@ openssl-1.1-clean:
 	@rm -f openssl-1.1/stamp-h1
 	@rm -rf openssl-1.1/staged
 	$(call unpatch_files,openssl-1.1)
+
+openssl-3.0/stamp-h1:
+	$(call patch_files,openssl-3.0)
+	cd openssl-3.0 && \
+		CC=$(CC:$(CROSS_COMPILE)%=%) \
+		AR=$(AR:$(CROSS_COMPILE)%=%) \
+		NM=$(NM:$(CROSS_COMPILE)%=%) \
+		RANLIB=$(RANLIB:$(CROSS_COMPILE)%=%) \
+		./Configure $(HOSTCONFIG)-freshtomato $(EXTRACFLAGS) $(if $(TCONFIG_OPTIMIZE_SIZE),-Os,-O3) --prefix=/usr --openssldir=/etc/ssl \
+			-ffunction-sections -fdata-sections -Wl,--gc-sections -fomit-frame-pointer \
+			shared $(OPENSSL_CIPHERS) --api=1.0.0 \
+			no-async no-aria no-sm2 no-sm3 no-sm4 no-cmp \
+			-DOPENSSL_PREFER_CHACHA_OVER_GCM
+	@$(MAKE) -C openssl-3.0 clean
+	@touch $@
+
+openssl-3.0: openssl-3.0/stamp-h1
+	$(SEP)
+	$(MAKE) -C $@ $(PARALLEL_BUILD)
+	$(MAKE) -C $@ DESTDIR=$(TOP)/openssl-3.0/staged install_sw
+
+openssl-3.0-install:
+	install -D openssl-3.0/libcrypto.so.3 $(INSTALLDIR)/openssl-3.0/usr/lib/libcrypto.so.3
+	install -D openssl-3.0/libssl.so.3 $(INSTALLDIR)/openssl-3.0/usr/lib/libssl.so.3
+	$(STRIP) $(INSTALLDIR)/openssl-3.0/usr/lib/libssl.so.3
+	$(STRIP) $(INSTALLDIR)/openssl-3.0/usr/lib/libcrypto.so.3
+	install -D openssl-3.0/apps/openssl $(INSTALLDIR)/openssl-3.0/usr/sbin/openssl30
+	$(STRIP) $(INSTALLDIR)/openssl-3.0/usr/sbin/openssl30
+	chmod 0500 $(INSTALLDIR)/openssl-3.0/usr/sbin/openssl30
+	cd $(INSTALLDIR)/openssl-3.0/usr/lib && ln -sf libcrypto.so.3 libcrypto.so
+	cd $(INSTALLDIR)/openssl-3.0/usr/lib && ln -sf libssl.so.3 libssl.so
+	cd $(INSTALLDIR)/openssl-3.0/usr/sbin && ln -sf openssl30 openssl
+
+openssl-3.0-clean:
+	-@$(MAKE) -C openssl-3.0 clean
+	@rm -f openssl-3.0/stamp-h1
+	@rm -rf openssl-3.0/staged
+	$(call unpatch_files,openssl-3.0)
 
 bridge/Makefile:
 	cd bridge && autoreconf -fsi && \
@@ -2028,8 +2075,7 @@ libexif-clean:
 	-@$(MAKE) -C libexif clean
 	@rm -f libexif/stamp-h1
 
-libid3tag/build/Makefile:
-ifneq ($(TCONFIG_BCMARM),y)
+libid3tag/static/Makefile:
 	@rm -rf libid3tag/static && mkdir -p libid3tag/static
 	cd libid3tag/static && $(call CMAKE_CrossOptions, crosscompiled.cmake) && \
 		cmake -DCMAKE_TOOLCHAIN_FILE=crosscompiled.cmake \
@@ -2039,11 +2085,12 @@ ifneq ($(TCONFIG_BCMARM),y)
 			-DCMAKE_CXX_FLAGS="-Wall -DNDEBUG $(if $(TCONFIG_BCMARM),-fno-strict-aliasing -fno-delete-null-pointer-checks -marm -march=armv7-a -mtune=cortex-a9,-funit-at-a-time \
 					$(if $(TCONFIG_MIPSR2),-march=mips32r2 -mips32r2 -mtune=mips32r2,-march=mips32 -mips32 -mtune=mips32)) -ffunction-sections -fdata-sections -fPIC -I$(TOP)/zlib/staged/usr/include" \
 			-DCMAKE_EXE_LINKER_FLAGS="-fPIC -Wl,--gc-sections -L$(TOP)/zlib/staged/usr/lib -lz" \
-			-DBUILD_SHARED_LIBS=FALSE \
+			-DBUILD_SHARED_LIBS=OFF \
 			-DZLIB_INCLUDE_DIR="$(TOP)/zlib/staged/usr/include" \
 			-DZLIB_LIBRARY="$(TOP)/zlib/staged/usr/lib/libz.so" \
 			..
-endif
+
+libid3tag/build/Makefile:
 	@rm -rf libid3tag/build && mkdir -p libid3tag/build
 	cd libid3tag/build && $(call CMAKE_CrossOptions, crosscompiled.cmake) && \
 		cmake -DCMAKE_TOOLCHAIN_FILE=crosscompiled.cmake \
@@ -2057,7 +2104,7 @@ endif
 			-DZLIB_LIBRARY="$(TOP)/zlib/staged/usr/lib/libz.so" \
 			..
 
-libid3tag: libid3tag/build/Makefile
+libid3tag: $(if $(TCONFIG_BCMARM),,libid3tag/static/Makefile) libid3tag/build/Makefile
 	@$(SEP)
 ifneq ($(TCONFIG_BCMARM),y)
 	$(MAKE) -C libid3tag/static all $(PARALLEL_BUILD)
@@ -3434,7 +3481,7 @@ getdns/build/Makefile:
 			-DCMAKE_INSTALL_PREFIX=/usr \
 			-DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_SKIP_RPATH=TRUE \
 			-DCMAKE_C_FLAGS="-Wall $(EXTRACFLAGS) -DNDEBUG -std=gnu99 -ffunction-sections -fdata-sections -I$(TOP)/$(OPENSSLDIR)/staged/usr/include -I$(TOP)/libyaml/include" \
-			-DCMAKE_EXE_LINKER_FLAGS="-Wl,--gc-sections $(if $(TCONFIG_OPENSSL11),-lpthread,) -L$(TOP)/$(OPENSSLDIR)/staged/usr/lib -L$(TOP)/libyaml/src/.libs -lssl -lcrypto -lyaml" \
+			-DCMAKE_EXE_LINKER_FLAGS="-Wl,--gc-sections $(if $(or $(TCONFIG_OPENSSL11),$(TCONFIG_OPENSSL30)),-lpthread,) -L$(TOP)/$(OPENSSLDIR)/staged/usr/lib -L$(TOP)/libyaml/src/.libs -lssl -lcrypto -lyaml" \
 			-DENABLE_STATIC=TRUE -DENABLE_SHARED=FALSE -DENABLE_GOST=FALSE \
 			-DBUILD_GETDNS_QUERY=FALSE \
 			-DBUILD_GETDNS_SERVER_MON=FALSE \

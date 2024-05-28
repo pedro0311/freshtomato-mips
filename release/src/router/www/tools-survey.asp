@@ -211,7 +211,7 @@ sg.setup = function() {
 	this.init('survey-grid','sort');
 	this.headerSet(['Last Seen','RGB','SSID','BSSID','RSSI<br>dBm','Quality','Ctrl/Centr<br>Channel','Security','802.11']);
 	this.populate();
-	this.sort(5);
+	this.sort(4);
 }
 
 function drawNoise(board, style) {
@@ -499,7 +499,7 @@ sg.sortCompare = function(a, b) {
 	if (r == 0)
 		r = cmpText(da.bssid, db.bssid);
 
-	return this.sortAscending ? r : -r;
+	return this.sortAscending ? -r : r;
 }
 
 Date.prototype.toWHMS = function() {
@@ -663,8 +663,8 @@ function drawCoordinates(a, b, c, d, e, f, g) {
 			var yPos = (canvas.height / (vdiv * 10)) * (-y - 10);
 
 			ctx.textBaseline = 'middle';
-			ctx.fillText(y.toString(), 10, yPos);
-			ctx.fillText(y.toString(), hsize - 10, yPos);
+			ctx.fillText(y.toString(), 7, yPos);
+			ctx.fillText(y.toString(), hsize - 7, yPos);
 		}
 	}
 }
@@ -870,7 +870,7 @@ function init() {
 		Timeout:
 		<img src="spin.gif" alt="" id="refresh-spinner">
 		<script>
-			genStdTimeList('expire-time', 'Never = ♾️', 6);
+			genStdTimeList('expire-time', 'Never = ♾️', 10);
 			genStdTimeList('refresh-time', 'One off', 10);
 		</script>
 		<input type="button" value="Refresh" onclick="ref.toggle()" id="refresh-button">
