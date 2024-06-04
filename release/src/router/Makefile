@@ -153,7 +153,7 @@ else
  export PHP_TARGET := php7
 endif
 
-# IPv6?
+# IPv6
 ifeq ($(TCONFIG_IPV6),y)
  export TCONFIG_IPV6 := y
 else
@@ -273,7 +273,6 @@ obj-y += rstats
 obj-$(TCONFIG_PROXY) += udpxy
 obj-y += hotplug2
 obj-y += udevtrigger
-obj-$(TCONFIG_BCMARM) += libnfnetlink
 obj-y += libusb10
 obj-y += usbmodeswitch
 obj-$(TCONFIG_BCMARM) += libmnl
@@ -384,6 +383,7 @@ obj-$(TCONFIG_MEDIA_SERVER) += libid3tag
 obj-$(TCONFIG_MEDIA_SERVER) += libvorbis
 obj-$(TCONFIG_MEDIA_SERVER) += ffmpeg
 obj-$(TCONFIG_MEDIA_SERVER) += minidlna
+obj-$(TCONFIG_CONNTRACK_TOOL) += libnfnetlink
 obj-$(TCONFIG_CONNTRACK_TOOL) += libnetfilter_conntrack
 obj-$(TCONFIG_CONNTRACK_TOOL) += libnetfilter_log
 obj-$(TCONFIG_CONNTRACK_TOOL) += libnetfilter_queue
@@ -810,7 +810,9 @@ endif
 	@echo ---
 
 ifeq ($(TCONFIG_OPTIMIZE_SHARED_LIBS),y)
+ ifneq ($(TCONFIG_BCMARM),y)
 	@$(SRCBASE)/btools/libfoo.pl
+ endif
 else
 	@$(SRCBASE)/btools/libfoo.pl --noopt
 endif
@@ -1478,11 +1480,12 @@ iptables-1.8.x/stamp-h1:
 	$(call patch_files,iptables-1.8.x)
 	cd iptables-1.8.x && ./autogen.sh && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -U CONFIG_NVRAM_SIZE" \
-		CPPFLAGS="-Os -Wall -I$(TOP)/libnfnetlink/include $(if $(TCONFIG_CONNTRACK_TOOL),-I$(TOP)/libnetfilter_conntrack/include,)" \
-		LDFLAGS="-L$(TOP)/libnfnetlink/src/.libs -lnfnetlink $(if $(TCONFIG_CONNTRACK_TOOL),-L$(TOP)/libnetfilter_conntrack/src/.libs,)" \
-		PKG_CONFIG_PATH="$(TOP)/libnfnetlink$(if $(TCONFIG_CONNTRACK_TOOL),:$(TOP)/libnetfilter_conntrack,)" \
+		CPPFLAGS="-Os -Wall $(if $(TCONFIG_CONNTRACK_TOOL),-I$(TOP)/libnfnetlink/include -I$(TOP)/libnetfilter_conntrack/include,)" \
+		LDFLAGS="$(if $(TCONFIG_CONNTRACK_TOOL),-L$(TOP)/libnfnetlink/src/.libs -lnfnetlink -L$(TOP)/libnetfilter_conntrack/src/.libs -Wl$(comma)-rpath$(comma)$(TOP)/libnetfilter_conntrack/src/.libs -Wl$(comma)-rpath$(comma)$(TOP)/libmnl/staged/usr/lib,)" \
+		PKG_CONFIG_PATH="$(if $(TCONFIG_CONNTRACK_TOOL),$(TOP)/libnfnetlink:$(TOP)/libnetfilter_conntrack/staged/usr/lib/pkgconfig,)" \
 		$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib \
 			$(if $(TCONFIG_IPV6),--enable-ipv6,--disable-ipv6) \
+			$(if $(TCONFIG_CONNTRACK_TOOL),,--disable-connlabel) \
 			--with-kernel=$(LINUXDIR) --with-xt-lock-name=/var/lock/xtables.lock \
 			--disable-nftables --disable-dependency-tracking
 	@touch $@
@@ -1950,7 +1953,7 @@ sqlite/stamp-h1:
 	cd sqlite && autoreconf -fsi && \
 		CC=$(CC) CFLAGS="-Os $(EXTRACFLAGS) -fPIC -std=gnu99 -I$(TOP)/zlib/staged/usr/include -ffunction-sections -fdata-sections" \
 		LDFLAGS="-L$(TOP)/zlib/staged/usr/lib -ffunction-sections -fdata-sections -Wl,--gc-sections" \
-		$(CONFIGURE) --prefix=/usr --enable-shared --enable-static \
+		$(CONFIGURE) --prefix=/usr --enable-shared --enable-static=no \
 			--disable-readline --enable-dynamic-extensions=no --enable-threadsafe
 	@touch $@
 
@@ -2104,11 +2107,9 @@ libid3tag/build/Makefile:
 			-DZLIB_LIBRARY="$(TOP)/zlib/staged/usr/lib/libz.so" \
 			..
 
-libid3tag: $(if $(TCONFIG_BCMARM),,libid3tag/static/Makefile) libid3tag/build/Makefile
+libid3tag: libid3tag/static/Makefile libid3tag/build/Makefile
 	@$(SEP)
-ifneq ($(TCONFIG_BCMARM),y)
 	$(MAKE) -C libid3tag/static all $(PARALLEL_BUILD)
-endif
 	$(MAKE) -C libid3tag/build all $(PARALLEL_BUILD)
 
 libid3tag-install:
@@ -2116,9 +2117,7 @@ libid3tag-install:
 	cd $(INSTALLDIR)/libid3tag/usr/lib/ && $(STRIP) libid3tag.so.0.16.3 && ln -sf libid3tag.so.0.16.3 libid3tag.so && ln -sf libid3tag.so.0.16.3 libid3tag.so.0
 
 libid3tag-clean:
-ifneq ($(TCONFIG_BCMARM),y)
 	@rm -rf libid3tag/static
-endif
 	@rm -rf libid3tag/build
 
 libvorbis/stamp-h1:
@@ -2398,9 +2397,11 @@ ifeq ($(TCONFIG_BCMARM),y)
 	install -D $(PCRE_TARGET)/staged/usr/lib/libpcre2-8.so.0.10.2 $(INSTALLDIR)/$(PCRE_TARGET)/usr/lib/libpcre2-8.so.0.10.2
 	$(STRIP) -s $(INSTALLDIR)/$(PCRE_TARGET)/usr/lib/libpcre2-8.so.0.10.2
 	cd $(INSTALLDIR)/$(PCRE_TARGET)/usr/lib/ && ln -sf libpcre2-8.so.0.10.2 libpcre2-8.so.0 && ln -sf libpcre2-8.so.0.10.2 libpcre2-8.so
+ ifeq ($(TCONFIG_AIO),y)
 	install -D $(PCRE_TARGET)/staged/usr/lib/libpcre2-posix.so.3.0.0 $(INSTALLDIR)/$(PCRE_TARGET)/usr/lib/libpcre2-posix.so.3.0.0
 	$(STRIP) -s $(INSTALLDIR)/$(PCRE_TARGET)/usr/lib/libpcre2-posix.so.3.0.0
 	cd $(INSTALLDIR)/$(PCRE_TARGET)/usr/lib/ && ln -sf libpcre2-posix.so.3.0.0 libpcre2-posix.so.3 && ln -sf libpcre2-posix.so.3.0.0 libpcre2-posix.so
+ endif
 else
 	install -D $(PCRE_TARGET)/staged/usr/lib/libpcre.so.1.2.13 $(INSTALLDIR)/$(PCRE_TARGET)/usr/lib/libpcre.so.1.2.13
 	$(STRIP) -s $(INSTALLDIR)/$(PCRE_TARGET)/usr/lib/libpcre.so.1.2.13
@@ -2427,9 +2428,9 @@ libxml2: libxml2/stamp-h1
 	@$(MAKE) -C $@ DESTDIR=$(TOP)/libxml2/staged install
 
 libxml2-install:
-	install -D libxml2/.libs/libxml2.so.2.12.6 $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.12.6
-	$(STRIP) $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.12.6
-	cd $(INSTALLDIR)/libxml2/usr/lib && ln -sf libxml2.so.2.12.6 libxml2.so.2 && ln -sf libxml2.so.2.12.6 libxml2.so
+	install -D libxml2/.libs/libxml2.so.2.12.7 $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.12.7
+	$(STRIP) $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.12.7
+	cd $(INSTALLDIR)/libxml2/usr/lib && ln -sf libxml2.so.2.12.7 libxml2.so.2 && ln -sf libxml2.so.2.12.7 libxml2.so
 
 libxml2-clean:
 	-@$(MAKE) -C libxml2 clean
@@ -2728,17 +2729,7 @@ libncurses-install:
 	cd $(INSTALLDIR)/libncurses/usr/lib && ln -sf ../share/terminfo terminfo
 	install libncurses/lib/libncurses.so.6.4 $(INSTALLDIR)/libncurses/usr/lib/libncurses.so.6
 	$(STRIP) $(INSTALLDIR)/libncurses/usr/lib/libncurses.so.6
-	install libncurses/lib/libpanel.so.6.4 $(INSTALLDIR)/libncurses/usr/lib/libpanel.so.6
-	$(STRIP) $(INSTALLDIR)/libncurses/usr/lib/libpanel.so.6
-	install libncurses/lib/libform.so.6.4 $(INSTALLDIR)/libncurses/usr/lib/libform.so.6
-	$(STRIP) $(INSTALLDIR)/libncurses/usr/lib/libform.so.6
-	install libncurses/lib/libmenu.so.6.4 $(INSTALLDIR)/libncurses/usr/lib/libmenu.so.6
-	$(STRIP) $(INSTALLDIR)/libncurses/usr/lib/libmenu.so.6
-	cd $(INSTALLDIR)/libncurses/usr/lib/ && \
-		ln -sf libncurses.so.6 libncurses.so && \
-		ln -sf libpanel.so.6 libpanel.so && \
-		ln -sf libform.so.6 libform.so && \
-		ln -sf libmenu.so.6 libmenu.so
+	cd $(INSTALLDIR)/libncurses/usr/lib/ && ln -sf libncurses.so.6 libncurses.so
 
 libncurses-clean:
 	-@$(MAKE) -C libncurses clean
@@ -2875,7 +2866,7 @@ libcap-ng/stamp-h1:
 	cd libcap-ng && ./autogen.sh && \
 		CFLAGS="-O2 -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC" \
 		LDFLAGS="-Wl,--gc-sections -fPIC" \
-		$(CONFIGURE) --prefix=/usr --enable-shared --bindir=/usr/sbin --libdir=/usr/lib
+		$(CONFIGURE) --prefix=/usr --enable-shared --enable-static=no --bindir=/usr/sbin --libdir=/usr/lib
 	@touch $@
 
 libcap-ng: libcap-ng/stamp-h1
@@ -3950,7 +3941,7 @@ libmnl/stamp-h1:
 	cd libmnl && autoreconf -fsi && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
-		$(CONFIGURE) --prefix=/usr
+		$(CONFIGURE) --prefix=/usr --enable-static
 	@touch $@
 
 libmnl: libmnl/stamp-h1
@@ -3975,8 +3966,8 @@ libmnl-clean:
 libnetfilter_conntrack/stamp-h1:
 	cd libnetfilter_conntrack && autoreconf -fsi && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -I$(TOP)/libnfnetlink/include -I$(TOP)/libmnl/staged/usr/include" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(TOP)/libnfnetlink/src/.libs -L$(TOP)/libmnl/staged/usr/lib" \
-		PKG_CONFIG_PATH="$(TOP)/libnfnetlink:$(TOP)/libmnl" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(TOP)/libnfnetlink/src/.libs -L$(TOP)/libmnl/staged/usr/lib -lmnl" \
+		PKG_CONFIG_PATH="$(TOP)/libnfnetlink:$(TOP)/libmnl/staged/usr/lib/pkgconfig" \
 		$(CONFIGURE) --prefix=/usr
 	@touch $@
 
@@ -3999,7 +3990,6 @@ libnetfilter_conntrack-clean:
 	-@$(MAKE) -C libnetfilter_conntrack clean
 	@rm -f libnetfilter_conntrack/stamp-h1 libnetfilter_conntrack/Makefile
 	@rm -rf libnetfilter_conntrack/staged
-
 
 libnetfilter_log/stamp-h1:
 	cd libnetfilter_log && \
@@ -4031,8 +4021,8 @@ libnetfilter_log-clean:
 libnetfilter_queue/stamp-h1:
 	cd libnetfilter_queue && autoreconf -fsi && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -I$(TOP)/libnfnetlink/include -I$(TOP)/libmnl/staged/usr/include" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(TOP)/libnfnetlink/src/.libs -L$(TOP)/libmnl/staged/usr/lib" \
-		PKG_CONFIG_PATH="$(TOP)/libnfnetlink:$(TOP)/libmnl" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(TOP)/libnfnetlink/src/.libs -L$(TOP)/libmnl/staged/usr/lib -lmnl" \
+		PKG_CONFIG_PATH="$(TOP)/libnfnetlink:$(TOP)/libmnl/staged/usr/lib/pkgconfig" \
 		$(CONFIGURE) --prefix=/usr
 	@touch $@
 
@@ -4059,9 +4049,9 @@ conntrack-tools/stamp-h1:
 	cd conntrack-tools && autoreconf -fsi && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -I$(TOP)/libnfnetlink/include -I$(TOP)/libmnl/staged/usr/include \
 			-I$(TOP)/libnetfilter_conntrack/staged/usr/include -I$(TOP)/libnetfilter_log/staged/usr/include -I$(TOP)/libnetfilter_queue/staged/usr/include" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(TOP)/libnfnetlink/src/.libs -L$(TOP)/libmnl/staged/usr/lib \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(TOP)/libnfnetlink/src/.libs -L$(TOP)/libmnl/staged/usr/lib -lmnl \
 			-L$(TOP)/libnetfilter_conntrack/staged/usr/lib -L$(TOP)/libnetfilter_log/staged/usr/lib -L$(TOP)/libnetfilter_queue/staged/usr/lib" \
-		PKG_CONFIG_PATH="$(TOP)/libnfnetlink:$(TOP)/libmnl:$(TOP)/libnetfilter_conntrack/staged/usr/lib/pkgconfig:$(TOP)/libnetfilter_log/staged/usr/lib/pkgconfig:$(TOP)/libnetfilter_queue/staged/usr/lib/pkgconfig" \
+		PKG_CONFIG_PATH="$(TOP)/libnfnetlink:$(TOP)/libmnl/staged/usr/lib/pkgconfig:$(TOP)/libnetfilter_conntrack/staged/usr/lib/pkgconfig:$(TOP)/libnetfilter_log/staged/usr/lib/pkgconfig:$(TOP)/libnetfilter_queue/staged/usr/lib/pkgconfig" \
 		$(CONFIGURE) --prefix=/usr --disable-cthelper --disable-cttimeout
 	@touch $@
 
@@ -4126,9 +4116,12 @@ libffi: libffi/stamp-h1
 	@rm -f libffi/staged/usr/lib/libffi.la
 
 libffi-install:
+ifeq ($(TCONFIG_IRQBALANCE),y)
 	install -D $(TOP)/libffi/.libs/libffi.so.8.1.4 $(INSTALLDIR)/libffi/usr/lib/libffi.so.8.1.4
 	$(STRIP) $(INSTALLDIR)/libffi/usr/lib/libffi.so.8.1.4
 	cd $(INSTALLDIR)/libffi/usr/lib && ln -sf libffi.so.8.1.4 libffi.so.8 && ln -sf libffi.so.8.1.4 libffi.so
+endif
+	@true
 
 libffi-clean:
 	-@$(MAKE) -C libffi distclean
@@ -4168,6 +4161,7 @@ glib2/build:
 		-Dnls=disabled \
 		-Dlibelf=disabled \
 		-Dglib_assert=false \
+		-Ddefault_library=shared \
 		-Dsystemtap=false \
 		-Dsysprof=disabled \
 		-Doss_fuzz=disabled \
@@ -4198,12 +4192,12 @@ irqbalance/stamp-h1:
 	$(call patch_files,irqbalance)
 	cd irqbalance && ./autogen.sh && \
 		CFLAGS="-Os -Wall -std=gnu99 $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
-		CPPFLAGS="-I$(TOP)/libiconv/staged/usr/include -I$(TOP)/libffi/staged/usr/lib/libffi-3.2.1/include -I$(TOP)/zlib/staged/usr/include -I$(TOP)/$(PCRE_TARGET)/staged/usr/include" \
+		CPPFLAGS="-I$(TOP)/libiconv/staged/usr/include -I$(TOP)/libffi/staged/usr/include -I$(TOP)/zlib/staged/usr/include -I$(TOP)/$(PCRE_TARGET)/staged/usr/include" \
 		LDFLAGS="-L$(TOP)/libiconv/staged/usr/lib -L$(TOP)/libffi/staged/usr/lib -L$(TOP)/zlib/staged/usr/lib -L$(TOP)/$(PCRE_TARGET)/staged/usr/lib -Wl,--gc-sections" \
 		LIBS="-lffi -liconv -lz -lpcre2-8" \
 		GLIB2_CFLAGS="-I$(TOP)/glib2/staged/usr/lib/glib-2.0/include -I$(TOP)/glib2/staged/usr/include/glib-2.0" \
 		GLIB2_LIBS="-L$(TOP)/glib2/staged/usr/lib -lglib-2.0" \
-		$(CONFIGURE) --target=arm-linux --prefix=/usr --enable-static=glib2 --with-libcap_ng=no \
+		$(CONFIGURE) --target=arm-linux --prefix=/usr --with-libcap_ng=no \
 			--with-systemd=no --without-irqbalance-ui --disable-numa --disable-dependency-tracking
 	@touch $@
 

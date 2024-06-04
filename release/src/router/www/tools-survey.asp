@@ -138,14 +138,31 @@ function doit() {
 	fillstyle = E('fill-style').value;
 	ssidshow = E('ssid-show').value;
 	ssidlimit = E('ssid-limit').value;
+	var filter = E('freq-filter').value;
 	if (ssidlimit > 40)
 		ssidlimit = 40;
 
 	sg.removeAllData();
-	sg.populate(fillstyle, ssidshow);
+	sg.populate(fillstyle, ssidshow, filter);
 	sg.resort();
 	drawNoise('ellipses2', fillstyle);
 	drawNoise('ellipses5', fillstyle);
+
+	var ellipses2Div = E('tomato-chart2');
+	var ellipses5Div = E('tomato-chart5');
+	if (filter == 2.4 && wl0.radio.value == 1) {
+		ellipses2Div.style.display = 'block';
+		ellipses5Div.style.display = 'none';
+	} else if (filter == 5 && wl1.radio.value == 1) {
+		ellipses2Div.style.display = 'none';
+		ellipses5Div.style.display = 'block';
+	} else if  ( filter == 0 && wl0.radio.value == 1 && wl1.radio.value == 1) {
+		ellipses2Div.style.display = 'block';
+		ellipses5Div.style.display = 'block';
+	} else  {
+		ellipses2Div.style.display = 'none';
+		ellipses5Div.style.display = 'none';
+	}
 }
 
 var colors = [
@@ -209,7 +226,7 @@ var sg = new TomatoGrid();
 
 sg.setup = function() {
 	this.init('survey-grid','sort');
-	this.headerSet(['Last Seen','RGB','SSID','BSSID','RSSI<br>dBm','Quality','Ctrl/Centr<br>Channel','Security','802.11']);
+	this.headerSet(['Last Seen','RGB','SSID','BSSID','RSSI<br>dBm','SNR<br>dB','Qual','Ctrl/Centr<br>Channel','Security','802.11']);
 	this.populate();
 	this.sort(4);
 }
@@ -324,7 +341,7 @@ function drawEllipse(c = -100, m = 20, q, col, ssid, noise, style, sshow) {
 	ctx.closePath();
 }
 
-sg.populate = function(style, sshow) {
+sg.populate = function(style, sshow, filter) {
 	var added = 0;
 	var removed = 0;
 	var i, j, k, t, e, s;
@@ -370,9 +387,13 @@ sg.populate = function(style, sshow) {
 		e.channel = s[10];
 		e.channel = e.channel+'<br><small>'+s[9]+' GHz<\/small><br><small>'+s[4]+' MHz<\/small>';
 		e.rssi = s[2];
+		if (s[9] == 2.4)
+			e.snr = Number(e.rssi) + Math.abs(wl0.noise);
+		else
+			e.snr = Number(e.rssi) + Math.abs(wl1.noise);
 		e.mhz = s[4];
 		e.cap = s[7]+ '<br>'+s[8];
-		e.rates =s[6].replace('11', '');;
+		e.rates =s[6].replace('11', '');
 		if (e.rssi != -999) {
 			if (e.rssi >= -50)
 				e.qual = 100;
@@ -406,6 +427,11 @@ sg.populate = function(style, sshow) {
 	for (i = 0; i < entries.length; ++i) {
 		var seen, m, mac;
 		e = entries[i];
+		const startIndex = e.channel.indexOf("<small>") + 7; // Find the index of "<small>" and add 7 to skip it
+		const endIndex = e.channel.indexOf(" GHz"); // Find the index of " GHz"
+		var frequency = e.channel.substring(startIndex, endIndex);
+		if (filter != frequency && filter != 0)
+			continue
 		seen = e.lastSeen.toWHMS();
 		if (useAjax()) {
 			m = Math.floor(((new Date()).getTime() - e.firstSeen.getTime()) / 60000);
@@ -450,7 +476,7 @@ sg.populate = function(style, sshow) {
 		if (mac.match(/^(..):(..):(..)/))
 			mac = '<div style="display:none" id="gW_'+i+'">&nbsp; <img src="spin.gif" alt="" style="vertical-align:middle"><\/div><a href="javascript:searchOUI(\''+RegExp.$1+'-'+RegExp.$2+'-'+RegExp.$3+'\','+i+')" title="OUI Search">'+mac+'<\/a>';
 
-		sg.insert(-1, e, [ '<small>'+seen+'<\/small>', ''+e.col, ''+e.ssid, mac, (e.rssi < 0 ? e.rssi+'' : ''),
+		sg.insert(-1, e, [ '<small>'+seen+'<\/small>', ''+e.col, ''+e.ssid, mac, (e.rssi < 0 ? e.rssi+'' : ''), ''+e.snr,
 		          (e.qual < 0 ? '' : '<small>'+e.qual+'<\/small><br><img src="bar'+MIN(MAX(Math.floor(e.qual / 12), 1), 6)+'.gif" id="bar_'+i+'" alt="">'),
 		          ''+e.control+'/'+e.channel, '<small>'+e.cap, '<\/small>'+e.rates], false);
 	}
@@ -487,9 +513,12 @@ sg.sortCompare = function(a, b) {
 			r = cmpInt(da.rssi, db.rssi);
 		break;
 		case 5:
-			r = cmpInt(da.qual, db.qual);
+			r = cmpInt(da.snr, db.snr);
 		break;
 		case 6:
+			r = cmpInt(da.qual, db.qual);
+		break;
+		case 7:
 			r = cmpInt(da.channel, db.channel);
 		break;
 		default:
@@ -802,6 +831,13 @@ function init() {
 	<br>
 	<div id="wl-controls">
 		<table border="0"><tr><td>
+			<label for="freqfilter">Display: </label>
+				<select id="freq-filter" onchange="doit();">
+					<option value="2.4">2.4 GHz</option>
+					<option value="5">5 GHz</option>
+					<option value="0" selected>2.4 & 5 GHz</option>
+				</select>&nbsp;&nbsp;&nbsp;&nbsp;
+		</td><td>
 			<label for="fill-style">Style: </label>
 				<select id="fill-style" onchange="doit();">
 					<option value="100">100%</option>
@@ -857,7 +893,9 @@ function init() {
 			if ('<% wlclient(); %>' == '0')
 				document.write('<li><b>Warning:<\/b> Wireless connections to this router may be disrupted while using this tool.<br><\/li>');
 		</script>
+<!-- BCMARM-BEGIN -->
 		<li><b>Wireless Survey:</b> will not show any results with WL filter turned on in 'permit only' mode. </li>
+<!-- BCMARM-END -->
 		<li><b>Internal SSID:</b> a full page reload is needed if any of the internal SSID parameters (grey ellipse) ever change.</li>
 		<li><b>Protocols:</b> 802.11ac based FT routers may not accurately detect 160, 240, or 320 MHz channel widths used by 802.11ax (WiFi 6) and 802.11be (WiFi 7) routers. Conversely, 802.11ax-based FT routers may misinterpret 240 or 320 MHz widths in 802.11be routers as 160 MHz. Consider these limitations when assessing network configurations for compatibility and performance.</li>
 	</ul>
