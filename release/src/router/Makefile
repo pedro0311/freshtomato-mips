@@ -810,9 +810,7 @@ endif
 	@echo ---
 
 ifeq ($(TCONFIG_OPTIMIZE_SHARED_LIBS),y)
- ifneq ($(TCONFIG_BCMARM),y)
 	@$(SRCBASE)/btools/libfoo.pl
- endif
 else
 	@$(SRCBASE)/btools/libfoo.pl --noopt
 endif
@@ -2394,13 +2392,13 @@ $(PCRE_TARGET): $(PCRE_TARGET)/stamp-h1
 
 $(PCRE_TARGET)-install:
 ifeq ($(TCONFIG_BCMARM),y)
-	install -D $(PCRE_TARGET)/staged/usr/lib/libpcre2-8.so.0.10.2 $(INSTALLDIR)/$(PCRE_TARGET)/usr/lib/libpcre2-8.so.0.10.2
-	$(STRIP) -s $(INSTALLDIR)/$(PCRE_TARGET)/usr/lib/libpcre2-8.so.0.10.2
-	cd $(INSTALLDIR)/$(PCRE_TARGET)/usr/lib/ && ln -sf libpcre2-8.so.0.10.2 libpcre2-8.so.0 && ln -sf libpcre2-8.so.0.10.2 libpcre2-8.so
+	install -D $(PCRE_TARGET)/staged/usr/lib/libpcre2-8.so.0.10.4 $(INSTALLDIR)/$(PCRE_TARGET)/usr/lib/libpcre2-8.so.0.10.4
+	$(STRIP) -s $(INSTALLDIR)/$(PCRE_TARGET)/usr/lib/libpcre2-8.so.0.10.4
+	cd $(INSTALLDIR)/$(PCRE_TARGET)/usr/lib/ && ln -sf libpcre2-8.so.0.10.4 libpcre2-8.so.0 && ln -sf libpcre2-8.so.0.10.4 libpcre2-8.so
  ifeq ($(TCONFIG_AIO),y)
-	install -D $(PCRE_TARGET)/staged/usr/lib/libpcre2-posix.so.3.0.0 $(INSTALLDIR)/$(PCRE_TARGET)/usr/lib/libpcre2-posix.so.3.0.0
-	$(STRIP) -s $(INSTALLDIR)/$(PCRE_TARGET)/usr/lib/libpcre2-posix.so.3.0.0
-	cd $(INSTALLDIR)/$(PCRE_TARGET)/usr/lib/ && ln -sf libpcre2-posix.so.3.0.0 libpcre2-posix.so.3 && ln -sf libpcre2-posix.so.3.0.0 libpcre2-posix.so
+	install -D $(PCRE_TARGET)/staged/usr/lib/libpcre2-posix.so.3.0.1 $(INSTALLDIR)/$(PCRE_TARGET)/usr/lib/libpcre2-posix.so.3.0.1
+	$(STRIP) -s $(INSTALLDIR)/$(PCRE_TARGET)/usr/lib/libpcre2-posix.so.3.0.1
+	cd $(INSTALLDIR)/$(PCRE_TARGET)/usr/lib/ && ln -sf libpcre2-posix.so.3.0.1 libpcre2-posix.so.3 && ln -sf libpcre2-posix.so.3.0.1 libpcre2-posix.so
  endif
 else
 	install -D $(PCRE_TARGET)/staged/usr/lib/libpcre.so.1.2.13 $(INSTALLDIR)/$(PCRE_TARGET)/usr/lib/libpcre.so.1.2.13
@@ -3852,8 +3850,9 @@ gettext-tiny/stamp-h1:
 	$(MAKE) -C gettext-tiny \
 		prefix=/usr \
 		LIBINTL=NOOP \
-		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections"
+		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -I$(TOP)/libiconv/staged/usr/include" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(TOP)/libiconv/staged/usr/lib -liconv" \
+		LIBS="-L$(TOP)/libiconv/staged/usr/lib -liconv"
 	@touch $@
 
 gettext-tiny: gettext-tiny/stamp-h1
@@ -3862,8 +3861,9 @@ gettext-tiny: gettext-tiny/stamp-h1
 		prefix=/usr \
 		LIBINTL=NOOP \
 		DESTDIR=$(TOP)/$@/staged \
-		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
+		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -I$(TOP)/libiconv/staged/usr/include" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(TOP)/libiconv/staged/usr/lib -liconv" \
+		LIBS="-L$(TOP)/libiconv/staged/usr/lib -liconv" \
 		install
 
 gettext-tiny-install:
