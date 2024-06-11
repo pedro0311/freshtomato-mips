@@ -15,13 +15,13 @@
 <title>[<% ident(); %>] Admin: SDHC/MMC</title>
 <link rel="stylesheet" type="text/css" href="tomato.css">
 <% css(); %>
-<script type="text/javascript" src="tomato.js"></script>
+<script src="tomato.js?rel=<% version(); %>"></script>
 
 <!-- / / / -->
 
-<script type="text/javascript" src="debug.js"></script>
+<script src="debug.js?rel=<% version(); %>"></script>
 
-<script type="text/javascript">
+<script>
 
 //	<% nvram("mmc_on,mmc_fs_partition,mmc_fs_type,mmc_exec_mount,mmc_exec_umount,mmc_cs,mmc_clk,mmc_din,mmc_dout"); %>
 
@@ -142,7 +142,7 @@ function submit_complete() {
 	<div class="title">Tomato</div>
 	<div class="version">Version <% version(); %></div>
 </td></tr>
-<tr id="body"><td id="navi"><script type="text/javascript">navi()</script></td>
+<tr id="body"><td id="navi"><script>navi()</script></td>
 <td id="content">
 <div id="ident"><% ident(); %></div>
 
@@ -165,7 +165,7 @@ function submit_complete() {
 
 <div class="section-title">SDHC/MMC</div>
 <div class="section">
-<script type="text/javascript">
+<script>
 //	<% statfs("/mmc", "mmc"); %>
 //	<% mmcid(); %>
 mmcon = (nvram.mmc_on == 1);
@@ -200,7 +200,7 @@ createFieldTable('', [
 </script>
 </div>
 
-<script type="text/javascript">show_notice1('<% notice("mmc"); %>');</script>
+<script>show_notice1('<% notice("mmc"); %>');</script>
 
 <!-- / / / -->
 
@@ -212,6 +212,6 @@ createFieldTable('', [
 </td></tr>
 </table>
 </form>
-<script type="text/javascript">verifyFields(null, 1);</script>
+<script>verifyFields(null, 1);</script>
 </body>
 </html>
