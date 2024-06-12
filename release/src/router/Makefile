@@ -194,30 +194,31 @@ FFMPEG_CONFIGURE_DECODERS := $(call FFMPEG_FILTER_CONFIG,enable-decoder,$(FFMPEG
 FFMPEG_CONFIGURE_PROTOCOLS := $(call FFMPEG_FILTER_CONFIG,enable-protocol,$(FFMPEG_PROTOCOLS))
 
 # openssl stuff
-OPENSSL_CIPHERS := no-ssl3 no-gost no-err no-unit-test no-tests no-comp no-sse2 no-afalgeng no-devcryptoeng
-ifeq ($(TCONFIG_OPENSSL30),)
- OPENSSL_CIPHERS += no-ssl2 no-heartbeats
-else
- OPENSSL_CIPHERS += no-crypto-mdebug no-fuzz-libfuzzer no-fuzz-afl no-nextprotoneg no-pinshared no-fips no-fips-securitychecks no-padlockeng
+OPENSSL_OPTIONS := no-tests no-unit-test no-sse2 no-ssl3 no-comp no-gost no-afalgeng no-devcryptoeng no-nextprotoneg no-capieng no-blake2 no-idea no-mdc2 no-ocb no-seed no-whirlpool no-srp no-err
+ifneq ($(or $(TCONFIG_OPENSSL30),$(TCONFIG_OPENSSL11)),y)
+ OPENSSL_OPTIONS +=  no-npn
 endif
-# remove on MIPS if built without KEYGEN
-ifeq ($(TCONFIG_BCMARM),)
- ifeq ($(TCONFIG_KEYGEN),)
-  OPENSSL_CIPHERS += no-camellia no-seed no-mdc2 no-rmd160 no-ts no-capieng no-rfc3779 no-zlib no-ssl-trace no-dtls1 no-psk no-md2
-  ifeq ($(TCONFIG_OPENSSL30),)
-   OPENSSL_CIPHERS += no-hw
-  endif
-  ifeq ($(or $(TCONFIG_OPENSSL30),$(TCONFIG_OPENSSL11)),y)
-   OPENSSL_CIPHERS += no-idea no-rc2 no-cast no-md4 no-cms no-ocsp no-srp no-ocb no-unit-test no-ui-console no-whirlpool no-blake2 no-cmac \
-                      no-multiblock no-nextprotoneg no-ct no-scrypt no-sctp no-engine no-siphash no-ubsan no-rc5 no-rdrand no-devcryptoeng no-dgram no-dtls
-  else
-   OPENSSL_CIPHERS += no-sha0 no-smime no-krb5 no-ripemd no-gms no-gmp no-jpake no-engines no-libunbound no-store enable-rc5
-  endif # TCONFIG_OPENSSL30 || TCONFIG_OPENSSL11
- endif # !TCONFIG_KEYGEN
- ifeq ($(TCONFIG_BBT),)
-  OPENSSL_CIPHERS += no-rc4
+ifeq ($(TCONFIG_OPENSSL30),)
+ OPENSSL_OPTIONS += no-ssl2 no-heartbeats
+else
+ OPENSSL_OPTIONS += no-crypto-mdebug no-fuzz-libfuzzer no-fuzz-afl no-fips no-fips-securitychecks no-padlockeng
+endif
+# remove when built without KEYGEN
+ifeq ($(TCONFIG_KEYGEN),)
+ OPENSSL_OPTIONS += no-camellia no-rmd160 no-rfc3779 no-md2 no-zlib no-ssl-trace no-psk no-ui-console no-filenames no-dso
+ ifeq ($(TCONFIG_OPENSSL30),)
+  OPENSSL_OPTIONS += no-hw
  endif
-endif # !TCONFIG_BCMARM
+ ifeq ($(or $(TCONFIG_OPENSSL30),$(TCONFIG_OPENSSL11)),y)
+  OPENSSL_OPTIONS += no-engine no-rc2 no-cast no-md4 no-cmac no-scrypt no-siphash no-rc5 no-dtls no-dtls1 no-dtls1_2 \
+                     no-ts no-cms no-ocsp no-multiblock no-ct no-sctp no-ubsan no-rdrand no-dgram
+ else
+  OPENSSL_OPTIONS += no-engines no-sha0 no-smime no-krb5 no-ripemd no-gms no-gmp no-jpake no-libunbound no-store no-dtls1 enable-rc5
+ endif # TCONFIG_OPENSSL30 || TCONFIG_OPENSSL11
+endif # !TCONFIG_KEYGEN
+ifeq ($(TCONFIG_BBT),)
+ OPENSSL_OPTIONS += no-rc4
+endif
 
 # libcurl flag
 ifeq ($(TCONFIG_STUBBY),y)
@@ -323,7 +324,16 @@ obj-$(TCONFIG_NFS) += libevent
 obj-$(TCONFIG_NFS) += portmap
 obj-$(TCONFIG_NFS) += libnfsidmap
 obj-$(TCONFIG_NFS) += nfs-utils
-obj-$(TCONFIG_NOCAT) += glib
+ifeq ($(TCONFIG_BCMARM),y)
+ obj-$(TCONFIG_NOCAT) += zlib
+ obj-$(TCONFIG_NOCAT) += libffi
+ obj-$(TCONFIG_NOCAT) += libiconv
+ obj-$(TCONFIG_NOCAT) += gettext-tiny
+ obj-$(TCONFIG_NOCAT) += $(PCRE_TARGET)
+ obj-$(TCONFIG_NOCAT) += glib2
+else
+ obj-$(TCONFIG_NOCAT) += glib
+endif
 obj-$(TCONFIG_NOCAT) += nocat
 obj-$(TCONFIG_USB) += e2fsprogs
 obj-$(TCONFIG_USB) += p910nd
@@ -1236,7 +1246,7 @@ endif # !TCONFIG_BCMARM
 		RANLIB=$(RANLIB:$(CROSS_COMPILE)%=%) \
 		./Configure $(HOSTCONFIG) $(EXTRACFLAGS) $(if $(TCONFIG_BCMARM),-O2,-Os) --prefix=/usr --openssldir=/etc/ssl -DOPENSSL_NO_BUF_FREELISTS \
 			-ffunction-sections -fdata-sections -Wl,--gc-sections -fomit-frame-pointer \
-			shared $(OPENSSL_CIPHERS)
+			shared $(OPENSSL_OPTIONS)
 
 ifeq ($(TCONFIG_BCMARM),)
 	cd openssl && mkdir -p include/openssl && \
@@ -1303,7 +1313,7 @@ endif # !TCONFIG_BCMARM
 		RANLIB=$(RANLIB:$(CROSS_COMPILE)%=%) \
 		./Configure $(HOSTCONFIG) $(EXTRACFLAGS) $(if $(TCONFIG_OPTIMIZE_SIZE),-Os,-O3) --prefix=/usr --openssldir=/etc/ssl \
 			-ffunction-sections -fdata-sections -Wl,--gc-sections -fomit-frame-pointer \
-			shared $(OPENSSL_CIPHERS) --api=1.0.0 \
+			shared $(OPENSSL_OPTIONS) --api=1.0.0 \
 			no-async no-aria no-sm2 no-sm3 no-sm4 \
 			-DOPENSSL_PREFER_CHACHA_OVER_GCM
 	@$(MAKE) -C openssl-1.1 clean
@@ -1341,7 +1351,7 @@ openssl-3.0/stamp-h1:
 		RANLIB=$(RANLIB:$(CROSS_COMPILE)%=%) \
 		./Configure $(HOSTCONFIG)-freshtomato $(EXTRACFLAGS) $(if $(TCONFIG_OPTIMIZE_SIZE),-Os,-O3) --prefix=/usr --openssldir=/etc/ssl \
 			-ffunction-sections -fdata-sections -Wl,--gc-sections -fomit-frame-pointer \
-			shared $(OPENSSL_CIPHERS) --api=1.0.0 \
+			shared $(OPENSSL_OPTIONS) --api=1.0.0 \
 			no-async no-aria no-sm2 no-sm3 no-sm4 no-cmp \
 			-DOPENSSL_PREFER_CHACHA_OVER_GCM
 	@$(MAKE) -C openssl-3.0 clean
@@ -2348,21 +2358,23 @@ ifneq ($(TCONFIG_BCMARM),y)
 	$(call unpatch_files,glib)
 endif
 
-# TODO: get rid of this ancient package!
 nocat/stamp-h1:
 	cd nocat && \
 		NC_CONF_PATH="/" \
-		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections $(if $(TCONFIG_BCMARM),-I$(TOP)/glib2/staged/usr/include/glib-2.0 -I$(TOP)/glib2/staged/usr/lib/glib-2.0/include,)" \
 		LDFLAGS="-Wl,--gc-sections" \
-		$(CONFIGURE) --localstatedir=/var --sysconfdir=/etc --with-firewall=iptables --with-glib-prefix="$(INSTALLDIR)/glib/usr" --disable-dependency-tracking
+		LIBS="$(if $(TCONFIG_BCMARM),-L$(TOP)/glib2/staged/usr/lib -L$(TOP)/libiconv/staged/usr/lib -L$(TOP)/$(PCRE_TARGET)/staged/usr/lib -lglib-2.0 -liconv -lpcre2-8,)" \
+		$(CONFIGURE) --localstatedir=/var --sysconfdir=/etc --with-firewall=iptables --with-glib-prefix="$(if $(TCONFIG_BCMARM),$(TOP)/glib2/staged,$(INSTALLDIR)/glib/usr)" --disable-dependency-tracking
 	@touch $@
 
 nocat: nocat/stamp-h1
 	@$(SEP)
+ifneq ($(TCONFIG_BCMARM),y)
 	@echo --- Integrate glib to nocat installdir ---
 	install -D glib/.libs/libglib-1.2.so.0.0.10 $(INSTALLDIR)/nocat/usr/lib/libglib-1.2.so.0.0.10
 	cd $(INSTALLDIR)/nocat/usr/lib && ln -s libglib-1.2.so.0.0.10 libglib-1.2.so.0
 	$(STRIP) $(INSTALLDIR)/nocat/usr/lib/libglib-1.2.so.0.0.10
+endif
 	@$(MAKE) -C $@ $(PARALLEL_BUILD)
 
 nocat-install:
@@ -4145,11 +4157,10 @@ glib2/build:
 		-Dcpp_link_args="-Wl,--gc-sections -L$(TOP)/libiconv/staged/usr/lib -liconv -L$(TOP)/zlib/staged/usr/lib -lz -L$(TOP)/libffi/staged/usr/lib -lffi \
 			-L$(TOP)/$(PCRE_TARGET)/staged/usr/lib -lpcre2-8 -L$(TOP)/gettext-tiny/staged/usr/lib" \
 		-Dc_std=gnu99 \
-		-Dcpp_std=c++11 \
+		-Dcpp_std=$(if $(TCONFIG_BCMARM),c++11,c++98) \
 		-Dwarning_level=1 \
 		-Doptimization=s \
 		-Ddebug=false \
-		-Ddefault_library=both \
 		-Dforce_posix_threads=true \
 		-Db_staticpic=true \
 		-Db_pie=true \
