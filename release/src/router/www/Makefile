@@ -384,6 +384,7 @@ endif
 ifeq ($(TCONFIG_OPENVPN),y)
 ifneq ($(TCONFIG_KEYGEN),y)
 	sed -i $(INSTALLDIR)/www/vpn-server.asp -e "/KEYGEN-BEGIN/,/KEYGEN-END/d"
+	sed -i $(INSTALLDIR)/www/vpn.js -e "/KEYGEN-BEGIN/,/KEYGEN-END/d"
 endif
 endif
 
