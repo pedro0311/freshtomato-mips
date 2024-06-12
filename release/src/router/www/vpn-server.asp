@@ -50,8 +50,9 @@ for (i = 0; i < tabs.length; ++i) {
 	usersTables[i].servername = tabs[i][0];
 	statusUpdaters.push(new StatusUpdater());
 }
-
+/* KEYGEN-BEGIN */
 var vpnciphers = vpnciphers.concat(['CAMELLIA-128-CBC'],['CAMELLIA-192-CBC'],['CAMELLIA-256-CBC']);
+/* KEYGEN-END */
 var ciphers = [['default','Use Default'],['none','None']];
 for (i = 0; i < vpnciphers.length; ++i)
 	ciphers.push([vpnciphers[i],vpnciphers[i]]);
