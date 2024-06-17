@@ -73,13 +73,13 @@ ifneq ($(TCONFIG_JFFS2),y)
 	sed -i $(INSTALLDIR)/www/nas-media.asp -e "/JFFS2-BEGIN/,/JFFS2-END/d"
 	sed -i $(INSTALLDIR)/www/nas-bittorrent.asp -e "/JFFS2-BEGIN/,/JFFS2-END/d"
 else
-ifeq ($(TCONFIG_BRCM_NAND_JFFS2),y)
+ ifeq ($(TCONFIG_BRCM_NAND_JFFS2),y)
 	sed -i $(INSTALLDIR)/www/admin-jffs2.asp -e "/JFFS2-BEGIN/,/JFFS2-END/d"
 	sed -i $(INSTALLDIR)/www/nas-bittorrent.asp -e "/JFFS2-BEGIN/,/JFFS2-END/d"
-else
+ else
 	sed -i $(INSTALLDIR)/www/admin-jffs2.asp -e "/JFFS2NAND-BEGIN/,/JFFS2NAND-END/d"
 	sed -i $(INSTALLDIR)/www/nas-bittorrent.asp -e "/JFFS2NAND-BEGIN/,/JFFS2NAND-END/d"
-endif
+ endif
 endif
 
 # Only include the Zebra options if Zebra is configured in.
@@ -90,6 +90,7 @@ endif
 # Only include EMF options if EMF is configured in.
 ifneq ($(TCONFIG_EMF),y)
 	sed -i $(INSTALLDIR)/www/advanced-firewall.asp -e "/EMF-BEGIN/,/EMF-END/d"
+	sed -i $(INSTALLDIR)/www/advanced-wireless.asp -e "/EMF-BEGIN/,/EMF-END/d"
 endif
 
 # Only include NTFS settings if NTFS support is configured in.
@@ -160,6 +161,9 @@ ifeq ($(filter y,$(TCONFIG_BLINK) $(TCONFIG_BCMARM)),)
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
 	sed -i $(INSTALLDIR)/www/status-data.jsx -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
 	sed -i $(INSTALLDIR)/www/basic-ipv6.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
+	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/RTNPLUS-BEGIN/,/RTNPLUS-END/d"
+else
+	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/RTNPLUS-NO-BEGIN/,/RTNPLUS-NO-END/d"
 endif
 
 # Only include IPv6 options if IPv6 is configured in.
@@ -221,6 +225,21 @@ ifneq ($(TCONFIG_USB),y)
 	sed -i $(INSTALLDIR)/www/status-devices.asp -e "/USB-BEGIN/,/USB-END/d"
 endif
 
+# ...And also don't include them if we have router with wl_high module but without USB support
+ifeq ($(TCONFIG_REMOVE_USBAPP),y)
+	rm -f $(INSTALLDIR)/www/nas-*.*
+	rm -f $(INSTALLDIR)/www/wwan_parser.js
+	rm -f $(INSTALLDIR)/www/wwan-sms.asp
+	rm -f $(INSTALLDIR)/www/cell.gif
+	sed -i $(INSTALLDIR)/www/tomato.js -e "/USB-BEGIN/,/USB-END/d"
+	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/USB-BEGIN/,/USB-END/d"
+	sed -i $(INSTALLDIR)/www/admin-buttons.asp -e "/USB-BEGIN/,/USB-END/d"
+	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/USB-BEGIN/,/USB-END/d"
+	sed -i $(INSTALLDIR)/www/about.asp -e "/USB-BEGIN/,/USB-END/d"
+	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/USB-BEGIN/,/USB-END/d"
+	sed -i $(INSTALLDIR)/www/status-devices.asp -e "/USB-BEGIN/,/USB-END/d"
+endif
+
 # Only include the CTF configuration if CTF is configured in.
 ifneq ($(TCONFIG_CTF),y)
 	sed -i $(INSTALLDIR)/www/advanced-misc.asp -e "/CTF-BEGIN/,/CTF-END/d"
@@ -236,17 +255,39 @@ ifneq ($(TCONFIG_BCMNAT),y)
 	sed -i $(INSTALLDIR)/www/restrict.asp -e "/BCMNAT-BEGIN/,/BCMNAT-END/d"
 endif
 ifneq ($(TCONFIG_BCMARM),y)
-ifeq ($(CONFIG_BCMWL6),y)
+ ifeq ($(CONFIG_BCMWL6),y)
 	sed -i $(INSTALLDIR)/www/advanced-misc.asp -e "/BCMNAT-BEGIN/,/BCMNAT-END/d"
 	sed -i $(INSTALLDIR)/www/bwlimit.asp -e "/BCMNAT-BEGIN/,/BCMNAT-END/d"
 	sed -i $(INSTALLDIR)/www/qos-settings.asp -e "/BCMNAT-BEGIN/,/BCMNAT-END/d"
 	sed -i $(INSTALLDIR)/www/restrict.asp -e "/BCMNAT-BEGIN/,/BCMNAT-END/d"
+ endif
 endif
+
+# Only for RT-N+ (enable SDK6 country code + rev selection also for newer SDK5 wl driver 5.100.x and up)
+ifneq ($(TCONFIG_BLINK),y)
+	sed -i $(INSTALLDIR)/www/advanced-wireless.asp -e "/BCMWL6-BEGIN/,/BCMWL6-END/d"
+endif
+
+# Remove for BCMWL6 SDK and up
+ifeq ($(CONFIG_BCMWL6),y)
+	sed -i $(INSTALLDIR)/www/advanced-wireless.asp -e "/BCMWL6-NO-BEGIN/,/BCMWL6-NO-END/d"
+endif
+
+# Only for BCMWL6 SDK / RT-AC branch
+ifneq ($(CONFIG_BCMWL6),y)
+	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/BCMWL6-BEGIN/,/BCMWL6-END/d"
+	sed -i $(INSTALLDIR)/www/advanced-wlanvifs.asp -e "/BCMWL6-BEGIN/,/BCMWL6-END/d"
+	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/BCMWL6-BEGIN/,/BCMWL6-END/d"
 endif
 
 ifneq ($(TCONFIG_BCM714),y)
 	sed -i $(INSTALLDIR)/www/advanced-wireless.asp -e "/BCMWL714-BEGIN/,/BCMWL714-END/d"
 	sed -i $(INSTALLDIR)/www/admin-debug.asp -e "/BCMWL714-BEGIN/,/BCMWL714-END/d"
+endif
+
+# Only include the wireless band steering option if is compiled in
+ifneq ($(TCONFIG_BCMBSD),y)
+	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/BSD-BEGIN/,/BSD-END/d"
 endif
 
 # Only include the roaming assistant option if is compiled in
@@ -373,19 +414,19 @@ ifneq ($(TCONFIG_HTTPS),y)
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/HTTPS-BEGIN/,/HTTPS-END/d"
 	sed -i $(INSTALLDIR)/www/admin-access.asp -e "/HTTPS-BEGIN/,/HTTPS-END/d"
 # depends on USB and NAS pages - only if USB Support is configured in
-ifeq ($(TCONFIG_USB),y)
-ifeq ($(TCONFIG_FTP),y)
+ ifeq ($(TCONFIG_USB),y)
+  ifeq ($(TCONFIG_FTP),y)
 	sed -i $(INSTALLDIR)/www/nas-ftp.asp -e "/HTTPS-BEGIN/,/HTTPS-END/d"
-endif
-endif
+  endif
+ endif
 endif
 
-# Only include the TLS keys generator option if it is compiled in
+# Only include the TLS keys generator option and algo if it is compiled in
 ifeq ($(TCONFIG_OPENVPN),y)
-ifneq ($(TCONFIG_KEYGEN),y)
+ ifneq ($(TCONFIG_KEYGEN),y)
 	sed -i $(INSTALLDIR)/www/vpn-server.asp -e "/KEYGEN-BEGIN/,/KEYGEN-END/d"
 	sed -i $(INSTALLDIR)/www/vpn.js -e "/KEYGEN-BEGIN/,/KEYGEN-END/d"
-endif
+ endif
 endif
 
 # Only include the Termlib based tools-shell.asp option if it is compiled in
@@ -404,12 +445,12 @@ endif
 
 # Only include LZ4 compression option/TLS server support if normal and 2.5+ OpenVPN is build
 ifeq ($(TCONFIG_OPENVPN),y)
-ifeq ($(TCONFIG_OPTIMIZE_SIZE_MORE),y)
+ ifeq ($(TCONFIG_OPTIMIZE_SIZE_MORE),y)
 	sed -i $(INSTALLDIR)/www/vpn-client.asp -e "/SIZEOPTMORE-BEGIN/,/SIZEOPTMORE-END/d"
 	sed -i $(INSTALLDIR)/www/vpn-server.asp -e "/SIZEOPTMORE-BEGIN/,/SIZEOPTMORE-END/d"
-else
-	sed -i $(INSTALLDIR)/www/vpn-server.asp -e "/SIZEOPTMORE0-BEGIN/,/SIZEOPTMORE0-END/d"
-endif
+ else
+	sed -i $(INSTALLDIR)/www/vpn-server.asp -e "/SIZEOPTMORE-NO-BEGIN/,/SIZEOPTMORE-NO-END/d"
+ endif
 endif
 
 # Only include "Remote Forwarding" if special size optimization is not required
@@ -438,9 +479,9 @@ endif
 
 # Only include Discovery helper if it is required
 ifneq ($(TCONFIG_BCMARM),y)
-ifneq ($(TCONFIG_MIPSR2),y)
+ ifneq ($(TCONFIG_MIPSR2),y)
 	sed -i $(INSTALLDIR)/www/status-devices.asp -e "/DISCOVERY-BEGIN/,/DISCOVERY-END/d"
-endif
+ endif
 endif
 
 # Only include the mdns option if it is compiled in
@@ -451,9 +492,9 @@ endif
 # Only include the QR Code page if it is compiled in
 ifneq ($(TCONFIG_QRCODE),y)
 	rm -f $(INSTALLDIR)/www/tools-qr.asp
-ifneq ($(TCONFIG_WIREGUARD),y)
+ ifneq ($(TCONFIG_WIREGUARD),y)
 	rm -f $(INSTALLDIR)/www/html5-qrcode.js
-endif
+ endif
 	rm -f $(INSTALLDIR)/www/qrcode.js
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/QRCODE-BEGIN/,/QRCODE-END/d"
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/QRCODE-BEGIN/,/QRCODE-END/d"
@@ -461,11 +502,11 @@ endif
 
 # distinguish version if ARM or MIPS
 ifeq ($(TCONFIG_OPENVPN),y)
-ifneq ($(TCONFIG_BCMARM),y)
+ ifneq ($(TCONFIG_BCMARM),y)
 	sed -i $(INSTALLDIR)/www/isup.jsz -e "/BCMARM-BEGIN/,/BCMARM-END/d"
-else
-	sed -i $(INSTALLDIR)/www/isup.jsz -e "/BCMARMNO-BEGIN/,/BCMARMNO-END/d"
-endif
+ else
+	sed -i $(INSTALLDIR)/www/isup.jsz -e "/BCMARM-NO-BEGIN/,/BCMARM-NO-END/d"
+ endif
 endif
 
 # add a note about WL Survey issue only on ARM routers
@@ -493,9 +534,9 @@ ifneq ($(TCONFIG_WIREGUARD),y)
 	rm -f $(INSTALLDIR)/www/vpn-wireguard.asp
 	rm -f $(INSTALLDIR)/www/cfg-icon.svg
 	rm -f $(INSTALLDIR)/www/qr-icon.svg
-ifneq ($(TCONFIG_QRCODE),y)
+ ifneq ($(TCONFIG_QRCODE),y)
 	rm -f $(INSTALLDIR)/www/html5-qrcode.js
-endif
+ endif
 #	rm -f $(INSTALLDIR)/www/interfaces-v6.js
 	rm -f $(INSTALLDIR)/www/wireguard.js
 	sed -i $(INSTALLDIR)/www/tomato.js -e "/WIREGUARD-BEGIN/,/WIREGUARD-END/d"
@@ -508,12 +549,27 @@ else
 	sed -i $(INSTALLDIR)/www/basic-ddns.asp -e "/DDNS2CLS-BEGIN/,/DDNS2CLS-END/d"
 endif
 
+# Add wireless modes based on branch
+# Wireless Ethernet Bridge - doesn't work on ARM7
+ifeq ($(TCONFIG_BCM7),y)
+ ifneq ($(TCONFIG_BCM714),y)
+	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/BCMWL7-NO-BEGIN/,/BCMWL7-NO-END/d"
+ endif
+endif
+# Wireless Client / Wireless Ethernet Bridge - doesn't work on MIPS RT-AC
+ifeq ($(CONFIG_BCMWL6),y)
+ ifneq ($(CONFIG_BCMWL6A),y)
+	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/RTAC-NO-BEGIN/,/RTAC-NO-END/d"
+ endif
+endif
+
 # clean up
 	cd $(INSTALLDIR)/www && \
 	for F in $(wildcard *.asp *.js *.jsx *.jsz *.html); do \
 		[ -f $(INSTALLDIR)/www/$$F ] && sed -i $$F \
 		-e "/USB-BEGIN/d"	-e "/USB-END/d" \
 		-e "/UPS-BEGIN/d"	-e "/UPS-END/d" \
+		-e "/EXTRAS-BEGIN/d"	-e "/EXTRAS-END/d" \
 		-e "/NTFS-BEGIN/d"	-e "/NTFS-END/d" \
 		-e "/SAMBA-BEGIN/d"	-e "/SAMBA-END/d" \
 		-e "/FTP-BEGIN/d"	-e "/FTP-END/d" \
@@ -530,7 +586,12 @@ endif
 		-e "/IPV6-BEGIN/d"	-e "/IPV6-END/d" \
 		-e "/CTF-BEGIN/d"	-e "/CTF-END/d" \
 		-e "/BCMNAT-BEGIN/d"	-e "/BCMNAT-END/d" \
+		-e "/BCMWL6-BEGIN/d"	-e "/BCMWL6-END/d" \
+		-e "/BCMWL6-NO-BEGIN/d"	-e "/BCMWL6-NO-END/d" \
+		-e "/BCMWL7-BEGIN/d"	-e "/BCMWL7-END/d" \
+		-e "/BCMWL7-NO-BEGIN/d"	-e "/BCMWL7-NO-END/d" \
 		-e "/BCMWL714-BEGIN/d"	-e "/BCMWL714-END/d" \
+		-e "/BSD-BEGIN/d"	-e "/BSD-END/d" \
 		-e "/ROAM-BEGIN/d"	-e "/ROAM-END/d" \
 		-e "/BBT-BEGIN/d"	-e "/BBT-END/d" \
 		-e "/BT-BEGIN/d"	-e "/BT-END/d" \
@@ -547,6 +608,9 @@ endif
 		-e "/TOR-BEGIN/d"	-e "/TOR-END/d" \
 		-e "/MICROSD-BEGIN/d"	-e "/MICROSD-END/d" \
 		-e "/TINC-BEGIN/d"	-e "/TINC-END/d" \
+		-e "/PARAGON-BEGIN/d"	-e "/PARAGON-END/d" \
+		-e "/TUXERA-BEGIN/d"	-e "/TUXERA-END/d" \
+		-e "/TUXERAHFS-BEGIN/d"	-e "/TUXERAHFS-END/d" \
 		-e "/MULTIWAN-BEGIN/d"	-e "/MULTIWAN-END/d" \
 		-e "/DUALWAN-BEGIN/d"	-e "/DUALWAN-END/d" \
 		-e "/HTTPS-BEGIN/d"	-e "/HTTPS-END/d" \
@@ -555,16 +619,19 @@ endif
 		-e "/TERMLIB0-BEGIN/d"	-e "/TERMLIB0-END/d" \
 		-e "/OPTSIZE-BEGIN/d"	-e "/OPTSIZE-END/d" \
 		-e "/SIZEOPTMORE-BEGIN/d" -e "/SIZEOPTMORE-END/d" \
-		-e "/SIZEOPTMORE0-BEGIN/d" -e "/SIZEOPTMORE0-END/d" \
+		-e "/SIZEOPTMORE-NO-BEGIN/d" -e "/SIZEOPTMORE-NO-END/d" \
 		-e "/IPERF-BEGIN/d"	-e "/IPERF-END/d" \
 		-e "/ADVTHEMES-BEGIN/d"	-e "/ADVTHEMES-END/d" \
 		-e "/SSH-BEGIN/d"	-e "/SSH-END/d" \
 		-e "/DISCOVERY-BEGIN/d"	-e "/DISCOVERY-END/d" \
 		-e "/MDNS-BEGIN/d"	-e "/MDNS-END/d" \
+		-e "/ZFS-BEGIN/d"	-e "/ZFS-END/d" \
 		-e "/QRCODE-BEGIN/d"	-e "/QRCODE-END/d" \
 		-e "/BCMARM-BEGIN/d"	-e "/BCMARM-END/d" \
-		-e "/BCMARMNO-BEGIN/d"	-e "/BCMARMNO-END/d" \
+		-e "/BCMARM-NO-BEGIN/d"	-e "/BCMARM-NO-END/d" \
 		-e "/RTNPLUS-BEGIN/d"	-e "/RTNPLUS-END/d" \
+		-e "/RTNPLUS-NO-BEGIN/d" -e "/RTNPLUS-NO-END/d" \
+		-e "/RTAC-NO-BEGIN/d"	-e "/RTAC-NO-END/d" \
 		-e "/PROXY-BEGIN/d"	-e "/PROXY-END/d" \
 		-e "/TFTP-BEGIN/d"	-e "/TFTP-END/d" \
 		-e "/WIREGUARD-BEGIN/d"	-e "/WIREGUARD-END/d" \
