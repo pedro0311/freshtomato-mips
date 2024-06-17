@@ -14,7 +14,7 @@
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 <meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] OpenVPN: Server</title>
-<link rel="stylesheet" type="text/css" href="tomato.css">
+<link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
 <script src="isup.jsz?rel=<% version(); %>"></script>
 <script src="tomato.js?rel=<% version(); %>"></script>
@@ -615,11 +615,11 @@ function verifyFields(focused, quiet) {
 	for (i = 0; i < tabs.length; ++i) {
 		t = tabs[i][0];
 
-/* SIZEOPTMORE0-BEGIN */
+/* SIZEOPTMORE-NO-BEGIN */
 		if (E('_vpn_'+t+'_crypt').value == 'tls')
 			E('_vpn_'+t+'_crypt').value = 'secret';
 		E('_vpn_'+t+'_crypt').options[0].disabled = 1;
-/* SIZEOPTMORE0-END */
+/* SIZEOPTMORE-NO-END */
 		var auth = E('_vpn_'+t+'_crypt').value;
 		var iface = E('_vpn_'+t+'_if').value;
 		var hmac = E('_vpn_'+t+'_hmac').value;

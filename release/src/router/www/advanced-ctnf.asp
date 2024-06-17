@@ -12,7 +12,7 @@
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 <meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Advanced: Conntrack / Netfilter</title>
-<link rel="stylesheet" type="text/css" href="tomato.css">
+<link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
 <script src="tomato.js?rel=<% version(); %>"></script>
 
@@ -191,9 +191,9 @@ function save() {
 	<script>
 		createFieldTable('', [
 			{ title: 'Maximum Connections', name: 'ct_max', type: 'text', maxlen: 6, size: 8,
-				suffix: '&nbsp; <a href="javascript:clicked()" id="count0">[ count current... ]<\/a> <img src="spin.gif" alt="" id="spin">',
+				suffix: '&nbsp; <a href="javascript:clicked()" id="count0">[ count current ]<\/a> <img src="spin.gif" alt="" id="spin">',
 				value: fixInt(nvram.ct_max || 4096, 128, 300000, 4096) }
-			,{ title: 'Hash Table Size', name: 'ct_hashsize', type: 'text', maxlen: 6, size: 8, value: nvram.ct_hashsize || 1023 }
+			,{ title: 'Hash Table Size', name: 'ct_hashsize',type: 'text', maxlen: 6, size: 8, value: nvram.ct_hashsize || 1023 }
 		]);
 	</script>
 	<input id="expire-button" type="button" value="Drop Idle" onclick="expireClicked()">
@@ -201,14 +201,14 @@ function save() {
 
 <!-- / / / -->
 
-<div class="section-title">TCP Timeout</div>
+<div class="section-title">TCP Timeout <small>(seconds)</small></div>
 <div class="section">
 	<script>
 		if ((v = nvram.ct_tcp_timeout.match(/^(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)$/)) == null) {
 			v = [0,0,1200,120,60,120,120,10,60,30,0];
 		}
 		titles = ['-', 'None', 'Established', 'SYN Sent', 'SYN Received', 'FIN Wait', 'Time Wait', 'Close', 'Close Wait', 'Last ACK', 'Listen'];
-		f = [{ title: ' ', text: '<small>(seconds)<\/small>' }];
+		f = [{ title: ' ', text: '' }];
 		for (i = 1; i < 11; ++i) {
 			f.push({ title: titles[i], name: ('f_tcp_' + (i - 1)),
 				type: 'text', maxlen: 6, size: 8, value: v[i],
@@ -221,32 +221,30 @@ function save() {
 
 <!-- / / / -->
 
-<div class="section-title">UDP Timeout</div>
+<div class="section-title">UDP Timeout <small>(seconds)</small></div>
 <div class="section">
 	<script>
 		if ((v = nvram.ct_udp_timeout.match(/^(\d+)\s+(\d+)$/)) == null) {
 			v = [0,30,180];
 		}
 		createFieldTable('', [
-			{ title: ' ', text: '<small>(seconds)<\/small>' },
-			{ title: 'Unreplied', name: 'f_udp_0', type: 'text', maxlen: 6, size: 8, value: v[1], suffix: '<span id="count11"><\/span>' },
-			{ title: 'Assured', name: 'f_udp_1', type: 'text', maxlen: 6, size: 8, value: v[2], suffix: '<span id="count12"><\/span>' }
+			{ title: 'Unreplied', name: 'f_udp_0',type: 'text', maxlen: 6, size: 8, value: v[1], suffix: '<span id="count11"><\/span>' },
+			{ title: 'Assured', name: 'f_udp_1',type: 'text', maxlen: 6, size: 8, value: v[2], suffix: '<span id="count12"><\/span>' }
 		]);
 	</script>
 </div>
 
 <!-- / / / -->
 
-<div class="section-title">Other Timeouts</div>
+<div class="section-title">Other Timeouts <small>(seconds)</small></div>
 <div class="section">
 	<script>
 		if ((v = nvram.ct_timeout.match(/^(\d+)\s+(\d+)$/)) == null) {
 			v = [0,600,30];
 		}
 		createFieldTable('', [
-			{ title: ' ', text: '<small>(seconds)<\/small>' },
-			{ title: 'Generic', name: 'f_ct_0', type: 'text', maxlen: 6, size: 8, value: v[1] },
-			{ title: 'ICMP', name: 'f_ct_1', type: 'text', maxlen: 6, size: 8, value: v[2] }
+			{ title: 'Generic', name: 'f_ct_0',type: 'text', maxlen: 6, size: 8, value: v[1] },
+			{ title: 'ICMP', name: 'f_ct_1',type: 'text', maxlen: 6, size: 8, value: v[2] }
 		]);
 	</script>
 </div>
@@ -257,12 +255,12 @@ function save() {
 <div class="section">
 	<script>
 		createFieldTable('', [
-			{ title: 'FTP', name: 'f_ftp', type: 'checkbox', value: nvram.nf_ftp != '0' },
-			{ title: 'GRE / PPTP', name: 'f_pptp', type: 'checkbox', value: nvram.nf_pptp != '0' },
-			{ title: 'H.323', name: 'f_h323', type: 'checkbox', value: nvram.nf_h323 != '0' },
-			{ title: 'SIP', name: 'f_sip', type: 'checkbox', value: nvram.nf_sip != '0' },
-			{ title: 'RTSP', name: 'f_rtsp', type: 'checkbox', value: nvram.nf_rtsp != '0' },
-			{ title: 'Enable IPSec Passthrough', name: 'f_ipsec_pass', type: 'select', options: [[0,'Disabled'],[1,'IPv4 & IPv6'],[2,'IPv6 only'],[3,'IPv4 only']], value: nvram.ipsec_pass }
+			{ title: 'FTP', name: 'f_ftp',type: 'checkbox', value: nvram.nf_ftp != '0' },
+			{ title: 'GRE / PPTP', name: 'f_pptp',type: 'checkbox', value: nvram.nf_pptp != '0' },
+			{ title: 'H.323', name: 'f_h323',type: 'checkbox', value: nvram.nf_h323 != '0' },
+			{ title: 'SIP', name: 'f_sip',type: 'checkbox', value: nvram.nf_sip != '0' },
+			{ title: 'RTSP', name: 'f_rtsp',type: 'checkbox', value: nvram.nf_rtsp != '0' },
+			{ title: 'Enable IPSec Passthrough', name: 'f_ipsec_pass',type: 'select', options: [[0,'Disabled'],[1,'IPv4 & IPv6'],[2,'IPv6 only'],[3,'IPv4 only']], value: nvram.ipsec_pass }
 		]);
 	</script>
 </div>
@@ -286,7 +284,7 @@ function save() {
 			{ title: 'TTL Adjust', multi: [
 				{ name: 'f_nf_ttl', type: 'select', options: v, value: nvram.nf_ttl.substr(0, 2) == 'c:' ? '' : nvram.nf_ttl },
 				{ name: 'f_ttl_val', type: 'text', maxlen: 3, size: 6, value: nvram.nf_ttl.substr(0, 2) == 'c:' ?  nvram.nf_ttl.substr(2, 5) : '' } ] },
-			{ title: 'Inbound Layer 7', name: 'f_l7in', type: 'checkbox', value: nvram.nf_l7in != '0' }
+			{ title: 'Inbound Layer 7', name: 'f_l7in',type: 'checkbox', value: nvram.nf_l7in != '0' }
 		]);
 	</script>
 </div>

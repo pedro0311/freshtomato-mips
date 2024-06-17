@@ -16,7 +16,7 @@
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 <meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Status: Overview</title>
-<link rel="stylesheet" type="text/css" href="tomato.css">
+<link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
 <script src="tomato.js?rel=<% version(); %>"></script>
 <script src="interfaces.js?rel=<% version(); %>"></script>
@@ -256,7 +256,7 @@ function ethstates() {
 		code += '<td class="title indent2"><img id="'+state[0]+'_'+uidx+'" src="'+state[0]+'.gif" alt=""><br>'+(stats.lan_desc == '1' ? state[1] : '')+'<\/td>';
 	}
 
-	code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="6" style="text-align:right">&raquo; <a href="basic-network.asp">Configure<\/a><\/td><\/tr><\/table><\/div>';
+	code += '<td class="content"><\/td><\/tr><tr><td class="title indent1" colspan="6" style="text-align:right">&raquo; <a href="basic-network.asp">Configure ⚙️<\/a><\/td><\/tr><\/table><\/div>';
 	E('ports').innerHTML = code;
 }
 
@@ -644,13 +644,13 @@ function init() {
 			{ title: 'Security', text: sec },
 			{ title: 'Control Channel', rid: 'channel'+uidx, text: stats.channel[uidx], ignore: (wl_sunit(uidx) >= 0) },
 /* RTNPLUS-BEGIN */
-			{ title: 'Control Channel Location', rid: 'ctrlsb'+uidx, text: wlstats[uidx].ctrlsb, ignore: ((!nphy) || (wl_sunit(uidx) >= 0)) },
+			{ title: 'Control Sideband', rid: 'ctrlsb'+uidx, text: wlstats[uidx].ctrlsb, ignore: ((!nphy) || (wl_sunit(uidx) >= 0)) },
 /* RTNPLUS-END */
 			{ title: 'Channel Width', rid: 'nbw'+uidx, text: wlstats[uidx].nbw, ignore: ((!nphy) || (wl_sunit(uidx) >= 0)) },
 			{ title: 'Interference Level', rid: 'interference'+uidx, text: stats.interference[uidx], ignore: (wl_sunit(uidx) >= 0) },
 			{ title: 'Rate', rid: 'rate'+uidx, text: wlstats[uidx].rate, ignore: (wl_sunit(uidx) >= 0) },
 /* QRCODE-BEGIN */
-			{ title: ' ', rid: 'qr-code'+uidx, text: '<a href="tools-qr.asp?wl='+wl_unit(uidx)+(wl_sunit(uidx) >= 0 ? '.'+wl_sunit(uidx) : '')+'">Show QR code<\/a>' },
+			{ title: 'QR code', rid: 'qr-code'+uidx, text: '<a href="tools-qr.asp?wl='+wl_unit(uidx)+(wl_sunit(uidx) >= 0 ? '.'+wl_sunit(uidx) : '')+'">🏁<\/a>' },
 /* QRCODE-END */
 			{ title: 'RSSI', rid: 'rssi'+uidx, text: wlstats[uidx].rssi || '', ignore: ((!wlstats[uidx].client) || (wl_sunit(uidx) >= 0)) },
 			{ title: 'Noise', rid: 'noise'+uidx, text: wlstats[uidx].noise || '', ignore: ((!wlstats[uidx].client) || (wl_sunit(uidx) >= 0)) },

@@ -12,7 +12,7 @@
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 <meta name="robots" content="noindex,nofollow">
 <title>[<% ident(); %>] Advanced: Wireless</title>
-<link rel="stylesheet" type="text/css" href="tomato.css">
+<link rel="stylesheet" type="text/css" href="tomato.css?rel=<% version(); %>">
 <% css(); %>
 <script src="tomato.js?rel=<% version(); %>"></script>
 <script src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
@@ -151,21 +151,16 @@ function save() {
 	}
 }
 
-/* BCMWL6-BEGIN */
 function init() {
-	if (((c = cookie.get(cprefix + '_notes_vis')) != null) && (c == '1')) {
-		toggleVisibility(cprefix, "notes");
-	}
-
-	var elements = document.getElementsByClassName("new_window");
-	for (var i = 0; i < elements.length; i++) if (elements[i].nodeName.toLowerCase()==="a")
-		addEvent(elements[i], "click", function(e) { cancelDefaultAction(e); window.open(this,"_blank"); } );
-}
+/* BCMWL6-BEGIN */
+	if (((c = cookie.get(cprefix+'_notes_vis')) != null) && (c == '1'))
+		toggleVisibility(cprefix, 'notes');
 /* BCMWL6-END */
+}
 </script>
 </head>
 
-<body>
+<body onload="init()">
 <form id="t_fom" method="post" action="tomato.cgi">
 <table id="container">
 <tr><td colspan="2" id="header">
@@ -219,10 +214,10 @@ function init() {
 
 			at = ((nvram['wl'+u+'_security_mode'] != "wep") && (nvram['wl'+u+'_security_mode'] != "radius") && (nvram['wl'+u+'_security_mode'] != "disabled"));
 			createFieldTable('', [
-/* NO-BCMWL6-BEGIN */
+/* BCMWL6-NO-BEGIN */
 				{ title: 'Afterburner', name: 'wl'+u+'_afterburner', type: 'select', options: [['auto','Auto'],['on','Enable'],['off','Disable *']],
 					value: nvram['wl'+u+'_afterburner'] },
-/* NO-BCMWL6-END */
+/* BCMWL6-NO-END */
 				{ title: 'Authentication Type', name: 'wl'+u+'_auth', type: 'select',
 					options: [['0','Auto *'],['1','Shared Key']], attrib: at ? 'disabled' : '',
 					value: at ? 0 : nvram['wl'+u+'_auth'] },
@@ -310,7 +305,6 @@ function init() {
 <!-- / / / -->
 
 <!-- BCMWL6-BEGIN -->
-
 <div class="section-title">Notes <small><i><a href='javascript:toggleVisibility(cprefix,"notes");'><span id="sesdiv_notes_showhide">(Click here to show)</span></a></i></small></div>
 <div class="section" id="sesdiv_notes" style="display:none">
 	<i>Country / Region and Country Rev EXAMPLES:</i><br>
@@ -335,7 +329,6 @@ function init() {
 <!-- ROAM-END -->
 	</ul>
 </div>
-
 <!-- BCMWL6-END -->
 
 <!-- / / / -->
