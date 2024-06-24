@@ -271,10 +271,8 @@ endif
 # Remove for BCMWL6 SDK and up
 ifeq ($(CONFIG_BCMWL6),y)
 	sed -i $(INSTALLDIR)/www/advanced-wireless.asp -e "/BCMWL6-NO-BEGIN/,/BCMWL6-NO-END/d"
-endif
-
-# Only for BCMWL6 SDK / RT-AC branch
-ifneq ($(CONFIG_BCMWL6),y)
+else
+# Remove for RT and RT-N
 	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/BCMWL6-BEGIN/,/BCMWL6-END/d"
 	sed -i $(INSTALLDIR)/www/advanced-wlanvifs.asp -e "/BCMWL6-BEGIN/,/BCMWL6-END/d"
 	sed -i $(INSTALLDIR)/www/status-overview.asp -e "/BCMWL6-BEGIN/,/BCMWL6-END/d"
@@ -533,8 +531,8 @@ endif
 ifneq ($(TCONFIG_WIREGUARD),y)
 	rm -f $(INSTALLDIR)/www/vpn-wireguard.asp
 	rm -f $(INSTALLDIR)/www/cfg-icon.svg
-	rm -f $(INSTALLDIR)/www/qr-icon.svg
  ifneq ($(TCONFIG_QRCODE),y)
+	rm -f $(INSTALLDIR)/www/qr-icon.svg
 	rm -f $(INSTALLDIR)/www/html5-qrcode.js
  endif
 #	rm -f $(INSTALLDIR)/www/interfaces-v6.js
@@ -553,14 +551,22 @@ endif
 # Wireless Ethernet Bridge - doesn't work on ARM7
 ifeq ($(TCONFIG_BCM7),y)
  ifneq ($(TCONFIG_BCM714),y)
-	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/BCMWL7-NO-BEGIN/,/BCMWL7-NO-END/d"
+	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/BCMWL7-NO-BEGIN/,/BCMWL7-NO-END/d"	# remove on SDK7
+ else
+	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/BCMWL7-BEGIN/,/BCMWL7-END/d"		# remove on SDK714
  endif
+else
+	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/BCMWL7-BEGIN/,/BCMWL7-END/d"		# remove on RT, RT-N, RT-AC, SDK6
 endif
 # Wireless Client / Wireless Ethernet Bridge - doesn't work on MIPS RT-AC
 ifeq ($(CONFIG_BCMWL6),y)
  ifneq ($(CONFIG_BCMWL6A),y)
-	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/RTAC-NO-BEGIN/,/RTAC-NO-END/d"
+	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/RTAC-NO-BEGIN/,/RTAC-NO-END/d"		# remove on RT-AC
+ else
+	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/RTAC-BEGIN/,/RTAC-END/d"		# remove on SDK6, SDK7, SDK714
  endif
+else
+	sed -i $(INSTALLDIR)/www/basic-network.asp -e "/RTAC-BEGIN/,/RTAC-END/d"		# remove on RT, RT-N
 endif
 
 # clean up
@@ -631,6 +637,7 @@ endif
 		-e "/BCMARM-NO-BEGIN/d"	-e "/BCMARM-NO-END/d" \
 		-e "/RTNPLUS-BEGIN/d"	-e "/RTNPLUS-END/d" \
 		-e "/RTNPLUS-NO-BEGIN/d" -e "/RTNPLUS-NO-END/d" \
+		-e "/RTAC-BEGIN/d"	-e "/RTAC-END/d" \
 		-e "/RTAC-NO-BEGIN/d"	-e "/RTAC-NO-END/d" \
 		-e "/PROXY-BEGIN/d"	-e "/PROXY-END/d" \
 		-e "/TFTP-BEGIN/d"	-e "/TFTP-END/d" \

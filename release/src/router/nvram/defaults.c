@@ -84,7 +84,7 @@ const defaults_t snmp_defaults[] = {
 const defaults_t upnp_defaults[] = {
 	{ "upnp_secure",		"1"				},
 	{ "upnp_port",			"0"				},
-	{ "upnp_ssdp_interval",		"60"				},	/* SSDP interval */
+	{ "upnp_ssdp_interval",		"900"				},	/* SSDP interval */
 	{ "upnp_mnp",			"0"				},
 	{ "upnp_custom",		""				},
 	{ "upnp_lan",			""				},

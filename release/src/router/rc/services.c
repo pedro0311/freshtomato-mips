@@ -1818,7 +1818,7 @@ void start_upnp(void)
 	fprintf(f, "ext_ifname=%s\n"
 	           "port=%d\n"
 	           "enable_upnp=%s\n"
-	           "enable_natpmp=%s\n"
+	           "enable_pcp_pmp=%s\n"
 	           "secure_mode=%s\n"
 	           "upnp_forward_chain=upnp\n"
 	           "upnp_nat_chain=upnp\n"
@@ -2826,7 +2826,7 @@ void start_haveged(void)
 	if (serialize_restart("haveged", 1))
 		return;
 
-	char *cmd_argv[] = { "/usr/sbin/haveged",
+	char *cmd_argv[] = { "haveged",
 	                     "-r", "0",             /* 0 = run as daemon */
 	                     "-w", "1024",          /* write_wakeup_threshold [bits] */
 #ifdef TCONFIG_BCMARM /* it has to be checkd for all MIPS routers */
