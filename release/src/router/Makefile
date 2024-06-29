@@ -90,7 +90,6 @@ export HAVE_TOMATO := y
 comma := ,
 
 export INSTALL_ZLIB := $(if $(or $(TCONFIG_DNSCRYPT),$(TCONFIG_NFS),$(TCONFIG_SAMBASRV),$(TCONFIG_BBT),$(TCONFIG_MEDIA_SERVER),$(TCONFIG_TOR),$(TCONFIG_TINC),$(TCONFIG_NGINX),$(TCONFIG_BCMARM),$(TCONFIG_ZFS),$(TCONFIG_IRQBALANCE)),y)
-export INSTALL_SQLITE := $(if $(or $(TCONFIG_NGINX),$(TCONFIG_MEDIA_SERVER)),y)
 
 ifeq ($(TCONFIG_BCMWL6),y)
  export CFLAGS += -DTRAFFIC_MGMT
@@ -413,6 +412,7 @@ ifeq ($(TCONFIG_OPENVPN),y)
    obj-y += lz4
    obj-y += libcap-ng
    obj-y += openvpn
+   export INSTALL_LZ4 := y
   else
    obj-y += openvpn-2.5
   endif
@@ -1968,7 +1968,7 @@ sqlite: sqlite/stamp-h1
 	@$(MAKE) -C $@ DESTDIR=$(TOP)/sqlite/staged install
 
 sqlite-install:
-ifeq ($(INSTALL_SQLITE),y)
+ifeq ($(or $(TCONFIG_NGINX),$(TCONFIG_MEDIA_SERVER)),y)
 	install -D sqlite/.libs/libsqlite3.so.0.8.6 $(INSTALLDIR)/sqlite/usr/lib/libsqlite3.so.0.8.6
 	$(STRIP) $(INSTALLDIR)/sqlite/usr/lib/libsqlite3.so.0.8.6
 	cd $(INSTALLDIR)/sqlite/usr/lib/ && \
@@ -2645,7 +2645,7 @@ $(PHP_TARGET)-clean:
 libatomic_ops/stamp-h1:
 	cd libatomic_ops && ./autogen.sh && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
-		$(CONFIGURE) --prefix=/usr --enable-static --enable-shared
+		$(CONFIGURE) --prefix=/usr --enable-static --disable-shared
 	@touch $@
 
 libatomic_ops: libatomic_ops/stamp-h1
@@ -2953,13 +2953,13 @@ openvpn/Makefile:
 		OPENSSL_LIBS="-L$(TOP)/$(OPENSSLDIR)/staged/usr/lib -lcrypto -lssl" \
 		LIBCAPNG_CFLAGS="-I$(TOP)/libcap-ng/src" \
 		LIBCAPNG_LIBS="-L$(TOP)/libcap-ng/src/.libs -lcap-ng" \
-		LZO_CFLAGS="-I$(TOP)/lzo/include" \
-		LZO_LIBS="-L$(TOP)/lzo/src/.libs -llzo2" \
-		LZ4_CFLAGS="-I$(TOP)/lz4/lib" \
-		LZ4_LIBS="-L$(TOP)/lz4/lib -llz4" \
+		LZO_CFLAGS="-I$(TOP)/lzo/staged/usr/include" \
+		LZO_LIBS="-L$(TOP)/lzo/staged/usr/lib -llzo2" \
+		LZ4_CFLAGS="-I$(TOP)/lz4/staged/usr/include" \
+		LZ4_LIBS="-L$(TOP)/lz4/staged/usr/lib -llz4" \
 		CFLAGS="$(if $(TCONFIG_BCMARM),-O2,$(CFLAG_OPTIMIZE)) -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections $(if $(TCONFIG_BCMARM),-I$(TOP)/libcap-ng/src,)" \
-		LDFLAGS="-L$(TOP)/$(OPENSSLDIR)/staged/usr/lib -lpthread -ldl -L$(TOP)/lzo/src/.libs -Wl,--gc-sections" \
-		CPPFLAGS="-I$(TOP)/lzo/include -I$(TOP)/$(OPENSSLDIR)/staged/usr/include" \
+		LDFLAGS="-L$(TOP)/$(OPENSSLDIR)/staged/usr/lib -lpthread -ldl -L$(TOP)/lzo/staged/usr/lib -Wl,--gc-sections" \
+		CPPFLAGS="-I$(TOP)/lzo/staged/usr/include -I$(TOP)/$(OPENSSLDIR)/staged/usr/include" \
 		PLUGINDIR="/lib" IPROUTE="/usr/sbin/ip" \
 		$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib --with-crypto-library=openssl --with-openssl-engine=no \
 			--disable-selinux --disable-systemd --disable-plugins --disable-pkcs11 \
@@ -3266,26 +3266,19 @@ endif
 lz4:
 	@$(SEP)
 	cd lz4 && \
-		CPPFLAGS="-O3 -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC" \
 		CFLAGS="-O3 -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC" \
+		CPPFLAGS="-O3 -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC" \
 		CXXFLAGS="-O3 -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC" \
 		LDFLAGS="-Wl,--gc-sections -fPIC" \
 		PREFIX=/usr \
 		LIBDIR=/usr/lib \
-		$(MAKE) \
-		LN_S="ln -sf" \
-		BUILD_SHARED=no \
-		install \
-		DESTDIR=$(TOP)/lz4/staged
+		$(MAKE) LN_S="ln -sf" install DESTDIR=$(TOP)/lz4/staged
 
 lz4-install:
-ifeq ($(TCONFIG_OPENVPN),y)
- ifeq ($(TCONFIG_BCMARM),y)
+ifeq ($(or $(INSTALL_LZ4),$(TCONFIG_TINC)),y)
 	install -D lz4/lib/liblz4.so.1.9.4 $(INSTALLDIR)/lz4/usr/lib/liblz4.so.1.9.4
 	$(STRIP) $(INSTALLDIR)/lz4/usr/lib/liblz4.so.1.9.4
-	cd $(INSTALLDIR)/lz4/usr/lib && ln -sf liblz4.so.1.9.4 liblz4.so.1
-	cd $(INSTALLDIR)/lz4/usr/lib && ln -sf liblz4.so.1.9.4 liblz4.so
- endif
+	cd $(INSTALLDIR)/lz4/usr/lib && ln -sf liblz4.so.1.9.4 liblz4.so.1 && ln -sf liblz4.so.1.9.4 liblz4.so
 endif
 	@true
 
