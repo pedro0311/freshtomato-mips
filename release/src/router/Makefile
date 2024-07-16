@@ -192,7 +192,28 @@ FFMPEG_CONFIGURE_PARSERS :=
 FFMPEG_CONFIGURE_DECODERS := $(call FFMPEG_FILTER_CONFIG,enable-decoder,$(FFMPEG_DECODERS))
 FFMPEG_CONFIGURE_PROTOCOLS := $(call FFMPEG_FILTER_CONFIG,enable-protocol,$(FFMPEG_PROTOCOLS))
 
-# openssl stuff
+# wolfssl options
+WOLFSSL_FLAGS := -fomit-frame-pointer -DFP_MAX_BITS=8192
+WOLFSSL_OPTIONS :=
+ifeq ($(TCONFIG_WOLFSSLMIN),y)
+ WOLFSSL_FLAGS   += -DUSE_SLOW_SHA -DUSE_SLOW_SHA256 -DUSE_SLOW_SHA512 -DWOLFSSL_AES_NO_UNROLL -DWOLFSSL_AES_SMALL_TABLES -DRSA_LOW_MEM -DCURVE25519_SMALL -DED25519_SMALL -DWOLFSSL_SMALL_CERT_VERIFY
+ WOLFSSL_OPTIONS += --enable-opensslextra --enable-stunnel $(if $(TCONFIG_OPENVPN),--enable-openvpn,--disable-poly1305 --disable-chacha --disable-md5 --disable-tls13 $(if $(TCONFIG_BBT),,--disable-sha)) --enable-session-ticket \
+                    --disable-oldtls --enable-aesgcm=small --enable-certgen --enable-fastmath \
+                    --disable-examples --disable-sslv3 --disable-arc4 --disable-dtls
+else
+ WOLFSSL_FLAGS   += -DWOLFSSL_ALT_NAMES
+ WOLFSSL_OPTIONS += --enable-opensslextra --enable-opensslall --enable-stunnel $(if $(TCONFIG_OPENVPN),--enable-openvpn,) $(if $(TCONFIG_NGINX),--enable-nginx,) --enable-session-ticket \
+                    --enable-sni --enable-altcertchains --enable-certgen \
+                    --enable-curve25519 --enable-tlsv10 --enable-wpas --enable-fortress --enable-fastmath \
+                    --disable-examples --disable-sslv3 --disable-arc4
+endif
+ifeq ($(TOMATO_EXPERIMENTAL),1)
+ WOLFSSL_OPTIONS += --enable-crypttests --enable-debug
+else
+ WOLFSSL_OPTIONS += --disable-crypttests --disable-errorstrings
+endif
+
+# openssl options
 OPENSSL_OPTIONS := no-tests no-unit-test no-sse2 no-ssl3 no-comp no-gost no-afalgeng no-devcryptoeng no-nextprotoneg no-capieng no-blake2 no-idea no-mdc2 no-ocb no-seed no-whirlpool no-srp no-rc4 no-cms no-ec2m
 ifneq ($(or $(TCONFIG_OPENSSL30),$(TCONFIG_OPENSSL11)),y)
  OPENSSL_OPTIONS +=  no-npn
@@ -218,13 +239,6 @@ endif # !TCONFIG_KEYGEN
 # build with err only for beta
 ifneq ($(TOMATO_EXPERIMENTAL),1)
  OPENSSL_OPTIONS += no-err
-endif
-
-# libcurl flag
-ifeq ($(TCONFIG_STUBBY),y)
- CACERT:=--with-ca-fallback
-else
- CACERT:=
 endif
 
 
@@ -286,16 +300,20 @@ ifeq ($(TCONFIG_HAVEGED),y)
 endif
 
 ifneq ($(TCONFIG_HTTPS),)
- ifeq ($(TCONFIG_OPENSSL30),y)
-  export OPENSSLDIR = openssl-3.0
+ ifeq ($(TCONFIG_WOLFSSL),y)
+  obj-y += wolfssl
  else
-  ifeq ($(TCONFIG_OPENSSL11),y)
-   export OPENSSLDIR = openssl-1.1
+  ifeq ($(TCONFIG_OPENSSL30),y)
+   export OPENSSLDIR = openssl-3.0
   else
-   export OPENSSLDIR = openssl
+   ifeq ($(TCONFIG_OPENSSL11),y)
+    export OPENSSLDIR = openssl-1.1
+   else
+    export OPENSSLDIR = openssl
+   endif
   endif
+  obj-y += $(OPENSSLDIR)
  endif
- obj-y += $(OPENSSLDIR)
 else
  obj-y += cyassl
 endif
@@ -408,8 +426,10 @@ obj-$(TCONFIG_ZEBRA) += zebra
 
 ifeq ($(TCONFIG_OPENVPN),y)
  obj-y += $(OPENSSLDIR)
- obj-y += lz4
- export INSTALL_LZ4 := y
+ ifneq ($(TCONFIG_OPTIMIZE_SIZE_MORE),y)
+  obj-y += lz4
+  export INSTALL_LZ4 := y
+ endif
  ifeq ($(TCONFIG_BCMARM),y)
   obj-y += libcap-ng
   obj-y += openvpn
@@ -1375,6 +1395,35 @@ openssl-3.0-clean:
 	@rm -f openssl-3.0/stamp-h1
 	@rm -rf openssl-3.0/staged
 	$(call unpatch_files,openssl-3.0)
+
+wolfssl/stamp-h1:
+	$(call patch_files,wolfssl)
+	cd wolfssl && ./autogen.sh && \
+		CFLAGS="$(if $(TCONFIG_OPTIMIZE_SIZE),-Os,-O3) -Wall $(EXTRACFLAGS) -fPIC $(WOLFSSL_FLAGS) -ffunction-sections -fdata-sections" \
+		LDFLAGS="-Wl,--gc-sections" \
+		$(CONFIGURE) --prefix=/usr --libdir=/usr/lib --enable-static $(WOLFSSL_OPTIONS) $(if $(TCONFIG_BCMARM),,--disable-threadlocal) --disable-dependency-tracking
+	@touch $@
+
+wolfssl: wolfssl/stamp-h1
+	$(SEP)
+	$(MAKE) -C $@
+	$(MAKE) -C $@ DESTDIR=$(TOP)/$@/staged install
+
+wolfssl-install:
+	install -D wolfssl/src/.libs/libwolfssl.so.42.2.0 $(INSTALLDIR)/wolfssl/usr/lib/libwolfssl.so.42.2.0
+	$(STRIP) $(INSTALLDIR)/wolfssl/usr/lib/libwolfssl.so.42.2.0
+	cd $(INSTALLDIR)/wolfssl/usr/lib && ln -sf libwolfssl.so.42.2.0 libwolfssl.so.42 && ln -sf libwolfssl.so.42.2.0 libwolfssl.so
+	# && ln -sf libwolfssl.so.42.2.0 libcyassl.so
+ifeq ($(TOMATO_EXPERIMENTAL),1)
+	install -D wolfssl/wolfcrypt/benchmark/.libs/benchmark $(INSTALLDIR)/wolfssl/usr/sbin/benchmark
+	$(STRIP) $(INSTALLDIR)/wolfssl/usr/sbin/benchmark
+endif
+
+wolfssl-clean:
+	-@$(MAKE) -C wolfssl clean
+	@rm -f wolfssl/stamp-h1
+	@rm -rf wolfssl/staged
+	$(call unpatch_files,wolfssl)
 
 bridge/Makefile:
 	cd bridge && autoreconf -fsi && \
@@ -2663,8 +2712,8 @@ nginx/stamp-h1:
 	cd nginx && \
 		./configure --crossbuild=Linux::$(ARCH) \
 			--with-cc="$(CC)" \
-			--with-cc-opt="-Os -Wall $(EXTRACFLAGS) -std=gnu99 -D_GNU_SOURCE -I$(TOP)/$(OPENSSLDIR)/include -I$(TOP)/$(PCRE_TARGET)/staged/usr/include -I$(TOP)/zlib" \
-			--with-ld-opt="-L$(TOP)/$(PCRE_TARGET)/staged/usr/lib -L$(TOP)/zlib/staged/usr/lib -L$(TOP)/$(OPENSSLDIR)/staged/usr/lib" \
+			--with-cc-opt="-Os -Wall $(EXTRACFLAGS) -std=gnu99 -D_GNU_SOURCE -I$(TOP)/$(PCRE_TARGET)/staged/usr/include -I$(TOP)/zlib $(if $(TCONFIG_WOLFSSL),,-I$(TOP)/$(OPENSSLDIR)/include)" \
+			--with-ld-opt="-L$(TOP)/$(PCRE_TARGET)/staged/usr/lib -L$(TOP)/zlib/staged/usr/lib $(if $(TCONFIG_WOLFSSL),-L$(TOP)/wolfssl/staged/usr/lib,-L$(TOP)/$(OPENSSLDIR)/staged/usr/lib)" \
 			--prefix=/usr \
 			--sbin-path=/usr/sbin \
 			--conf-path=/etc/nginx/nginx.conf \
@@ -2683,13 +2732,16 @@ nginx/stamp-h1:
 			--with-http_gzip_static_module \
 			--with-http_v2_module \
 			--with-http_realip_module \
+			--without-http_upstream_zone_module \
+			$(if $(TCONFIG_WOLFSSL),--with-wolfssl=$(TOP)/wolfssl/staged/usr,) \
 			$(if $(TCONFIG_BCMARM),,--with-libatomic=$(TOP)/libatomic_ops) \
 			$(if $(TCONFIG_IPV6),--with-ipv6,)
 	@touch $@
 
 nginx: nginx/stamp-h1
 	@$(SEP)
-	@$(MAKE) -C $@ CFLAGS="-Os -Wall $(EXTRACFLAGS) -std=gnu99 -D_GNU_SOURCE -ffunction-sections -fdata-sections -I$(TOP)/zlib -I$(TOP)/$(PCRE_TARGET)/staged/usr/include -I$(TOP)/$(OPENSSLDIR)/include" $(PARALLEL_BUILD)
+	@$(MAKE) -C $@ CFLAGS="-Os -Wall $(EXTRACFLAGS) -std=gnu99 -D_GNU_SOURCE -I$(TOP)/zlib -I$(TOP)/$(PCRE_TARGET)/staged/usr/include \
+		$(if $(TCONFIG_WOLFSSL),-I$(TOP)/wolfssl,-I$(TOP)/$(OPENSSLDIR)/include)" $(PARALLEL_BUILD)
 
 nginx-install:
 	install -D nginx/objs/nginx $(INSTALLDIR)/nginx/usr/sbin/nginx && chmod 0755 $(INSTALLDIR)/nginx/usr/sbin/nginx
@@ -2897,13 +2949,16 @@ openvpn-2.5/Makefile:
 	cd openvpn-2.5 && autoreconf -fsi && \
 		OPENSSL_CFLAGS="-I$(TOP)/$(OPENSSLDIR)/staged/usr/include" \
 		OPENSSL_LIBS="-L$(TOP)/$(OPENSSLDIR)/staged/usr/lib -lcrypto -lssl" \
+		WOLFSSL_CFLAGS="-I$(TOP)/wolfssl/staged/usr/include -I$(TOP)/wolfssl/staged/usr/include/wolfssl" \
+		WOLFSSL_INCLUDEDIR="-I$(TOP)/wolfssl/staged/usr/include -I$(TOP)/wolfssl/staged/usr/include/wolfssl" \
+		WOLFSSL_LIBS="-L$(TOP)/wolfssl/staged/usr/lib -lwolfssl" \
 		LZ4_CFLAGS="-I$(TOP)/lz4/staged/usr/include" \
 		LZ4_LIBS="-L$(TOP)/lz4/staged/usr/lib -llz4" \
 		CFLAGS="$(if $(TCONFIG_BCMARM),-O2,$(CFLAG_OPTIMIZE)) -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
-		LDFLAGS="-L$(TOP)/$(OPENSSLDIR)/staged/usr/lib -lpthread -ldl -ffunction-sections -fdata-sections -Wl,--gc-sections" \
-		CPPFLAGS="-I$(TOP)/$(OPENSSLDIR)/staged/usr/include" \
+		LDFLAGS="$(if $(TCONFIG_WOLFSSL),-L$(TOP)/wolfssl/staged/usr/lib,-L$(TOP)/$(OPENSSLDIR)/staged/usr/lib) -lpthread -ldl -Wl,--gc-sections" \
+		CPPFLAGS="$(if $(TCONFIG_WOLFSSL),-I$(TOP)/wolfssl/staged/usr/include -I$(TOP)/wolfssl/staged/usr/include/wolfssl,-I$(TOP)/$(OPENSSLDIR)/staged/usr/include)" \
 		PLUGINDIR="/lib" IPROUTE="/usr/sbin/ip" \
-		$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib --with-crypto-library=openssl --with-openssl-engine=no \
+		$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib $(if $(TCONFIG_WOLFSSL),--with-crypto-library=wolfssl,--with-crypto-library=openssl --with-openssl-engine=no) \
 			--disable-management --disable-debug --disable-plugin-auth-pam --disable-plugin-down-root --disable-pf --disable-unit-tests --disable-dependency-tracking \
 			--enable-iproute2 ac_cv_lib_resolv_gethostbyname=no \
 			--disable-lzo $(if $(TCONFIG_OPTIMIZE_SIZE_MORE),--disable-lz4,) $(if $(TCONFIG_BCMARM),,$(if $(TCONFIG_AIO),,--enable-small))
@@ -2928,15 +2983,18 @@ openvpn/Makefile:
 	cd openvpn && autoreconf -fsi && \
 		OPENSSL_CFLAGS="-I$(TOP)/$(OPENSSLDIR)/staged/usr/include" \
 		OPENSSL_LIBS="-L$(TOP)/$(OPENSSLDIR)/staged/usr/lib -lcrypto -lssl" \
+		WOLFSSL_CFLAGS="-I$(TOP)/wolfssl/staged/usr/include -I$(TOP)/wolfssl/staged/usr/include/wolfssl" \
+		WOLFSSL_INCLUDEDIR="-I$(TOP)/wolfssl/staged/usr/include -I$(TOP)/wolfssl/staged/usr/include/wolfssl" \
+		WOLFSSL_LIBS="-L$(TOP)/wolfssl/staged/usr/lib -lwolfssl" \
 		LIBCAPNG_CFLAGS="-I$(TOP)/libcap-ng/src" \
 		LIBCAPNG_LIBS="-L$(TOP)/libcap-ng/src/.libs -lcap-ng" \
 		LZ4_CFLAGS="-I$(TOP)/lz4/staged/usr/include" \
 		LZ4_LIBS="-L$(TOP)/lz4/staged/usr/lib -llz4" \
 		CFLAGS="$(if $(TCONFIG_BCMARM),-O2,$(CFLAG_OPTIMIZE)) -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections $(if $(TCONFIG_BCMARM),-I$(TOP)/libcap-ng/src,)" \
-		LDFLAGS="-L$(TOP)/$(OPENSSLDIR)/staged/usr/lib -lpthread -ldl -Wl,--gc-sections" \
-		CPPFLAGS="-I$(TOP)/$(OPENSSLDIR)/staged/usr/include" \
+		LDFLAGS="$(if $(TCONFIG_WOLFSSL),-L$(TOP)/wolfssl/staged/usr/lib,-L$(TOP)/$(OPENSSLDIR)/staged/usr/lib) -lpthread -ldl -Wl,--gc-sections" \
+		CPPFLAGS="$(if $(TCONFIG_WOLFSSL),-I$(TOP)/wolfssl/staged/usr/include -I$(TOP)/wolfssl/staged/usr/include/wolfssl,-I$(TOP)/$(OPENSSLDIR)/staged/usr/include)" \
 		PLUGINDIR="/lib" IPROUTE="/usr/sbin/ip" \
-		$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib --with-crypto-library=openssl --with-openssl-engine=no \
+		$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib $(if $(TCONFIG_WOLFSSL),--with-crypto-library=wolfssl,--with-crypto-library=openssl --with-openssl-engine=no) \
 			--disable-selinux --disable-systemd --disable-plugins --disable-pkcs11 --disable-dco \
 			--disable-management --disable-debug --disable-plugin-auth-pam --disable-plugin-down-root --disable-unit-tests --disable-dependency-tracking \
 			--enable-iproute2 ac_cv_lib_resolv_gethostbyname=no \
@@ -2986,18 +3044,18 @@ libcurl/stamp-h1:
 		CFLAGS="-Os -Wall -pipe -ffunction-sections -fdata-sections -std=gnu99 -fPIC \
 			$(if $(TCONFIG_BCMARM),-fno-strict-aliasing -fno-delete-null-pointer-checks -marm -march=armv7-a -mtune=cortex-a9,-funit-at-a-time -Wno-pointer-sign \
 				$(if $(TCONFIG_MIPSR2),-march=mips32r2 -mips32r2 -mtune=mips32r2,-march=mips32 -mips32 -mtune=mips32))" \
-		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC -I$(TOP)/$(OPENSSLDIR)/staged/usr/include" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC -L$(TOP)/$(OPENSSLDIR)/staged/usr/lib" \
+		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC $(if $(TCONFIG_WOLFSSL),-I$(TOP)/wolfssl/staged/usr/include -I$(TOP)/wolfssl/staged/usr/include/wolfssl,-I$(TOP)/$(OPENSSLDIR)/staged/usr/include)" \
+		LDFLAGS="-Wl,--gc-sections -fPIC $(if $(TCONFIG_WOLFSSL),-Wl$(comma)-rpath$(comma)$(TOP)/wolfssl/staged/usr/lib,-L$(TOP)/$(OPENSSLDIR)/staged/usr/lib)" \
 		LIBS="-lpthread" \
 		$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib \
 			--enable-shared --enable-static --enable-cookies --enable-file --enable-ftp --enable-http --enable-tftp $(if $(TCONFIG_IPV6),--enable-ipv6,--disable-ipv6) \
-			--with-openssl="$(TOP)/$(OPENSSLDIR)/staged/usr" --with-zlib="$(TOP)/zlib/staged/usr" \
+			--with-zlib=$(TOP)/zlib/staged/usr $(if $(TCONFIG_WOLFSSL),--with-wolfssl=$(TOP)/wolfssl/staged/usr,--with-openssl=$(TOP)/$(OPENSSLDIR)/staged/usr $(if $(TCONFIG_STUBBY),--with-ca-fallback,)) \
 			--disable-dict --disable-debug --disable-gopher --disable-pthreads --disable-threaded-resolver --disable-progress-meter --disable-dateparse --disable-dnsshuffle \
 			--disable-ldap --disable-manual --disable-telnet --disable-verbose --disable-doh --disable-mime --disable-netrc --disable-socketpair --disable-headers-api \
 			--without-gnutls --without-libidn2 --without-libpsl $(if $(TCONFIG_BCMARM),,--disable-tls-srp) --without-ngtcp2 --without-nghttp3 --without-quiche --without-msh3 \
 			--without-brotli --without-nghttp2 --without-zstd --without-librtmp --disable-versioned-symbols --enable-symbol-hiding --disable-proxy --disable-ntlm \
-			--disable-ntlm-wb --disable-websockets --disable-alt-svc --disable-ares disable-libcurl-option --without-libgsasl --disable-dependency-tracking \
-			$(CACERT)
+			--disable-ntlm-wb --disable-websockets --disable-alt-svc --disable-ares disable-libcurl-option --without-libgsasl --disable-docs --disable-dependency-tracking \
+			--without-ca-path $(if $(TCONFIG_STUBBY),--with-ca-bundle=/etc/ssl/certs/ca-certificates.crt,)
 	@touch $@
 
 libcurl: libcurl/stamp-h1
@@ -3034,9 +3092,9 @@ libevent: libevent/stamp-h1
 	$(MAKE) -C $@ DESTDIR=$(TOP)/libevent/staged install
 
 libevent-install:
-	install -d $(INSTALLDIR)/libevent/usr/lib
-	install libevent/.libs/libevent-2.1.so.7.0.1 $(INSTALLDIR)/libevent/usr/lib/libevent-2.1.so.7
+	install -D libevent/.libs/libevent-2.1.so.7.0.1 $(INSTALLDIR)/libevent/usr/lib/libevent-2.1.so.7
 	$(STRIP) -s $(INSTALLDIR)/libevent/usr/lib/libevent-2.1.so.7
+	cd $(INSTALLDIR)/libevent/usr/lib/ && ln -sf libevent-2.1.so.7 libevent.so
 
 libevent-clean:
 	-@$(MAKE) -C libevent clean
@@ -3076,14 +3134,18 @@ transmission/build/Makefile:
 			-DCMAKE_INSTALL_PREFIX=/usr \
 			-DCMAKE_BUILD_TYPE=Release -DCMAKE_SKIP_RPATH=TRUE \
 			-DCMAKE_C_FLAGS="-Wall $(EXTRACFLAGS) -DNDEBUG -std=gnu99 -ffunction-sections -fdata-sections -fPIC --param large-function-growth=800 --param max-inline-insns-single=3600 \
-					-I$(TOP)/zlib/staged/usr/include -I$(TOP)/$(OPENSSLDIR)/staged/usr/include -I$(TOP)/libevent/staged/usr/include" \
+					-I$(TOP)/zlib/staged/usr/include -I$(TOP)/libevent/staged/usr/include \
+					$(if $(TCONFIG_WOLFSSL),-I$(TOP)/wolfssl/staged/usr/include -I$(TOP)/wolfssl/staged/usr/include/wolfssl,-I$(TOP)/$(OPENSSLDIR)/staged/usr/include)" \
 			-DCMAKE_CXX_FLAGS="-Wall -DNDEBUG $(if $(TCONFIG_BCMARM),-fno-strict-aliasing -fno-delete-null-pointer-checks -marm -march=armv7-a -mtune=cortex-a9,-funit-at-a-time \
 					$(if $(TCONFIG_MIPSR2),-march=mips32r2 -mips32r2 -mtune=mips32r2,-march=mips32 -mips32 -mtune=mips32)) \
 					-ffunction-sections -fdata-sections -fPIC --param large-function-growth=800 --param max-inline-insns-single=3600 -fno-exceptions -fno-rtti \
-					-I$(TOP)/zlib/staged/usr/include -I$(TOP)/$(OPENSSLDIR)/staged/usr/include -I$(TOP)/libevent/staged/usr/include" \
-			-DCMAKE_EXE_LINKER_FLAGS="-Wl,--gc-sections -fPIC -L$(TOP)/zlib/staged/usr/lib -L$(TOP)/$(OPENSSLDIR)/staged/usr/lib -L$(TOP)/libevent/staged/usr/lib -lz -lssl -lcrypto -levent -lpthread" \
+					-I$(TOP)/zlib/staged/usr/include -I$(TOP)/libevent/staged/usr/include \
+					$(if $(TCONFIG_WOLFSSL),-I$(TOP)/wolfssl/staged/usr/include -I$(TOP)/wolfssl/staged/usr/include/wolfssl,-I$(TOP)/$(OPENSSLDIR)/staged/usr/include)" \
+			-DCMAKE_EXE_LINKER_FLAGS="-Wl,--gc-sections -fPIC -L$(TOP)/zlib/staged/usr/lib -L$(TOP)/libevent/staged/usr/lib -lz -levent -lpthread \
+					$(if $(TCONFIG_WOLFSSL),-L$(TOP)/wolfssl/staged/usr/lib -lwolfssl,-L$(TOP)/$(OPENSSLDIR)/staged/usr/lib -lssl -lcrypto)" \
 			-DENABLE_LIGHTWEIGHT=TRUE -DENABLE_UTP=TRUE -DENABLE_NLS=FALSE -DENABLE_CLI=FALSE -DENABLE_GTK=FALSE -DENABLE_TESTS=FALSE \
 			-DENABLE_NLS=FALSE -DINSTALL_DOC=FALSE -DUSE_SYSTEM_UTP=FALSE -DUSE_SYSTEM_DHT=FALSE -DUSE_SYSTEM_B64=FALSE -DWITH_SYSTEMD=FALSE \
+			-DWITH_CRYPTO=$(if $(TCONFIG_WOLFSSL),cyassl,openssl) \
 			-DCURL_INCLUDE_DIR=$(TOP)/libcurl/include \
 			-DCURL_LIBRARY=$(TOP)/libcurl/lib/.libs/libcurl.so \
 			-DEVENT2_INCLUDE_DIR=$(TOP)/libevent/staged/usr/include \
@@ -3091,6 +3153,8 @@ transmission/build/Makefile:
 			-DOPENSSL_INCLUDE_DIR=$(TOP)/$(OPENSSLDIR)/staged/usr/include \
 			-DOPENSSL_CRYPTO_LIBRARY=$(TOP)/$(OPENSSLDIR)/staged/usr/lib/libcrypto.so \
 			-DOPENSSL_SSL_LIBRARY=$(TOP)/$(OPENSSLDIR)/staged/usr/lib/libssl.so \
+			-DWOLFSSL_INCLUDE_DIR=$(TOP)/wolfssl/staged/usr/include \
+			-DWOLFSSL_LIBRARY=$(TOP)/wolfssl/staged/usr/lib/libwolfssl.so \
 			-DZLIB_INCLUDE_DIR=$(TOP)/zlib/staged/usr/include \
 			-DZLIB_LIBRARY=$(TOP)/zlib/staged/usr/lib/libz.so \
 			-DICONV_INCLUDE_DIR="" \
