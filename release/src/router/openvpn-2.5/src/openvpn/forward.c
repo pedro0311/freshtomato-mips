@@ -184,6 +184,83 @@ check_tls_errors_nco(struct context *c)
 
 #if P2MP
 
+static void
+parse_incoming_control_channel_command(struct context *c, struct buffer *buf)
+{
+    if (buf_string_match_head_str(buf, "AUTH_FAILED"))
+    {
+        receive_auth_failed(c, buf);
+    }
+    else if (buf_string_match_head_str(buf, "PUSH_"))
+    {
+        incoming_push_message(c, buf);
+    }
+    else if (buf_string_match_head_str(buf, "RESTART"))
+    {
+        server_pushed_signal(c, buf, true, 7);
+    }
+    else if (buf_string_match_head_str(buf, "HALT"))
+    {
+        server_pushed_signal(c, buf, false, 4);
+    }
+    else if (buf_string_match_head_str(buf, "INFO_PRE"))
+    {
+        server_pushed_info(c, buf, 8);
+    }
+    else if (buf_string_match_head_str(buf, "INFO"))
+    {
+        server_pushed_info(c, buf, 4);
+    }
+    else if (buf_string_match_head_str(buf, "CR_RESPONSE"))
+    {
+        receive_cr_response(c, buf);
+    }
+    else
+    {
+        msg(D_PUSH_ERRORS, "WARNING: Received unknown control message: %s", BSTR(buf));
+    }
+}
+
+static struct buffer
+extract_command_buffer(struct buffer *buf, struct gc_arena *gc)
+{
+    /* commands on the control channel are seperated by 0x00 bytes.
+     * cmdlen does not include the 0 byte of the string */
+    int cmdlen = (int)strnlen(BSTR(buf), BLEN(buf));
+
+    if (cmdlen >= BLEN(buf))
+    {
+        buf_advance(buf, cmdlen);
+        /* Return empty buffer */
+        struct buffer empty = { 0 };
+        return empty;
+    }
+
+    /* include the NUL byte and ensure NUL termination */
+    cmdlen +=  1;
+
+    /* Construct a buffer that only holds the current command and
+     * its closing NUL byte */
+    struct buffer cmdbuf = alloc_buf_gc(cmdlen, gc);
+    buf_write(&cmdbuf, BPTR(buf), cmdlen);
+
+    /* Remove \r and \n at the end of the buffer to avoid
+     * problems with scripts and other that add extra \r and \n */
+    buf_chomp(&cmdbuf);
+
+    /* check we have only printable characters or null byte in the
+     * command string and no newlines */
+    if (!string_check_buf(&cmdbuf, CC_PRINT | CC_NULL, CC_CRLF))
+    {
+        msg(D_PUSH_ERRORS, "WARNING: Received control with invalid characters: %s",
+            format_hex(BPTR(&cmdbuf), BLEN(&cmdbuf), 256, gc));
+        cmdbuf.len = 0;
+    }
+
+    buf_advance(buf, cmdlen);
+    return cmdbuf;
+}
+
 /*
  * Handle incoming configuration
  * messages on the control channel.
@@ -199,43 +276,14 @@ check_incoming_control_channel(struct context *c)
     struct buffer buf = alloc_buf_gc(len, &gc);
     if (tls_rec_payload(c->c2.tls_multi, &buf))
     {
-        /* force null termination of message */
-        buf_null_terminate(&buf);
+        while (BLEN(&buf) > 1)
+        {
+            struct buffer cmdbuf = extract_command_buffer(&buf, &gc);
 
-        /* enforce character class restrictions */
-        string_mod(BSTR(&buf), CC_PRINT, CC_CRLF, 0);
-
-        if (buf_string_match_head_str(&buf, "AUTH_FAILED"))
-        {
-            receive_auth_failed(c, &buf);
-        }
-        else if (buf_string_match_head_str(&buf, "PUSH_"))
-        {
-            incoming_push_message(c, &buf);
-        }
-        else if (buf_string_match_head_str(&buf, "RESTART"))
-        {
-            server_pushed_signal(c, &buf, true, 7);
-        }
-        else if (buf_string_match_head_str(&buf, "HALT"))
-        {
-            server_pushed_signal(c, &buf, false, 4);
-        }
-        else if (buf_string_match_head_str(&buf, "INFO_PRE"))
-        {
-            server_pushed_info(c, &buf, 8);
-        }
-        else if (buf_string_match_head_str(&buf, "INFO"))
-        {
-            server_pushed_info(c, &buf, 4);
-        }
-        else if (buf_string_match_head_str(&buf, "CR_RESPONSE"))
-        {
-            receive_cr_response(c, &buf);
-        }
-        else
-        {
-            msg(D_PUSH_ERRORS, "WARNING: Received unknown control message: %s", BSTR(&buf));
+            if (cmdbuf.len > 0)
+            {
+                parse_incoming_control_channel_command(c, &cmdbuf);
+            }
         }
     }
     else
