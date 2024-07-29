@@ -1521,8 +1521,6 @@ static void check_bootnv(void)
 	case MODEL_WNDR3400v3:
 		nvram_unset("et1macaddr");
 		dirty |= check_nv("vlan2hwname", "et0");
-		dirty |= check_nv("wl0_ifname", "eth0");
-		dirty |= check_nv("wl1_ifname", "eth1");
 		break;
 	case MODEL_R6300V1:
 	case MODEL_WNDR4500:
