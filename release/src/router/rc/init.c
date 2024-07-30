@@ -4258,9 +4258,6 @@ static int init_nvram(void)
 			nvram_set("wl1_hwaddr", s); /* fix WL mac for 5G eth2 */
 			nvram_set("0:macaddr", s);
 
-			nvram_set("boardflags", "0x710");
-			nvram_set("boardflags2", "0x0");
-
 			/* wifi channel settings */
 			nvram_set("wl1_channel", "36");
 			nvram_set("wl1_nbw", "40");
@@ -4270,23 +4267,11 @@ static int init_nvram(void)
 			nvram_set("wl0_nbw_cap", "0");
 			nvram_set("wl0_channel", "6");
 			nvram_set("wl0_nctrlsb", "lower");
-
-			/* set QTD params in nvram for USB wl radio IC */
-			nvram_set("ehciirqt", "3");
-			nvram_set("qtdc_pid", "48407");
-			nvram_set("qtdc_vid", "2652");
-			nvram_set("qtdc0_ep", "4");
-			nvram_set("qtdc0_sz", "5");
-			nvram_set("qtdc1_ep", "18");
-			nvram_set("qtdc1_sz", "10");
 		}
 		/* F9K1102(v3) adjust default values for wl_txq_thresh, et_txq_thresh and wl_rpcq_rxthresh (--> explicitly for WiFi modules) */
 		nvram_set("et_txq_thresh", "512");
 		nvram_set("wl_txq_thresh", "512");
 		nvram_set("wl_rpcq_rxthresh", "512");
-
-		nvram_set("wl0_txq_thresh", "512");
-		nvram_set("wl0_rpcq_rxthresh", "512");
 
 		nvram_set("wl1_txq_thresh", "512");
 		nvram_set("wl1_rpcq_rxthresh", "512");
