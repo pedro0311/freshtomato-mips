@@ -4403,9 +4403,6 @@ static int init_nvram(void)
 			nvram_set("wl1_hwaddr", s); 			/* fix WL mac for 5G eth2 */
 			nvram_set("usb/0xBD17/macaddr", s);
 
-			nvram_set("boardflags", "0x80001710");
-			nvram_set("boardflags2", "0x00000000");
-
 			/* wifi settings/channels */
 			nvram_set("wl0_nbw", "20");
 			nvram_set("wl0_nbw_cap", "0");
@@ -4429,6 +4426,9 @@ static int init_nvram(void)
 		nvram_set("et_txq_thresh", "256");
 		nvram_set("wl_txq_thresh", "256");
 		nvram_set("wl_rpcq_rxthresh", "256");
+
+		nvram_set("wl1_txq_thresh", "256");
+		nvram_set("wl1_rpcq_rxthresh", "256");
 		break;
 	case MODEL_WNDR4000:
 		mfr = "Netgear";
