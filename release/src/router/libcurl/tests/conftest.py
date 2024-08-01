@@ -5,7 +5,7 @@
 #                            | (__| |_| |  _ <| |___
 #                             \___|\___/|_| \_\_____|
 #
-# Copyright (C) 2008 - 2022, Daniel Stenberg, <daniel@haxx.se>, et al.
+# Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
 #
 # This software is licensed as described in the file COPYING, which
 # you should have received as part of this distribution. The terms
@@ -47,7 +47,7 @@ def pytest_report_header(config):
         ])
     if env.has_vsftpd():
         report.extend([
-            f'  VsFTPD: {env.vsftpd_version()}, ftp:{env.ftp_port}'
+            f'  VsFTPD: {env.vsftpd_version()}, ftp:{env.ftp_port}, ftps:{env.ftps_port}'
         ])
     return '\n'.join(report)
 

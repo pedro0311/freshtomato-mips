@@ -40,6 +40,8 @@ TESTSCRIPTS = \
  test1275.pl  \
  test1276.pl  \
  test1477.pl  \
+ test1486.pl  \
+ test1488.pl  \
  test1544.pl  \
  test971.pl
 
@@ -125,7 +127,7 @@ TEST_E = -a -e
 TEST_NF = -a -p ~flaky ~timing-dependent
 
 # special CI target derived from nonflaky with CI-specific flags
-TEST_CI = $(TEST_NF) -rm
+TEST_CI = $(TEST_NF) -r -rm
 endif
 
 # make sure that PERL is pointing to an executable
@@ -162,7 +164,7 @@ checksrc:
 	(cd server && $(MAKE) checksrc)
 	(cd http && $(MAKE) checksrc)
 
-if CURLDEBUG
+if DEBUGBUILD
 # for debug builds, we scan the sources on all regular make invokes
 all-local: checksrc
 endif

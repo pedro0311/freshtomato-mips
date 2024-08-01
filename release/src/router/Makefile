@@ -247,11 +247,9 @@ endif
 #
 
 
-obj-y				+= $(if $(TCONFIG_BCM7),libbcm,lzma-loader) busybox shared nvram$(BCMEX) $(if $(TCONFIG_BCMARM),eapd$(BCMEX)/linux,et) \
+obj-y				+= $(if $(TCONFIG_BCMARM),libbcm,lzma-loader) busybox shared nvram$(BCMEX) $(if $(TCONFIG_BCMARM),eapd$(BCMEX)/linux,et) \
 				   libbcmcrypto wlconf$(BCMEX) $(if $(TCONFIG_BCMARM),nas$(BCMEX)) prebuilt
 obj-$(TCONFIG_EMF)		+= emf$(BCMEX) igs$(BCMEX)
-obj-$(TCONFIG_DPSTA)		+= dpsta
-obj-$(TCONFIG_DHDAP)		+= dhd $(if $(TCONFIG_BCM714),,$(if $(TCONFIG_BCM7),pciefd))
 obj-$(TCONFIG_DPSTA)		+= dpsta
 obj-$(TCONFIG_DHDAP)		+= $(if $(TCONFIG_BCM714),dhd$(BCMEX),dhd) $(if $(TCONFIG_BCM714),,$(if $(TCONFIG_BCM7),pciefd))
 
@@ -314,7 +312,7 @@ ifeq ($(TCONFIG_OPENVPN),y)
 endif
 
 obj-y				+= $(SSL_TARGET) mssl httpd
-obj-y				+= $(if $(TCONFIG_BCMARM),zlib libcurl) mdu
+obj-y				+= $(if $(or $(TCONFIG_BCMARM),$(TCONFIG_BBT),$(TCONFIG_NGINX)),zlib libcurl,) mdu
 obj-y				+= $(if $(TCONFIG_DNSSEC),$(if $(TCONFIG_HTTPS),gmp nettle)) dnsmasq
 obj-$(TCONFIG_SSH)		+= dropbear
 obj-$(TCONFIG_DNSCRYPT)		+= zlib libsodium dnscrypt
@@ -358,10 +356,12 @@ obj-$(TCONFIG_IRQBALANCE)	+= zlib libffi libiconv gettext-tiny $(PCRE_TARGET) gl
 obj-clean := $(foreach obj, $(obj-y) $(obj-n) $(obj-), $(obj)-clean)
 obj-install := $(foreach obj,$(obj-y),$(obj)-install)
 
+export PLATFORM LIBDIR USRLIBDIR
+
 ifeq ($(TCONFIG_BCMARM),y)
  LINUX_VERSION = 2_6_36
  LINUX_KERNEL = 2.6.36
- export PLATFORM LIBDIR USRLIBDIR LINUX_VERSION
+ export LINUX_VERSION
 
  ifeq ($(TCONFIG_BCM714),y)
   export BCMSRC = src-rt-7.14.114.x/src
@@ -3059,9 +3059,12 @@ libevent: libevent/stamp-h1
 	$(MAKE) -C $@ DESTDIR=$(TOP)/libevent/staged install
 
 libevent-install:
+ifeq ($(or $(TCONFIG_BBT),$(TCONFIG_TOR)),y)
 	install -D libevent/.libs/libevent-2.1.so.7.0.1 $(INSTALLDIR)/libevent/usr/lib/libevent-2.1.so.7
 	$(STRIP) -s $(INSTALLDIR)/libevent/usr/lib/libevent-2.1.so.7
 	cd $(INSTALLDIR)/libevent/usr/lib/ && ln -sf libevent-2.1.so.7 libevent.so
+endif
+	@true
 
 libevent-clean:
 	-@$(MAKE) -C libevent clean
@@ -3154,7 +3157,7 @@ libnfsidmap/stamp-h1:
 		CFLAGS="-Os -Wall $(EXTRACFLAGS)" \
 		ac_cv_func_malloc_0_nonnull=yes \
 		ac_cv_func_realloc_0_nonnull=yes \
-		$(CONFIGURE) --prefix=/usr --enable-shared --enable-static
+		$(CONFIGURE) --prefix=/usr --disable-shared --enable-static
 	@touch $@
 
 libnfsidmap: libnfsidmap/stamp-h1
@@ -3283,9 +3286,9 @@ lz4:
 
 lz4-install:
 ifeq ($(or $(INSTALL_LZ4),$(TCONFIG_TINC)),y)
-	install -D lz4/lib/liblz4.so.1.9.4 $(INSTALLDIR)/lz4/usr/lib/liblz4.so.1.9.4
-	$(STRIP) $(INSTALLDIR)/lz4/usr/lib/liblz4.so.1.9.4
-	cd $(INSTALLDIR)/lz4/usr/lib && ln -sf liblz4.so.1.9.4 liblz4.so.1 && ln -sf liblz4.so.1.9.4 liblz4.so
+	install -D lz4/lib/liblz4.so.1.10.0 $(INSTALLDIR)/lz4/usr/lib/liblz4.so.1.10.0
+	$(STRIP) $(INSTALLDIR)/lz4/usr/lib/liblz4.so.1.10.0
+	cd $(INSTALLDIR)/lz4/usr/lib && ln -sf liblz4.so.1.10.0 liblz4.so.1 && ln -sf liblz4.so.1.10.0 liblz4.so
 endif
 	@true
 
@@ -3426,11 +3429,12 @@ libsodium-clean:
 	@rm -f libsodium/stamp-h1
 
 dnscrypt/stamp-h1:
-	cd dnscrypt && autoreconf && \
-		CFLAGS="-Os -Wall $(EXTRACFLAGS) -I$(TOP)/libsodium/src/libsodium/include -ffunction-sections -fdata-sections -fPIC" \
+	$(call patch_files,dnscrypt)
+	cd dnscrypt && ./autogen.sh && \
+		CFLAGS="-Os -Wall $(EXTRACFLAGS) -I$(TOP)/libsodium/src/libsodium/include -ffunction-sections -fdata-sections" \
 		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -I$(TOP)/libsodium/src/libsodium/include -I$(TOP)/zlib/staged/usr/include -ffunction-sections -fdata-sections" \
 		LDFLAGS="-Wl,--gc-sections -L$(TOP)/libsodium/src/libsodium/.libs -L$(TOP)/zlib/staged/usr/lib" \
-		$(CONFIGURE) --prefix=/usr --disable-ssp --disable-dependency-tracking
+		$(CONFIGURE) --prefix=/usr --disable-ssp --disable-plugins --disable-dependency-tracking
 	@touch $@
 
 dnscrypt: dnscrypt/stamp-h1
@@ -3447,6 +3451,7 @@ dnscrypt-clean:
 	-@$(MAKE) -C dnscrypt clean
 	@rm -f dnscrypt/stamp-h1 dnscrypt/Makefile
 	@rm -rf dnscrypt/src/proxy/.deps
+	$(call unpatch_files,dnscrypt)
 
 libyaml/stamp-h1:
 	cd libyaml && autoreconf -fsi && \
