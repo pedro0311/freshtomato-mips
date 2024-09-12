@@ -551,7 +551,7 @@ else
 endif # !TCONFIG_BCMARM
 	cd $(TARGETDIR)/lib/modules/*/kernel/drivers/net && mv et/* . && rm -rf et || true
 	cd $(TARGETDIR)/lib/modules/*/kernel/drivers/net && mv wl/* . && rm -rf wl || true
-	cd $(TARGETDIR)/lib/modules/*/kernel/fs && mv cifs/* . && rm -rf cifs
+	cd $(TARGETDIR)/lib/modules/*/kernel/fs && mv cifs/* . && rm -rf cifs || true
 	cd $(TARGETDIR)/lib/modules/*/kernel/fs && mv jffs2/* . && rm -rf jffs2 || true
 	cd $(TARGETDIR)/lib/modules/*/kernel/fs && mv jffs/* . && rm -rf jffs || true
 	cd $(TARGETDIR)/lib/modules/*/kernel/lib && mv zlib_inflate/* . && rm -rf zlib_inflate || true
@@ -1347,7 +1347,6 @@ dnsmasq-clean:
 iptables:
 	@$(SEP)
 	$(call patch_files,iptables)
-	cp -f iptables/extensions/libipt_ipp2p_K26.c iptables/extensions/libipt_ipp2p.c
 	$(MAKE) -C $@ PREFIX=/usr BINDIR=/usr/sbin LIBDIR=/usr/lib KERNEL_DIR=$(LINUXDIR) COPT_FLAGS="-Os $(EXTRACFLAGS) -U CONFIG_NVRAM_SIZE $(OPTSIZE_FLAG)" $(PARALLEL_BUILD)
 
 iptables-install:
@@ -1655,7 +1654,7 @@ dhcpv6-clean:
 wsdd2:
 	$(call patch_files,wsdd2)
 	@$(SEP)
-	@$(MAKE) -C $@ CFLAGS="-Os -Wall -std=gnu99 $(EXTRACFLAGS) -ffunction-sections -fdata-sections -DTOMATO -I$(TOP)/shared" LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections"
+	@$(MAKE) -C $@ CFLAGS="-Os -Wall $(EXTRACFLAGS) -std=gnu99 -ffunction-sections -fdata-sections -DTOMATO -I$(TOP)/shared" LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections"
 
 wsdd2-install:
 	install -D wsdd2/wsdd2 $(INSTALLDIR)/wsdd2/usr/sbin/wsdd2
@@ -2083,7 +2082,7 @@ minidlna/stamp-h1:
 			-I$(TOP)/libjpeg-turbo -I$(TOP)/libexif -I$(TOP)/libid3tag/build -I$(TOP)/libogg/include -I$(TOP)/libvorbis/include -I$(TOP)/zlib/staged/usr/include" \
 		LDFLAGS="-Wl,--gc-sections -ffunction-sections -fdata-sections -L$(TOP)/shared -L$(TOP)/libvorbis/lib/.libs -L$(TOP)/libogg/src/.libs -L$(TOP)/sqlite/.libs -L$(TOP)/libexif/libexif/.libs -L$(TOP)/libjpeg-turbo/build \
 			-L$(TOP)/flac/src/libFLAC/.libs -L$(TOP)/libid3tag/build -L$(TOP)/zlib/staged/usr/lib -L$(TOP)/ffmpeg/libavformat -L$(TOP)/ffmpeg/libavcodec -L$(TOP)/ffmpeg/libavutil" \
-		LIBS="-lvorbis -logg -lsqlite3 -lexif -ljpeg -lFLAC -lid3tag -lz -lavformat -lavcodec -lavutil -lpthread -lm" \
+		LIBS="-lm -lpthread -lgcc_s -lvorbis -lz -logg -lsqlite3 -lexif -ljpeg -lFLAC -lid3tag -lavformat -lavcodec -lavutil" \
 		$(CONFIGURE) --prefix=/usr --libdir=/usr/lib --with-db-path=/tmp/minidlna --with-log-path=/var/log --with-os-name="FreshTomato" --with-os-url="https://freshtomato.org/" \
 			--with-os-version="Linux/2.6.$(if $(TCONFIG_BCMARM),36.4brcmarm,22.19)" --enable-tivo --disable-nls --disable-dependency-tracking
 	@touch $@
@@ -2726,7 +2725,7 @@ libncurses/stamp-h1:
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
 		LIBS="-lstdc++" \
 		$(CONFIGURE) --prefix=/usr --with-shared --with-normal --disable-debug --without-ada --without-manpages --without-progs \
-			--without-tests --without-cxx --without-cxx-bindings --with-build-cppflags=-D_GNU_SOURCE
+			--without-tests --without-cxx --without-cxx-bindings --with-build-cppflags=-D_GNU_SOURCE --disable-rpath --disable-rpath-hack
 	@touch $@
 
 libncurses: libncurses/stamp-h1
@@ -2926,7 +2925,8 @@ openvpn-2.5/Makefile:
 		CPPFLAGS="$(if $(TCONFIG_WOLFSSL),-I$(TOP)/wolfssl/staged/usr/include -I$(TOP)/wolfssl/staged/usr/include/wolfssl,-I$(TOP)/$(OPENSSLDIR)/staged/usr/include)" \
 		PLUGINDIR="/lib" IPROUTE="/usr/sbin/ip" \
 		$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib $(if $(TCONFIG_WOLFSSL),--with-crypto-library=wolfssl,--with-crypto-library=openssl --with-openssl-engine=no) \
-			--disable-management --disable-debug --disable-plugin-auth-pam --disable-plugin-down-root --disable-pf --disable-unit-tests --disable-dependency-tracking \
+			--disable-debug --disable-plugin-auth-pam --disable-plugin-down-root --disable-pf --disable-unit-tests --disable-dependency-tracking \
+			$(if $(or $(TCONFIG_BCMARM),$(TCONFIG_AIO)),--enable-management,--disable-management) \
 			--enable-iproute2 ac_cv_lib_resolv_gethostbyname=no \
 			--disable-lzo $(if $(TCONFIG_OPTIMIZE_SIZE_MORE),--disable-lz4,) $(if $(TCONFIG_BCMARM),,$(if $(TCONFIG_AIO),,--enable-small))
 	@touch openvpn-2.5/.conf
@@ -2962,8 +2962,9 @@ openvpn/Makefile:
 		CPPFLAGS="$(if $(TCONFIG_WOLFSSL),-I$(TOP)/wolfssl/staged/usr/include -I$(TOP)/wolfssl/staged/usr/include/wolfssl,-I$(TOP)/$(OPENSSLDIR)/staged/usr/include)" \
 		PLUGINDIR="/lib" IPROUTE="/usr/sbin/ip" \
 		$(CONFIGURE) --prefix=/usr --bindir=/usr/sbin --libdir=/usr/lib $(if $(TCONFIG_WOLFSSL),--with-crypto-library=wolfssl,--with-crypto-library=openssl --with-openssl-engine=no) \
-			--disable-selinux --disable-systemd --disable-plugins --disable-pkcs11 --disable-dco \
-			--disable-management --disable-debug --disable-plugin-auth-pam --disable-plugin-down-root --disable-unit-tests --disable-dependency-tracking \
+			--disable-selinux --disable-systemd --disable-pkcs11 --disable-dco \
+			--disable-debug --disable-plugin-auth-pam --disable-plugin-down-root --disable-unit-tests --disable-dependency-tracking \
+			$(if $(or $(TCONFIG_BCMARM),$(TCONFIG_AIO)),--enable-management,--disable-management) \
 			--enable-iproute2 ac_cv_lib_resolv_gethostbyname=no \
 			--disable-lzo $(if $(TCONFIG_OPTIMIZE_SIZE_MORE),--disable-lz4,) $(if $(TCONFIG_BCMARM),,$(if $(TCONFIG_AIO),,--enable-small))
 	@touch openvpn/.conf
@@ -3075,7 +3076,7 @@ libiconv/stamp-h1:
 	cd libiconv && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -std=gnu99 -ffunction-sections -fdata-sections -fPIC" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
-		$(CONFIGURE) --prefix=/usr --disable-nls --enable-static --enable-shared
+		$(CONFIGURE) --prefix=/usr --disable-nls --disable-rpath --enable-static --enable-shared
 	@touch $@
 
 libiconv: libiconv/stamp-h1
@@ -3726,6 +3727,7 @@ iperf/stamp-h1:
 	$(call patch_files,iperf)
 	cd iperf && autoreconf -fsi && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -fPIC" \
+		LIBS="-lgcc_s" \
 		ac_cv_func_clock_gettime="no" \
 		ac_cv_func_daemon="no" \
 		$(CONFIGURE) --prefix=/usr --disable-profiling --without-openssl
@@ -4019,11 +4021,11 @@ libnetfilter_conntrack-clean:
 	@rm -rf libnetfilter_conntrack/staged
 
 libnetfilter_log/stamp-h1:
-	cd libnetfilter_log && \
+	cd libnetfilter_log && autoreconf -fsi && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -I$(TOP)/libnfnetlink/include -I$(TOP)/libmnl/staged/usr/include" \
-		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(TOOLCHAIN)/lib -L$(TOOLCHAIN)/arm-brcm-linux-uclibcgnueabi/sysroot/usr/lib -L$(TOP)/libnfnetlink/src/.libs -L$(TOP)/libmnl/staged/usr/lib -lmnl" \
+		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(TOOLCHAIN)/lib -L$(TOP)/libnfnetlink/src/.libs -L$(TOP)/libmnl/staged/usr/lib -lmnl" \
 		PKG_CONFIG_PATH="$(TOP)/libnfnetlink:$(TOP)/libmnl/staged/usr/lib/pkgconfig" \
-		$(CONFIGURE) --prefix=/usr
+		$(CONFIGURE) --prefix=/usr --without-ipulog
 	@touch $@
 
 libnetfilter_log: libnetfilter_log/stamp-h1
@@ -4047,7 +4049,7 @@ libnetfilter_log-clean:
 
 libnetfilter_queue/stamp-h1:
 	cd libnetfilter_queue && autoreconf -fsi && \
-		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -I$(TOP)/libnfnetlink/include -I$(TOP)/libmnl/staged/usr/include" \
+		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -I$(TOP)/libnfnetlink/include -I$(TOP)/libmnl/staged/usr/include -D_GNU_SOURCE=1" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -L$(TOP)/libnfnetlink/src/.libs -L$(TOP)/libmnl/staged/usr/lib -lmnl" \
 		PKG_CONFIG_PATH="$(TOP)/libnfnetlink:$(TOP)/libmnl/staged/usr/lib/pkgconfig" \
 		$(CONFIGURE) --prefix=/usr
@@ -4200,6 +4202,8 @@ glib2/build:
 
 glib2: glib2/build
 	@$(SEP)
+	# workaround for new toolchain
+	@cd $(SRCBASE) && mkdir -p usr/include
 	$(TOP)/meson/meson.py compile -C $@/build $(PARALLEL_BUILD)
 	$(TOP)/meson/meson.py install -C $@/build --destdir=$(TOP)/$@/staged
 
@@ -4217,7 +4221,7 @@ glib2-clean:
 irqbalance/stamp-h1:
 	$(call patch_files,irqbalance)
 	cd irqbalance && ./autogen.sh && \
-		CFLAGS="-Os -Wall -std=gnu99 $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+		CFLAGS="-Os -Wall $(EXTRACFLAGS) -std=gnu99 -ffunction-sections -fdata-sections" \
 		CPPFLAGS="-I$(TOP)/libiconv/staged/usr/include -I$(TOP)/libffi/staged/usr/include -I$(TOP)/zlib/staged/usr/include -I$(TOP)/$(PCRE_TARGET)/staged/usr/include" \
 		LDFLAGS="-L$(TOP)/libiconv/staged/usr/lib -L$(TOP)/libffi/staged/usr/lib -L$(TOP)/zlib/staged/usr/lib -L$(TOP)/$(PCRE_TARGET)/staged/usr/lib -Wl,--gc-sections" \
 		LIBS="-lffi -liconv -lz -lpcre2-8" \
