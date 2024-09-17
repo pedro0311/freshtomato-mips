@@ -415,8 +415,11 @@ ifeq ($(TCONFIG_BCMARM),y)
  include $(SRCBASE)/makefiles/WLAN_Common.mk
  export BASEDIR := $(WLAN_TreeBaseA)
  export EXTRALIBS = -lgcc_s
- export LD_LIBRARY_PATH := $(SRCBASE)/toolchains/hndtools-arm-linux-2.6.36-uclibc-4.5.3/lib
-
+ ifeq ($(CONFIG_TOOLCHAIN53),)
+  export LD_LIBRARY_PATH := $(SRCBASE)/toolchains/hndtools-arm-linux-2.6.36-uclibc-4.5.3/lib
+ else
+  export LD_LIBRARY_PATH := $(SRCBASE)/toolchains/hndtools-arm-uclibc-5.3/usr/lib
+ endif
  ifeq (2_6_36,$(LINUX_VERSION))
   ifeq ($(TCONFIG_BCM7),y)
    export LINUXDIR := $(SRCBASE)/linux/linux-2.6.36
@@ -655,7 +658,7 @@ ifneq ($(TCONFIG_NGINX)$(TCONFIG_NANO),)
  ifneq ($(TCONFIG_BCMARM),y)
 	install $(LIBDIR)/libstdc++.so.6 $(TARGETDIR)/lib/libstdc++.so.6
  else
-	install $(LIBDIR)/../arm-linux/lib/libstdc++.so.6 $(TARGETDIR)/lib/libstdc++.so.6
+	install $(LIBDIR)/../../lib/libstdc++.so.6 $(TARGETDIR)/lib/libstdc++.so.6
  endif # TCONFIG_BCMARM
 	cd $(TARGETDIR)/lib && ln -sf libstdc++.so.6 libstdc++.so
 	$(STRIP) $(TARGETDIR)/lib/libstdc++.so.6
@@ -1102,7 +1105,7 @@ endif # !TCONFIG_BCMARM
 		AR=$(AR:$(CROSS_COMPILE)%=%) \
 		NM=$(NM:$(CROSS_COMPILE)%=%) \
 		RANLIB=$(RANLIB:$(CROSS_COMPILE)%=%) \
-		./Configure $(HOSTCONFIG) $(EXTRACFLAGS) $(if $(TCONFIG_BCMARM),-O2,-Os) --prefix=/usr --openssldir=/etc/ssl -DOPENSSL_NO_BUF_FREELISTS \
+		./Configure $(HOSTCONFIG) $(EXTRACFLAGS) $(if $(TCONFIG_BCMARM),-O3,-Os) --prefix=/usr --openssldir=/etc/ssl -DOPENSSL_NO_BUF_FREELISTS \
 			-ffunction-sections -fdata-sections -Wl,--gc-sections -fomit-frame-pointer \
 			shared $(OPENSSL_OPTIONS)
 
@@ -1169,8 +1172,8 @@ endif # !TCONFIG_BCMARM
 		AR=$(AR:$(CROSS_COMPILE)%=%) \
 		NM=$(NM:$(CROSS_COMPILE)%=%) \
 		RANLIB=$(RANLIB:$(CROSS_COMPILE)%=%) \
-		./Configure $(HOSTCONFIG) $(EXTRACFLAGS) $(if $(TCONFIG_OPTIMIZE_SIZE),-Os,-O3) --prefix=/usr --openssldir=/etc/ssl \
-			-ffunction-sections -fdata-sections -Wl,--gc-sections -fomit-frame-pointer \
+		./Configure $(HOSTCONFIG)-freshtomato $(if $(TCONFIG_OPTIMIZE_SIZE),-Os,-O3) --prefix=/usr --openssldir=/etc/ssl \
+			-ffunction-sections -fdata-sections -Wl,--gc-sections \
 			shared $(OPENSSL_OPTIONS) --api=1.0.0 \
 			no-async no-aria no-sm2 no-sm3 no-sm4 \
 			-DOPENSSL_PREFER_CHACHA_OVER_GCM
@@ -1207,8 +1210,8 @@ openssl-3.0/stamp-h1:
 		AR=$(AR:$(CROSS_COMPILE)%=%) \
 		NM=$(NM:$(CROSS_COMPILE)%=%) \
 		RANLIB=$(RANLIB:$(CROSS_COMPILE)%=%) \
-		./Configure $(HOSTCONFIG)-freshtomato $(EXTRACFLAGS) $(if $(TCONFIG_OPTIMIZE_SIZE),-Os,-O3) --prefix=/usr --openssldir=/etc/ssl \
-			-ffunction-sections -fdata-sections -Wl,--gc-sections -fomit-frame-pointer \
+		./Configure $(HOSTCONFIG)-freshtomato $(if $(TCONFIG_OPTIMIZE_SIZE),-Os,-O3) --prefix=/usr --openssldir=/etc/ssl \
+			-ffunction-sections -fdata-sections -Wl,--gc-sections \
 			shared $(OPENSSL_OPTIONS) --api=1.0.0 \
 			no-async no-aria no-sm2 no-sm3 no-sm4 no-cmp \
 			-DOPENSSL_PREFER_CHACHA_OVER_GCM
@@ -2127,13 +2130,18 @@ endif
 
 hotplug2:
 	@$(SEP)
+	$(call patch_files,hotplug2)
 	$(MAKE) -C $@ \
-		EXTRACFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
+		EXTRACFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections $(if $(CONFIG_TOOLCHAIN53),-DCONFIG_TOOLCHAIN53,)" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections"
 
 hotplug2-install:
 	$(MAKE) -C hotplug2 PREFIX=$(INSTALLDIR)/hotplug2 SUBDIRS="" install
 	$(MAKE) -C hotplug2/examples PREFIX=$(INSTALLDIR)/hotplug2/rom KERNELVER=$(LINUX_KERNEL) install
+
+hotplug2-clean:
+	-@$(MAKE) -C hotplug2
+	$(call unpatch_files,hotplug2)
 
 emf$(BCMEX):
 	$(MAKE) -C $(if $(TCONFIG_BCMARM),,$(SRCBASE)/)emf$(BCMEX)/emfconf CROSS=$(CROSS_COMPILE)
@@ -2719,12 +2727,13 @@ nginx-clean:
 	$(call unpatch_files,nginx)
 
 libncurses/stamp-h1:
+	$(call patch_files,libncurses)
 	cd libncurses && \
 		CFLAGS="-Os -Wall -ffunction-sections -fdata-sections -fPIC" \
 		CPPFLAGS="-Os $(EXTRACFLAGS) -fPIC" \
 		LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections -fPIC" \
 		LIBS="-lstdc++" \
-		$(CONFIGURE) --prefix=/usr --with-shared --with-normal --disable-debug --without-ada --without-manpages --without-progs \
+		$(CONFIGURE) --prefix=/usr --with-shared --with-normal --disable-debug --without-ada --without-manpages --without-progs --without-profile --disable-big-core \
 			--without-tests --without-cxx --without-cxx-bindings --with-build-cppflags=-D_GNU_SOURCE --disable-rpath --disable-rpath-hack
 	@touch $@
 
@@ -2753,6 +2762,7 @@ libncurses-clean:
 	-@$(MAKE) -C libncurses clean
 	@rm -f libncurses/stamp-h1 libncurses/Makefile
 	@rm -rf libncurses/staged
+	$(call unpatch_files,libncurses)
 
 mysql/target/Makefile:
 	@mkdir -p mysql/host
@@ -3790,9 +3800,9 @@ expat: expat/stamp-h1
 	@$(MAKE) -C $@ DESTDIR=$(TOP)/expat/staged install
 
 expat-install:
-	install -D expat/staged/usr/lib/libexpat.so.1.9.2 $(INSTALLDIR)/expat/usr/lib/libexpat.so.1.9.2
-	$(STRIP) $(INSTALLDIR)/expat/usr/lib/libexpat.so.1.9.2
-	cd $(INSTALLDIR)/expat/usr/lib && ln -sf libexpat.so.1.9.2 libexpat.so.1
+	install -D expat/staged/usr/lib/libexpat.so.1.9.3 $(INSTALLDIR)/expat/usr/lib/libexpat.so.1.9.3
+	$(STRIP) $(INSTALLDIR)/expat/usr/lib/libexpat.so.1.9.3
+	cd $(INSTALLDIR)/expat/usr/lib && ln -sf libexpat.so.1.9.3 libexpat.so.1
 
 expat-clean:
 	-@$(MAKE) -C expat clean
