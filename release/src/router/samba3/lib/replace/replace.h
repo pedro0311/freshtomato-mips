@@ -711,11 +711,7 @@ typedef unsigned long long ptrdiff_t ;
 #endif
 
 #ifndef __location__
-#ifdef NO_OPTSIZE
 #define __location__ __FILE__ ":" __LINESTR__
-#else
-#define __location__ ""
-#endif /* NO_OPTSIZE */
 #endif
 
 /** 

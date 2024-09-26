@@ -77,14 +77,10 @@ typedef void TALLOC_CTX;
   this uses a little trick to allow __LINE__ to be stringified
 */
 #ifndef __location__
-#ifdef NO_OPTSIZE
 #define __TALLOC_STRING_LINE1__(s)    #s
 #define __TALLOC_STRING_LINE2__(s)   __TALLOC_STRING_LINE1__(s)
 #define __TALLOC_STRING_LINE3__  __TALLOC_STRING_LINE2__(__LINE__)
 #define __location__ __FILE__ ":" __TALLOC_STRING_LINE3__
-#else
-#define __location__ ""
-#endif /* NO_OPTSIZE */
 #endif
 
 #ifndef TALLOC_DEPRECATED
