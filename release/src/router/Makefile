@@ -2500,6 +2500,7 @@ libpng-clean:
 	$(call unpatch_files,libpng)
 
 libzip/build/Makefile:
+	$(call patch_files,libzip)
 	@rm -rf libzip/build && mkdir -p libzip/build
 	cd libzip/build && $(call CMAKE_CrossOptions, crosscompiled.cmake) && \
 		cmake -DCMAKE_TOOLCHAIN_FILE=crosscompiled.cmake \
@@ -2535,6 +2536,7 @@ libzip-install:
 libzip-clean:
 	@rm -rf libzip/build
 	@rm -rf libzip/staged
+	$(call unpatch_files,libzip)
 
 $(PHP_TARGET)/stamp-h1:
 	$(call patch_files,$(PHP_TARGET))
@@ -3635,23 +3637,23 @@ libjson-c/build/Makefile:
 			-DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_SKIP_RPATH=TRUE \
 			-DCMAKE_C_FLAGS="-Wall $(EXTRACFLAGS) -DNDEBUG -ffunction-sections -fdata-sections" \
 			-DCMAKE_EXE_LINKER_FLAGS="-Wl,--gc-sections" \
-			-DBUILD_TESTING=FALSE \
-			-DBUILD_SHARED_LIBS=FALSE \
-			$(if $(TCONFIG_BCMARM),,-DDISABLE_THREAD_LOCAL_STORAGE=TRUE) \
-			$(if $(TCONFIG_BCMARM),,-DDISABLE_WERROR=TRUE) \
+			-DBUILD_APPS=OFF \
+			-DBUILD_SHARED_LIBS=OFF \
+			-DDISABLE_EXTRA_LIBS=ON \
+			$(if $(TCONFIG_BCMARM),,-DDISABLE_THREAD_LOCAL_STORAGE=TRUE -DDISABLE_WERROR=TRUE) \
 			..
 
 libjson-c: libjson-c/build/Makefile
 	@$(SEP)
-	$(MAKE) -C libjson-c/build all $(PARALLEL_BUILD)
-	cd libjson-c && \
-	ln -sf build/json_config.h json_config.h && ln -sf build/json.h json.h
+	@$(MAKE) -C libjson-c/build all $(PARALLEL_BUILD)
+	@$(MAKE) -C libjson-c/build DESTDIR=$(TOP)/libjson-c/staged install
 
 libjson-c-install:
 	@true
 
 libjson-c-clean:
 	@rm -rf libjson-c/build
+	@rm -rf libjson-c/staged
 	$(call unpatch_files,libjson-c)
 
 libubox/build/Makefile:
@@ -3661,15 +3663,17 @@ libubox/build/Makefile:
 		cmake -DCMAKE_TOOLCHAIN_FILE=crosscompiled.cmake \
 			-DCMAKE_INSTALL_PREFIX=/usr \
 			-DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_SKIP_RPATH=TRUE \
-			-DCMAKE_C_FLAGS="-Wall $(EXTRACFLAGS) -DNDEBUG -ffunction-sections -fdata-sections -I$(TOP)/libjson-c -std=gnu99 -D_GNU_SOURCE $(if $(TCONFIG_BCMARM),-DTCONFIG_BCMARM,)" \
+			-DCMAKE_C_FLAGS="-Wall $(EXTRACFLAGS) -std=gnu99 -D_GNU_SOURCE $(if $(TCONFIG_BCMARM),-DTCONFIG_BCMARM,) -DNDEBUG \
+				-ffunction-sections -fdata-sections -I$(TOP)/libjson-c/staged/usr/include" \
 			-DCMAKE_EXE_LINKER_FLAGS="-Wl,--gc-sections" \
-			-DBUILD_LUA=FALSE \
-			-Djson="$(TOP)/libjson-c/build/libjson-c.a" \
+			-DBUILD_LUA=OFF \
+			-DBUILD_EXAMPLES=OFF \
+			-Djson="$(TOP)/libjson-c/staged/usr/lib/libjson-c.a" \
 			..
 
 libubox: libubox/build/Makefile
 	@$(SEP)
-	$(MAKE) -C libubox/build ubox-static blobmsg_json-static $(PARALLEL_BUILD)
+	@$(MAKE) -C libubox/build ubox-static blobmsg_json-static $(PARALLEL_BUILD)
 
 libubox-install:
 	@true
@@ -3685,11 +3689,11 @@ uqmi/build/Makefile:
 		cmake -DCMAKE_TOOLCHAIN_FILE=crosscompiled.cmake \
 			-DCMAKE_INSTALL_PREFIX=/usr \
 			-DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_SKIP_RPATH=TRUE \
-			-DCMAKE_C_FLAGS="-Wall $(EXTRACFLAGS) -DNDEBUG -ffunction-sections -fdata-sections" \
-			-DCMAKE_EXE_LINKER_FLAGS="-Wl,--gc-sections -lm" \
+			-DCMAKE_C_FLAGS="-Wall $(EXTRACFLAGS) -DNDEBUG -ffunction-sections -fdata-sections -I$(TOP)" \
+			-DCMAKE_EXE_LINKER_FLAGS="-Wl,--gc-sections -lm -L$(TOP)/libubox/build" \
 			-DBUILD_STATIC=TRUE \
-			-Djson_include_dir="$(TOP)/libjson-c" \
-			-Djson_library="$(TOP)/libjson-c/build/libjson-c.a" \
+			-Djson_include_dir="$(TOP)/libjson-c/staged/usr/include" \
+			-Djson_library="$(TOP)/libjson-c/staged/usr/lib/libjson-c.a" \
 			-Dblobmsg_json_include_dir="$(TOP)" \
 			-Dblobmsg_json_library="$(TOP)/libubox/build/libblobmsg_json.a" \
 			-Dubox_include_dir="$(TOP)" \
@@ -3698,10 +3702,10 @@ uqmi/build/Makefile:
 
 uqmi: uqmi/build/Makefile
 	@$(SEP)
-	$(MAKE) -C uqmi/build $(PARALLEL_BUILD)
+	@$(MAKE) -C uqmi/build $(PARALLEL_BUILD)
 
 uqmi-install:
-	install -D uqmi/build/uqmi $(INSTALLDIR)/uqmi/usr/sbin/uqmi
+	install -D uqmi/build/uqmi/uqmi $(INSTALLDIR)/uqmi/usr/sbin/uqmi
 	$(STRIP) $(INSTALLDIR)/uqmi/usr/sbin/uqmi
 
 uqmi-clean:
