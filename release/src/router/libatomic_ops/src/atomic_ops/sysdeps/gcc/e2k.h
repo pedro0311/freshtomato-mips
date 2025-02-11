@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004 Hewlett-Packard Development Company, L.P.
+ * Copyright (c) 2022 Ivan Maidanski
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,18 +20,9 @@
  * SOFTWARE.
  */
 
-/* Definitions for architectures on which loads of given type are       */
-/* atomic (either for suitably aligned data only or for any legal       */
-/* alignment).                                                          */
+/* As of clang-9, all __GCC_HAVE_SYNC_COMPARE_AND_SWAP_n are missing.   */
+#define AO_GCC_FORCE_HAVE_CAS
 
-AO_INLINE unsigned/**/short
-AO_short_load(const volatile unsigned/**/short *addr)
-{
-# ifdef AO_ACCESS_short_CHECK_ALIGNED
-    AO_ASSERT_ADDR_ALIGNED(addr);
-# endif
-  /* Cast away the volatile for architectures like IA64 where   */
-  /* volatile adds barrier (fence) semantics.                   */
-  return *(const unsigned/**/short *)addr;
-}
-#define AO_HAVE_short_load
+#include "generic.h"
+
+#undef AO_GCC_FORCE_HAVE_CAS
