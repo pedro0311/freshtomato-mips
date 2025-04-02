@@ -180,7 +180,7 @@ if (port_vlan_supported) {
 		                '<div id="vport_2"><img src="eth_off.gif" id="eth_off_3" alt=""><\/div>2', '<br>Tag<br>2',
 		                '<div id="vport_3"><img src="eth_off.gif" id="eth_off_4" alt=""><\/div>3', '<br>Tag<br>3',
 		                '<div id="vport_4"><img src="eth_off.gif" id="eth_off_5" alt=""><\/div>4', '<br>Tag<br>4',
-		                '<br>Default<br>VLAN', 'Ethernet to<br>bridge<br>mapping']);
+		                '<br>Default<br>VLAN', 'VLAN to<br>bridge<br>mapping']);
 
 		vlg.populate();
 		vlg.canDelete = false;
@@ -1041,7 +1041,7 @@ function init() {
 				</script>
 			</li>
 			<li><b>Default VLAN</b> - VLAN ID assigned to untagged frames received by the router.</li>
-			<li><b>Ethernet to Bridge mapping</b> - One and only one VLAN can be assigned to a bridge. Do not confuse Ethernet WAN (physical port) with WAN bridge (logical interface), they might or might not map onto each other</li>
+			<li><b>VLAN to Bridge mapping</b> - One and only one VLAN can be assigned to a bridge. Do not confuse Ethernet WAN (physical port) with WAN bridge (logical interface), they might or might not map onto each other</li>
 		</ul>
 		<br>
 		<div><i>VID Offset:</i> First 802.1Q VLAN tag to be used as <i>base/initial tag/VID</i> for VLAN and VID assignments. This allows using VIDs larger than 15 on (older) devices, in contiguous blocks/ranges with up to 16 VLANs/VIDs. Set to '0' (zero) to disable this feature and VLANs will have the very same/identical value for its VID, as usual (from 0 to 15).</div>
