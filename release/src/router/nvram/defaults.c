@@ -1698,6 +1698,7 @@ const defaults_t defaults[] = {
 #ifdef TCONFIG_WIREGUARD
 	{"wg_adns",			""				},
 	{"wg0_enable",			"0"				},
+	{"wg0_poll",			"0"				},
 	{"wg0_file",			""				},
 	{"wg0_key",			""				},
 	{"wg0_endpoint",		""				},
@@ -1719,6 +1720,7 @@ const defaults_t defaults[] = {
 	{"wg0_peer_dns",		""				},
 	{"wg0_peers",			""				},
 	{"wg1_enable",			"0"				},
+	{"wg1_poll",			"0"				},
 	{"wg1_file",			""				},
 	{"wg1_key",			""				},
 	{"wg1_endpoint",		""				},
@@ -1740,6 +1742,7 @@ const defaults_t defaults[] = {
 	{"wg1_peer_dns",		""				},
 	{"wg1_peers",			""				},
 	{"wg2_enable",			"0"				},
+	{"wg2_poll",			"0"				},
 	{"wg2_file",			""				},
 	{"wg2_key",			""				},
 	{"wg2_endpoint",		""				},
