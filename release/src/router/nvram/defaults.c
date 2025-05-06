@@ -1259,7 +1259,6 @@ const defaults_t defaults[] = {
 	{ "console_loglevel",		"1"				},
 	{ "t_cafree",			"1"				},
 	{ "t_hidelr",			"0"				},
-	{ "debug_clkfix",		"1"				},
 	{ "debug_ddns",			"0"				},
 #ifdef TCONFIG_BCM714
 	{ "debug_wlx_shdown",		"0"				},	/* Shutdown wl radio eth1 (bit 0) and/or eth2 (bit 1) and/or eth3 (bit 2) */
