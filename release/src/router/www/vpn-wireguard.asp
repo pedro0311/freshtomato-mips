@@ -123,11 +123,22 @@ function show() {
 	}
 }
 
-function toggle(service, isup) {
+function toggle(service, up) {
 	if (changed && !confirm('There are unsaved changes. Continue anyway?'))
 		return;
 
-	serviceLastUp[id] = isup;
+	/* check for active 'External - VPN Provider' mode */
+	var external_mode = 0;
+	for (var i = 0; i < WG_INTERFACE_COUNT; i++) {
+		if (isup['wireguard'+i] && E('_wg'+i+'_com').value == 3) /* active */
+			external_mode++;
+	}
+	if (external_mode && !up && E('_wg'+(service.substr(9, 1))+'_com').value == 3) {
+		alert('Only one wireguard instance can be run in "External - VPN Provider" mode!');
+		return;
+	}
+
+	serviceLastUp[id] = up;
 	countButton = 0;
 
 	var id = service.substr(service.length - 1);
@@ -136,7 +147,7 @@ function toggle(service, isup) {
 
 	var fom = E('t_fom');
 	var bup = fom._service.value;
-	fom._service.value = service+(isup ? '-stop' : '-start');
+	fom._service.value = service+(up ? '-stop' : '-start');
 
 	form.submit(fom, 1, 'service.cgi');
 	fom._service.value = bup;
@@ -196,7 +207,7 @@ function updateForm(num) {
 
 function loadConfig(unit) {
 	if (isup['wireguard'+unit]) {
-		alert('Before importing the configuration file, you must first stop this unit');
+		alert('Before importing the configuration file, you must first stop this instance');
 		return;
 	}
 
@@ -1609,6 +1620,13 @@ function verifyFields(focused, quiet) {
 		}
 	}
 
+	/* check for active 'External - VPN Provider' mode */
+	var external_mode = 0;
+	for (var i = 0; i < WG_INTERFACE_COUNT; i++) {
+		if (isup['wireguard'+i] && E('_wg'+i+'_com').value == 3) /* active */
+			external_mode++;
+	}
+
 	for (var i = 0; i < WG_INTERFACE_COUNT; i++) {
 		if (!v_range('_wg'+i+'_poll', quiet || !ok, 0, 30))
 			ok = 0;
@@ -1681,12 +1699,27 @@ function verifyFields(focused, quiet) {
 				ferror.clear(ip);
 		}
 
+		/* allow only one instance in 'External - VPN Provider' mode - disable option 3 in others */
+		if (external_mode && !isup['wireguard'+i])
+			E('_wg'+i+'_com').lastChild.disabled = 1;
+
 		if (E('_wg'+i+'_com').value == 3) { /* 'External - VPN Provider' */
 			E('_f_wg'+i+'_peer_ip').value = '';
 			E('_f_wg'+i+'_peer_ip').disabled = 1;
+			elem.display('wg'+i+'-peer-param-title', 0);
+			elem.display('wg'+i+'-peer-param', 0);
+			elem.display('wg'+i+'-peers-download', 0);
+			elem.display('wg'+i+'-peers-generate-title', 0);
+			elem.display('wg'+i+'-peers-generate', 0);
 		}
-		else
+		else {
 			E('_f_wg'+i+'_peer_ip').disabled = 0;
+			elem.display('wg'+i+'-peer-param-title', 1);
+			elem.display('wg'+i+'-peer-param', 1);
+			elem.display('wg'+i+'-peers-download', 1);
+			elem.display('wg'+i+'-peers-generate-title', 1);
+			elem.display('wg'+i+'-peers-generate', 1);
+		}
 
 		/* verify interface dns */
 		var dns = E('_wg'+i+'_dns');
@@ -1969,9 +2002,10 @@ function init() {
 			]);
 			W('<br>');
 
-			W('<div class="section-title">Peer Parameters <span style="font-size:0.7em">(used to generate peer config files)</span><\/div>');
+			W('<div class="section-title" id="'+t+'-peer-param-title">Peer Parameters <span style="font-size:0.7em">(used to generate peer config files)<\/span><\/div>');
+			W('<div id="'+t+'-peer-param">');
 			createFieldTable('', [
-				{ title: 'Router behind NAT', name: t+'_ka', type: 'text', maxlen: 2, size: 4, suffix: '&nbsp;<small>enables keepalives from this router towards the defined peers (range 0 - 99 secs; 0 to disable)<\/small>', value: nvram[t+'_ka'] },
+				{ title: 'Router behind NAT', name: t+'_ka', type: 'text', maxlen: 2, size: 4, suffix: '&nbsp;<small>configures keepalive interval from this router towards the defined peers (0=disable/no NAT, 10-99s range, 25 is a common setting)<\/small>', value: nvram[t+'_ka'] },
 				{ title: 'Endpoint', name: 'f_'+t+'_endpoint', type: 'select', options: [['0','FQDN'],['1','WAN IP'],['2','Custom Endpoint']], value: nvram[t+'_endpoint'][0] || 0, suffix: '&nbsp;<input type="text" name="f_'+t+'_custom_endpoint" value="'+(nvram[t+'_endpoint'].split('|', 2)[1] || '')+'" onchange="verifyFields(this, 1)" id="_f_'+t+'_custom_endpoint" maxlength="64" size="46">' },
 				{ title: 'Allowed IPs', name: t+'_aip', type: 'text', placeholder: 'CIDR format / comma separated', maxlen: 128, size: 64, value: nvram[t+'_aip'] },
 				{ title: 'DNS Servers for Peers', name: t+'_peer_dns', type: 'text', maxlen: 128, size: 64, placeholder: 'comma separated', value: nvram[t+'_peer_dns'] },
@@ -1982,6 +2016,7 @@ function init() {
 				{ title: 'Forward all peer traffic', name: 'f_'+t+'_rgw', type: 'checkbox', value: nvram[t+'_rgw'] == 1 }
 			]);
 			W('<br>');
+			W('<\/div>');
 
 			W('<div class="section-title">Import Config from File<\/div>');
 			W('<div class="fields">');
@@ -2000,26 +2035,31 @@ function init() {
 			W('<div class="section-title">Peers<\/div>');
 			W('<div class="tomato-grid" id="'+t+'-peers-grid"><\/div>');
 			peerTables[i].setup();
+			W('<div id="'+t+'-peers-download">');
 			W('<input type="button" value="Download All Configs" onclick="downloadAllConfigs(event,'+i+')" id="'+t+'_download_all">');
 			W('<br>');
-			W('<br>');
+			W('<\/div>');
 			W('<div id="'+t+'_qrcode" class="qrcode" style="display:none">');
 			W('<img src="qr-icon.svg" alt="'+t+'_qrcode_img" style="max-width:100px">');
 			W('<div id="'+t+'_qrcode_labels" class="qrcode-labels" title="Message">Point your mobile phone camera <br>here above to connect automatically<\/div>');
 			W('<\/div>');
 
+			W('<div id="'+t+'-dummy" style="display:none">');
 			createFieldTable('', [
 				{ title: 'Port', name: 'f_'+t+'_peer_port', type: 'text', maxlen: 5, size: 10, value: nvram[t+'_port'] == '' ? (51820 + i) : nvram[t+'_port'], hidden: 1 },
 				{ title: 'FWMark', name: 'f_'+t+'_peer_fwmark', type: 'text', maxlen: 8, size: 8, value: '0', hidden: 1 }
 			]);
+			W('<\/div>');
+			W('<br>');
 
-			W('<div class="section-title">Peer Generation<\/div>');
+			W('<div class="section-title" id="'+t+'-peers-generate-title">Peer Generation<\/div>');
+			W('<div id="'+t+'-peers-generate">');
 			createFieldTable('', [
 				{ title: 'Generate PSK', name: 'f_'+t+'_peer_psk_gen', type: 'checkbox', value: true, suffix: '&nbsp;<small>strenghten encyption with PresharedKey<\/small>' },
 				{ title: '', custom: '<input type="button" value="Generate Peer" onclick="generatePeer('+i+')" id="'+t+'_peer_gen">' }
 			]);
 			W('<br>');
-			W('<br>');
+			W('<\/div>');
 
 			W('<div class="section-title">Peer\'s Parameters<\/div>');
 			createFieldTable('', [
@@ -2030,7 +2070,7 @@ function init() {
 				{ title: 'Preshared Key', name: 'f_'+t+'_peer_psk', type: 'text', maxlen: 44, size: 48 },
 				{ title: 'VPN Interface IP', name: 'f_'+t+'_peer_ip', type: 'text', placeholder: 'CIDR format', maxlen: 64, size: 64 },
 				{ title: 'Allowed IPs', name: 'f_'+t+'_peer_aip', type: 'text', placeholder: 'CIDR format / comma separated', maxlen: 128, size: 64 },
-				{ title: 'Peer behind NAT', name: 'f_'+t+'_peer_ka', type: 'text', maxlen: 2, size: 4, value: '', suffix: '&nbsp;<small>enables keepalives from this peer towards the other peers (range 0 - 99 secs; 0 to disable)<\/small>' },
+				{ title: 'Peer behind NAT', name: 'f_'+t+'_peer_ka', type: 'text', maxlen: 2, size: 4, value: '', suffix: '&nbsp;<small>configures keepalive interval for peer connections (0=disable/no NAT, 10-99s range, 25 is a common setting)<\/small>' },
 				{ title: '', custom: '<input type="button" value="Add to Peers" onclick="addPeer('+i+')" id="'+t+'_peer_add"> <input type="button" value="Clean" onclick="clearPeerFields('+i+')" id="'+t+'_peer_clean">' }
 			]);
 			W('<\/div>');
@@ -2103,7 +2143,7 @@ function init() {
 			</ul>
 		</ul>
 		<ul>
-			<li><b>Peer Parameters</b> - Settings related to peer configuration generation on the Peers page.</li>
+			<li><b>Peer Parameters</b> - Settings related to peer configuration generation on the Peers page (not available in 'External - VPN Provider' mode).</li>
 			<ul>
 				<li><b>Router behind NAT</b> - If enabled, Keepalives will be sent from the router to peers.</li>
 				<li><b>Endpoint</b> - What to use for the endpoint of the router in configuration files generated on the Peers tab.</li>
@@ -2139,10 +2179,10 @@ function init() {
 				<li><b>Public Key</b> - The public key for this peer's wireguard interface.</li>
 				<li><b>VPN Interface IP</b> - The IP address of this peer's wireguard interface.</li>
 			</ul>
-			<li><b>Download All Configs</b> - This button will generate and download the configuration files for all the peers in the table.</li>
+			<li><b>Download All Configs</b> - This button will generate and download the configuration files for all the peers in the table (not available in 'External - VPN Provider' mode).</li>
 		</ul>
 		<ul>
-			<li><b>Peer Generation</b></li>
+			<li><b>Peer Generation (not available in 'External - VPN Provider' mode)</b></li>
 			<ul>
 				<li><b>Generate PSK</b> - If checked, will generate a PresharedKey for this network and assign the very same to each peer when <i>Generate Peer</i> is clicked.</li>
 				<li><b>Generate Peer</b> - This button will generate a new peer and populate the basic fields of the Peer's Parameters subsection.</li>
