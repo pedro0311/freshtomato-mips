@@ -1923,10 +1923,14 @@ function save(nomsg) {
 		fom['wg'+i+'_peers'].value = s;
 		nvram['wg'+i+'_peers'] = s;
 
-		var routedata = routingTables[i].getAllData();
 		s = '';
-		for (j = 0; j < routedata.length; ++j)
-			s += routedata[j].join('<')+'>';
+		if ((fom['_wg'+i+'_com'].value == 3) && ((fom['_wg'+i+'_rgwr'].value == 2) || (fom['_wg'+i+'_rgwr'].value == 3))) { /* only in 'External' mode _and_ routing policy mode */
+			var routedata = routingTables[i].getAllData();
+			for (j = 0; j < routedata.length; ++j)
+				s += routedata[j].join('<')+'>';
+		}
+		else /* otherwise, remove all data */
+			routingTables[i].removeAllData();
 
 		fom['wg'+i+'_routing_val'].value = s;
 		fom['wg'+i+'_enable'].value = fom['_f_wg'+i+'_enable'].checked ? 1 : 0;
@@ -2204,7 +2208,7 @@ function init() {
 			/* routing policy tab start */
 			W('<div id="'+t+'-wg-policy">');
 			W('<div class="tomato-grid" id="table_'+t+'_routing"><\/div>');
-			W('<div id="_'+t+'_routing_div_help"><div class="fields"><div class="about"><b>To use Routing Policy, you have to choose "Extarnal - VPN Provider" as Type of VPN and "Routing Policy [(strict)]" in "Redirect Internet Traffic".<\/b><\/div><\/div><\/div>');
+			W('<div id="_'+t+'_routing_div_help"><div class="fields"><div class="about"><b>To use Routing Policy, you have to choose "External - VPN Provider" as Type of VPN and "Routing Policy [(strict)]" in "Redirect Internet Traffic".<\/b><\/div><\/div><\/div>');
 			W('<\/div>');
 			/* routing policy tab stop */
 
