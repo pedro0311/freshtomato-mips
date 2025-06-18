@@ -2474,9 +2474,9 @@ libxml2: libxml2/static/Makefile libxml2/build/Makefile
 
 libxml2-install:
 ifeq ($(TCONFIG_BCMARM),y)
-	install -D libxml2/staged/usr/lib/libxml2.so.16.0.3 $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.16.0.3
-	$(STRIP) $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.16.0.3
-	cd $(INSTALLDIR)/libxml2/usr/lib && ln -sf libxml2.so.16.0.3 libxml2.so.16 && ln -sf libxml2.so.16.0.3 libxml2.so
+	install -D libxml2/staged/usr/lib/libxml2.so.16.0.4 $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.16.0.4
+	$(STRIP) $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.16.0.4
+	cd $(INSTALLDIR)/libxml2/usr/lib && ln -sf libxml2.so.16.0.4 libxml2.so.16 && ln -sf libxml2.so.16.0.4 libxml2.so
 else
 	install -D libxml2/staged/usr/lib/libxml2.so.2.13.7 $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.13.7
 	$(STRIP) $(INSTALLDIR)/libxml2/usr/lib/libxml2.so.2.13.7
@@ -4190,9 +4190,9 @@ libffi: libffi/stamp-h1
 
 libffi-install:
 ifeq ($(TCONFIG_IRQBALANCE),y)
-	install -D $(TOP)/libffi/.libs/libffi.so.8.1.4 $(INSTALLDIR)/libffi/usr/lib/libffi.so.8.1.4
-	$(STRIP) $(INSTALLDIR)/libffi/usr/lib/libffi.so.8.1.4
-	cd $(INSTALLDIR)/libffi/usr/lib && ln -sf libffi.so.8.1.4 libffi.so.8 && ln -sf libffi.so.8.1.4 libffi.so
+	install -D $(TOP)/libffi/.libs/libffi.so.8.2.0 $(INSTALLDIR)/libffi/usr/lib/libffi.so.8.2.0
+	$(STRIP) $(INSTALLDIR)/libffi/usr/lib/libffi.so.8.2.0
+	cd $(INSTALLDIR)/libffi/usr/lib && ln -sf libffi.so.8.2.0 libffi.so.8 && ln -sf libffi.so.8.2.0 libffi.so
 endif
 	@true
 

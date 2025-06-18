@@ -271,7 +271,7 @@ sub fixDyn
 		fixDynDep("php-cgi", "libxml2.so.2.13.7");
 	}
 	else {
-		fixDynDep("php-cgi", "libxml2.so.16.0.3");
+		fixDynDep("php-cgi", "libxml2.so.16.0.4");
 	}
 	fixDynDep("php-cgi", "libpng16.so.16.49.0");
 	fixDynDep("php-cgi", "libiconv.so.2.7.0");
@@ -287,7 +287,7 @@ sub fixDyn
 		fixDynDep("php-cli", "libxml2.so.2.13.7");
 	}
 	else {
-		fixDynDep("php-cli", "libxml2.so.16.0.3");
+		fixDynDep("php-cli", "libxml2.so.16.0.4");
 	}
 	fixDynDep("php-cli", "libpng16.so.16.49.0");
 	fixDynDep("php-cli", "libiconv.so.2.7.0");
@@ -303,7 +303,7 @@ sub fixDyn
 		fixDynDep("php-fpm", "libxml2.so.2.13.7");
 	}
 	else {
-		fixDynDep("php-fpm", "libxml2.so.16.0.3");
+		fixDynDep("php-fpm", "libxml2.so.16.0.4");
 	}
 	fixDynDep("php-fpm", "libpng16.so.16.49.0");
 	fixDynDep("php-fpm", "libiconv.so.2.7.0");
@@ -711,7 +711,7 @@ if ($is_arm ne "y") { # MIPS
 	genSO("${root}/usr/lib/libxml2.so.2.13.7", "${router}/libxml2/staged/usr/lib/libxml2.a", "${stripshared}", "-L${router}/zlib");
 }
 else {
-	genSO("${root}/usr/lib/libxml2.so.16.0.3", "${router}/libxml2/staged/usr/lib/libxml2.a", "${stripshared}", "-L${router}/zlib");
+	genSO("${root}/usr/lib/libxml2.so.16.0.4", "${router}/libxml2/staged/usr/lib/libxml2.a", "${stripshared}", "-L${router}/zlib");
 }
 genSO("${root}/usr/lib/libpcre.so.1.2.13", "${router}/pcre/.libs/libpcre.a", "${stripshared}");
 genSO("${root}/usr/lib/libpcre2-8.so.0.14.0", "${router}/pcre2/staged/usr/lib/libpcre2-8.a", "${stripshared}");
@@ -729,7 +729,7 @@ genSO("${root}/usr/lib/libe2p.so.2.3", "${router}/e2fsprogs/lib/libe2p.a", "${st
 genSO("${root}/usr/lib/libcom_err.so.2.1", "${router}/e2fsprogs/lib/libcom_err.a", "${stripshared}", "-L${router}/e2fsprogs/lib");
 
 #genSO("${root}/usr/lib/libipset.so.11.1.0", "${router}/ipset/lib/.libs/libipset.a", "${stripshared}"); # (deleted)
-#genSO("${root}/usr/lib/libffi.so.8.1.4", "${router}/libffi/.libs/libffi.a", "${stripshared}"); # (deleted)
+#genSO("${root}/usr/lib/libffi.so.8.2.0", "${router}/libffi/.libs/libffi.a", "${stripshared}"); # (deleted)
 
 # do not add (!): libcap-ng, libzip, libsqlite3, libebtc, libiptc, libxtables, libip4tc, libip6tc, libglib-1, libglib-2, ...
 
