@@ -409,7 +409,7 @@
  #undef HAVE_DHCP6
  #endif
  
-@@ -388,6 +409,9 @@
+@@ -397,6 +418,9 @@
  #ifdef DNSMASQ_COMPILE_OPTS
  
  static char *compile_opts = 
@@ -673,7 +673,7 @@
 +#endif /* HAVE_IPV6 */
 --- dnsmasq/src/domain-match.c
 +++ dnsmasq/src/domain-match.c
-@@ -437,8 +437,10 @@
+@@ -441,8 +441,10 @@
  
  	if (srv->flags & SERV_ALL_ZEROS)
  	  memset(&addr, 0, sizeof(addr));
@@ -684,7 +684,7 @@
  	
  	if (add_resource_record(header, limit, &trunc, sizeof(struct dns_header), &p, daemon->local_ttl, NULL, T_AAAA, C_IN, "6", &addr))
  	  anscount++;
-@@ -664,9 +666,12 @@
+@@ -668,9 +670,12 @@
      {
        size_t size;
        
@@ -698,7 +698,7 @@
  	size = sizeof(struct serv_addr4);
        else
  	size = sizeof(struct serv_local);
-@@ -683,8 +688,10 @@
+@@ -687,8 +692,10 @@
        if (flags & SERV_4ADDR)
  	((struct serv_addr4*)serv)->addr = local_addr->addr4;
        
@@ -1965,7 +1965,7 @@
  		}
 --- dnsmasq/src/util.c
 +++ dnsmasq/src/util.c
-@@ -366,11 +366,13 @@
+@@ -370,11 +370,13 @@
  	  s1->in.sin_addr.s_addr == s2->in.sin_addr.s_addr)
  	return 1;
        
@@ -1979,7 +1979,7 @@
      }
    return 0;
  }
-@@ -381,9 +383,11 @@
+@@ -385,9 +387,11 @@
        s->in.sin_addr.s_addr == 0)
      return 1;
    
@@ -1991,7 +1991,7 @@
    
    return 0;
  }
-@@ -393,9 +397,11 @@
+@@ -397,9 +401,11 @@
  #ifdef HAVE_SOCKADDR_SA_LEN
    return addr->sa.sa_len;
  #else
@@ -2003,7 +2003,7 @@
      return sizeof(addr->in); 
  #endif
  }
-@@ -518,6 +524,7 @@
+@@ -522,6 +528,7 @@
  }
  
  
@@ -2011,7 +2011,7 @@
  int is_same_net6(struct in6_addr *a, struct in6_addr *b, int prefixlen)
  {
    int pfbytes = prefixlen >> 3;
-@@ -556,12 +563,14 @@
+@@ -560,12 +567,14 @@
      }
  }
  
@@ -2026,7 +2026,7 @@
    if (addr->sa.sa_family == AF_INET)
      {
        inet_ntop(AF_INET, &addr->in.sin_addr, buf, ADDRSTRLEN);
-@@ -580,6 +589,10 @@
+@@ -584,6 +593,10 @@
  	}
        port = ntohs(addr->in6.sin6_port);
      }
