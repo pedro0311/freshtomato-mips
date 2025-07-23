@@ -25,7 +25,7 @@
 <!-- USB-END -->
 
 <script>
-
+//	<% jsdefaults(); %>
 var wmo = {'ap':'Access Point','sta':'Wireless Client','wet':'Wireless Ethernet Bridge','wds':'WDS'};
 var auth = {'disabled':'-','wep':'WEP','wpa_personal':'WPA Personal (PSK)','wpa_enterprise':'WPA Enterprise','wpa2_personal':'WPA2 Personal (PSK)','wpa2_enterprise':'WPA2 Enterprise','wpaX_personal':'WPA / WPA2 Personal','wpaX_enterprise':'WPA / WPA2 Enterprise','radius':'Radius'};
 var enc = {'tkip':'TKIP','aes':'AES','tkip+aes':'TKIP / AES'};
