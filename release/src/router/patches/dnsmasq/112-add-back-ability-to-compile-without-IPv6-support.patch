@@ -567,6 +567,21 @@
  #ifdef HAVE_DHCP6
  void join_multicast(int dienow);
  #endif
+--- dnsmasq/src/dnssec.c
++++ dnsmasq/src/dnssec.c
+@@ -1022,7 +1022,11 @@
+ 	{
+ 	  if (option_bool(OPT_BOGUSPRIV) &&
+ 	      (flags = in_arpa_name_2_addr(name, &a)) &&
+-	      ((flags == F_IPV6 && private_net6(&a.addr6, 0)) || (flags == F_IPV4 && private_net(a.addr4, 0))))
++	       (
++#ifdef HAVE_IPV6
++	        (flags == F_IPV6 && private_net6(&a.addr6, 0)) ||
++#endif /* HAVE_IPV6 */
++	        (flags == F_IPV4 && private_net(a.addr4, 0))))
+ 	    {
+ 	      my_syslog(LOG_INFO, _("Insecure reply received for DS %s, assuming that's OK for a RFC-1918 address."), name);
+ 	      neganswer = 1;
 --- dnsmasq/src/domain.c
 +++ dnsmasq/src/domain.c
 @@ -19,14 +19,21 @@
