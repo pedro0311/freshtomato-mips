@@ -311,6 +311,7 @@ const defaults_t defaults[] = {
 	{ "stubby_resolvers",		"<1.1.1.1>>cloudflare-dns.com><1.0.0.1>>cloudflare-dns.com>"},	/* default DoT resolvers */
 	{ "stubby_force_tls13",		"0"				},	/* TLS version */
 	{ "stubby_log",			"5"				},	/* log level */
+	{ "stubby_custom",		""				},	/* custom config */
 #endif /* TCONFIG_STUBBY */
 	{ "wan_wins",			""				},	/* x.x.x.x x.x.x.x ... */
 	{ "wan_lease",			"86400"				},	/* WAN lease time in seconds */
