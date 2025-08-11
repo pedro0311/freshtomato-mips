@@ -1573,6 +1573,7 @@ const defaults_t defaults[] = {
 	{ "vpn_client1_routing_val",	""				},
 	{ "vpn_client1_fw",		"1"				},
 	{ "vpn_client1_tlsvername",	"0"				},
+	{ "vpn_client1_prio",		""				},
 	{ "vpn_client2_poll",		"0"				},
 	{ "vpn_client2_if",		"tun"				},
 	{ "vpn_client2_bridge",		"1"				},
@@ -1610,6 +1611,7 @@ const defaults_t defaults[] = {
 	{ "vpn_client2_routing_val",	""				},
 	{ "vpn_client2_fw",		"1"				},
 	{ "vpn_client2_tlsvername",	"0"				},
+	{ "vpn_client2_prio",		""				},
 #ifdef TCONFIG_BCMARM
 	{ "vpn_client3_poll",		"0"				},
 	{ "vpn_client3_if",		"tun"				},
@@ -1648,6 +1650,7 @@ const defaults_t defaults[] = {
 	{ "vpn_client3_routing_val",	""				},
 	{ "vpn_client3_fw",		"1"				},
 	{ "vpn_client3_tlsvername",	"0"				},
+	{ "vpn_client3_prio",		""				},
 #endif /* TCONFIG_BCMARM */
 #endif /* TCONFIG_OPENVPN */
 
