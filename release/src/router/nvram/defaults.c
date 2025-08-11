@@ -1727,6 +1727,7 @@ const defaults_t defaults[] = {
 	{"wg0_fw",			"1"				},
 	{"wg0_rgwr",			"1"				},
 	{"wg0_routing_val",		""				},
+	{"wg0_prio",			""				},
 	{"wg1_enable",			"0"				},
 	{"wg1_poll",			"0"				},
 	{"wg1_file",			""				},
@@ -1754,6 +1755,7 @@ const defaults_t defaults[] = {
 	{"wg1_fw",			"1"				},
 	{"wg1_rgwr",			"1"				},
 	{"wg1_routing_val",		""				},
+	{"wg1_prio",			""				},
 	{"wg2_enable",			"0"				},
 	{"wg2_poll",			"0"				},
 	{"wg2_file",			""				},
@@ -1781,6 +1783,7 @@ const defaults_t defaults[] = {
 	{"wg2_fw",			"1"				},
 	{"wg2_rgwr",			"1"				},
 	{"wg2_routing_val",		""				},
+	{"wg2_prio",			""				},
 #endif /* TCONFIG_WIREGUARD */
 
 #ifdef TCONFIG_BT
