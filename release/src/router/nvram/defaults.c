@@ -955,7 +955,7 @@ const defaults_t defaults[] = {
 #ifdef TCONFIG_USB_EXTRAS
 	{ "dnsmasq_tftp",		"0"				},
 	{ "dnsmasq_tftp_path",		""				},
-	{ "dnsmasq_pxelan0",		"0"				},
+	{ "dnsmasq_pxelan",		"0"				},
 #endif
 #ifdef TCONFIG_MDNS
 	{ "mdns_enable",		"0"				},
