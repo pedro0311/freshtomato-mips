@@ -261,6 +261,14 @@ void asp_nvram(int argc, char **argv)
 	web_puts("\t'web_pb': '"); /* multiSSID */
 	web_putj(nvram_safe_get("web_pb"));
 	web_puts("'};\n");
+
+	web_puts("\t'os_ver_last': '");
+	web_putj(nvram_safe_get("os_version_last"));
+	web_puts("',\n");
+
+	web_puts("\t'os_ver': '");
+	web_putj(tomato_shortver);
+	web_puts("',\n");
 }
 
 /* <% nvramseq('foo', 'bar%d', 5, 8); %> ---> foo = ['a','b','c']; */
