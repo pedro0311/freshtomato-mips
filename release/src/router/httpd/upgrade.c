@@ -33,9 +33,6 @@ void prepare_upgrade(void)
 			break;
 	}
 
-	nvram_set("os_version_last", tomato_shortver);
-	nvram_commit();
-
 	unlink("/var/log/messages");
 	unlink("/var/log/messages.0");
 	sync();
