@@ -703,7 +703,7 @@ static int wg_set_iface_addr(char *iface, const char *addr)
 
 	/* Set wireguard interface address(es) */
 	nv = nv_orig = strdup(addr);
-	while ((b = strsep(&nv, ",")) != NULL) {
+	while (nv && (b = strsep(&nv, ",")) != NULL) {
 		if (eval("ip", "addr", "add", b, "dev", iface)) {
 			logmsg(LOG_WARNING, "unable to add wireguard interface %s address of %s!", iface, b);
 			if (nv_orig)
@@ -1228,7 +1228,7 @@ static void wg_route_peer_allowed_ips(const int unit, char *iface, const char *a
 		parsed = vstrsep(b, "|", &rt, &table);
 
 		if (!rt || rt[0] == '\0') {
-			logmsg(LOG_WARNING, "invalid route format for wg%d: missing routetype in '%s'", unit, b);
+			logmsg(LOG_WARNING, "invalid route format for wg%d: missing routetype in '%s'", unit, tp);
 			/* use default route_type = 1, table = NULL */
 		}
 		else if (parsed == 1) {
@@ -1243,10 +1243,12 @@ static void wg_route_peer_allowed_ips(const int unit, char *iface, const char *a
 		free(tp);
 	}
 
+	logmsg(LOG_DEBUG, "*** %s: routing: iface=[%s] route_type=[%s] table=[%d]", __FUNCTION__, iface, route_type, table);
+
 	/* check which routing type the user specified */
 	if (route_type > 0) { /* !off */
 		aip = aip_orig = strdup(allowed_ips);
-		while ((b = strsep(&aip, ",")) != NULL) {
+		while (aip && (b = strsep(&aip, ",")) != NULL) {
 			memset(buffer, 0, BUF_SIZE_32);
 			snprintf(buffer, BUF_SIZE_32, "%s", b);
 
@@ -1732,20 +1734,26 @@ void write_wg_dnsmasq_config(FILE* f)
 		}
 	}
 
-	if ((dir = opendir(WG_DNS_DIR)) != NULL) {
-		while ((file = readdir(dir)) != NULL) {
-			fn = file->d_name;
+	dir = opendir(WG_DNS_DIR);
+	if (!dir)
+		return;
 
-			if (fn[0] == '.')
+	while ((file = readdir(dir)) != NULL) {
+		fn = file->d_name;
+
+		if (fn[0] == '.')
+			continue;
+
+		if (sscanf(fn, "%s.conf", device) == 1) {
+			memset(buf, 0, BUF_SIZE);
+			snprintf(buf, BUF_SIZE, "%s/%s", WG_DNS_DIR, fn);
+			if (fappend(f, buf) == -1) {
+				logmsg(LOG_WARNING, "fappend failed for %s (%s)", buf, strerror(errno));
 				continue;
-
-			if (sscanf(fn, "%s.conf", device) == 1) {
-				logmsg(LOG_DEBUG, "*** %s: adding Dnsmasq config from %s", __FUNCTION__, fn);
-				memset(buf, 0, BUF_SIZE);
-				snprintf(buf, BUF_SIZE, WG_DNS_DIR"/%s", fn);
-				fappend(f, buf);
 			}
+
+			logmsg(LOG_DEBUG, "*** %s: adding Dnsmasq config from %s", __FUNCTION__, fn);
 		}
-		closedir(dir);
 	}
+	closedir(dir);
 }
