@@ -1526,6 +1526,7 @@ function init() {
 		}
 	}
 	verifyFields(null, 1);
+	insOvl();
 </script>
 </body>
 </html>
