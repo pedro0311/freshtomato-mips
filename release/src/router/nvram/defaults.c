@@ -487,8 +487,6 @@ const defaults_t defaults[] = {
 	{ "ipv6_duid_type",		"3"				},	/* see RFC8415 Section 11; DUID-LLT = 1, DUID-EN = 2, DUID-LL = 3 (default), DUID-UUID = 4 */
 	{ "ipv6_prefix",		""				},	/* The global-scope IPv6 prefix to route/advertise */
 	{ "ipv6_prefix_length",		"64"				},	/* The bit length of the prefix. Used by dhcp6c. For radvd, /64 is always assumed. */
-	{ "ipv6_ia_na_id",		"0"				},	/* The ia-na id used by dhcp6c.*/
-	{ "ipv6_ia_pd_id",		"0"				},	/* The ia-pd id used by dhcp6c.*/
 	{ "ipv6_rtr_addr",		""				},	/* defaults to $ipv6_prefix::1 */
 	{ "ipv6_radvd",			"1"				},	/* Enable Router Advertisement (radvd) */
 	{ "ipv6_dhcpd",			"1"				},	/* Enable DHCPv6 */
