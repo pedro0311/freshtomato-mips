@@ -516,6 +516,7 @@ const defaults_t defaults[] = {
 	{ "ipv6_wan_addr",		""				},	/* Static IPv6 WAN Address */
 	{ "ipv6_prefix_len_wan",	"64"				},	/* Static IPv6 WAN Prefix Length */
 	{ "ipv6_isp_gw",		""				},	/* Static IPv6 ISP Gateway */
+	{ "ipv6_llremote_custom",	""				},	/* DHCPv6 PD user defined Gateway - used for default route, usually fe80:: (until provided via IPv6 RAs) */
 #endif /* TCONFIG_IPV6 */
 
 #ifdef TCONFIG_FANCTRL
