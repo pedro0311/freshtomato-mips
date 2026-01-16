@@ -1836,26 +1836,27 @@ const defaults_t defaults[] = {
 #endif /* TCONFIG_NOCAT */
 
 #ifdef TCONFIG_NGINX
-	{"nginx_enable",		"0"				},	/* NGinX enabled */
-	{"nginx_php",			"0"				},	/* PHP enabled */
-	{"nginx_keepconf",		"0"				},	/* Enable/disable keep configuration files unmodified in /etc/nginx */
-	{"nginx_docroot",		"/www"				},	/* path for server files */
-	{"nginx_port",			"85"				},	/* port to listen */
-	{"nginx_remote",		"0"				},	/* open port from WAN side */
-	{"nginx_fqdn",			"FreshTomato"			},	/* server name */
-	{"nginx_upload",		"100"				},	/* upload file size limit */
-	{"nginx_priority",		"10"				},	/* server priority = worker_priority */
-	{"nginx_custom",		""				},	/* additional lines for nginx.conf */
-	{"nginx_httpcustom",		""				},	/* additional lines for nginx.conf */
-	{"nginx_servercustom",		""				},	/* additional lines for nginx.conf */
-	{"nginx_phpconf",		""				},	/* additional lines for php.ini */
+	{ "nginx_enable",		"0"				},	/* NGinX enabled */
+	{ "nginx_php",			"0"				},	/* PHP enabled */
+	{ "nginx_keepconf",		"0"				},	/* Enable/disable keep configuration files unmodified in /etc/nginx */
+	{ "nginx_docroot",		"/www"				},	/* path for server files */
+	{ "nginx_port",			"85"				},	/* port to listen */
+	{ "nginx_remote",		"0"				},	/* open port from WAN side */
+	{ "nginx_fqdn",			"FreshTomato"			},	/* server name */
+	{ "nginx_upload",		"100"				},	/* upload file size limit */
+	{ "nginx_priority",		"10"				},	/* server priority = worker_priority */
+	{ "nginx_custom",		""				},	/* additional lines for nginx.conf */
+	{ "nginx_httpcustom",		""				},	/* additional lines for nginx.conf */
+	{ "nginx_servercustom",		""				},	/* additional lines for nginx.conf */
+	{ "nginx_phpconf",		""				},	/* additional lines for php.ini */
 #ifdef TCONFIG_BCMARM
-	{"nginx_phpfpmconf",		""				},	/* additional lines for php-fpm.conf */
+	{ "nginx_phpfpmconf",		""				},	/* additional lines for php-fpm.conf */
 #endif
-	{"nginx_user",			"root"				},	/* user/group */
-	{"nginx_override",		"0"				},	/* use user config */
-	{"nginx_overridefile",		"/path/to/nginx.conf"		},	/* path/to/user/nginx.conf */
-	{"nginx_h5aisupport",		"0"				},	/* enable h5ai support */
+	{ "nginx_user",			"root"				},	/* user/group */
+	{ "nginx_override",		"0"				},	/* use user config */
+	{ "nginx_overridefile",		"/path/to/nginx.conf"		},	/* path/to/user/nginx.conf */
+	{ "nginx_h5aisupport",		"0"				},	/* enable h5ai support */
+	{ "nginx_sleep",		"1"				},	/* delay at startup */
 
 	{ "mysql_enable",		"0"				},
 	{ "mysql_sleep",		"2"				},
