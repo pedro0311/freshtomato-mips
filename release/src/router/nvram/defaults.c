@@ -1668,6 +1668,7 @@ const defaults_t defaults[] = {
 	{"wg0_enable",			"0"				},
 	{"wg0_poll",			"0"				},
 	{"wg0_tchk",			"0"				},	/* check if tunnel is up */
+	{"wg0_sleep",			"1"				},	/* delay at startup */
 	{"wg0_file",			""				},
 	{"wg0_key",			""				},
 	{"wg0_endpoint",		""				},
@@ -1697,6 +1698,7 @@ const defaults_t defaults[] = {
 	{"wg1_enable",			"0"				},
 	{"wg1_poll",			"0"				},
 	{"wg1_tchk",			"0"				},	/* check if tunnel is up */
+	{"wg1_sleep",			"1"				},	/* delay at startup */
 	{"wg1_file",			""				},
 	{"wg1_key",			""				},
 	{"wg1_endpoint",		""				},
@@ -1726,6 +1728,7 @@ const defaults_t defaults[] = {
 	{"wg2_enable",			"0"				},
 	{"wg2_poll",			"0"				},
 	{"wg2_tchk",			"0"				},	/* check if tunnel is up */
+	{"wg2_sleep",			"1"				},	/* delay at startup */
 	{"wg2_file",			""				},
 	{"wg2_key",			""				},
 	{"wg2_endpoint",		""				},
