@@ -367,7 +367,7 @@ END:
 	}
 
 	/* terminate the child */
-	exit(0);
+	_exit(0);
 }
 
 void stop_mysql(void)
