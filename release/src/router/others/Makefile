@@ -8,6 +8,11 @@ install:
 	install -d $(INSTALLDIR)/usr/bin
 	install -d $(INSTALLDIR)/lib
 
+# Port health monitor/recover script
+ifeq ($(TCONFIG_BCMARM),y)
+	install -m 0700 porthealth.sh $(INSTALLDIR)/usr/sbin/porthealth.sh
+endif
+
 ifeq ($(TCONFIG_USB),y)
 # Optware perl symlink
 	install -d $(INSTALLDIR)/usr/bin
