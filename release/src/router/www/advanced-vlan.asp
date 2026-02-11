@@ -109,7 +109,6 @@ switch (nvram['t_model_name']) {
 	case 'Cisco M10 v2.0':
 	case 'D-Link DIR-865L':
 	case 'Linksys M20':
-	case 'Linksys E1000 v1':
 	case 'Linksys E1000 v2.0':
 	case 'Linksys E1000 v2.1':
 	case 'Linksys WRT310N v2':
@@ -155,6 +154,8 @@ switch (nvram['t_model_name']) {
 	case 'Netgear WNR3500L v2':
 	case 'Tenda N60':
 	case 'Linksys WRT160N': /* WRT160Nv3 */
+	case 'Linksys E1000 v1':
+	case 'Linksys E1000 v1.0':
 	case 'Linksys E2000':
 	case 'Linksys E3000':
 		COL_P0N = '0';
