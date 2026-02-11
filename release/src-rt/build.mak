@@ -24,50 +24,30 @@ ifeq ($(BELKIN),y)
  endif
 endif
 
-	@echo "" >>fpkg.log
-	@echo "***********************" `date` "************************" >>fpkg.log
-	@cat router/shared/tomato_version >>fpkg.log
-	@echo "" >>fpkg.log
-	@cat router/target.info >>fpkg.log
-
 ifeq ($(wildcard include/bcm20xx.h),)
-	@btools/fpkg -i lzma-loader/loader.gz -i $(LINUXDIR)/arch/mips/brcm-boards/bcm947xx/compressed/vmlinuz -a 1024 -i router/mipsel-uclibc/target.image \
-		-t image/freshtomato.trx \
-		-l W54G,image/WRT54G_WRT54GL.bin \
-		-l W54S,image/WRT54GS.bin \
-		-l W54s,image/WRT54GSv4.bin \
-		-l W54U,image/WRTSL54GS.bin \
-		-m 0x10577050,image/WR850G.bin \
-		| tee -a fpkg.log
+	$(call CREATE_INJECT_MODEL_LINKSYS,freshtomato-WRT54G_WRT54GL-$(branch_rev)$(fn_BUILD_USB)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).bin,-l,W54G)
+	$(call CREATE_INJECT_MODEL_LINKSYS,freshtomato-WRT54GS-$(branch_rev)$(fn_BUILD_USB)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).bin,-l,W54S)
+	$(call CREATE_INJECT_MODEL_LINKSYS,freshtomato-WRT54GSv4-$(branch_rev)$(fn_BUILD_USB)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).bin,-l,W54s)
+	$(call CREATE_INJECT_MODEL_LINKSYS,freshtomato-WRTSL54GS-$(branch_rev)$(fn_BUILD_USB)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).bin,-l,W54U)
+	$(call CREATE_INJECT_MODEL_LINKSYS,freshtomato-WR850G-$(branch_rev)$(fn_BUILD_USB)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).bin,-m,0x10577050)
 else
  ifeq ($(LINKSYS_E),y)
-	# Linksys E-series build plus generic TRX image
-	@btools/fpkg -i lzma-loader/loader.gz -i $(LINUXDIR)/arch/mips/brcm-boards/bcm947xx/compressed/vmlinuz -a 1024 -i router/mipsel-uclibc/target.image \
-		-t image/freshtomato$(if $(filter-out $(BUILD_FN),),$(shell echo -$(BUILD_FN)))-$(branch_rev)$(fn_BUILD_USB)$(fn_NVRAM_SIZE)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).trx \
-		-l 4200,image/freshtomato-E4200-$(branch_rev)$(fn_BUILD_USB)$(fn_NVRAM_SIZE)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).bin \
-		-l 61XN,image/freshtomato-E3000-$(branch_rev)$(fn_BUILD_USB)$(fn_NVRAM_SIZE)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).bin \
-		-l 32XN,image/freshtomato-E2000-$(branch_rev)$(fn_BUILD_USB)$(fn_NVRAM_SIZE)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).bin \
-		| tee -a fpkg.log
+	# Linksys E-series build
+	$(call CREATE_INJECT_MODEL_LINKSYS,freshtomato-E4200-$(branch_rev)$(fn_BUILD_USB)$(fn_NVRAM_SIZE)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).bin,-l,4200)
+	$(call CREATE_INJECT_MODEL_LINKSYS,freshtomato-E3000-$(branch_rev)$(fn_BUILD_USB)$(fn_NVRAM_SIZE)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).bin,-l,61XN)
+	$(call CREATE_INJECT_MODEL_LINKSYS,freshtomato-E2000-$(branch_rev)$(fn_BUILD_USB)$(fn_NVRAM_SIZE)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).bin,-l,32XN)
  else
   ifeq ($(BELKIN),y)
    ifneq ($(NVRAM_SIZE),60)
-	# Create Belkin images
-	@btools/fpkg -i lzma-loader/loader.gz -i $(LINUXDIR)/arch/mips/brcm-boards/bcm947xx/compressed/vmlinuz -a 1024 -i router/mipsel-uclibc/target.image \
-		-t image/freshtomato$(if $(filter-out $(BUILD_FN),),$(shell echo -$(BUILD_FN)))-$(branch_rev)$(fn_BUILD_USB)$(fn_NVRAM_SIZE)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).trx \
-		-b 0x20100322,image/freshtomato-F7D3301-$(branch_rev)$(fn_BUILD_USB)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).bin \
-		-b 0x20090928,image/freshtomato-F7D3302-$(branch_rev)$(fn_BUILD_USB)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).bin \
-		-b 0x20091006,image/freshtomato-F7D4302-$(branch_rev)$(fn_BUILD_USB)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).bin \
-		-b 0x00017116,image/freshtomato-F5D8235v3-$(branch_rev)$(fn_BUILD_USB)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).bin \
-		| tee -a fpkg.log
+	# Create Belkin F7D3301, F7D3302, F7D4302, F5D8235v3 images
+	$(call CREATE_INJECT_MODEL_BELKIN,freshtomato-F7D3301-$(branch_rev)$(fn_BUILD_USB)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).bin,0x20100322)
+	$(call CREATE_INJECT_MODEL_BELKIN,freshtomato-F7D3302-$(branch_rev)$(fn_BUILD_USB)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).bin,0x20090928)
+	$(call CREATE_INJECT_MODEL_BELKIN,freshtomato-F7D4302-$(branch_rev)$(fn_BUILD_USB)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).bin,0x20091006)
+	$(call CREATE_INJECT_MODEL_BELKIN,freshtomato-F5D8235v3-$(branch_rev)$(fn_BUILD_USB)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).bin,0x00017116)
    endif
   else
-	# Create generic TRX image
-	@echo "Creating Generic TRX Firmware"
-	@btools/fpkg -i lzma-loader/loader.gz -i $(LINUXDIR)/arch/mips/brcm-boards/bcm947xx/compressed/vmlinuz -a 1024 -i router/mipsel-uclibc/target.image \
-		-t image/freshtomato$(if $(filter-out $(BUILD_FN),),$(shell echo -$(BUILD_FN)))-$(branch_rev)$(fn_BUILD_USB)$(fn_NVRAM_SIZE)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).trx \
-		| tee -a fpkg.log
+	@echo "Creating Generic TRX Firmware (RT)"
+	$(call CREATE_INJECT_MODEL_GEN,freshtomato$(current_BUILD_FN)-$(branch_rev)$(fn_BUILD_USB)$(fn_NVRAM_SIZE)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).trx)
   endif
  endif
 endif
-
-	@cp fpkg.log image/fpkg-$(branch_rev)$(fn_BUILD_USB)-$(current_TOMATO_VER)$(beta)$(current_V2)-$(current_BUILD_DESC).log
