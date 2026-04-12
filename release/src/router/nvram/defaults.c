@@ -930,6 +930,9 @@ const defaults_t defaults[] = {
 #ifdef TCONFIG_BCMNAT
 	{ "bcmnat_disable",		"1"				},
 #endif
+#ifdef TCONFIG_BCMARM
+	{ "porthealth_cfg",		""				},
+#endif
 
 /* advanced-dhcpdns */
 	{ "dhcpd_dmdns",		"1"				},
