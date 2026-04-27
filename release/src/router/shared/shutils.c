@@ -289,13 +289,33 @@ fail:
 
 /*
  * Convert Ethernet address binary data to string representation
- * @param	e	binary data
- * @param	a	string in xx:xx:xx:xx:xx:xx notation
- * @return	a
+ * @param e       binary Ethernet address
+ * @param a       output buffer
+ * @return        string
  */
 char *ether_etoa(const unsigned char *e, char *a)
 {
-	sprintf(a, "%02X:%02X:%02X:%02X:%02X:%02X", e[0], e[1], e[2], e[3], e[4], e[5]);
+	static const char hex[] = "0123456789ABCDEF";
+	char *p = a;
+	int i;
+
+	if (!a) return NULL;
+
+	if (!e) {
+		a[0] = '\0';
+		return a;
+	}
+
+	for (i = 0; i < ETHER_ADDR_LEN; i++) {
+		if (i)
+			*p++ = ':';
+
+		*p++ = hex[e[i] >> 4];
+		*p++ = hex[e[i] & 0x0F];
+	}
+
+	*p = '\0';
+
 	return a;
 }
 
