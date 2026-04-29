@@ -322,6 +322,7 @@ char *ether_etoa(const unsigned char *e, char *a)
 void cprintf(const char *format, ...)
 {
 	FILE *f;
+	int nfd;
 	va_list args;
 
 #ifdef DEBUG_NOISY
@@ -329,18 +330,20 @@ void cprintf(const char *format, ...)
 #else
 	if (nvram_match("debug_cprintf", "1")) {
 #endif
-		if ((f = fopen("/dev/console", "w")) != NULL) {
-			va_start(args, format);
-			vfprintf(f, format, args);
-			va_end(args);
-			fclose(f);
+		if ((nfd = open("/dev/console", O_WRONLY | O_NONBLOCK)) >= 0) {
+			if ((f = fdopen(nfd, "w")) != NULL) {
+				va_start(args, format);
+				vfprintf(f, format, args);
+				va_end(args);
+				fclose(f);
+			}
+			else {
+				close(nfd);
+			}
 		}
 	}
-#if 1	
+
 	if (nvram_match("debug_cprintf_file", "1")) {
-//		char s[32];
-//		sprintf(s, "/tmp/cprintf.%d", getpid());
-//		if ((f = fopen(s, "a")) != NULL) {
 		if ((f = fopen("/tmp/cprintf", "a")) != NULL) {
 			va_start(args, format);
 			vfprintf(f, format, args);
@@ -348,19 +351,6 @@ void cprintf(const char *format, ...)
 			fclose(f);
 		}
 	}
-#endif
-#if 0
-	if (nvram_match("debug_cprintf_log", "1")) {
-		char s[512];
-		
-		va_start(args, format);
-		vsnprintf(s, sizeof(s), format, args);
-		s[sizeof(s) - 1] = 0;
-		va_end(args);
-		
-		if ((s[0] != '\n') || (s[1] != 0)) syslog(LOG_DEBUG, "%s", s);
-	}
-#endif
 }
 
 int _vstrsep(char *buf, const char *sep, ...)
