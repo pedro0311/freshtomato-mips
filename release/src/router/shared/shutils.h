@@ -153,18 +153,16 @@ static inline char * strcat_r(const char *s1, const char *s2, char *buf)
 })
 #endif
 
-/* Copy each token in wordlist delimited by space into word */
+/* copy each token in wordlist delimited by space into word */
 #define foreach(word, wordlist, next) \
-	for (next = &wordlist[strspn(wordlist, " ")], \
-	     strncpy(word, next, sizeof(word)), \
-	     word[strcspn(word, " ")] = '\0', \
-	     word[sizeof(word) - 1] = '\0', \
+	for (next = &(wordlist)[strspn((wordlist), " ")], \
+	     strlcpy((word), next, sizeof(word)), \
+	     (word)[strcspn((word), " ")] = '\0', \
 	     next = strchr(next, ' '); \
-	     strlen(word); \
+	     (word)[0] != '\0'; \
 	     next = next ? &next[strspn(next, " ")] : "", \
-	     strncpy(word, next, sizeof(word)), \
-	     word[strcspn(word, " ")] = '\0', \
-	     word[sizeof(word) - 1] = '\0', \
+	     strlcpy((word), next, sizeof(word)), \
+	     (word)[strcspn((word), " ")] = '\0', \
 	     next = strchr(next, ' '))
 
 /* Return NUL instead of NULL if undefined */
