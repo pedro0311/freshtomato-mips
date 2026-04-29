@@ -353,6 +353,37 @@ void cprintf(const char *format, ...)
 	}
 }
 
+/*
+ * Convert an Ethernet address to a printable string.
+ *
+ * The function formats the address as uppercase hexadecimal octets separated
+ * by colons. The returned pointer refers to a static internal buffer and is
+ * overwritten by each subsequent call.
+ *
+ * @param  n  Ethernet address to convert
+ * @return    Pointer to the formatted address string, or NULL on error
+ */
+#ifdef CONFIG_BCMWL5
+char *wl_ether_etoa(const struct ether_addr *n)
+{
+	static char etoa_buf[ETHER_ADDR_LEN * 3];
+	int ret;
+
+	if (n == NULL)
+		return NULL;
+
+	ret = snprintf(etoa_buf, sizeof(etoa_buf),
+	               "%02X:%02X:%02X:%02X:%02X:%02X",
+	               n->octet[0] & 0xff, n->octet[1] & 0xff,
+	               n->octet[2] & 0xff, n->octet[3] & 0xff,
+	               n->octet[4] & 0xff, n->octet[5] & 0xff);
+	if (ret < 0 || (size_t)ret >= sizeof(etoa_buf))
+		return NULL;
+
+	return etoa_buf;
+}
+#endif /* CONFIG_BCMWL5 */
+
 int _vstrsep(char *buf, const char *sep, ...)
 {
 	va_list ap;
