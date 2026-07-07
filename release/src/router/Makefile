@@ -3099,6 +3099,7 @@ $(LIBCURL_TARGET)-clean:
 	$(call unpatch_files,$(LIBCURL_TARGET))
 
 libevent/stamp-h1:
+	$(call patch_files,libevent)
 	cd libevent && ./autogen.sh && \
 		CFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC" \
 		CPPFLAGS="-Os -Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections -fPIC -I$(TOP)/zlib/staged/usr/include" \
@@ -3114,7 +3115,7 @@ libevent: libevent/stamp-h1
 
 libevent-install:
 ifeq ($(or $(TCONFIG_BBT),$(TCONFIG_TOR)),y)
-	install -D libevent/.libs/libevent-2.1.so.7.0.1 $(INSTALLDIR)/libevent/usr/lib/libevent-2.1.so.7
+	install -D libevent/.libs/libevent-2.1.so.7.0.2 $(INSTALLDIR)/libevent/usr/lib/libevent-2.1.so.7
 	$(STRIP) -s $(INSTALLDIR)/libevent/usr/lib/libevent-2.1.so.7
 	cd $(INSTALLDIR)/libevent/usr/lib/ && ln -sf libevent-2.1.so.7 libevent.so
 endif
@@ -3124,6 +3125,7 @@ libevent-clean:
 	-@$(MAKE) -C libevent clean
 	@rm -f libevent/stamp-h1 libevent/Makefile
 	@rm -rf libevent/staged
+	$(call unpatch_files,libevent)
 
 libiconv/stamp-h1:
 	cd libiconv && \
@@ -4244,9 +4246,9 @@ libffi: libffi/stamp-h1
 
 libffi-install:
 ifeq ($(TCONFIG_IRQBALANCE),y)
-	install -D $(TOP)/libffi/.libs/libffi.so.8.2.0 $(INSTALLDIR)/libffi/usr/lib/libffi.so.8.2.0
-	$(STRIP) $(INSTALLDIR)/libffi/usr/lib/libffi.so.8.2.0
-	cd $(INSTALLDIR)/libffi/usr/lib && ln -sf libffi.so.8.2.0 libffi.so.8 && ln -sf libffi.so.8.2.0 libffi.so
+	install -D $(TOP)/libffi/.libs/libffi.so.8.3.1 $(INSTALLDIR)/libffi/usr/lib/libffi.so.8.3.1
+	$(STRIP) $(INSTALLDIR)/libffi/usr/lib/libffi.so.8.3.1
+	cd $(INSTALLDIR)/libffi/usr/lib && ln -sf libffi.so.8.3.1 libffi.so.8 && ln -sf libffi.so.8.3.1 libffi.so
 endif
 	@true
 
