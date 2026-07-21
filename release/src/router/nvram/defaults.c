@@ -1121,7 +1121,7 @@ const defaults_t defaults[] = {
 #ifdef TCONFIG_BCMARM
 	{ "porthealth_cfg",		""				},
 #endif
-	{ "tcp_clamp_disable",		"0"				},	/* Adjust TCP MSS for forwarded traffic on WAN and VPN interfaces to avoid MTU-related connection issues. */
+
 /* advanced-dhcpdns */
 	{ "dhcpd_dmdns",		"1"				},
 	{ "dhcpd_slt",			"0"				},
