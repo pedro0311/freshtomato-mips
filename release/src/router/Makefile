@@ -1708,7 +1708,7 @@ pppd-clean:
 
 pptpd/Makefile:
 	$(call patch_files,pptpd)
-	cd pptpd && \
+	cd pptpd && autoreconf -fsi && \
 		CFLAGS="-Wall $(EXTRACFLAGS) -ffunction-sections -fdata-sections" \
 		LDFLAGS="-Wl,--gc-sections" \
 		$(CONFIGURE) --prefix=$(INSTALLDIR)/pptpd --enable-bcrelay --disable-dependency-tracking
