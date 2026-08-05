@@ -18,12 +18,15 @@
 <script src="wireless.jsx?_http_id=<% nv(http_id); %>"></script>
 <script>
 
-//	<% nvram("wl_security_mode,wl_afterburner,wl_antdiv,wl_auth,wl_bcn,wl_dtim,wl_frag,wl_frameburst,wl_gmode_protection,wl_plcphdr,wl_rate,wl_rateset,wl_rts,wl_txant,wl_wme,wl_wme_no_ack,wl_wme_apsd,wl_txpwr,wl_mrate,t_features,wl_distance,wl_maxassoc,wl_bss_maxassoc,wlx_hpamp,wlx_hperx,wl_reg_mode,wl_country_code,wl_btc_mode,wl_mimo_preamble,wl_obss_coex,wl_mitigation,wl_wmf_bss_enable,wl_user_rssi"); %>
+//	<% nvram("wl_security_mode,wl_afterburner,wl_antdiv,wl_auth,wl_bcn,wl_dtim,wl_frag,wl_frameburst,wl_gmode_protection,wl_plcphdr,wl_rate,wl_rateset,wl_rts,wl_txant,wl_wme,wl_wme_no_ack,wl_wme_apsd,wl_txpwr,wl_mrate,t_features,wl_distance,wl_maxassoc,wl_bss_maxassoc,wlx_hpamp,wlx_hperx,wl_reg_mode,wl_country_code,0:ccode,1:ccode,pci/1/1/ccode,pci/2/1/ccode,sb/1/ccode,wl_country_rev,0:regrev,1:regrev,pci/1/1/regrev,pci/2/1/regrev,sb/1/regrev,wl_btc_mode,wl_mimo_preamble,wl_obss_coex,wl_mitigation,wl_nband,wl_wmf_bss_enable,wl_user_rssi"); %>
 
 //	<% wlcountries(); %>
 
 hp = features('hpamp');
 nphy = features('11n');
+/* BCMWL6-BEGIN */
+var cprefix = 'advanced_wireless';
+/* BCMWL6-END */
 
 function verifyFields(focused, quiet) {
 	for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
@@ -36,6 +39,9 @@ function verifyFields(focused, quiet) {
 			if (!v_range('_wl'+u+'_dtim', quiet, 1, 255)) return 0;
 			if (!v_range('_wl'+u+'_frag', quiet, 256, 2346)) return 0;
 			if (!v_range('_wl'+u+'_rts', quiet, 0, 2347)) return 0;
+/* BCMWL6-BEGIN */
+			if (!v_range('_wl'+u+'_country_rev', quiet, 0, 999)) return 0;
+/* BCMWL6-END */
 			if ((E('_wl'+u+'_txpwr').value != 0) && !v_range(E('_wl'+u+'_txpwr'), quiet, 5, hp ? 251 : 400)) return 0;
 /* ROAM-BEGIN */
 			if ((E('_wl'+u+'_user_rssi').value != 0) && !v_range(E('_wl'+u+'_user_rssi'), quiet, -90, -45)) return 0;
@@ -61,15 +67,59 @@ function save() {
 	for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 		if (wl_sunit(uidx) < 0) {
 			var u = wl_unit(uidx);
+/* BCMWL6-BEGIN */
+			var u_pci = (u+1);
+			var u_sb = (u+1);
+/* BCMWL6-END */
 			var c_code = E('_wl'+u+'_country_code').value;
+/* BCMWL6-BEGIN */
+			var c_rev = E('_wl'+u+'_country_rev').value;
+/* BCMWL6-END */
 
 			n = E('_f_wl'+u+'_distance').value * 1;
 			E('_wl'+u+'_distance').value = n ? n : '';
 
-			/* check if wireless country will be changed */
+			/* check if wireless country settings will be changed */
 			if (nvram['wl'+u+'_country_code'] != c_code)
 				router_reboot = 1;
+/* BCMWL6-BEGIN */
+			/* check if wireless country settings will be changed */
+			if (nvram['wl'+u+'_country_rev'] != c_rev)
+				router_reboot = 1;
 
+			if ((nvram['sb/1/ccode'].length > 0) && (nvram['sb/1/regrev'].length > 0)) { /* check SDK5 / sb (Southbridge) first */
+				if (u_sb == 1) {
+					E('_sb/'+u_sb+'/ccode').value = c_code;
+					E('_sb/'+u_sb+'/regrev').value = c_rev;
+				}
+				else if (u_sb == 2) { /* second interface PCI */
+					if (nvram['0:ccode'].length > 0) /* check short version */
+						E('_0:ccode').value = c_code;
+    
+					if (nvram['pci/1/1/ccode'].length > 0) /* check long version */
+						E('_pci/1/1/ccode').value = c_code;
+
+					if (nvram['0:regrev'].length > 0)
+						E('_0:regrev').value = c_rev;
+
+					if (nvram['pci/1/1/regrev'].length > 0)
+						E('_pci/1/1/regrev').value = c_rev;
+				}
+			}
+			else { /* SDK6 and PCI */
+				if (nvram[+u+':ccode'].length > 0) /* check short version */
+					E('_'+u+':ccode').value = c_code;
+    
+				if (nvram['pci/'+u_pci+'/1/ccode'].length > 0) /* check long version */
+					E('_pci/'+u_pci+'/1/ccode').value = c_code;
+
+				if (nvram[+u+':regrev'].length > 0)
+					E('_'+u+':regrev').value = c_rev;
+
+				if (nvram['pci/'+u_pci+'/1/regrev'].length > 0)
+					E('_pci/'+u_pci+'/1/regrev').value = c_rev;
+			}
+/* BCMWL6-END */
 			E('_wl'+u+'_nmode_protection').value = E('_wl'+u+'_gmode_protection').value;
 
 			/* Set bss_maxassoc same as global */
@@ -91,7 +141,7 @@ function save() {
 	}
 
 	/* check wireless country changed ? */
-	if (router_reboot && confirm("Router must be rebooted to apply changed country. Reboot now? (and commit changes to NVRAM)")) {
+	if (router_reboot && confirm("Router must be rebooted to apply changed country settings. Reboot now? (and commit changes to NVRAM)")) {
 		fom._service.disabled = 1;
 		fom._reboot.value = 1;
 		form.submit(fom, 0);
@@ -100,10 +150,17 @@ function save() {
 		form.submit(fom, 1);
 	}
 }
+
+function init() {
+/* BCMWL6-BEGIN */
+	if (((c = cookie.get(cprefix+'_notes_vis')) != null) && (c == '1'))
+		toggleVisibility(cprefix, 'notes');
+/* BCMWL6-END */
+}
 </script>
 </head>
 
-<body>
+<body onload="init()">
 <form id="t_fom" method="post" action="tomato.cgi">
 <table id="container">
 <tr><td colspan="2" id="header">
@@ -127,8 +184,26 @@ function save() {
 	for (var uidx = 0; uidx < wl_ifaces.length; ++uidx) {
 		if (wl_sunit(uidx) < 0) {
 			var u = wl_unit(uidx);
+/* BCMWL6-BEGIN */
+			var u_pci = (u+1);
+			var u_sb = (u+1);
+/* BCMWL6-END */
 
 			W('<input type="hidden" id="_wl'+u+'_distance" name="wl'+u+'_distance">');
+/* BCMWL6-BEGIN */
+			if (nvram['sb/'+u_sb+'/ccode'])
+				W('<input type="hidden" id="_sb/'+u_sb+'/ccode" name="sb/'+u_sb+'/ccode">');
+			if (nvram['sb/'+u_sb+'/regrev'])
+				W('<input type="hidden" id="_sb/'+u_sb+'/regrev" name="sb/'+u_sb+'/regrev">');
+			if (nvram[+u+':ccode'])
+				W('<input type="hidden" id="_'+u+':ccode" name="'+u+':ccode">');
+			if (nvram['pci/'+u_pci+'/1/ccode'])
+				W('<input type="hidden" id="_pci/'+u_pci+'/1/ccode" name="pci/'+u_pci+'/1/ccode">');
+			if (nvram[+u+':regrev'])
+				W('<input type="hidden" id="_'+u+':regrev" name="'+u+':regrev">');
+			if (nvram['pci/'+u_pci+'/1/regrev'])
+				W('<input type="hidden" id="_pci/'+u_pci+'/1/regrev" name="pci/'+u_pci+'/1/regrev">');
+/* BCMWL6-END */
 			W('<input type="hidden" id="_wl'+u+'_nmode_protection" name="wl'+u+'_nmode_protection">');
 			W('<input type="hidden" id="_wl'+u+'_bss_maxassoc" name="wl'+u+'_bss_maxassoc">');
 
@@ -139,8 +214,10 @@ function save() {
 
 			at = ((nvram['wl'+u+'_security_mode'] != "wep") && (nvram['wl'+u+'_security_mode'] != "radius") && (nvram['wl'+u+'_security_mode'] != "disabled"));
 			createFieldTable('', [
+/* BCMWL6-NO-BEGIN */
 				{ title: 'Afterburner', name: 'wl'+u+'_afterburner', type: 'select', options: [['auto','Auto'],['on','Enable'],['off','Disable *']],
 					value: nvram['wl'+u+'_afterburner'] },
+/* BCMWL6-NO-END */
 				{ title: 'Authentication Type', name: 'wl'+u+'_auth', type: 'select',
 					options: [['0','Auto *'],['1','Shared Key']], attrib: at ? 'disabled' : '',
 					value: at ? 0 : nvram['wl'+u+'_auth'] },
@@ -155,8 +232,15 @@ function save() {
 					value: nvram['wl'+u+'_reg_mode'] },
 				{ title: 'Country / Region', name: 'wl'+u+'_country_code', type: 'select',
 					options: wl_countries, value: nvram['wl'+u+'_country_code'] },
+/* BCMWL6-BEGIN */
+				{ title: 'Country Rev', name: 'wl'+u+'_country_rev', type: 'text', maxlen: 3, size: 7,
+					suffix: ' <small>(range: 0 - 999)<\/small>', value: nvram['wl'+u+'_country_rev'] },
+/* BCMWL6-END */
 				{ title: 'Bluetooth Coexistence', name: 'wl'+u+'_btc_mode', type: 'select',
 					options: [['0', 'Disable *'],['1', 'Enable'],['2', 'Preemption']],
+/* RTNPLUS-BEGIN */
+					hidden: (nvram['wl'+u+'_nband'] == 1),
+/* RTNPLUS-END */
 					value: nvram['wl'+u+'_btc_mode'] },
 				{ title: 'Distance / ACK Timing', name: 'f_wl'+u+'_distance', type: 'text', maxlen: 5, size: 7,
 					suffix: ' <small>meters<\/small>&nbsp;&nbsp;<small>(range: 0 - 99999; 0 = use default)<\/small>',
@@ -202,7 +286,11 @@ function save() {
 					options: [['0','Auto *'],['1000000','1 Mbps'],['2000000','2 Mbps'],['5500000','5.5 Mbps'],['6000000','6 Mbps'],['9000000','9 Mbps'],['11000000','11 Mbps'],['12000000','12 Mbps'],['18000000','18 Mbps'],['24000000','24 Mbps'],['36000000','36 Mbps'],['48000000','48 Mbps'],['54000000','54 Mbps']],
 					value: nvram['wl'+u+'_rate'] },
 				{ title: 'Interference Mitigation', name: 'wl'+u+'_mitigation', type: 'select',
-					options: [['0','None *'],['1','Non-WLAN'],['2','WLAN Manual'],['3','WLAN Auto']],
+					options: [['0','None *'],['1','Non-WLAN'],['2','WLAN Manual'],['3','WLAN Auto']
+/* RTNPLUS-BEGIN */
+						,['4','WLAN Auto with Noise Reduction']
+/* RTNPLUS-END */
+					],
 					value: nvram['wl'+u+'_mitigation'] },
 				{ title: 'WMM', name: 'wl'+u+'_wme', type: 'select', options: [['auto','Auto'],['off','Disable'],['on','Enable *']], value: nvram['wl'+u+'_wme'] },
 				{ title: 'No ACK', name: 'wl'+u+'_wme_no_ack', indent: 2, type: 'select', options: [['off','Disable *'],['on','Enable']],
@@ -220,6 +308,35 @@ function save() {
 <!-- / / / -->
 
 <div class="section"><small>The default settings are indicated with an asterisk <b style="font-size:1.5em">*</b> symbol.</small></div>
+
+<!-- / / / -->
+
+<!-- BCMWL6-BEGIN -->
+<div class="section-title">Notes <small><i><a href="javascript:toggleVisibility(cprefix,'notes');" id="toggleLink-notes"><span id="sesdiv_notes_showhide">(Click here to show)</span></a></i></small></div>
+<div class="section" id="sesdiv_notes" style="display:none">
+	<i>Country / Region and Country Rev EXAMPLES:</i><br>
+	<ul>
+		<li><b>EU / 4</b> - Country: EU (Europe) AND Country Rev: 4</li>
+		<li><b>EU / 13</b> - Country: EU (Europe) AND Country Rev: 13</li>
+		<li><b>PL / 2</b> - Country: PL (Poland) AND Country Rev: 2</li>
+		<li><b>DE / 3</b> - Country: DE (Germany) AND Country Rev: 3</li>
+		<li><b>US / 10</b> - Country: US (USA) AND Country Rev: 10</li>
+		<li><b>CN / 1</b> - Country: CN (China) AND Country Rev: 1</li>
+		<li><b>TW / 4</b> - Country: TW (Taiwan) AND Country Rev: 4</li>
+	</ul>
+
+	<i>Further Notes:</i><br>
+	<ul>
+		<li>Please select the same country code and rev for all wireless interfaces</li>
+		<li>Country code AND rev define the possible channel list, power and other regulations</li>
+		<li>Leave default values if you are not sure what you are doing!</li>
+		<li>Info: initial country rev depends on bootloader/cfe default value</li>
+<!-- ROAM-BEGIN -->
+		<li>Roaming Assistant: Do not enable wireless bandsteering (BSD) at the same time!</li>
+<!-- ROAM-END -->
+	</ul>
+</div>
+<!-- BCMWL6-END -->
 
 <!-- / / / -->
 
