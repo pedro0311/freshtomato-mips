@@ -293,7 +293,7 @@ define RouterOptions
 	echo "TCONFIG_ZEBRA=y" >>$(1); \
 	sed -i "/TCONFIG_BLINK/d" $(1); \
 	echo "TCONFIG_BLINK=y" >>$(1); \
-	sed -i "/TCONFIG_OPTIMIZE_SIZE/d" $(1); \
+	sed -i -e "/^TCONFIG_OPTIMIZE_SIZE=/d" -e "/^# TCONFIG_OPTIMIZE_SIZE is not set/d" $(1); \
 	echo "TCONFIG_OPTIMIZE_SIZE=y" >>$(1); \
 	sed -i "/TCONFIG_EMF/d" $(1); \
 	if [ "$(SLIM)" = "y" ]; then \
