@@ -898,7 +898,9 @@ endif
 	$(call BusyboxOptions, router/busybox/config_$(lowercase_B))
 
 	@$(MAKE) setprofile N=$(TPROFILE) B=$(B) DESC="$(BUILD_DESC)" USB="$(USB)"
+ifneq ($(CONFIG_ONLY),y)
 	@$(MAKE) all
+endif
 
 include targets.mak
 
