@@ -334,7 +334,7 @@ define RouterOptions
 			echo "TCONFIG_NTFS=y" >>$(1); \
 		fi; \
 		if [ "$(UFSD)" = "y" ]; then \
-			sed -i "/TCONFIG_UFSD/d" $(1); \
+			sed -i -e "/^TCONFIG_UFSD=/d" -e "/^# TCONFIG_UFSD is not set/d" $(1); \
 			echo "TCONFIG_UFSD=y" >>$(1); \
 		fi; \
 		if [ "$(HFS)" = "y" ]; then \
