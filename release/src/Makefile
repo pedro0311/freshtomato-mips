@@ -296,6 +296,16 @@ define RouterOptions
 		grep -q -e "^$$1=y$$" -e "^# $$1 is not set$$" $(1) || { echo "ERROR: $$1 missing from $(1)" >&2; exit 1; }; \
 		sed -i "s/^$$1=y$$/# $$1 is not set/" $(1); \
 	}; \
+	config_n TCONFIG_MIPS_RT; \
+	config_n TCONFIG_MIPS_RTN; \
+	config_n TCONFIG_MIPS_RTAC; \
+	if [ "$(CONFIG_RT)" = "y" ]; then \
+		config_y TCONFIG_MIPS_RT; \
+	elif [ "$(CONFIG_BCMWL6)" = "y" ]; then \
+		config_y TCONFIG_MIPS_RTAC; \
+	else \
+		config_y TCONFIG_MIPS_RTN; \
+	fi; \
 	config_y TCONFIG_ZEBRA; \
 	config_y TCONFIG_BLINK; \
 	config_y TCONFIG_OPTIMIZE_SIZE; \
