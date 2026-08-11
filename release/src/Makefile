@@ -355,7 +355,6 @@ define RouterOptions
 	fi; \
 	if [ "$(NO_JFFS)" = "y" ]; then \
 		config_n TCONFIG_JFFS2; \
-		config_n TCONFIG_JFFSV1; \
 	fi; \
 	if [ "$(NO_CIFS)" = "y" ]; then \
 		config_n TCONFIG_CIFS; \
