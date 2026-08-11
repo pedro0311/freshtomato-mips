@@ -281,9 +281,9 @@ what:
 # KERN_SIZE_OPT KERN_SIZE_OPT_MORE
 # USB ("USB"|"")
 # JFFSv1 | NO_JFFS
-# NO_CIFS, NO_ZEBRA, NO_SAMBA, NO_HTTPS, NO_ADBLOCK, NO_XXTP, NO_LIBOPT, NO_FTP, NO_BLINK, HAVEGED
+# NO_CIFS, NO_ZEBRA, NO_SAMBA, NO_HTTPS, NO_ADBLOCK NO_XXTP, NO_LIBOPT, NO_FTP, HAVEGED
 # SAMBA3, OPENVPN, DONT_OPTIMIZE_SIZE, OPTIMIZE_SIZE_MORE, IPV6SUPP, EBTABLES, NTFS, UFSD, MEDIASRV, BBEXTRAS, USBEXTRAS, BCM57, SLIM, NOCAT, CTF, NGINX, NANO, BCMNAT, PROXY
-# NFS, BTCLIENT, BTGUI, TR_EXTRAS, SNMP, SDHC, HFS, UPS, DNSCRYPT, STUBBY, PPTPD, TOR, IPSEC, RAID, MICROSD, USBAP, NO_USBAPP, IPERF, KEYGEN, NO_KEYGEN, TERMLIB, ADVTHEMES, BRCM_NAND_JFFS2, BONDING, MDNS, SDK6MIPS, ROAM OPENSSL11 OPENSSL30 WOLFSSL WOLFSSLMIN
+# NFS, BTCLIENT, BTGUI, TR_EXTRAS, SNMP, SDHC, HFS, UPS, DNSCRYPT, STUBBY, PPTPD, TOR, IPSEC, RAID, MICROSD, USBAP, NO_USBAPP, IPERF, KEYGEN, NO_KEYGEN, TERMLIB, ADVTHEMES, BRCM_NAND_JFFS2, BONDING, MDNS, ROAM OPENSSL11 OPENSSL30 WOLFSSL WOLFSSLMIN
 # AC66U, R6300V1, WNDR4500V1, WNDR4500V2, AIO, FULL_EXTRAS
 
 define RouterOptions
@@ -307,7 +307,6 @@ define RouterOptions
 		config_y TCONFIG_MIPS_RTN; \
 	fi; \
 	config_y TCONFIG_ZEBRA; \
-	config_y TCONFIG_BLINK; \
 	config_y TCONFIG_OPTIMIZE_SIZE; \
 	if [ "$(SLIM)" = "y" ]; then \
 		config_n TCONFIG_EMF; \
@@ -465,8 +464,8 @@ define RouterOptions
 		echo "ERROR: select only one RT-AC model discriminator (AC66U, R6300V1, WNDR4500V1 or WNDR4500V2)" >&2; \
 		exit 1; \
 	fi; \
-	if [ "$$model_flags" -gt 0 ] && [ "$(SDK6MIPS)" != "y" ]; then \
-		echo "ERROR: RT-AC model discriminators require SDK6MIPS=y" >&2; \
+	if [ "$$model_flags" -gt 0 ] && [ "$(CONFIG_BCMWL6)" != "y" ]; then \
+		echo "ERROR: RT-AC model discriminators require the RT-AC target family" >&2; \
 		exit 1; \
 	fi; \
 	if [ "$(AC66U)" = "y" ]; then \
@@ -492,9 +491,6 @@ define RouterOptions
 	fi; \
 	if [ "$(NAND)" = "y" ]; then \
 		config_y TCONFIG_NAND; \
-	fi; \
-	if [ "$(SDK6MIPS)" = "y" ]; then \
-		config_y TCONFIG_BCMWL6; \
 	fi; \
 	if [ "$(ROAM)" = "y" ]; then \
 		config_y TCONFIG_ROAM; \
@@ -558,9 +554,6 @@ define RouterOptions
 	fi; \
 	if [ "$(QRCODE)" = "y" ]; then \
 		config_y TCONFIG_QRCODE; \
-	fi; \
-	if [ "$(NO_BLINK)" = "y" ]; then \
-		config_n TCONFIG_BLINK; \
 	fi; \
 	if [ "$(HAVEGED)" = "y" ]; then \
 		config_y TCONFIG_HAVEGED; \
