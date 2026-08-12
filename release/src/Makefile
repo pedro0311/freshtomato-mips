@@ -392,7 +392,6 @@ define RouterOptions
 	fi; \
 	if [ "$(NO_L7)" = "y" ]; then \
 		config_n TCONFIG_L7; \
-		config_n TCONFIG_L7PAT; \
 	elif [ "$(NO_L7PAT)" = "y" ]; then \
 		config_n TCONFIG_L7PAT; \
 	fi; \
