@@ -477,7 +477,7 @@ define RouterOptions
 		echo "ERROR: select only one RT-AC model discriminator (AC66U, R6300V1, WNDR4500V1 or WNDR4500V2)" >&2; \
 		exit 1; \
 	fi; \
-	if [ "$$model_flags" -gt 0 ] && [ "$(CONFIG_BCMWL6)" != "y" ]; then \
+	if [ "$$model_flags" -gt 0 ] && [ "$(MIPS_FAMILY)" != "RTAC" ]; then \
 		echo "ERROR: RT-AC model discriminators require the RT-AC target family" >&2; \
 		exit 1; \
 	fi; \
@@ -590,7 +590,7 @@ define BusyboxOptions
 		echo "CONFIG_NICE=y" >>$(1); \
 		sed -i "/CONFIG_SETCONSOLE/d" $(1); \
 		echo "CONFIG_SETCONSOLE=y" >>$(1); \
-		if [ "$(CONFIG_RT)" = "" ]; then \
+		if [ "$(MIPS_FAMILY)" != "RT" ]; then \
 			sed -i "/CONFIG_MKFIFO/d" $(1); \
 			echo "CONFIG_MKFIFO=y" >>$(1); \
 		fi; \
@@ -801,7 +801,7 @@ define KernelConfig
 	else \
 		echo "# CONFIG_BCM57XX is not set" >>$(1); \
 	fi; \
-	if [ "$(CONFIG_RT)" = "" ]; then \
+	if [ "$(MIPS_FAMILY)" != "RT" ]; then \
 		if [ "$(USBAP)" = "y" ]; then \
 			sed -i "s/# CONFIG_WL_USBAP is not set/CONFIG_WL_USBAP=y/g" $(1); \
 			sed -i "s/CONFIG_WL_APSTA=\"wlconfig_lx_router_apsta\"/CONFIG_WL_APSTA=\"wlconfig_lx_router_high\"/g" $(1); \
@@ -836,14 +836,14 @@ define KernelConfig
 			echo "CONFIG_BRIDGE_EBT_IP6=m" >>$(1); \
 		fi; \
 	fi; \
-	if [ "$(CONFIG_RT)" = "" ]; then \
+	if [ "$(MIPS_FAMILY)" != "RT" ]; then \
 		if [ "$(NVRAM_64K)" = "y" ]; then \
 			sed -i "s/# CONFIG_NVRAM_64K is not set/CONFIG_NVRAM_64K=y/g" $(1); \
 		fi; \
 	else \
 		sed -i "s/# CONFIG_NVRAM_64K is not set//g" $(1); \
 	fi; \
-	if [ "$(CONFIG_RT)" = "" ]; then \
+	if [ "$(MIPS_FAMILY)" != "RT" ]; then \
 		if [ "$(FULL_EXTRAS)" = "y" ]; then \
 			sed -i "s/# CONFIG_NETFILTER_XT_MATCH_STATISTIC is not set/CONFIG_NETFILTER_XT_MATCH_STATISTIC=m/g" $(1); \
 			sed -i "s/# CONFIG_NETFILTER_XT_MATCH_COMMENT is not set/CONFIG_NETFILTER_XT_MATCH_COMMENT=y/g" $(1); \
