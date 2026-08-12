@@ -1,4 +1,5 @@
 export LINUXDIR := $(SRCBASE)/linux/linux-2.6
+export MIPS_FAMILY := RT
 
 EXTRA_CFLAGS := -DLINUX26 -DCONFIG_BCMWL5 -pipe
 
