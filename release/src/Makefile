@@ -309,7 +309,6 @@ define RouterOptions
 		RTAC) config_y TCONFIG_MIPS_RTAC ;; \
 		*) echo "ERROR: unsupported MIPS_FAMILY='$(MIPS_FAMILY)' (expected RT, RTN or RTAC)" >&2; exit 1 ;; \
 	esac; \
-	config_y TCONFIG_ZEBRA; \
 	if [ "$(AIO)" = "y" ]; then \
 		config_n TCONFIG_OPTIMIZE_SIZE; \
 	else \
