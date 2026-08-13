@@ -316,8 +316,15 @@ define RouterOptions
 		*) echo "ERROR: unsupported target platform '$(TARGET_PLATFORM):$(TARGET_VARIANT)'" >&2; exit 1 ;; \
 	esac; \
 	if [ "$(AIO)" = "y" ]; then \
-		config_n TCONFIG_OPTIMIZE_SIZE; \
-	else \
+		config_y TCONFIG_AIO; \
+	fi; \
+	if [ "$(TARGET_PLATFORM)" = "MIPS" ]; then \
+		if [ "$(AIO)" = "y" ]; then \
+			config_n TCONFIG_OPTIMIZE_SIZE; \
+		else \
+			config_y TCONFIG_OPTIMIZE_SIZE; \
+		fi; \
+	elif [ "$(DO_OPTIMIZE_SIZE)" = "y" ]; then \
 		config_y TCONFIG_OPTIMIZE_SIZE; \
 	fi; \
 	if [ "$(SLIM)" = "y" ]; then \
@@ -495,9 +502,6 @@ define RouterOptions
 	fi; \
 	if [ "$(WNDR4500V2)" = "y" ]; then \
 		config_y TCONFIG_WNDR4500V2; \
-	fi; \
-	if [ "$(AIO)" = "y" ]; then \
-		config_y TCONFIG_AIO; \
 	fi; \
 	if [ "$(CTF)" = "y" ]; then \
 		config_y TCONFIG_CTF; \
