@@ -437,6 +437,9 @@ define RouterOptions
 		config_y TCONFIG_OPENVPN; \
 		config_y TCONFIG_FTP_SSL; \
 	fi; \
+	if [ "$(WIREGUARD)" = "y" ]; then \
+		config_y TCONFIG_WIREGUARD; \
+	fi; \
 	if [ "$(PPTPD)" = "y" ]; then \
 		config_y TCONFIG_PPTPD; \
 	fi; \
@@ -476,6 +479,12 @@ define RouterOptions
 	fi; \
 	if [ "$(NVRAM_64K)" = "y" ]; then \
 		config_y TCONFIG_NVRAM_64K; \
+	fi; \
+	if [ "$(NVRAM_128K)" = "y" ]; then \
+		config_y TCONFIG_NVRAM_128K; \
+	fi; \
+	if [ "$(DRAM_512M)" = "y" ]; then \
+		config_y TCONFIG_DRAM_512M; \
 	fi; \
 	if [ "$(TOR)" = "y" ]; then \
 		config_y TCONFIG_TOR; \
