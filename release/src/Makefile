@@ -362,6 +362,17 @@ define RouterOptions
 		fi; \
 		if [ "$(UFSD)" = "y" ]; then \
 			config_y TCONFIG_UFSD; \
+		elif [ "$(UFSD)" = "ASUS" ]; then \
+			config_y TCONFIG_UFSDA; \
+		fi; \
+		if [ "$(TUXERA)" = "y" ]; then \
+			config_y TCONFIG_TUXERA; \
+		fi; \
+		if [ "$(TUXERA_HFS)" = "y" ]; then \
+			config_y TCONFIG_TUX_HFS; \
+		fi; \
+		if [ "$(ZFS)" = "y" ]; then \
+			config_y TCONFIG_ZFS; \
 		fi; \
 		if [ "$(HFS)" = "y" ]; then \
 			config_y TCONFIG_HFS; \
