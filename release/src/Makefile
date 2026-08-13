@@ -574,9 +574,6 @@ define RouterOptions
 	if [ "$(NVRAM_SIZE)" = "32" ]; then \
 		config_y TCONFIG_NVRAM_32K; \
 	fi; \
-	if [ "$(OPTIMIZE_SIZE_MORE)" = "y" ]; then \
-		config_y TCONFIG_OPTIMIZE_SIZE_MORE; \
-	fi; \
 	if [ "$(BRCM_NAND_JFFS2)" = "y" ]; then \
 		config_y TCONFIG_BRCM_NAND_JFFS2; \
 	fi; \
@@ -591,6 +588,24 @@ define RouterOptions
 	fi; \
 	if [ "$(QRCODE)" = "y" ]; then \
 		config_y TCONFIG_QRCODE; \
+	fi; \
+	if [ "$(FANCTRL)" = "y" ]; then \
+		config_y TCONFIG_FANCTRL; \
+	fi; \
+	if [ "$(OPTIMIZE_SIZE_MORE)" = "y" ]; then \
+		config_y TCONFIG_OPTIMIZE_SIZE_MORE; \
+	fi; \
+	if [ "$(CONNTRACK_TOOL)" = "y" ]; then \
+		config_y TCONFIG_CONNTRACK_TOOL; \
+	fi; \
+	if [ "$(IRQBALANCE)" = "y" ]; then \
+		config_y TCONFIG_IRQBALANCE; \
+	fi; \
+	if [ "$(NO_TRXKEY)" = "y" ]; then \
+		config_n TCONFIG_TRXKEY; \
+	fi; \
+	if [ "$(EXTSW)" = "y" ]; then \
+		config_y TCONFIG_EXTSW; \
 	fi; \
 	if [ "$(HAVEGED)" = "y" ]; then \
 		config_y TCONFIG_HAVEGED; \
