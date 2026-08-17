@@ -455,7 +455,6 @@ define RouterOptions
 	fi; \
 	if [ "$(OPENVPN)" = "y" ]; then \
 		config_y TCONFIG_OPENVPN; \
-		config_y TCONFIG_FTP_SSL; \
 	fi; \
 	if [ "$(NO_FTP)" = "y" ]; then \
 		config_n TCONFIG_FTP; \
