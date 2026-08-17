@@ -1,15 +1,6 @@
-/*
- * MIPS builds use this file in two contexts:
- *
- *  - libshared: keep the historical router_defaults[] stub used by wlconf
- *    and other Broadcom consumers;
- *  - nvram utility: build the full defaults tables into nvram itself.
- *
- * This preserves the existing MIPS binary layout while keeping the defaults
- * source under router/shared, ready for ARM/MIPS source unification.
- */
+#include <tomato_config.h>
 
-#ifdef NVRAM_DEFAULTS_FULL
+#if defined(TCONFIG_BCMARM) || defined(NVRAM_DEFAULTS_FULL)
 
 /*
  *
@@ -22,7 +13,6 @@
  */
 
 
-#include <tomato_config.h>
 #include "tomato_profile.h"
 #include <string.h>
 #ifdef TCONFIG_BCMARM
@@ -55,7 +45,23 @@
  #endif
 #endif
 
-const defaults_t rstats_defaults[] = {
+/*
+ * ARM uses Broadcom's larger nvram_tuple while MIPS keeps the compact
+ * two-pointer defaults_t used by the nvram utility.  The common tables
+ * intentionally initialize only name/key and value; all remaining ARM
+ * nvram_tuple members are zero-initialized by C.
+ */
+#ifdef TCONFIG_BCMARM
+ #define DEFAULTS_TYPE struct nvram_tuple
+ #define DEFAULTS_CONST
+ #define DEFAULTS_MAIN router_defaults
+#else
+ #define DEFAULTS_TYPE defaults_t
+ #define DEFAULTS_CONST const
+ #define DEFAULTS_MAIN defaults
+#endif
+
+DEFAULTS_CONST DEFAULTS_TYPE rstats_defaults[] = {
 	{ "rstats_path",		""				},
 	{ "rstats_stime",		"48"				},
 	{ "rstats_offset",		"1"				},
@@ -66,7 +72,7 @@ const defaults_t rstats_defaults[] = {
 	{ NULL, NULL }
 };
 
-const defaults_t cstats_defaults[] = {
+DEFAULTS_CONST DEFAULTS_TYPE cstats_defaults[] = {
 	{ "cstats_path",		""				},
 	{ "cstats_stime",		"48"				},
 	{ "cstats_offset",		"1"				},
@@ -80,7 +86,7 @@ const defaults_t cstats_defaults[] = {
 };
 
 #ifdef TCONFIG_FTP
-const defaults_t ftp_defaults[] = {
+DEFAULTS_CONST DEFAULTS_TYPE ftp_defaults[] = {
 	{ "ftp_super",			"0"				},
 	{ "ftp_anonymous",		"0"				},
 	{ "ftp_dirlist",		"0"				},
@@ -104,7 +110,7 @@ const defaults_t ftp_defaults[] = {
 #endif /* TCONFIG_FTP */
 
 #ifdef TCONFIG_SNMP
-const defaults_t snmp_defaults[] = {
+DEFAULTS_CONST DEFAULTS_TYPE snmp_defaults[] = {
 	{ "snmp_port",			"161"				},
 	{ "snmp_remote",		"0"				},
 	{ "snmp_remote_sip",		""				},
@@ -120,7 +126,7 @@ const defaults_t snmp_defaults[] = {
 #define BRIDGE_BLOCK_UPNP(i) \
 	{ "upnp_lan" #i,		""				},
 
-const defaults_t upnp_defaults[] = {
+DEFAULTS_CONST DEFAULTS_TYPE upnp_defaults[] = {
 	{ "upnp_secure",		"1"				},
 	{ "upnp_port",			"0"				},
 	{ "upnp_ssdp_interval",		"900"				},	/* SSDP interval */
@@ -179,7 +185,7 @@ const defaults_t upnp_defaults[] = {
 };
 
 #ifdef TCONFIG_BCMBSD
-const defaults_t bsd_defaults[] = {
+DEFAULTS_CONST DEFAULTS_TYPE bsd_defaults[] = {
 	{ "bsd_role", 		 	"3"				},	/* Band Steer Daemon; 0:Disable, 1:Primary, 2:Helper, 3:Standalone */
 	{ "bsd_hport", 		 	"9877"				},	/* BSD helper port */
 	{ "bsd_pport", 		 	"9878"				},	/* BSD Primary port */
@@ -229,7 +235,7 @@ const defaults_t bsd_defaults[] = {
 	{"bsd_aclist_timeout",		"3"				},
 #endif /* TCONFIG_AC3200 */
 	{"bsd_scheme",			"2"				},
-	{ 0, 0, 0 }
+	{ NULL, NULL }
 };
 #endif /* TCONFIG_BCMBSD */
 
@@ -250,7 +256,7 @@ const defaults_t bsd_defaults[] = {
 	{ "wan" #i "_ppp_username",	""				}, \
 	{ "wan" #i "_ppp_passwd",	""				}, \
 	{ "wan" #i "_ppp_service",	""				}, \
-	{ "wan" #i "_ppp_demand",	""				}, \
+	{ "wan" #i "_ppp_demand",	"0"				}, \
 	{ "wan" #i "_ppp_demand_dnsip",	"198.51.100.1"			}, \
 	{ "wan" #i "_ppp_custom",	""				}, \
 	{ "wan" #i "_ppp_idletime",	"5"				}, \
@@ -529,7 +535,7 @@ const defaults_t bsd_defaults[] = {
 	{"wg" #i "_prio",		""				},
 #endif /* TCONFIG_WIREGUARD */
 
-const defaults_t defaults[] = {
+DEFAULTS_CONST DEFAULTS_TYPE DEFAULTS_MAIN[] = {
 	{ "restore_defaults",		"0"				},	/* Set to 0 to not restore defaults on boot */
 
 	/* LAN H/W parameters */
@@ -2112,16 +2118,18 @@ const defaults_t if_vlan[] = {
 };
 #endif /* TCONFIG_BCMARM */
 
-
-#else /* !NVRAM_DEFAULTS_FULL */
+#else /* TCONFIG_BCMARM || NVRAM_DEFAULTS_FULL */
 
 #include <string.h>
 #include <bcmnvram.h>
 
-// stub for wlconf, etc.
+/*
+ * Keep the historical MIPS router_defaults[] stub used by wlconf and
+ * other Broadcom consumers.  The nvram utility builds the full tables
+ * above by compiling this file with NVRAM_DEFAULTS_FULL.
+ */
 struct nvram_tuple router_defaults[] = {
 	{ NULL, NULL, 0 }
 };
 
-
-#endif /* NVRAM_DEFAULTS_FULL */
+#endif /* TCONFIG_BCMARM || NVRAM_DEFAULTS_FULL */
