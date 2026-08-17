@@ -556,11 +556,35 @@ define RouterOptions
 	if [ "$(NAND)" = "y" ]; then \
 		config_y TCONFIG_NAND; \
 	fi; \
+	if [ "$(AC3200)" = "y" ]; then \
+		config_y TCONFIG_AC3200; \
+	fi; \
+	if [ "$(AC5300)" = "y" ]; then \
+		config_y TCONFIG_AC5300; \
+	fi; \
+	if [ "$(BSD)" = "y" ]; then \
+		config_y TCONFIG_BCMBSD; \
+	fi; \
 	if [ "$(ROAM)" = "y" ]; then \
 		config_y TCONFIG_ROAM; \
 	fi; \
 	if [ "$(BCMNAT)" = "y" ]; then \
 		config_y TCONFIG_BCMNAT; \
+	fi; \
+	if [ "$(BCMSMP)" = "y" ]; then \
+		config_y TCONFIG_BCMSMP; \
+	fi; \
+	if [ "$(PROXYSTA)" = "y" ]; then \
+		config_y TCONFIG_PROXYSTA; \
+	fi; \
+	if [ "$(DPSTA)" = "y" ]; then \
+		config_y TCONFIG_DPSTA; \
+	fi; \
+	if [ "$(GRO)" = "y" ]; then \
+		config_y TCONFIG_GROCTRL; \
+	fi; \
+	if [ "$(BCMFA)" = "y" ]; then \
+		config_y TCONFIG_BCMFA; \
 	fi; \
 	if [ "$(TINC)" = "y" ]; then \
 		config_y TCONFIG_TINC; \
