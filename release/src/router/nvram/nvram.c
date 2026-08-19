@@ -271,6 +271,7 @@ static const char *nv_default_value(const struct nvram_tuple *t)
 	return t->value;
 }
 
+#ifdef TCONFIG_MIPS_RTAC
 static int validate_main(int argc, char **argv)
 {
 	const struct nvram_tuple *t;
@@ -297,6 +298,7 @@ static int validate_main(int argc, char **argv)
 
 	return 0;
 }
+#endif /* TCONFIG_MIPS_RTAC */
 
 static int defaults_main(int argc, char **argv)
 {
@@ -1003,7 +1005,9 @@ static const applets_t applets[] = {
 	{ "export",		-3,	export_main		},
 	{ "import",		-3,	import_main		},
 	{ "defaults",		3,	defaults_main		},
+#ifdef TCONFIG_MIPS_RTAC
 	{ "validate",		-3,	validate_main		},
+#endif /* TCONFIG_MIPS_RTAC */
 	{ "backup",		3,	backup_main		},
 	{ "restore",		-3,	restore_main		},
 	{ "setfb64",		4,	setfb64_main		},
