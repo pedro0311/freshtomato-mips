@@ -1,15 +1,21 @@
 /*
  * Shell-like utility functions
  *
- * Copyright (C) 2008, Broadcom Corporation
- * All Rights Reserved.
+ * Copyright (C) 2012, Broadcom Corporation. All Rights Reserved.
  * 
- * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
- * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
- * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: wlif_utils.h,v 1.3 2008/09/17 23:10:05 Exp $
+ * $Id: wlif_utils.h 415105 2013-07-28 03:40:28Z $
  */
 
 #ifndef _wlif_utils_h_
@@ -41,6 +47,9 @@ typedef struct wsec_info_s {
 	unsigned int auth;			/* shared key authentication optional (0) or required (1) */
 	unsigned int akm;			/* authentication mode */
 	unsigned int wsec;			/* encryption */
+#ifdef TCONFIG_BCMARM
+	unsigned int mfp;			/* mfp */
+#endif
 	unsigned int flags;			/* flags */
 	char osifname[IFNAMSIZ];		/* interface name */
 	unsigned char ea[ETHER_ADDR_LEN];	/* interface hw address */
@@ -75,7 +84,14 @@ extern int get_lan_mac(unsigned char *mac);
 extern unsigned char *get_wlmacstr_by_unit(char *unit);
 extern int get_wlname_by_mac(unsigned char *mac, char *wlname);
 extern char *get_ifname_by_wlmac(unsigned char *mac, char *name);
-
 extern int get_wsec(wsec_info_t *info, unsigned char *mac, char *osifname);
+#ifdef TCONFIG_RTNPLUS
+extern bool wl_wlif_is_psta(char *ifname);
+#endif
+#ifdef TCONFIG_BCMARM
+extern bool wl_wlif_is_dwds(char *ifname);
+extern bool wl_wlif_is_psr_ap(char *ifname);
+extern bool wl_wlif_is_wet_ap(char *ifname);
+#endif
 
 #endif /* _wlif_utils_h_ */
