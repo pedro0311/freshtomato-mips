@@ -23,6 +23,7 @@
 
 
 #include <stddef.h>
+#include <string.h>
 #include <bcmnvram.h>
 #include <shared.h>
 
